@@ -1,0 +1,15 @@
+{
+    "presets": ["stage-0", "react-native"],
+    "plugins": ["transform-object-rest-spread", "react-hot-loader/babel", [
+	"module-resolver", {
+	    "root": "./",
+	    "alias": {
+		"@views": "./src/views",
+		"@pages": "./src/views/pages",
+		"@core": "./src/core",
+		"@components": "./src/views/components",
+		"@config": "./config/"
+	    }
+	}]
+    ]
+}
