@@ -1,18 +1,14 @@
-import IPFS from 'ipfs'
-import ipfsConfig from '@config/ipfs.config'
+import IPFS from 'ipfs-api'
 
-export const ipfs = {
-  init() {
-    const self = this
-    return new Promise((resolve, reject) => {
-      self._ipfs = new IPFS(ipfsConfig)
+export let ipfs = null
 
-      self._ipfs.on('ready', () => {
-	self._ipfs.id((err, res) => {
-	  if (err) return reject(err)
-	  resolve(res)
-	})
-      })
+export function init() {
+  return new Promise((resolve, reject) => {
+    ipfs = new IPFS()
+
+    ipfs.id((err, res) => {
+      if (err) return reject(err)
+      resolve(res)
     })
-  }
+  })
 }

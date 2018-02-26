@@ -1,5 +1,5 @@
 {
-    "presets": ["stage-0", "react-native"],
+    "presets": ["react-native"],
     "plugins": ["transform-object-rest-spread", "react-hot-loader/babel", [
 	"module-resolver", {
 	    "root": "./",

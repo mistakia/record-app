@@ -6,5 +6,11 @@ module.exports = {
   pass: '2662d47e3d692fe8c2cdb70b907ebb12b216a9d9ca5110dd336d12e7bf86073b',
   EXPERIMENTAL: {
     pubsub: true
+  },
+
+  config: {
+    Addresses: {
+      API: '/ip4/127.0.0.1/tcp/5001'
+    }
   }
 }

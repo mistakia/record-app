@@ -2,8 +2,8 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { ipfsActions, getId } from '@core/ipfs'
-import Tracklist from '@components/tracklist'
+import { ipfsActions, getIPFSId } from '@core/ipfs'
+import { getOrbitId } from '@core/db'
 
 export class HomePage extends React.Component {
   componentWillMount() {
@@ -15,20 +15,21 @@ export class HomePage extends React.Component {
   }
 
   render() {
-    const { ipfsId } = this.props
+    const { ipfsId, orbitId } = this.props
 
     return (
       <section>
 	<h5>IPFS ID: {ipfsId}</h5>
-	<Tracklist />
+	<h5>ORBIT ID: {orbitId}</h5>
       </section>
     )
   }
 }
 
 const mapStateToProps = createSelector(
-  getId,
-  ipfsId => ({ipfsId})
+  getOrbitId,
+  getIPFSId,
+  (orbitId, ipfsId) => ({orbitId,ipfsId})
 )
 
 const mapDispatchToProps = {
