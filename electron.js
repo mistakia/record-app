@@ -2,10 +2,8 @@
 
 const electron = require('electron')
 const Logger  = require('logplease')
-const IPFSFactory = require('ipfsd-ctl')
-
+const Node = require('./lib/node')
 const config = require('./config/project.config')
-const ipfsConfig = require('./config/ipfs.config')
 
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
@@ -13,21 +11,10 @@ process.on('uncaughtException', (err) => {
   logger.error(err)
 })
 
-const f = IPFSFactory.create()
+const node = new Node()
 
-f.spawn({
-  init: true,
-  start: true,
-  config: ipfsConfig.config
-}, function (err, ipfsd) {
-  if (err) { throw err }
-
-  ipfsd.api.id(function (err, res) {
-    if (err) { throw err }
-    logger.info(`IPFS API: ${ipfsd.apiAddr}`)
-    logger.info(`IPFS ID: ${res.id}`)
-  })
-
+node.on('ready', function() {
+  logger.info('Record Node running.')
 })
 
 // Module to control application life.

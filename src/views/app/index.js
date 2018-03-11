@@ -1,13 +1,8 @@
-import { Component } from 'react'
 import PropTypes from 'prop-types'
 
-import Render from './Render'
+import App from './App'
 
-export default class App extends Component {
-  render() {
-    return Render.call(this, this.props, this.state)
-  }
-}
+export default App
 
 App.propTypes = {
   children: PropTypes.element

@@ -1,16 +1,10 @@
 import { takeLatest, fork, put, call } from 'redux-saga/effects'
 
 import { dbActions } from '@core/db'
-import { init } from '@core/db/service'
+import { fetchId } from '@core/api'
 
 export function* initDB({ payload }) {
-  try {
-    yield put(dbActions.initPending())
-    const data = yield call(init, payload)
-    yield put(dbActions.initFulfilled(data))
-  } catch (error) {
-    put(dbActions.initFailed(error))
-  }
+  yield call(fetchId, payload)
 }
 
 export function* watchDB_INIT() {

@@ -2,8 +2,6 @@ import OrbitDB from 'orbit-db'
 import PeerId from 'peer-id'
 import { ec as EC } from 'elliptic'
 
-import { ipfs } from '@core/ipfs'
-
 export let orbitdb = null
 
 const ec = new EC('secp256k1')

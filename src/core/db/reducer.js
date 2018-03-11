@@ -9,7 +9,7 @@ export const initialState = new Map({
 export function dbReducer(state = initialState, { payload, type }) {
   switch(type) {
     case dbActions.DB_INIT_FULFILLED:
-      return state.set('id', payload)
+      return state.set('id', payload.id)
     default:
       return state
   }

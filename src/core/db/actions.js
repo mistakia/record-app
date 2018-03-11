@@ -24,3 +24,9 @@ export const dbActions = {
     payload: { peerId, privateKey }
   })
 }
+
+export const idRequestActions = {
+  failed: dbActions.initFailed,
+  fulfilled: dbActions.initFulfilled,
+  pending: dbActions.initPending
+}

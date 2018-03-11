@@ -1,0 +1,14 @@
+{
+  "name": "record-nodejs-react-native",
+  "version": "0.0.1",
+  "description": "node part of the project",
+  "main": "main.js",
+  "author": "janeasystems",
+  "license": "",
+  "dependencies": {
+    "express": "^4.16.2",
+    "ipfs": "github:krahimian/js-ipfs",
+    "leveldown": "github:krahimian/leveldown",
+    "orbit-db": "^0.19.5"
+  }
+}

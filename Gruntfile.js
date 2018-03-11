@@ -92,6 +92,14 @@ module.exports = function (grunt) {
             dest: '<%= pkg.dist %>/favicon.ico'
           }
         ]
+      },
+      node: {
+	files: [{
+	  expand: true,
+	  cwd:'lib/node/',
+	  src: ['*'],
+	  dest: 'nodejs-assets/nodejs-project/node_modules/node/'
+	}]
       }
     },
 
@@ -125,6 +133,16 @@ module.exports = function (grunt) {
 	task: ['webpack', 'exec:launch_electron_dist'],
 	options: {
 	  logConcurrentOutput: true
+	}
+      }
+    },
+
+    'watch': {
+      node: {
+	files: ['./lib/node/*.js'],
+	tasks: ['copy:node'],
+	options: {
+	  spawn: false
 	}
       }
     }
