@@ -1,3 +1,1 @@
-import HomePage from './home.native'
-
-export default HomePage
+export { default } from './home.native'

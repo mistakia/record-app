@@ -1,3 +1,1 @@
-import App from './App.native'
-
-export default App
+export { default } from './App.native'
