@@ -97,7 +97,7 @@ module.exports = function (grunt) {
 	files: [{
 	  expand: true,
 	  cwd:'lib/node/',
-	  src: ['*'],
+	  src: ['**/*'],
 	  dest: 'nodejs-assets/nodejs-project/node_modules/node/'
 	}]
       }

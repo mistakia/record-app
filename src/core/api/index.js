@@ -1,3 +1,4 @@
 export {
-  fetchId
+  fetchInit,
+  fetchAddress
 } from './sagas'

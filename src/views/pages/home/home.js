@@ -2,14 +2,10 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { getOrbitId, dbActions } from '@core/db'
+import { getOrbitId } from '@core/db'
 import LoadDB from '@components/load-db'
 
 export class HomePage extends React.Component {
-  componentWillMount() {
-    this.props.init()
-  }
-
   render() {
     const { orbitId } = this.props
 
@@ -27,11 +23,6 @@ const mapStateToProps = createSelector(
   (orbitId) => ({orbitId})
 )
 
-const mapDispatchToProps = {
-  init: dbActions.init
-}
-
 export default connect(
-  mapStateToProps,
-  mapDispatchToProps
+  mapStateToProps
 )(HomePage)

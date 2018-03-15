@@ -5,6 +5,12 @@ export const dbActions = {
 
   DB_INIT: 'DB_INIT',
 
+  DB_LOAD_FAILED: 'DB_LOAD_FAILED',
+  DB_LOAD_FULFILLED: 'DB_LOAD_FULFILLED',
+  DB_LOAD_PENDING: 'DB_LOAD_PENDING',
+
+  DB_LOAD: 'DB_LOAD',
+
   initFailed: error => ({
     type: dbActions.DB_INIT_FAILED,
     payload: error
@@ -19,14 +25,38 @@ export const dbActions = {
     type: dbActions.DB_INIT_PENDING
   }),
 
-  init: (peerId, privateKey) => ({
-    type: dbActions.DB_INIT,
-    payload: { peerId, privateKey }
+  init: () => ({
+    type: dbActions.DB_INIT
+  }),
+
+  loadFailed: error => ({
+    type: dbActions.DB_LOAD_FAILED,
+    payload: error
+  }),
+
+  loadFulfilled: data => ({
+    type: dbActions.DB_LOAD_FULFILLED,
+    payload: data
+  }),
+
+  loadPending: () => ({
+    type: dbActions.DB_LOAD_PENDING
+  }),
+
+  load: (address) => ({
+    type: dbActions.DB_LOAD,
+    payload: address
   })
 }
 
-export const idRequestActions = {
+export const initRequestActions = {
   failed: dbActions.initFailed,
   fulfilled: dbActions.initFulfilled,
   pending: dbActions.initPending
+}
+
+export const loadRequestActions = {
+  failed: dbActions.loadFailed,
+  fulfilled: dbActions.loadFulfilled,
+  pending: dbActions.loadPending
 }

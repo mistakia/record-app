@@ -3,8 +3,12 @@ export const api = {
     const url = `http://localhost:3000/${path}`
     return dispatch({url})
   },
-  fetchId() {
+  fetchInit() {
     const url = 'http://localhost:3000/'
+    return dispatch({url})
+  },
+  fetchAddress(address) {
+    const url = `http://localhost:3000/orbitdb/${address}`
     return dispatch({url})
   }
 }

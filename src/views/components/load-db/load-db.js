@@ -1,4 +1,7 @@
 import React from 'react'
+import { connect } from 'react-redux'
+
+import { dbActions } from '@core/db'
 
 class LoadDB extends React.Component {
 
@@ -12,7 +15,7 @@ class LoadDB extends React.Component {
     const value = this.input.value.trim()
     console.log(value)
     this.input.blur()
-    //TODO
+    this.props.load(value)
   }
 
   render = () => (
@@ -28,4 +31,11 @@ class LoadDB extends React.Component {
   )
 }
 
-export default LoadDB
+const mapDispatchToProps = {
+  load: dbActions.load
+}
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(LoadDB)

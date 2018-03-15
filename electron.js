@@ -25,10 +25,6 @@ logger.info(`User Data: ${app.getPath('userData')}`)
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
-require('./api').listen(8080, () => {
-  logger.info('api server is running at http://localhost:8080/')
-})
-
 const logToRenderer = (source, level, text) => {
   if (mainWindow)
     mainWindow.webContents.send('log', source, level, text)

@@ -1,10 +1,15 @@
 import React from 'react'
-import { Component } from 'react'
-
 import { Route } from 'react-router-dom'
-import HomePage from '@pages/home'
+import { connect } from 'react-redux'
 
-export default class App extends Component {
+import HomePage from '@pages/home'
+import { dbActions } from '@core/db'
+
+export class App extends React.Component {
+  componentWillMount() {
+    this.props.init()
+  }
+
   render() {
     return (
       <div>
@@ -15,3 +20,12 @@ export default class App extends Component {
     )
   }
 }
+
+const mapDispatchToProps = {
+  init: dbActions.init
+}
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(App)
