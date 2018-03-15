@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { getOrbitId, dbActions } from '@core/db'
+import LoadDB from '@components/load-db'
 
 export class HomePage extends React.Component {
   componentWillMount() {
@@ -10,12 +11,12 @@ export class HomePage extends React.Component {
   }
 
   render() {
-    const { ipfsId, orbitId } = this.props
+    const { orbitId } = this.props
 
     return (
       <section>
-	<h5>IPFS ID: {ipfsId}</h5>
 	<h5>ORBIT ID: {orbitId}</h5>
+	<LoadDB />
       </section>
     )
   }

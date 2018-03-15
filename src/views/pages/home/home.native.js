@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 
 import { getOrbitId, dbActions } from '@core/db'
+import LoadDB from '@components/load-db'
 
 export class HomePage extends Component {
   constructor(props) {
@@ -21,6 +22,7 @@ export class HomePage extends Component {
     return (
       <View>
 	<Text style={styles.welcome}>ORBIT ID: {orbitId}</Text>
+	<LoadDB />
       </View>
     )
   }
