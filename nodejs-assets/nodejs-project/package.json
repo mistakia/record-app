@@ -4,11 +4,14 @@
   "description": "node part of the project",
   "main": "main.js",
   "author": "janeasystems",
-  "license": "",
+    "license": "",
+    "scripts": {
+	"postinstall": "GYP_DEFINES=\"OS=ios\" npm_config_nodedir=\"~/nodejs-mobile\" npm_config_platform=\"ios\" npm_config_node_engine=\"chakracore\" npm --verbose install krahimian/leveldown --build-from-source"
+    },
   "dependencies": {
     "express": "^4.16.2",
     "ipfs": "github:krahimian/js-ipfs",
     "leveldown": "github:krahimian/leveldown",
-    "orbit-db": "^0.19.5"
+    "orbit-db": "github:krahimian/orbit-db"
   }
 }
