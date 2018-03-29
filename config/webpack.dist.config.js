@@ -8,11 +8,12 @@
 
 const webpack = require('webpack')
 const project = require('./project.config')
+const path = require('path')
 
 module.exports = {
   output: {
     publicPath: '/assets/',
-    path: 'dist/assets/',
+    path: path.resolve(__dirname, '../dist/assets/'),
     filename: 'main.js'
   },
   devtool: false,

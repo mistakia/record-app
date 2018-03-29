@@ -7,7 +7,11 @@ process.on('uncaughtException', (err) => {
   console.log(err)
 })
 
+const repo = path.resolve(os.tmpdir(), './ipfs')
+console.log(repo)
+
 const nodeConfig = {
+  repo: repo,
   directory: path.resolve(os.tmpdir(), './orbitdb'),
   init: true,
   pass: '2662d47e3d692fe8c2cdb70b907ebb12b216a9d9ca5110dd336d12e7bf86073b',

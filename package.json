@@ -20,7 +20,7 @@
     "start": "REACT_DEBUGGER=\"open -g 'rndebugger://set-debugger-loc?port=8081' ||\" node node_modules/react-native/local-cli/cli.js start --reset-cache",
     "build": "grunt build",
     "dev": "grunt watch",
-    "build:ios": "react-native bundle --reset-cache --entry-file src/index.ios.js --bundle-output ios/main.jsbundle --platform ios --dev true",
+    "build:ios": "react-native bundle --reset-cache --entry-file src/index.ios.js --bundle-output ios/main.jsbundle --platform ios --dev false",
     "rebuild:electron": "npm rebuild --runtime=electron --target=$(electron -v) --abi=$(electron --abi) --disturl=https://atom.io/download/atom-shell",
     "rebuild:node": "npm rebuild",
     "start:ios": "react-native run-ios",
