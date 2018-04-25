@@ -139,7 +139,7 @@ module.exports = function (grunt) {
 
     'watch': {
       node: {
-	files: ['./lib/node/*.js'],
+	files: ['./lib/node/**/*.js'],
 	tasks: ['copy:node'],
 	options: {
 	  spawn: false
