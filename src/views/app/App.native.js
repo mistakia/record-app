@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 
 import { getOrbitId, dbActions } from '@core/db'
-import HomePage from '@pages/home'
+import TracksPage from '@pages/tracks'
 
 export class App extends Component {
   constructor(props) {
@@ -53,7 +53,7 @@ export class App extends Component {
   render() {
     return (
       <View>
-	<Route exact path ='/' component={HomePage} />
+	<Route exact path ='/' component={TracksPage} />
       </View>
     )
   }

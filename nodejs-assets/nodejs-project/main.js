@@ -11,22 +11,24 @@ const repo = path.resolve(os.tmpdir(), './ipfs')
 console.log(repo)
 
 const nodeConfig = {
-  repo: repo,
-  directory: path.resolve(os.tmpdir(), './orbitdb'),
-  init: true,
-  pass: '2662d47e3d692fe8c2cdb70b907ebb12b216a9d9ca5110dd336d12e7bf86073b',
-  EXPERIMENTAL: {
-    pubsub: true
-  },
+  orbitPath: path.resolve(os.tmpdir(), './orbitdb'),
+  ipfsConfig: {
+    repo: repo,
+    init: true,
+    pass: '2662d47e3d692fe8c2cdb70b907ebb12b216a9d9ca5110dd336d12e7bf86073b',
+    EXPERIMENTAL: {
+      pubsub: true
+    },
 
-  config: {
-    Addresses: {
-      Swarm: [
-	//'/ip4/0.0.0.0/tcp/4002',
-	//'/ip4/0.0.0.0/tcp/4003/ws'
-	//'/dns4/star-signal.cloud.ipfs.team/wss/p2p-webrtc-star'
-	//'/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
-      ]
+    config: {
+      Addresses: {
+	Swarm: [
+	  //'/ip4/0.0.0.0/tcp/4002',
+	  //'/ip4/0.0.0.0/tcp/4003/ws'
+	  //'/dns4/star-signal.cloud.ipfs.team/wss/p2p-webrtc-star'
+	  //'/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
+	]
+      }
     }
   }
 }

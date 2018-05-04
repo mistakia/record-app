@@ -1,7 +1,9 @@
 'use strict'
 
+const { default: installExtension, REDUX_DEVTOOLS } = require('electron-devtools-installer');
 const electron = require('electron')
 const Logger  = require('logplease')
+const path = require('path')
 const Node = require('./lib/node')
 const config = require('./config/project.config')
 
@@ -11,16 +13,11 @@ process.on('uncaughtException', (err) => {
   logger.error(err)
 })
 
-const node = new Node()
-
-node.on('ready', function() {
-  logger.info('Record Node running.')
-})
-
 // Module to control application life.
 const app = electron.app
 
-logger.info(`User Data: ${app.getPath('userData')}`)
+const userDataPath = app.getPath('userData')
+logger.info(`User Data: ${userDataPath}`)
 
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
@@ -65,14 +62,27 @@ function createWindow () {
 function clearData () {
   const ses = mainWindow.webContents.session
   ses.clearStorageData((err) => {
-    if (err) console.log(err)
+    if (err) logger.error(err)
   })
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', () => {
-  createWindow()
+  installExtension(REDUX_DEVTOOLS)
+    .then((name) => logger.info(`Added Extension: ${name}`))
+    .catch((err) => logger.error('An error occurred: ', err));
+
+
+  const node = new Node({
+    repo: path.resolve(userDataPath, './ipfs'),
+    directory: path.resolve(userDataPath, './orbitdb')
+  })
+
+  node.on('ready', function() {
+    logger.info('Record Node running.')
+    createWindow()
+  })
  
   // Pass log messages to the renderer process
   Logger.events.on('data', logToRenderer)

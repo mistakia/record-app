@@ -1,26 +1,27 @@
-import React, { Component } from 'react'
-import { createSelector } from 'reselect'
+import React from 'react'
 import { connect } from 'react-redux'
+import { createSelector } from 'reselect'
 import {
   StyleSheet,
   Text,
   View
 } from 'react-native'
 
-import { getOrbitId, dbActions } from '@core/db'
-import LoadDB from '@components/load-db'
+import { getOrbitId } from '@core/db'
+import { tracklistActions } from '@core/tracklists'
+import Tracklist from '@components/Tracklist'
 
-export class HomePage extends Component {
-  constructor(props) {
-    super(props)
+export class TracksPage extends React.Component {
+  componentWillMount() {
+    this.props.loadTracks('me')
   }
 
   render() {
     const { orbitId } = this.props
     return (
       <View>
-	<Text style={styles.welcome}>ORBIT ID: {orbitId}</Text>
-	<LoadDB />
+	<Text style={styles.welcome}>ORBIT ID: {orbitId}</Text>	
+	<Tracklist />
       </View>
     )
   }
@@ -50,6 +51,11 @@ const mapStateToProps = createSelector(
   (orbitId) => ({orbitId})
 )
 
+const mapDispatchToProps = {
+  loadTracks: tracklistActions.loadTracks
+}
+
 export default connect(
-  mapStateToProps
-)(HomePage)
+  mapStateToProps,
+  mapDispatchToProps
+)(TracksPage)

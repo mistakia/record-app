@@ -16,7 +16,7 @@ export const dbActions = {
     payload: error
   }),
 
-  initFulfilled: data => ({
+  initFulfilled: (id, data) => ({
     type: dbActions.DB_INIT_FULFILLED,
     payload: data
   }),
@@ -27,25 +27,6 @@ export const dbActions = {
 
   init: () => ({
     type: dbActions.DB_INIT
-  }),
-
-  loadFailed: error => ({
-    type: dbActions.DB_LOAD_FAILED,
-    payload: error
-  }),
-
-  loadFulfilled: data => ({
-    type: dbActions.DB_LOAD_FULFILLED,
-    payload: data
-  }),
-
-  loadPending: () => ({
-    type: dbActions.DB_LOAD_PENDING
-  }),
-
-  load: (address) => ({
-    type: dbActions.DB_LOAD,
-    payload: address
   })
 }
 
@@ -53,10 +34,4 @@ export const initRequestActions = {
   failed: dbActions.initFailed,
   fulfilled: dbActions.initFulfilled,
   pending: dbActions.initPending
-}
-
-export const loadRequestActions = {
-  failed: dbActions.loadFailed,
-  fulfilled: dbActions.loadFulfilled,
-  pending: dbActions.loadPending
 }

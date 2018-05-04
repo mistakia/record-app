@@ -7,8 +7,8 @@ export const api = {
     const url = 'http://localhost:3000/'
     return dispatch({url})
   },
-  fetchAddress(address) {
-    const url = `http://localhost:3000/orbitdb/${address}`
+  fetchTracks(tracklistId) {
+    const url =`http://localhost:3000/tracks/${tracklistId}`
     return dispatch({url})
   }
 }

@@ -2,8 +2,9 @@ import React from 'react'
 import { Route } from 'react-router-dom'
 import { connect } from 'react-redux'
 
-import HomePage from '@pages/home'
+import TracksPage from '@pages/tracks'
 import { dbActions } from '@core/db'
+
 
 export class App extends React.Component {
   componentWillMount() {
@@ -14,7 +15,7 @@ export class App extends React.Component {
     return (
       <div>
 	<main className="main">
-	  <Route exact path='/' component={HomePage} />
+	  <Route exact path='/' component={TracksPage} />
 	</main>
       </div>
     )
