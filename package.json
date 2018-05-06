@@ -6,9 +6,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vacay/record"
+    "url": "https://github.com/mistakia/record-app"
   },
-  "homepage": "https://github.com/vacay/record",
+  "homepage": "https://github.com/mistakia/record-app",
   "keywords": [],
   "src": "./",
   "test": "./test",
@@ -19,7 +19,6 @@
   "scripts": {
     "start": "REACT_DEBUGGER=\"open -g 'rndebugger://set-debugger-loc?port=8081' ||\" node node_modules/react-native/local-cli/cli.js start --reset-cache",
     "build": "grunt build",
-    "dev": "grunt watch",
     "build:ios": "react-native bundle --reset-cache --entry-file src/index.ios.js --bundle-output ios/main.jsbundle --platform ios --dev false",
     "rebuild:electron": "npm rebuild --runtime=electron --target=$(electron -v) --abi=$(electron --abi) --disturl=https://atom.io/download/atom-shell",
     "rebuild:node": "npm rebuild",
@@ -40,14 +39,12 @@
   "dependencies": {
     "babel-polyfill": "^6.23.0",
     "connected-react-router": "^4.2.1",
-    "deep-extend": "^0.5.1",
+    "debug": "^3.1.0",
     "fbjs": "^0.6.0",
     "grunt": "^1.0.1",
     "history": "^4.6.1",
-    "ipfs": "github:ipfs/js-ipfs",
     "logplease": "^1.2.13",
     "nodejs-mobile-react-native": "^0.1.4",
-    "orbit-db": "^0.19.7",
     "prop-types": "^15.6.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
@@ -55,6 +52,7 @@
     "react-redux": "^5.0.4",
     "react-router": "^4.1.1",
     "react-router-dom": "^4.1.1",
+    "record-node": "github:mistakia/record-node",
     "redux": "^3.6.0",
     "redux-saga": "^0.15.3",
     "reselect": "^3.0.1",
@@ -81,7 +79,6 @@
     "grunt-contrib-clean": "^1.0.0",
     "grunt-contrib-connect": "^1.0.0",
     "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-watch": "^1.0.0",
     "grunt-exec": "^0.4.6",
     "grunt-open": "^0.2.3",
     "grunt-webpack": "^3.0.2",

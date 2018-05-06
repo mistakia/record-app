@@ -4,8 +4,11 @@ const { default: installExtension, REDUX_DEVTOOLS } = require('electron-devtools
 const electron = require('electron')
 const Logger  = require('logplease')
 const path = require('path')
-const Node = require('./lib/node')
+const RecordNode = require('record-node')
 const config = require('./config/project.config')
+const debug = require('debug')
+
+debug.enable('jsipfs:*,record:*')
 
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
@@ -74,9 +77,11 @@ app.on('ready', () => {
     .catch((err) => logger.error('An error occurred: ', err));
 
 
-  const node = new Node({
-    repo: path.resolve(userDataPath, './ipfs'),
-    directory: path.resolve(userDataPath, './orbitdb')
+  const node = new RecordNode({
+    ipfsConfig: {
+      repo: path.resolve(userDataPath, './ipfs')
+    },
+    orbitPath: path.resolve(userDataPath, './orbitdb')
   })
 
   node.on('ready', function() {

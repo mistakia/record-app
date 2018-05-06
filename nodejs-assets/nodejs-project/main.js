@@ -1,7 +1,7 @@
 const rn_bridge = require('rn-bridge')
 const os = require('os')
 const path = require('path')
-const Node = require('node')
+const RecordNode = require('record-node')
 
 process.on('uncaughtException', (err) => {
   console.log(err)
@@ -39,7 +39,7 @@ rn_bridge.channel.on('message', (msg) => {
 })
 
 try {
-  const node = new Node(nodeConfig)
+  const node = new RecordNode(nodeConfig)
 
   node.on('error', function(err) {
     console.log(err)
