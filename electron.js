@@ -72,7 +72,7 @@ function clearData () {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', () => {
-  installExtension(REDUX_DEVTOOLS)
+  installExtension(REDUX_DEVTOOLS.id)
     .then((name) => logger.info(`Added Extension: ${name}`))
     .catch((err) => logger.error('An error occurred: ', err));
 
