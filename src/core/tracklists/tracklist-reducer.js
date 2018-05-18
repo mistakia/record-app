@@ -19,13 +19,14 @@ export function tracklistReducer(state = new Tracklist(), {payload, type}) {
       return state.set('isPending', true)
 
     case tracklistActions.LOAD_TRACKS:
-      return state.isNew ? state.set('id', payload.tracklistId) : state
+      return state.isNew ? state.set('id', payload.logId) : state
 
     default:
       return state
   }
 }
 
+//TODO: merge with mergeContactIds
 function mergeTrackIds(trackIds, collection) {
   let ids = trackIds.toJS()
   let newIds = collection.reduce((list, trackData) => {

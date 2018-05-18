@@ -1,8 +1,10 @@
 import React from 'react'
-import { Route } from 'react-router-dom'
+import { Route, Switch, Link } from 'react-router-dom'
 import { connect } from 'react-redux'
 
+import HomePage from '@pages/home'
 import TracksPage from '@pages/tracks'
+import ContactsPage from '@pages/contacts'
 import { dbActions } from '@core/db'
 
 
@@ -15,7 +17,16 @@ export class App extends React.Component {
     return (
       <div>
 	<main className="main">
-	  <Route exact path='/' component={TracksPage} />
+	  <ul>
+	    <li><Link to='/'>Home</Link></li>
+	    <li><Link to='/tracks/me'>My Tracks</Link></li>
+	    <li><Link to='/contacts/me'>My Contacts</Link></li>
+	  </ul>
+	  <Switch>
+	    <Route exact path='/' component={HomePage} />
+	    <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
+	    <Route path='/contacts/:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
+	  </Switch>
 	</main>
       </div>
     )

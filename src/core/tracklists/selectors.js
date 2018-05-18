@@ -1,13 +1,13 @@
 import { createSelector } from 'reselect'
 
-import { getTracks } from '@core/tracks/selectors'
+import { getTracks } from '@core/tracks'
 
 export function getTracklists(state) {
-  return state.tracklists
+  return state.get('tracklists')
 }
 
-export function getTracklistById(state, tracklistId) {
-  return getTracklists(state).get(tracklistId)
+export function getTracklistById(state, logId) {
+  return getTracklists(state).get(logId)
 }
 
 export function getCurrentTracklist(state) {

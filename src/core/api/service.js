@@ -3,12 +3,16 @@ export const api = {
     const url = `http://localhost:3000/${path}`
     return dispatch({url})
   },
+  fetchContacts(logId) {
+    const url = `http://localhost:3000/logs/contacts/${logId}`
+    return dispatch({url})
+  },
   fetchInit() {
     const url = 'http://localhost:3000/'
     return dispatch({url})
   },
-  fetchTracks(tracklistId) {
-    const url =`http://localhost:3000/tracks/${tracklistId}`
+  fetchTracks(logId) {
+    const url =`http://localhost:3000/logs/tracks/${logId}`
     return dispatch({url})
   }
 }

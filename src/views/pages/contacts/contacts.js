@@ -2,31 +2,31 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { tracklistActions } from '@core/tracklists'
-import Tracklist from '@components/Tracklist'
+import { contactlistActions } from '@core/contactlists'
+import Contactlist from '@components/Contactlist'
 
-export class TracksPage extends React.Component {
+export class ContactsPage extends React.Component {
   componentWillMount() {
-    // '/me' or proper orbitdb address
+    // '/me' or proper orbitdb adadress
     const { logId } = this.props.match.params
-    this.props.loadTracks(logId)
+    this.props.loadContacts(logId)
   }
 
   render() {
     return (
       <section>
-	<h1>Tracks Page</h1>
-	<Tracklist />
+	<h1>Contacts Page</h1>
+	<Contactlist />
       </section>
     )
   }
 }
 
 const mapDispatchToProps = {
-  loadTracks: tracklistActions.loadTracks
+  loadContacts: contactlistActions.loadContacts
 }
 
 export default connect(
   null,
   mapDispatchToProps
-)(TracksPage)
+)(ContactsPage)

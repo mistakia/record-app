@@ -7,20 +7,18 @@ import {
   View
 } from 'react-native'
 
-import { getOrbitId } from '@core/db'
 import { tracklistActions } from '@core/tracklists'
 import Tracklist from '@components/Tracklist'
 
 export class TracksPage extends React.Component {
   componentWillMount() {
-    this.props.loadTracks('me')
+    // '/me' or proper orbitdb address
+    this.props.loadTracks('/me')
   }
 
   render() {
-    const { orbitId } = this.props
     return (
       <View>
-	<Text style={styles.welcome}>ORBIT ID: {orbitId}</Text>	
 	<Tracklist />
       </View>
     )
@@ -46,16 +44,11 @@ const styles = StyleSheet.create({
   },
 })
 
-const mapStateToProps = createSelector(
-  getOrbitId,
-  (orbitId) => ({orbitId})
-)
-
 const mapDispatchToProps = {
   loadTracks: tracklistActions.loadTracks
 }
 
 export default connect(
-  mapStateToProps,
+  null,
   mapDispatchToProps
 )(TracksPage)

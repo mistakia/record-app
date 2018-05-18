@@ -7,6 +7,7 @@ class Track extends React.Component {
     return (
       <article>
 	<h1>{track.title}</h1>
+	<p>{track.url}</p>
       </article>
     )
   }

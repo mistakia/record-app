@@ -1,5 +1,5 @@
 export function getTracks(state) {
-  return state.tracks
+  return state.get('tracks')
 }
 
 export function getTrackById(state, trackId) {

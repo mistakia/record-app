@@ -10,6 +10,7 @@ export class HomePage extends React.Component {
 
     return (
       <section>
+	<h1>Home Page</h1>	
 	<h5>ORBIT ID: {orbitId}</h5>
       </section>
     )

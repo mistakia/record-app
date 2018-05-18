@@ -10,25 +10,25 @@ export const tracklistActions = {
     payload: error
   }),
 
-  fetchTracksFulfilled: (tracklistId, data) => ({
+  fetchTracksFulfilled: (logId, data) => ({
     type: tracklistActions.FETCH_TRACKS_FULFILLED,
     payload: {
       data,
-      tracklistId
+      logId
     }
   }),
 
-  fetchTracksPending: tracklistId => ({
+  fetchTracksPending: logId => ({
     type: tracklistActions.FETCH_TRACKS_PENDING,
     payload: {
-      tracklistId
+      logId
     }
   }),
 
-  loadTracks: (tracklistId) => ({
+  loadTracks: (logId) => ({
     type: tracklistActions.LOAD_TRACKS,
     payload: {
-      tracklistId
+      logId
     }
   })
 }

@@ -4,10 +4,10 @@ import { tracklistActions } from './actions'
 import { getTracklistById } from './selectors'
 
 export function* loadTracks({payload}) {
-  const { tracklistId } = payload
-  const tracklist = yield select(getTracklistById, tracklistId);
+  const { logId } = payload
+  const tracklist = yield select(getTracklistById, logId);
   if (tracklist && tracklist.isNew) {
-    yield call(fetchTracks, tracklistId)
+    yield call(fetchTracks, logId)
   }
 }
 
@@ -25,5 +25,4 @@ export function* watchLoadTracks() {
 
 export const tracklistSagas = [
   fork(watchLoadTracks)
-]
-    
+]    
