@@ -9,9 +9,9 @@
     "postinstall": "GYP_DEFINES=\"OS=ios\" npm_config_nodedir=\"~/nodejs-mobile\" npm_config_platform=\"ios\" npm_config_node_engine=\"chakracore\" npm --verbose install krahimian/leveldown --build-from-source"
   },
   "dependencies": {
-    "express": "^4.16.2",
-    "ipfs": "github:krahimian/js-ipfs",
+    "debug": "^3.1.0",
     "leveldown": "github:krahimian/leveldown",
-    "orbit-db": "github:krahimian/orbit-db"
+    "logplease": "^1.2.14",
+    "record-node": "github:mistakia/record-node"
   }
 }

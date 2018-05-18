@@ -12,13 +12,15 @@ import Tracklist from '@components/Tracklist'
 
 export class TracksPage extends React.Component {
   componentWillMount() {
-    // '/me' or proper orbitdb address
-    this.props.loadTracks('/me')
+    // '/me' or proper orbitdb adadress
+    const { logId } = this.props.match.params
+    this.props.loadTracks(logId)
   }
 
   render() {
     return (
       <View>
+	<Text>Tracks Page</Text>
 	<Tracklist />
       </View>
     )

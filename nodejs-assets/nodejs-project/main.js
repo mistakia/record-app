@@ -1,25 +1,23 @@
 const rn_bridge = require('rn-bridge')
 const os = require('os')
 const path = require('path')
+const debug = require('debug')
+const Logger = require('logplease')
 const RecordNode = require('record-node')
+
+// Log Record / IPFS / OrbitDB
+const log = debug('main')
+debug.enable('main,record:*,jsipfs') //TODO: jsipfs not working?
+Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 process.on('uncaughtException', (err) => {
   console.log(err)
 })
 
-const repo = path.resolve(os.tmpdir(), './ipfs')
-console.log(repo)
+log(`Home Dir: ${os.homedir()}`)
 
 const nodeConfig = {
-  orbitPath: path.resolve(os.tmpdir(), './orbitdb'),
   ipfsConfig: {
-    repo: repo,
-    init: true,
-    pass: '2662d47e3d692fe8c2cdb70b907ebb12b216a9d9ca5110dd336d12e7bf86073b',
-    EXPERIMENTAL: {
-      pubsub: true
-    },
-
     config: {
       Addresses: {
 	Swarm: [
@@ -46,7 +44,7 @@ try {
   })
 
   node.on('ready', function() {
-    console.log('main.js: node ready')
+    log('RecordNode ready')
     rn_bridge.channel.send('ready')
   })
 
@@ -159,4 +157,4 @@ try {
  * }
  * */
 
-console.log('main.js initialized')
+log('initialized')

@@ -1,10 +1,9 @@
 import React, { Component } from 'react'
 import nodejs from 'nodejs-mobile-react-native'
 import { createSelector } from 'reselect'
-import { Route } from 'react-router-dom'
+import { Link, Route, Switch } from 'react-router-native'
 import { connect } from 'react-redux'
 import {
-  AppRegistry,
   AppState,
   StyleSheet,
   Text,
@@ -13,6 +12,8 @@ import {
 
 import { getOrbitId, dbActions } from '@core/db'
 import TracksPage from '@pages/tracks'
+import HomePage from '@pages/home'
+import ContactsPage from '@pages/contacts'
 
 export class App extends Component {
   constructor(props) {
@@ -53,7 +54,22 @@ export class App extends Component {
   render() {
     return (
       <View>
-	<Route exact path ='/' component={TracksPage} />
+	<View>
+	  <Link to='/'>
+	    <Text>Home</Text>
+	  </Link>
+	  <Link to='/tracks/me'>
+	    <Text>My Tracks</Text>
+	  </Link>
+	  <Link to='/contacts/me'>
+	    <Text>My Contacts</Text>
+	  </Link>
+	</View>
+	<Switch>
+	  <Route exact path='/' component={HomePage} />
+	  <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
+	  <Route path='/contacts/:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
+	</Switch>
       </View>
     )
   }
