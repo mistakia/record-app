@@ -4,6 +4,7 @@ import { createSelector } from 'reselect'
 
 import { tracklistActions } from '@core/tracklists'
 import Tracklist from '@components/Tracklist'
+import PageLayout from '@layouts/page'
 
 export class TracksPage extends React.Component {
   componentWillMount() {
@@ -13,11 +14,16 @@ export class TracksPage extends React.Component {
   }
 
   render() {
+    const head = (
+      <h1>Tracks Page</h1>
+    )
+
+    const body = (
+      <Tracklist />
+    )
+
     return (
-      <section>
-	<h1>Tracks Page</h1>
-	<Tracklist />
-      </section>
+      <PageLayout head={head} body={body} />
     )
   }
 }

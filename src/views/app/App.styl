@@ -1,0 +1,30 @@
+html
+    height 100%
+    width 100%
+    overflow hidden
+    text-size-adjust 100%
+    -webkit-font-smoothing: antialiased
+    -moz-osx-font-smoothing: grayscale
+    text-rendering: optimizeLegibility
+
+body
+    position relative
+    font-family "Helvetica Neue", "Helvetica", "Arial", sans-serif
+    font-size 14px
+    color $textColor
+    height 100%
+    width 100%
+    overflow hidden
+    background-color #f6f6f6
+
+main
+    absolute top right bottom left
+    height 100%
+    overflow hidden
+    padding-top 45px
+    padding-bottom 100px
+
+@media (min-width: $smallMin)
+    main
+        padding-left 15px
+        padding-right 15px    

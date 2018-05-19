@@ -8,6 +8,7 @@
 		"@pages": "./src/views/pages",
 		"@core": "./src/core",
 		"@components": "./src/views/components",
+		"@layouts": "./src/views/layouts",
 		"@config": "./config/"
 	    }
 	}]

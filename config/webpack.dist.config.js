@@ -8,6 +8,7 @@
 
 const webpack = require('webpack')
 const project = require('./project.config')
+const nib = require('nib')
 const path = require('path')
 
 module.exports = {
@@ -36,11 +37,21 @@ module.exports = {
       exclude: /node_modules/,
       loader: 'babel-loader'
     }, {
-      test: /\.css$/,
-      loader: 'style-loader!css-loader'
-    }, {
-      test: /\.sass/,
-      loader: 'style-loader!css-loader!sass-loader?outputStyle=expanded&indentedSyntax'
+      test: /\.(styl|css)$/,
+      use: [{
+	loader: 'style-loader'
+      }, {
+	loader: 'css-loader',
+      }, {
+	loader: 'stylus-loader',
+	options: {
+	  use: [nib()],
+	  import: [
+	    '~nib/lib/nib/index.styl',
+	    path.resolve(__dirname, '../src/styles/variables.styl')
+	  ]
+	}
+      }]
     }, {
       test: /\.(png|jpg)$/,
       loader: 'url-loader?limit=8192'

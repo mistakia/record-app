@@ -4,6 +4,7 @@
 
 'use strict';
 const path = require('path')
+const nib = require('nib')
 const webpack = require('webpack')
 const project = require('./project.config')
 
@@ -35,25 +36,28 @@ module.exports = {
     fs: 'empty',
     net: 'empty',
     tls: 'empty'
-  },  
+  },
   module: {
     rules: [{
       test: /\.js$/,
       exclude: /node_modules/,
       loader: 'babel-loader'
-    }, {      
-      test: /\.sass/,
+    }, {
+      test: /\.(styl|css)$/,
       use: [{
 	loader: 'style-loader'
       }, {
-	loader: 'css-loader'
+	loader: 'css-loader',
+      }, {
+	loader: 'stylus-loader',
+	options: {
+	  use: [nib()],
+	  import: [
+	    '~nib/lib/nib/index.styl',
+	    path.resolve(__dirname, '../src/styles/variables.styl')
+	  ]
+	}
       }]
-    }, {
-      test: /\.css$/,
-      use: [
-	'style-loader',
-	'css-loader'
-      ]
     }, {
       test: /\.(png|jpg)$/,
       loader: 'url-loader',

@@ -1,12 +1,15 @@
 import React from 'react'
-import { Route, Switch, Link } from 'react-router-dom'
+import { Route, Switch } from 'react-router-dom'
 import { connect } from 'react-redux'
 
+import Menu from '@components/Menu'
 import HomePage from '@pages/home'
 import TracksPage from '@pages/tracks'
 import ContactsPage from '@pages/contacts'
 import { dbActions } from '@core/db'
 
+import 'normalize.css'
+import './App.styl'
 
 export class App extends React.Component {
   componentWillMount() {
@@ -17,11 +20,7 @@ export class App extends React.Component {
     return (
       <div>
 	<main className="main">
-	  <ul>
-	    <li><Link to='/'>Home</Link></li>
-	    <li><Link to='/tracks/me'>My Tracks</Link></li>
-	    <li><Link to='/contacts/me'>My Contacts</Link></li>
-	  </ul>
+	  <Menu />
 	  <Switch>
 	    <Route exact path='/' component={HomePage} />
 	    <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />

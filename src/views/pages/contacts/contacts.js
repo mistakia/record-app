@@ -4,6 +4,7 @@ import { createSelector } from 'reselect'
 
 import { contactlistActions } from '@core/contactlists'
 import Contactlist from '@components/Contactlist'
+import PageLayout from '@layouts/page'
 
 export class ContactsPage extends React.Component {
   componentWillMount() {
@@ -13,11 +14,16 @@ export class ContactsPage extends React.Component {
   }
 
   render() {
+    const head = (
+      <h1>Contacts Page</h1>
+    )
+
+    const body = (
+      <Contactlist />
+    )
+
     return (
-      <section>
-	<h1>Contacts Page</h1>
-	<Contactlist />
-      </section>
+      <PageLayout head={head} body={body} />
     )
   }
 }
