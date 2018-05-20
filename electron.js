@@ -14,7 +14,8 @@ debug.enable('jsipfs:*,record:*')
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
 process.on('uncaughtException', (err) => {
-  logger.error(err)
+  console.log(err)
+  process.exit()
 })
 
 // Module to control application life.
@@ -38,10 +39,10 @@ let mainWindow
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    minWidth: 300,
+    minWidth: 600,
     minHeight: 475,
-    maxWidth: 800,
-    maxHeight: 600
+    maxWidth: 1000,
+    maxHeight: 800
   })
 
   const indexUrl = config.globals.__DEV__
@@ -78,12 +79,23 @@ app.on('ready', () => {
     .catch((err) => logger.error('An error occurred: ', err));
 
 
-  const node = new RecordNode()
+  try {
+    const node = new RecordNode()
 
-  node.on('ready', function() {
-    logger.info('Record Node running.')
-    createWindow()
-  })
+    node.on('error', (err) => {
+      logger.error(`Node error: ${err.toString()}`)
+      console.log(err)
+    })
+
+    node.on('ready', () => {
+      logger.info('Record Node running.')
+      createWindow()
+    })
+
+  } catch (err) {
+    logger.error(`Error starting node: ${err.toString()}`)
+    console.log(err)
+  }
  
   // Pass log messages to the renderer process
   Logger.events.on('data', logToRenderer)

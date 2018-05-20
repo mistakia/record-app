@@ -16,33 +16,58 @@ export class HomePage extends React.Component {
     const subs = Object.keys(info.subs).map((id, index) => {
       const subPeers = info.subs[id]
       return (
-        <div key={index}>
-          <p>{id}</p>
-          <p>Sub Peers: {subPeers.length}</p>
-          <p>{subPeers}</p>
-        </div>
+        <tr key={index}>
+          <td>{id}</td>
+          <td>{subPeers.length}</td>
+        </tr>
       )
     })
 
     const peers = info.peers.map((peer, index) => {
       return (
-        <div key={index}>
-          <p>{peer.id}</p>
-          <p>{peer.address}</p>
-        </div>
+        <tr key={index}>
+          <td>{index + 1}</td>
+          <td>{peer.address}</td>
+        </tr>
       )
     })
 
     const body = (
       <div>
-        <h5>ID: {info.ipfs.id}</h5>
-        <p>{info.ipfs.publicKey}</p>
-        <p>{info.ipfs.agentVersion}</p>
-        <p>{info.ipfs.protocolVersion}</p>
-        <p>Subs: {subs.length}</p>
-        <div>{subs}</div>
-        <p>Peers: {peers.length}</p>
-        <div>{peers}</div>
+        <label>Orbit DB Address</label>
+        <pre>{info.orbitdb.address}</pre>
+        <label>Orbit DB Public Key</label>
+        <pre>{info.orbitdb.publicKey}</pre>
+        <label>IPFS ID</label>
+        <pre>{info.ipfs.id}</pre>
+        <label>IPFS Public Key</label>
+        <pre>{info.ipfs.publicKey}</pre>
+        <label>IPFS Agent Version</label>
+        <pre>{info.ipfs.agentVersion}</pre>
+        <label>IPFS Protocol Version</label>
+        <pre>{info.ipfs.protocolVersion}</pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Sub</th>
+              <th>Peers</th>
+            </tr>
+          </thead>
+          <tbody>
+            {subs}
+          </tbody>
+        </table>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>IPFS Peer</th>
+            </tr>
+          </thead>
+          <tbody>
+            {peers}
+          </tbody>
+        </table>
       </div>
     )
 
