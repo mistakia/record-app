@@ -33,7 +33,6 @@ export const tracklistActions = {
   })
 }
 
-
 export const tracklistRequestActions = {
   failed: tracklistActions.fetchTracksFailed,
   fulfilled: tracklistActions.fetchTracksFulfilled,

@@ -1,7 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
-import { View, Text } from 'react-native'
+import { View } from 'react-native'
 
 import {
   getCurrentContactlist,
@@ -11,24 +11,24 @@ import LoadingIndicator from '@components/LoadingIndicator'
 import Contact from '@components/Contact'
 
 class Contactlist extends React.Component {
-  render() {
+  render () {
     const { contacts } = this.props
 
     const contactItems = contacts.map((contact, index) => {
       return (
-	<View>
-	  <Contact contact={contact} />
-	</View>
+        <View>
+          <Contact contact={contact} />
+        </View>
       )
     })
 
     return (
       <View>
-	{contactItems}
+        {contactItems}
 
-	<View>
-	  {(this.props.displayLoadingIndicator) ? <LoadingIndicator /> : null}	  
-	</View>
+        <View>
+          {(this.props.displayLoadingIndicator) ? <LoadingIndicator /> : null}
+        </View>
       </View>
     )
   }

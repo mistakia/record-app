@@ -6,7 +6,6 @@ import { infoReducer } from './info'
 import { tracklistsReducer } from './tracklists'
 import { tracksReducer } from './tracks'
 
-
 const rootReducer = asyncReducers => {
   return combineReducers({
     contacts: contactsReducer,

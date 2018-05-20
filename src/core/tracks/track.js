@@ -7,7 +7,7 @@ export const Track = new Record({
   stream_url: null
 })
 
-export function createTrack(data) {
+export function createTrack (data) {
   return new Track({
     id: data._id,
     title: data.content.title,

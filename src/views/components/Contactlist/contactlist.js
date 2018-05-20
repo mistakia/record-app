@@ -10,24 +10,24 @@ import LoadingIndicator from '@components/LoadingIndicator'
 import Contact from '@components/Contact'
 
 class Contactlist extends React.Component {
-  render() {
+  render () {
     const { contacts } = this.props
 
     const contactItems = contacts.map((contact, index) => {
       return (
-	<div key={index}>
-	  <Contact contact={contact} />
-	</div>
+        <div key={index}>
+          <Contact contact={contact} />
+        </div>
       )
     })
 
     return (
       <div>
-	{contactItems}
+        {contactItems}
 
-	<div>
-	  { this.props.displayLoadingIndicator ? <LoadingIndicator /> : null}
-	</div>
+        <div>
+          { this.props.displayLoadingIndicator ? <LoadingIndicator /> : null}
+        </div>
       </div>
     )
   }

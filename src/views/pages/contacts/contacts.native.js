@@ -1,23 +1,22 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
 import { Text, View } from 'react-native'
 
 import { contactlistActions } from '@core/contactlists'
 import Contactlist from '@components/Contactlist'
 
 export class ContactsPage extends React.Component {
-  componentWillMount() {
+  componentWillMount () {
     // '/me' or proper orbitdb adadress
     const { logId } = this.props.match.params
-    this.props.loadContacts(logId)    
+    this.props.loadContacts(logId)
   }
 
-  render() {
+  render () {
     return (
       <View>
-	<Text>Contacts Page</Text>
-	<Contactlist />
+        <Text>Contacts Page</Text>
+        <Contactlist />
       </View>
     )
   }

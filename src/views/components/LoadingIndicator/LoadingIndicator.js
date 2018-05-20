@@ -1,9 +1,7 @@
 import React from 'react'
 
-class LoadingIndicator extends React.Component {
-  render = () => (
-    <div>Loading</div>
-  )
-}
+const LoadingIndicator = () => (
+  <div>Loading</div>
+)
 
 export default LoadingIndicator

@@ -1,19 +1,18 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
 
 import { contactlistActions } from '@core/contactlists'
 import Contactlist from '@components/Contactlist'
 import PageLayout from '@layouts/page'
 
 export class ContactsPage extends React.Component {
-  componentWillMount() {
+  componentWillMount () {
     // '/me' or proper orbitdb adadress
     const { logId } = this.props.match.params
     this.props.loadContacts(logId)
   }
 
-  render() {
+  render () {
     const head = (
       <h1>Contacts</h1>
     )

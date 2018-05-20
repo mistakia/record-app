@@ -1,31 +1,31 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
-import { View, Text } from 'react-native'
+import { View } from 'react-native'
 
 import { getCurrentTracklist, getTracksForCurrentTracklist } from '@core/tracklists'
 import LoadingIndicator from '@components/LoadingIndicator'
 import Track from '@components/Track'
 
 class Tracklist extends React.Component {
-  render() {
+  render () {
     const { tracks } = this.props
 
     const trackItems = tracks.map((track, index) => {
       return (
-	<View>
-	  <Track track={track} />
-	</View>
+        <View>
+          <Track track={track} />
+        </View>
       )
     })
 
     return (
       <View>
-	{trackItems}
+        {trackItems}
 
-	<View>
-	  {(this.props.displayLoadingIndicator) ? <LoadingIndicator /> : null}	  
-	</View>
+        <View>
+          {(this.props.displayLoadingIndicator) ? <LoadingIndicator /> : null}
+        </View>
       </View>
     )
   }

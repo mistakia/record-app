@@ -6,7 +6,7 @@ export const Contact = new Record({
   alias: null
 })
 
-export function createContact(data) {
+export function createContact (data) {
   return new Contact({
     id: data._id,
     address: data.content.address,

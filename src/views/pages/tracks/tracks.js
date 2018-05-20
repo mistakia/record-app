@@ -1,19 +1,18 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
 
 import { tracklistActions } from '@core/tracklists'
 import Tracklist from '@components/Tracklist'
 import PageLayout from '@layouts/page'
 
 export class TracksPage extends React.Component {
-  componentWillMount() {
+  componentWillMount () {
     // '/me' or proper orbitdb address
     const { logId } = this.props.match.params
     this.props.loadTracks(logId)
   }
 
-  render() {
+  render () {
     const head = (
       <h1>Tracks</h1>
     )

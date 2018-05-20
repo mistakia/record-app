@@ -1,22 +1,24 @@
+/* global fetch */
+
 export const api = {
-  fetch(path) {
+  fetch (path) {
     const url = `http://localhost:3000/${path}`
     return dispatch({url})
   },
-  fetchContacts(logId) {
+  fetchContacts (logId) {
     const url = `http://localhost:3000/logs/contacts/${logId}`
     return dispatch({url})
   },
-  fetchInfo() {
+  fetchInfo () {
     const url = 'http://localhost:3000/info'
     return dispatch({url})
   },
-  fetchTracks(logId) {
-    const url =`http://localhost:3000/logs/tracks/${logId}`
+  fetchTracks (logId) {
+    const url = `http://localhost:3000/logs/tracks/${logId}`
     return dispatch({url})
   }
 }
 
-export function dispatch(options) {
+export function dispatch (options) {
   return fetch(options.url).then(response => response.json())
 }

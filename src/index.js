@@ -1,7 +1,8 @@
+/* global __DEV__ */
+
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { AppContainer } from 'react-hot-loader'
-import { browserHistory } from 'react-router'
 
 import Root from '@views/root'
 
@@ -10,7 +11,7 @@ const rootElement = document.getElementById('root')
 let render = () => {
   ReactDOM.render(
     <AppContainer>
-      <Root/>
+      <Root />
     </AppContainer>,
     rootElement
   )
@@ -41,10 +42,10 @@ if (__DEV__) {
     module.hot.accept('./views/root', () => {
       const NextApp = require('./views/root').default
       ReactDOM.render(
-	<AppContainer>
-	  <NextApp/>
-	</AppContainer>,
-	rootElement
+        <AppContainer>
+          <NextApp />
+        </AppContainer>,
+        rootElement
       )
     })
   }

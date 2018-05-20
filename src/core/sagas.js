@@ -4,8 +4,7 @@ import { contactlistSagas } from './contactlists'
 import { infoSagas } from './info'
 import { tracklistSagas } from './tracklists'
 
-
-export default function* rootSaga() {
+export default function * rootSaga () {
   yield all([
     ...contactlistSagas,
     ...infoSagas,

@@ -5,7 +5,7 @@ import { contactlistRequestActions } from '@core/contactlists'
 import { infoRequestActions } from '@core/info'
 import { tracklistRequestActions } from '@core/tracklists'
 
-function* fetchAPI(apiFunction, actions, id, param) {
+function * fetchAPI (apiFunction, actions, id, param) {
   try {
     yield put(actions.pending(id))
     const data = yield call(apiFunction, param || id)

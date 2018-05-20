@@ -4,15 +4,14 @@ import { Link } from 'react-router-dom'
 import './menu.styl'
 
 class Menu extends React.Component {
-  render() {
-
+  render () {
     return (
       <div id='menu'>
-	<ul>
-	  <li><Link to='/'>Home</Link></li>
-	  <li><Link to='/tracks/me'>Tracks</Link></li>
-	  <li><Link to='/contacts/me'>Contacts</Link></li>
-	</ul>
+        <ul>
+          <li><Link to='/'>Home</Link></li>
+          <li><Link to='/tracks/me'>Tracks</Link></li>
+          <li><Link to='/contacts/me'>Contacts</Link></li>
+        </ul>
       </div>
     )
   }

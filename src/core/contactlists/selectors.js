@@ -2,11 +2,11 @@ import { createSelector } from 'reselect'
 
 import { getContacts } from '@core/contacts'
 
-export function getContactlists(state) {
+export function getContactlists (state) {
   return state.get('contactlists')
 }
 
-export function getCurrentContactlist(state) {
+export function getCurrentContactlist (state) {
   let contactlists = getContactlists(state)
   return contactlists.get(contactlists.get('currentContactlistId'))
 }

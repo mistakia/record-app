@@ -1,11 +1,9 @@
 import React, { Component } from 'react'
 import nodejs from 'nodejs-mobile-react-native'
-import { createSelector } from 'reselect'
 import { Link, Route, Switch } from 'react-router-native'
 import { connect } from 'react-redux'
 import {
   AppState,
-  StyleSheet,
   Text,
   View
 } from 'react-native'
@@ -16,18 +14,13 @@ import HomePage from '@pages/home'
 import ContactsPage from '@pages/contacts'
 
 export class App extends Component {
-  constructor(props) {
-    super(props)
-  }
-
-  componentWillMount() {
+  componentWillMount () {
     const self = this
 
     nodejs.start('main.js')
-    this.listenerRef = ((msg) => {
-      if (msg === 'ready')
-	self.props.init()
-    })
+    this.listenerRef = (msg) => {
+      if (msg === 'ready') { self.props.init() }
+    }
     nodejs.channel.addListener(
       'message',
       this.listenerRef,
@@ -35,64 +28,44 @@ export class App extends Component {
     )
   }
 
-  componentWillUnmount() {
-    if (this.listenerRef)
-      nodejs.channel.removeListener('message', this.listenerRef)
+  componentWillUnmount () {
+    if (this.listenerRef) { nodejs.channel.removeListener('message', this.listenerRef) }
   }
 
-  componentDidMount() {
+  componentDidMount () {
     AppState.addEventListener('change', (state) => {
       if (state === 'active') {
-	nodejs.channel.send('resume')
+        nodejs.channel.send('resume')
       }
       if (state === 'background') {
-	nodejs.channel.send('suspend')
+        nodejs.channel.send('suspend')
       }
     })
   }
 
-  render() {
+  render () {
     return (
       <View>
-	<View>
-	  <Link to='/'>
-	    <Text>Home</Text>
-	  </Link>
-	  <Link to='/tracks/me'>
-	    <Text>My Tracks</Text>
-	  </Link>
-	  <Link to='/contacts/me'>
-	    <Text>My Contacts</Text>
-	  </Link>
-	</View>
-	<Switch>
-	  <Route exact path='/' component={HomePage} />
-	  <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
-	  <Route path='/contacts/:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
-	</Switch>
+        <View>
+          <Link to='/'>
+            <Text>Home</Text>
+          </Link>
+          <Link to='/tracks/me'>
+            <Text>My Tracks</Text>
+          </Link>
+          <Link to='/contacts/me'>
+            <Text>My Contacts</Text>
+          </Link>
+        </View>
+        <Switch>
+          <Route exact path='/' component={HomePage} />
+          <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
+          <Route path='/contacts/:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
+        </Switch>
       </View>
     )
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-})
 
 const mapDispatchToProps = {
   init: infoActions.init

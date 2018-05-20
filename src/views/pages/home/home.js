@@ -6,7 +6,7 @@ import { getInfo } from '@core/info'
 import PageLayout from '@layouts/page'
 
 export class HomePage extends React.Component {
-  render() {
+  render () {
     const { info } = this.props
 
     const head = (
@@ -16,33 +16,33 @@ export class HomePage extends React.Component {
     const subs = Object.keys(info.subs).map((id, index) => {
       const subPeers = info.subs[id]
       return (
-	<div key={index}>
-	  <p>{id}</p>
-	  <p>Sub Peers: {subPeers.length}</p>
-	  <p>{subPeers}</p>
-	</div>
+        <div key={index}>
+          <p>{id}</p>
+          <p>Sub Peers: {subPeers.length}</p>
+          <p>{subPeers}</p>
+        </div>
       )
     })
 
     const peers = info.peers.map((peer, index) => {
       return (
-	<div key={index}>
-	  <p>{peer.id}</p>
-	  <p>{peer.address}</p>
-	</div>
+        <div key={index}>
+          <p>{peer.id}</p>
+          <p>{peer.address}</p>
+        </div>
       )
     })
 
     const body = (
       <div>
-	<h5>ID: {info.ipfs.id}</h5>
-	<p>{info.ipfs.publicKey}</p>
-	<p>{info.ipfs.agentVersion}</p>
-	<p>{info.ipfs.protocolVersion}</p>
-	<p>Subs: {subs.length}</p>
-	<p>{subs}</p>
-	<p>Peers: {peers.length}</p>
-	<p>{peers}</p>
+        <h5>ID: {info.ipfs.id}</h5>
+        <p>{info.ipfs.publicKey}</p>
+        <p>{info.ipfs.agentVersion}</p>
+        <p>{info.ipfs.protocolVersion}</p>
+        <p>Subs: {subs.length}</p>
+        <div>{subs}</div>
+        <p>Peers: {peers.length}</p>
+        <div>{peers}</div>
       </div>
     )
 

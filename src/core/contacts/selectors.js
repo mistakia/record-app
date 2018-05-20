@@ -1,7 +1,7 @@
-export function getContacts(state) {
+export function getContacts (state) {
   return state.get('contacts')
 }
 
-export function getContactById(state, contactId) {
+export function getContactById (state, contactId) {
   return getContacts(state).get(contactId)
 }

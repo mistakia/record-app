@@ -14,21 +14,21 @@ import '@styles/general.styl'
 import './App.styl'
 
 export class App extends React.Component {
-  componentWillMount() {
+  componentWillMount () {
     this.props.init()
   }
 
-  render() {
+  render () {
     return (
       <div>
-	<main className="main scroll">
-	  <Menu />
-	  <Switch>
-	    <Route exact path='/' component={HomePage} />
-	    <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
-	    <Route path='/contacts/:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
-	  </Switch>
-	</main>
+        <main className='main scroll'>
+          <Menu />
+          <Switch>
+            <Route exact path='/' component={HomePage} />
+            <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
+            <Route path='/contacts/:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
+          </Switch>
+        </main>
       </div>
     )
   }

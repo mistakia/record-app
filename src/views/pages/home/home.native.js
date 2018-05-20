@@ -7,18 +7,14 @@ import {
   View
 } from 'react-native'
 
-import { getInfo, infoActions } from '@core/info'
+import { getInfo } from '@core/info'
 
 export class HomePage extends Component {
-  constructor(props) {
-    super(props)
-  }
-
-  render() {
+  render () {
     const { info } = this.props
     return (
       <View>
-	<Text style={styles.welcome}>ID: {info.ipfs.id}</Text>
+        <Text style={styles.welcome}>ID: {info.ipfs.id}</Text>
       </View>
     )
   }
@@ -29,18 +25,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#F5FCFF'
   },
   welcome: {
     fontSize: 20,
     textAlign: 'center',
-    margin: 20,
+    margin: 20
   },
   instructions: {
     textAlign: 'center',
     color: '#333333',
-    marginBottom: 5,
-  },
+    marginBottom: 5
+  }
 })
 
 const mapStateToProps = createSelector(

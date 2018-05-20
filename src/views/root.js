@@ -16,7 +16,7 @@ const ConnectedApp = withRouter(App)
 const Root = () => (
   <Provider store={store}>
     <ConnectedRouter history={history}>
-      <ConnectedApp/>
+      <ConnectedApp />
     </ConnectedRouter>
   </Provider>
 )

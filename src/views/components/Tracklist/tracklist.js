@@ -7,24 +7,24 @@ import LoadingIndicator from '@components/LoadingIndicator'
 import Track from '@components/Track'
 
 class Tracklist extends React.Component {
-  render() {
+  render () {
     const { tracks } = this.props
 
     const trackItems = tracks.map((track, index) => {
       return (
-	<div key={index}>
-	  <Track track={track} />
-	</div>
+        <div key={index}>
+          <Track track={track} />
+        </div>
       )
     })
 
     return (
       <div>
-	{trackItems}
+        {trackItems}
 
-	<div>
-	  {(this.props.displayLoadingIndicator) ? <LoadingIndicator /> : null}
-	</div>
+        <div>
+          {(this.props.displayLoadingIndicator) ? <LoadingIndicator /> : null}
+        </div>
       </div>
     )
   }
