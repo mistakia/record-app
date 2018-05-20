@@ -7,8 +7,8 @@ export const api = {
     const url = `http://localhost:3000/logs/contacts/${logId}`
     return dispatch({url})
   },
-  fetchInit() {
-    const url = 'http://localhost:3000/'
+  fetchInfo() {
+    const url = 'http://localhost:3000/info'
     return dispatch({url})
   },
   fetchTracks(logId) {

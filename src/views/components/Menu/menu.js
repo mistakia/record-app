@@ -10,8 +10,8 @@ class Menu extends React.Component {
       <div id='menu'>
 	<ul>
 	  <li><Link to='/'>Home</Link></li>
-	  <li><Link to='/tracks/me'>My Tracks</Link></li>
-	  <li><Link to='/contacts/me'>My Contacts</Link></li>
+	  <li><Link to='/tracks/me'>Tracks</Link></li>
+	  <li><Link to='/contacts/me'>Contacts</Link></li>
 	</ul>
       </div>
     )

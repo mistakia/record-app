@@ -15,7 +15,7 @@ export class ContactsPage extends React.Component {
 
   render() {
     const head = (
-      <h1>Contacts Page</h1>
+      <h1>Contacts</h1>
     )
 
     const body = (

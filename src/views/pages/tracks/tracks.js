@@ -15,7 +15,7 @@ export class TracksPage extends React.Component {
 
   render() {
     const head = (
-      <h1>Tracks Page</h1>
+      <h1>Tracks</h1>
     )
 
     const body = (

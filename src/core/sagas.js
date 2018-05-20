@@ -1,14 +1,14 @@
 import { all } from 'redux-saga/effects'
 
 import { contactlistSagas } from './contactlists'
-import { dbSagas } from './db'
+import { infoSagas } from './info'
 import { tracklistSagas } from './tracklists'
 
 
 export default function* rootSaga() {
   yield all([
     ...contactlistSagas,
-    ...dbSagas,
+    ...infoSagas,
     ...tracklistSagas
   ])
 }

@@ -1,5 +1,5 @@
 export {
   fetchContacts,
-  fetchInit,
+  fetchInfo,
   fetchTracks
 } from './sagas'

@@ -10,7 +10,7 @@ import {
   View
 } from 'react-native'
 
-import { getOrbitId, dbActions } from '@core/db'
+import { infoActions } from '@core/info'
 import TracksPage from '@pages/tracks'
 import HomePage from '@pages/home'
 import ContactsPage from '@pages/contacts'
@@ -94,16 +94,11 @@ const styles = StyleSheet.create({
   },
 })
 
-const mapStateToProps = createSelector(
-  getOrbitId,
-  (orbitId) => ({orbitId})
-)
-
 const mapDispatchToProps = {
-  init: dbActions.init
+  init: infoActions.init
 }
 
 export default connect(
-  mapStateToProps,
+  null,
   mapDispatchToProps
 )(App)

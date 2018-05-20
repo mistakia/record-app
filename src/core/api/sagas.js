@@ -1,8 +1,8 @@
 import { call, put } from 'redux-saga/effects'
 import { api } from '@core/api/service'
 
-import { initRequestActions } from '@core/db/actions'
 import { contactlistRequestActions } from '@core/contactlists'
+import { infoRequestActions } from '@core/info'
 import { tracklistRequestActions } from '@core/tracklists'
 
 function* fetchAPI(apiFunction, actions, id, param) {
@@ -16,5 +16,5 @@ function* fetchAPI(apiFunction, actions, id, param) {
 }
 
 export const fetchContacts = fetchAPI.bind(null, api.fetchContacts, contactlistRequestActions)
-export const fetchInit = fetchAPI.bind(null, api.fetchInit, initRequestActions)
+export const fetchInfo = fetchAPI.bind(null, api.fetchInfo, infoRequestActions)
 export const fetchTracks = fetchAPI.bind(null, api.fetchTracks, tracklistRequestActions)

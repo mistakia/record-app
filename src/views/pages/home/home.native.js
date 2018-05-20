@@ -7,7 +7,7 @@ import {
   View
 } from 'react-native'
 
-import { getOrbitId, dbActions } from '@core/db'
+import { getInfo, infoActions } from '@core/info'
 
 export class HomePage extends Component {
   constructor(props) {
@@ -15,10 +15,10 @@ export class HomePage extends Component {
   }
 
   render() {
-    const { orbitId } = this.props
+    const { info } = this.props
     return (
       <View>
-	<Text style={styles.welcome}>ORBIT ID: {orbitId}</Text>
+	<Text style={styles.welcome}>ID: {info.ipfs.id}</Text>
       </View>
     )
   }
@@ -44,8 +44,8 @@ const styles = StyleSheet.create({
 })
 
 const mapStateToProps = createSelector(
-  getOrbitId,
-  (orbitId) => ({orbitId})
+  getInfo,
+  (info) => ({info})
 )
 
 export default connect(

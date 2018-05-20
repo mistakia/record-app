@@ -6,9 +6,11 @@ import Menu from '@components/Menu'
 import HomePage from '@pages/home'
 import TracksPage from '@pages/tracks'
 import ContactsPage from '@pages/contacts'
-import { dbActions } from '@core/db'
+import { infoActions } from '@core/info'
 
 import 'normalize.css'
+import '@styles/normalize.css'
+import '@styles/general.styl'
 import './App.styl'
 
 export class App extends React.Component {
@@ -19,7 +21,7 @@ export class App extends React.Component {
   render() {
     return (
       <div>
-	<main className="main">
+	<main className="main scroll">
 	  <Menu />
 	  <Switch>
 	    <Route exact path='/' component={HomePage} />
@@ -33,7 +35,7 @@ export class App extends React.Component {
 }
 
 const mapDispatchToProps = {
-  init: dbActions.init
+  init: infoActions.init
 }
 
 export default connect(
