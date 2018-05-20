@@ -41,7 +41,6 @@
   "dependencies": {
     "babel-polyfill": "^6.23.0",
     "debug": "^3.1.0",
-    "fbjs": "^0.6.0",
     "grunt": "^1.0.1",
     "history": "^4.6.1",
     "immutable": "^3.8.2",

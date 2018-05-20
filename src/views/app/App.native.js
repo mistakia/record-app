@@ -15,11 +15,9 @@ import ContactsPage from '@pages/contacts'
 
 export class App extends Component {
   componentWillMount () {
-    const self = this
-
     nodejs.start('main.js')
     this.listenerRef = (msg) => {
-      if (msg === 'ready') { self.props.init() }
+      if (msg === 'ready') { this.props.init() }
     }
     nodejs.channel.addListener(
       'message',
