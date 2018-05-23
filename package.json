@@ -17,6 +17,7 @@
   "mainOutput": "main",
   "main": "index.desktop.html",
   "scripts": {
+    "install": "(cd nodejs-assets/nodejs-project && npm install)",
     "clean": "rm -rf $TMPDIR/react-* && watchman watch-del-all && npm cache clean --force",
     "start": "REACT_DEBUGGER=\"open -g 'rndebugger://set-debugger-loc?port=8081' ||\" node node_modules/react-native/local-cli/cli.js start --reset-cache",
     "lint": "./node_modules/.bin/standard 'src/**/*.js' && ./node_modules/.bin/standard 'nodejs-assets/nodejs-project/main.js'",
