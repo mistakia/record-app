@@ -2,14 +2,12 @@ import React, { Component } from 'react'
 import nodejs from 'nodejs-mobile-react-native'
 import { Route, Switch } from 'react-router-native'
 import { connect } from 'react-redux'
+import RNFS from 'react-native-fs'
 import {
   AppState,
   StyleSheet,
-  Text,
   View
 } from 'react-native'
-
-const  RNFS = require('react-native-fs')
 
 import Menu from '@components/Menu'
 import { infoActions } from '@core/info'

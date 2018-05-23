@@ -1,9 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import {
-  Text,
-  View
-} from 'react-native'
+import { Text } from 'react-native'
 
 import { tracklistActions } from '@core/tracklists'
 import Tracklist from '@components/Tracklist'
@@ -22,7 +19,7 @@ export class TracksPage extends React.Component {
     )
 
     const body = (
-        <Tracklist />
+      <Tracklist />
     )
 
     return (

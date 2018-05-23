@@ -8,8 +8,7 @@ import {
 } from 'react-native'
 
 import PageLayout from '@layouts/page'
-import { getInfo } from '@core/info'
-import { infoActions } from '@core/info'
+import { getInfo, infoActions } from '@core/info'
 
 export class HomePage extends Component {
   componentWillMount () {
@@ -24,9 +23,7 @@ export class HomePage extends Component {
     )
 
     const body = (
-      <View style={{
-              margin: 5
-            }}>
+      <View style={{margin: 5}}>
         <Text style={styles.label}>Orbit DB Address</Text>
         <View style={styles.container}>
           <Text style={styles.pre}>{info.orbitdb.address}</Text>
