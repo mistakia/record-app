@@ -9,7 +9,7 @@ import rootReducer from './reducers'
 const sagaMiddleware = createSagaMiddleware()
 
 export default (initialState = {}, history) => {
-  const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose  
+  const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
 
   // ======================================================
   // Middleware Configuration
@@ -17,7 +17,7 @@ export default (initialState = {}, history) => {
   const middlewares = [
     sagaMiddleware,
     routerMiddleware(history)
-  ]  
+  ]
 
   // ======================================================
   // Store Enhancers
@@ -42,11 +42,9 @@ export default (initialState = {}, history) => {
   if (module.hot) {
     // Enable webpack hot module replacement for reducers
     module.hot.accept('./reducers', () => {
-      import('./reducers').then(reducerModule => {
-        const createReducers = reducerModule.default
-        const nextReducers = createReducers(store.asyncReducers)
-        store.replaceReducer(nextReducers)
-      })
+      const createReducers = require('./reducers').default
+      const nextReducers = createReducers(store.asyncReducers)
+      store.replaceReducer(nextReducers)
     })
   }
 
