@@ -9,7 +9,7 @@ debug.useColors = () => false // disable colors in log (fixes xcode issue)
 
 // Log Record / IPFS / OrbitDB
 const log = debug('main')
-debug.enable('*') // main,record:*,jsipfs')
+debug.enable('main,record:*,jsipfs')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 process.on('uncaughtException', (err) => {
@@ -18,7 +18,15 @@ process.on('uncaughtException', (err) => {
 
 log('starting')
 
+let started = false
+
 rnBridge.channel.on('message', (msg) => {
+
+  if (started)
+    return
+
+  started = true
+
   const docsDir = msg
   const recorddir = path.resolve(docsDir, './record')
 

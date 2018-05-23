@@ -9,8 +9,13 @@ import {
 
 import PageLayout from '@layouts/page'
 import { getInfo } from '@core/info'
+import { infoActions } from '@core/info'
 
 export class HomePage extends Component {
+  componentWillMount () {
+    this.props.init()
+  }
+
   render () {
     const { info } = this.props
 
@@ -77,6 +82,11 @@ const mapStateToProps = createSelector(
   (info) => ({info})
 )
 
+const mapDispatchToProps = {
+  init: infoActions.init
+}
+
 export default connect(
-  mapStateToProps
+  mapStateToProps,
+  mapDispatchToProps
 )(HomePage)
