@@ -7,6 +7,7 @@ import {
 
 import { tracklistActions } from '@core/tracklists'
 import Tracklist from '@components/Tracklist'
+import PageLayout from '@layouts/page'
 
 export class TracksPage extends React.Component {
   componentWillMount () {
@@ -16,11 +17,16 @@ export class TracksPage extends React.Component {
   }
 
   render () {
-    return (
-      <View>
-        <Text>Tracks Page</Text>
+    const head = (
+      <Text>Tracks</Text>
+    )
+
+    const body = (
         <Tracklist />
-      </View>
+    )
+
+    return (
+      <PageLayout head={head} body={body} />
     )
   }
 }

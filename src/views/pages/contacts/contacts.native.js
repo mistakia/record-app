@@ -4,6 +4,7 @@ import { Text, View } from 'react-native'
 
 import { contactlistActions } from '@core/contactlists'
 import Contactlist from '@components/Contactlist'
+import PageLayout from '@layouts/page'
 
 export class ContactsPage extends React.Component {
   componentWillMount () {
@@ -13,11 +14,16 @@ export class ContactsPage extends React.Component {
   }
 
   render () {
+    const head = (
+      <Text>Contacts</Text>
+    )
+
+    const body = (
+      <Contactlist />
+    )
+
     return (
-      <View>
-        <Text>Contacts Page</Text>
-        <Contactlist />
-      </View>
+      <PageLayout head={head} body={body} />
     )
   }
 }

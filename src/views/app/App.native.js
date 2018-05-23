@@ -1,13 +1,15 @@
 import React, { Component } from 'react'
 import nodejs from 'nodejs-mobile-react-native'
-import { Link, Route, Switch } from 'react-router-native'
+import { Route, Switch } from 'react-router-native'
 import { connect } from 'react-redux'
 import {
   AppState,
+  StyleSheet,
   Text,
   View
 } from 'react-native'
 
+import Menu from '@components/Menu'
 import { infoActions } from '@core/info'
 import TracksPage from '@pages/tracks'
 import HomePage from '@pages/home'
@@ -33,28 +35,18 @@ export class App extends Component {
   componentDidMount () {
     AppState.addEventListener('change', (state) => {
       if (state === 'active') {
-        nodejs.channel.send('resume')
+        // nodejs.channel.send('resume')
       }
       if (state === 'background') {
-        nodejs.channel.send('suspend')
+        // nodejs.channel.send('suspend')
       }
     })
   }
 
   render () {
     return (
-      <View>
-        <View>
-          <Link to='/'>
-            <Text>Home</Text>
-          </Link>
-          <Link to='/tracks/me'>
-            <Text>My Tracks</Text>
-          </Link>
-          <Link to='/contacts/me'>
-            <Text>My Contacts</Text>
-          </Link>
-        </View>
+      <View style={styles.appContainer}>
+        <Menu />
         <Switch>
           <Route exact path='/' component={HomePage} />
           <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
@@ -64,6 +56,14 @@ export class App extends Component {
     )
   }
 }
+
+const styles = StyleSheet.create({
+  appContainer: {
+    ...StyleSheet.absoluteFillObject,
+    top: 20,
+    backgroundColor: '#f6f6f6'
+  }
+})
 
 const mapDispatchToProps = {
   init: infoActions.init
