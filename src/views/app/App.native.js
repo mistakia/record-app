@@ -9,6 +9,8 @@ import {
   View
 } from 'react-native'
 
+const  RNFS = require('react-native-fs')
+
 import Menu from '@components/Menu'
 import { infoActions } from '@core/info'
 import TracksPage from '@pages/tracks'
@@ -18,6 +20,8 @@ import ContactsPage from '@pages/contacts'
 export class App extends Component {
   componentWillMount () {
     nodejs.start('main.js')
+    nodejs.channel.send(RNFS.DocumentDirectoryPath)
+
     this.listenerRef = (msg) => {
       if (msg === 'ready') { this.props.init() }
     }

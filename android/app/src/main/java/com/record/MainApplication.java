@@ -3,8 +3,7 @@ package com.record;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.janeasystems.rn_nodejs_mobile.RNNodeJsMobilePackage;
-import com.janeasystems.rn_nodejs_mobile.RNNodeJsMobilePackage;
+import com.rnfs.RNFSPackage;
 import com.janeasystems.rn_nodejs_mobile.RNNodeJsMobilePackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -26,8 +25,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new RNNodeJsMobilePackage(),
-            new RNNodeJsMobilePackage(),
+            new RNFSPackage(),
             new RNNodeJsMobilePackage()
       );
     }

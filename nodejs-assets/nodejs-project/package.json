@@ -1,0 +1,14 @@
+{
+  "name": "record-nodejs-react-native",
+  "version": "0.0.1",
+  "description": "node part of the project",
+  "main": "main.js",
+  "author": "janeasystems",
+  "license": "",
+  "scripts": {},
+  "dependencies": {
+    "debug": "^3.1.0",
+    "logplease": "^1.2.14",
+    "record-node": "github:mistakia/record-node"
+  }
+}
