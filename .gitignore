@@ -42,4 +42,5 @@ yarn-error.log
 dist
 coverage/
 ios/main.jsbundle
+ios/main.jsbundle.meta
 orbitdb
