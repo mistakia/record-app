@@ -10,6 +10,7 @@ const config = require('./config/project.config')
 const debug = require('debug')
 
 debug.enable('jsipfs:*,record:*')
+Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
@@ -96,10 +97,10 @@ app.on('ready', () => {
     logger.error(`Error starting node: ${err.toString()}`)
     console.log(err)
   }
- 
+
   // Pass log messages to the renderer process
   Logger.events.on('data', logToRenderer)
-  
+
 })
 
 // Quit when all windows are closed.
