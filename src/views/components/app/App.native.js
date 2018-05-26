@@ -1,6 +1,5 @@
-import React, { Component } from 'react'
+import React from 'react'
 import nodejs from 'nodejs-mobile-react-native'
-import { Route, Switch } from 'react-router-native'
 import { connect } from 'react-redux'
 import RNFS from 'react-native-fs'
 import {
@@ -10,12 +9,10 @@ import {
 } from 'react-native'
 
 import Menu from '@components/Menu'
+import Routes from '@views/routes'
 import { infoActions } from '@core/info'
-import TracksPage from '@pages/tracks'
-import HomePage from '@pages/home'
-import ContactsPage from '@pages/contacts'
 
-export class App extends Component {
+export class App extends React.Component {
   componentWillMount () {
     nodejs.start('main.js')
     nodejs.channel.send(RNFS.DocumentDirectoryPath)
@@ -49,11 +46,7 @@ export class App extends Component {
     return (
       <View style={styles.appContainer}>
         <Menu />
-        <Switch>
-          <Route exact path='/' component={HomePage} />
-          <Route path='/tracks/:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
-          <Route path='/contacts/:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
-        </Switch>
+        <Routes />
       </View>
     )
   }

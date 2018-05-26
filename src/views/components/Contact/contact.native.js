@@ -10,7 +10,7 @@ class Contact extends React.Component {
       <View>
         <Text>Alias: {contact.alias}</Text>
         <Text>Address: {contact.address}</Text>
-        <Link to={`/tracks${contact.address}`}>Tracks</Link>
+        <Link to={`/tracks${contact.address}`}><Text>Tracks</Text></Link>
       </View>
     )
   }

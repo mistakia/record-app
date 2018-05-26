@@ -1,4 +1,9 @@
-export { contactlistActions, contactlistRequestActions } from './actions'
+export {
+  contactlistActions,
+  contactlistRequestActions,
+  contactlistPostActions
+} from './actions'
+
 export { contactlistSagas } from './sagas'
 
 export {

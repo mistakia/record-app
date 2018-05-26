@@ -16,7 +16,7 @@ class Contactlist extends React.Component {
 
     const contactItems = contacts.map((contact, index) => {
       return (
-        <View>
+        <View key={index}>
           <Contact contact={contact} />
         </View>
       )

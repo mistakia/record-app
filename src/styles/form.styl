@@ -1,0 +1,28 @@
+form
+    position relative
+
+label
+    display block
+    padding 2px 8px
+    font-size 0.8em
+    margin-bottom 10px
+    background-color white
+
+input
+textarea
+    width 100%
+    border-radius 0
+    border none
+    box-shadow none
+    padding 10px
+    margin 0
+    &::placeholder
+        color rgba(0,0,0,0.3)
+    &:hover
+    &:focus
+        box-shadow none
+        outline none
+
+input[type="search"]
+    &::-webkit-search-cancel-button
+        margin-right 10px

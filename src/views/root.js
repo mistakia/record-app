@@ -5,7 +5,7 @@ import { ConnectedRouter } from 'react-router-redux'
 
 import createStore from '@core/store'
 import createHistory from '@core/history'
-import App from '@views/app'
+import App from '@components/app'
 
 const history = createHistory()
 const initialState = window.__INITIAL_STATE__

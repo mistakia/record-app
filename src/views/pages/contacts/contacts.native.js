@@ -1,6 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { Text } from 'react-native'
+import { Text, View, StyleSheet } from 'react-native'
+import { Link } from 'react-router-native'
 
 import { contactlistActions } from '@core/contactlists'
 import Contactlist from '@components/Contactlist'
@@ -15,7 +16,10 @@ export class ContactsPage extends React.Component {
 
   render () {
     const head = (
-      <Text>Contacts</Text>
+      <View style={styles.content}>
+        <Text>Contacts</Text>
+        <Link style={styles.button} to='/contacts/new'><Text>Add Contact</Text></Link>
+      </View>
     )
 
     const body = (
@@ -27,6 +31,19 @@ export class ContactsPage extends React.Component {
     )
   }
 }
+
+const styles = StyleSheet.create({
+  content: {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  button: {
+    marginTop: 10,
+    padding: 5,
+    borderColor: '#CCC',
+    borderWidth: 1
+  }
+})
 
 const mapDispatchToProps = {
   loadContacts: contactlistActions.loadContacts
