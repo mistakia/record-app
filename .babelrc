@@ -4,7 +4,7 @@
     "transform-object-rest-spread",
     "react-hot-loader/babel", [
       "module-resolver", {
-	"root": "./",
+	"root": ["./"],
 	"alias": {
 	  "@views": "./src/views",
 	  "@pages": "./src/views/pages",
