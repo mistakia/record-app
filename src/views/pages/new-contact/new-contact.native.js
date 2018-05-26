@@ -41,21 +41,21 @@ export class NewContactPage extends React.Component {
       <View>
         <Text style={styles.label}>Alias</Text>
         <TextInput
-           style={styles.input}
-           placeholder='Contact Nickname'
-           onChangeText={(alias) => this.setState({alias})} value={this.state.alias} />
-          <Text style={styles.label}>Address</Text>
-          <TextInput
-             style={styles.input}
-             placeholder='/orbitdb/Qm.../record'
-             onChangeText={(address) => this.setState({address})}
-            value={this.state.address}
-            />
-            <TouchableOpacity
-               style={styles.button}
-               onPress={this.handleSubmit}>
-              <Text>Submit</Text>
-            </TouchableOpacity>
+          style={styles.input}
+          placeholder='Contact Nickname'
+          onChangeText={(alias) => this.setState({alias})} value={this.state.alias} />
+        <Text style={styles.label}>Address</Text>
+        <TextInput
+          style={styles.input}
+          placeholder='/orbitdb/Qm.../record'
+          onChangeText={(address) => this.setState({address})}
+          value={this.state.address}
+        />
+        <TouchableOpacity
+          style={styles.button}
+          onPress={this.handleSubmit}>
+          <Text>Submit</Text>
+        </TouchableOpacity>
       </View>
     )
 
