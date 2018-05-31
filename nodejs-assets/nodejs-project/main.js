@@ -9,7 +9,7 @@ debug.useColors = () => false // disable colors in log (fixes xcode issue)
 
 // Log Record / IPFS / OrbitDB
 const log = debug('main')
-debug.enable('main,record:*,jsipfs,libp2p:*')
+debug.enable('main,record:*,jsipfs,libp2p')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 process.on('uncaughtException', (err) => {
@@ -36,14 +36,8 @@ rnBridge.channel.on('message', (msg) => {
     path: recorddir,
     orbitPath: path.resolve(recorddir, './orbitdb'),
     ipfsConfig: {
-      EXPERIMENTAL: {
-        dht: true,
-        relay: false,
-        pubsub: true
-      },
       init: {
-        bits: 1024,
-        log: debug('main:init')
+        bits: 1024
       },
       repo: path.resolve(recorddir, './ipfs'),
       config: {
@@ -52,7 +46,7 @@ rnBridge.channel.on('message', (msg) => {
 	    // '/ip4/0.0.0.0/tcp/4002',
 	    // '/ip4/0.0.0.0/tcp/4003/ws'
 	    //'/dns4/star-signal.cloud.ipfs.team/wss/p2p-webrtc-star'
-            //'/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
+            '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
 	    //'/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
 	  ]
         }

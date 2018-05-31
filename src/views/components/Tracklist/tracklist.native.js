@@ -13,7 +13,7 @@ class Tracklist extends React.Component {
 
     const trackItems = tracks.map((track, index) => {
       return (
-        <View>
+        <View key={index}>
           <Track track={track} />
         </View>
       )
