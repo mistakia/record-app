@@ -9,7 +9,7 @@ const RecordNode = require('record-node')
 const config = require('./config/project.config')
 const debug = require('debug')
 
-debug.enable('jsipfs:*,record:*')
+debug.enable('repo,jsipfs:*,record:*,libp2p:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
