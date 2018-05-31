@@ -110,7 +110,7 @@ module.exports = function (grunt) {
     },
 
     'exec': {
-      launch_electron: 'NODE_ENV=development electron electron.js',
+      launch_electron: 'NODE_ENV=development electron electron.js --inspect',
       launch_electron_dist: 'NODE_ENV=production electron electron.js'
     },
 
