@@ -9,7 +9,7 @@ debug.useColors = () => false // disable colors in log (fixes xcode issue)
 
 // Log Record / IPFS / OrbitDB
 const log = debug('main')
-debug.enable('main,record:*,jsipfs,libp2p')
+debug.enable('main,record:*,jsipfs:*,libp2p:*,bitswap:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 process.on('uncaughtException', (err) => {
@@ -62,6 +62,10 @@ rnBridge.channel.on('message', (msg) => {
     })
 
     node.on('ready', function() {
+      node._ipfs._libp2pNode.on('peer:discovery', (peerInfo) => console.log(`Peer Discovery: ${peerInfo.id.toB58String()}`))
+
+      node._ipfs._libp2pNode.on('peer:connect', (peerInfo) => console.log(`Peer Connect: ${peerInfo.id.toB58String()}`))
+
       log('RecordNode ready')
       rnBridge.channel.send('ready')
     })
