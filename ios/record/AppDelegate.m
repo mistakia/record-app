@@ -19,10 +19,19 @@
 {
   NSURL *jsCodeLocation;
 
-  jsCodeLocation = [NSURL URLWithString:@"http://localhost:8081/src/index.ios.bundle?platform=ios&dev=true"];
-  //jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"dist/index" fallbackResource:nil];
-  //jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
-  
+  // Loading JavaScript code
+  #if DEBUG
+    #if TARGET_IPHONE_SIMULATOR
+        // Run from locally running dev server
+        jsCodeLocation = [NSURL URLWithString:@"http://localhost:8081/src/index.ios.bundle?platform=ios&dev=true"];
+    #else
+        // Run on device with code coming from dev server on comp (change the IP to your comps IP)
+        jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"src/index.ios" fallbackResource:nil];
+    #endif
+  #else
+    jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+  #endif
+
   //Log in release mode
   RCTSetLogThreshold(RCTLogLevelInfo - 1);
 
