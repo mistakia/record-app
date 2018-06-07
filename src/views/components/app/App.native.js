@@ -15,10 +15,16 @@ import { infoActions } from '@core/info'
 export class App extends React.Component {
   componentWillMount () {
     nodejs.start('main.js')
-    nodejs.channel.send(RNFS.DocumentDirectoryPath)
+    const msg = {
+      action: 'init',
+      data: { docsPath: RNFS.DocumentDirectoryPath }
+    }
+    nodejs.channel.send(JSON.stringify(msg))
 
-    this.listenerRef = (msg) => {
-      if (msg === 'ready') { this.props.init() }
+    this.listenerRef = (message) => {
+      const msg = JSON.parse(message)
+      console.log(msg)
+      if (msg.action === 'ready') { this.props.init() }
     }
     nodejs.channel.addListener(
       'message',

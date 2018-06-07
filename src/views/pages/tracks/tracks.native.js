@@ -10,7 +10,7 @@ export class TracksPage extends React.Component {
   componentWillMount () {
     // '/me' or proper orbitdb adadress
     const { logId } = this.props.match.params
-    this.props.loadTracks(logId)
+    this.props.loadTracks(`/${logId}`)
   }
 
   render () {

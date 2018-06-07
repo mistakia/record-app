@@ -28,7 +28,7 @@ export class NewContactPage extends React.Component {
     const { alias, address } = this.state
 
     if (address && alias) {
-      this.props.addContact('me', { alias, address })
+      this.props.addContact('/me', { alias, address })
     }
   }
 
