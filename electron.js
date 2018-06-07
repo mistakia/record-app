@@ -5,13 +5,16 @@ const electron = require('electron')
 const Logger  = require('logplease')
 const path = require('path')
 const os = require('os')
+const fs = require('fs')
 const RecordNode = require('record-node')
-const config = require('./config/project.config')
 const debug = require('debug')
+const OrbitDB = require('orbit-db')
+const IPFS = require('ipfs')
 
-debug.enable('repo,jsipfs:*,record:*,libp2p:*')
+const config = require('./config/project.config')
+
+debug.enable('repo,jsipfs:*,record:*,libp2p:*,bitswap:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
-
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
 process.on('uncaughtException', (err) => {
@@ -22,8 +25,10 @@ process.on('uncaughtException', (err) => {
 // Module to control application life.
 const app = electron.app
 
-const userDataPath = app.getPath('userData')
-logger.info(`User Data: ${userDataPath}`)
+// const userDataPath = app.getPath('userData')
+// logger.info(`User Data: ${userDataPath}`)
+const recorddir = path.resolve(os.homedir(), './.record')
+if (!fs.existsSync(recorddir)) { fs.mkdirSync(recorddir) }
 
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
@@ -81,18 +86,54 @@ app.on('ready', () => {
 
 
   try {
-    const node = new RecordNode()
-
-    node.on('error', (err) => {
-      logger.error(`Node error: ${err.toString()}`)
-      console.log(err)
-    })
-
-    node.on('ready', () => {
-      logger.info('Record Node running.')
+    const ipfsConfig = {
+      init: {
+        bits: 1024
+      },
+      repo: path.resolve(recorddir, './ipfs'),
+      EXPERIMENTAL: {
+        dht: false, // TODO: BRICKS COMPUTER
+        relay: {
+          enabled: true,
+          hop: {
+            enabled: false, // TODO: CPU hungry on mobile
+            active: false
+          }
+        },
+        pubsub: true
+      },
+      config: {
+        Bootstrap: [],
+        Addresses: {
+	  Swarm: [
+            '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
+	  ]
+        }
+      }
+    }
+    const ipfs = new IPFS(ipfsConfig)
+    ipfs.on('ready', async () => {
       createWindow()
-    })
 
+      const orbitAddressPath = path.resolve(recorddir, 'address.txt')
+      const orbitAddress = fs.existsSync(orbitAddressPath) ?
+                           fs.readFileSync(orbitAddressPath, 'utf8') : undefined
+
+      logger.info(`Orbit Address: ${orbitAddress}`)
+
+      const opts = {
+        orbitAddress: orbitAddress,
+        orbitPath: path.resolve(recorddir, './orbitdb'),
+        api: true
+      }
+
+      const rn = new RecordNode(ipfs, OrbitDB, opts)
+      await rn.load()
+      fs.writeFileSync(orbitAddressPath, rn._log.address)
+
+      console.log('ipfs ready')
+      rn.syncContacts()
+    })
   } catch (err) {
     logger.error(`Error starting node: ${err.toString()}`)
     console.log(err)

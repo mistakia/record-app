@@ -1,36 +1,41 @@
 const rnBridge = require('rn-bridge')
 const os = require('os')
+const fs = require('fs')
+const IPFS = require('ipfs')
 const path = require('path')
 const debug = require('debug')
 const Logger = require('logplease')
+
+const OrbitDB = require('orbit-db')
 const RecordNode = require('record-node')
 
 debug.useColors = () => false // disable colors in log (fixes xcode issue)
 
 // Log Record / IPFS / OrbitDB
-const log = debug('main')
-debug.enable('main,record:*,jsipfs:*,libp2p:*,bitswap:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
+const logger = debug('main')
+debug.enable('main,jsipfs:*,libp2p:*,bitswap:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 process.on('uncaughtException', (err) => {
   console.log(err)
 })
 
-log('starting')
+logger('starting')
 
+let rn = null
 let started = false
 
-rnBridge.channel.on('message', (msg) => {
-
+const init = (docsPath) => {
   if (started)
     return
 
   started = true
 
-  const docsDir = msg
-  const recorddir = path.resolve(docsDir, './record')
+  const recorddir = path.resolve(docsPath, './record')
 
-  log(`Record Dir: ${recorddir}`)
+  if (!fs.existsSync(recorddir)) { fs.mkdirSync(recorddir) }
+
+  logger(`Record Dir: ${recorddir}`)
 
   const nodeConfig = {
     path: recorddir,
@@ -40,14 +45,22 @@ rnBridge.channel.on('message', (msg) => {
         bits: 1024
       },
       repo: path.resolve(recorddir, './ipfs'),
+      EXPERIMENTAL: {
+        dht: false, // TODO: BRICKS COMPUTER
+        relay: {
+          enabled: true,
+          hop: {
+            enabled: false, // TODO: CPU hungry on mobile
+            active: false
+          }
+        },
+        pubsub: true
+      },
       config: {
+        Bootstrap: [],
         Addresses: {
 	  Swarm: [
-	    // '/ip4/0.0.0.0/tcp/4002',
-	    // '/ip4/0.0.0.0/tcp/4003/ws'
-	    //'/dns4/star-signal.cloud.ipfs.team/wss/p2p-webrtc-star'
             '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
-	    //'/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
 	  ]
         }
       }
@@ -55,24 +68,140 @@ rnBridge.channel.on('message', (msg) => {
   }
 
   try {
-    const node = new RecordNode(nodeConfig)
+    // Create the IPFS node instance
+    const node = new IPFS(nodeConfig.ipfsConfig)
 
-    node.on('error', function(err) {
-      console.log(err)
-    })
+    node.on('ready', () => {
+      const orbitAddressPath = path.resolve(recorddir, 'address.txt')
 
-    node.on('ready', function() {
-      node._ipfs._libp2pNode.on('peer:discovery', (peerInfo) => console.log(`Peer Discovery: ${peerInfo.id.toB58String()}`))
+      const orbitAddress = fs.existsSync(orbitAddressPath) ?
+                           fs.readFileSync(orbitAddressPath, 'utf8') : undefined
 
-      node._ipfs._libp2pNode.on('peer:connect', (peerInfo) => console.log(`Peer Connect: ${peerInfo.id.toB58String()}`))
+      logger(`Orbit Address: ${orbitAddress}`)
 
-      log('RecordNode ready')
-      rnBridge.channel.send('ready')
+      const opts = {
+        orbitPath: path.resolve(recorddir, './orbitdb'),
+        orbitAddress: orbitAddress,
+        logConfig: {
+          replicate: false
+        }
+      }
+
+      rn = new RecordNode(node, OrbitDB, opts)
+
+      setTimeout(async () => {
+
+        try {
+          await rn.load()
+          fs.writeFileSync(orbitAddressPath, rn._log.address)
+        } catch(e) {
+          console.log(e)
+        }
+
+        console.log('ipfs ready')
+        rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
+
+        rn.syncContacts()
+
+      }, 30000)
+
     })
 
   } catch(e) {
     console.log(e)
   }
 
-  log('initialized')
+  logger('initialized')
+
+}
+
+rnBridge.channel.on('message', async (message) => {
+
+  const msg = JSON.parse(message)
+  logger(msg)
+
+  let data
+  let log
+
+  switch(msg.action) {
+    case 'init':
+      init(msg.data.docsPath)
+      break
+
+    case 'contacts:get':
+      if (!rn) {
+        return
+      }
+
+      try {
+        log = await rn.getLog(msg.data.logId)
+        data = log.contacts.all()
+      } catch (e) {
+        console.log(e)
+      }
+
+      rnBridge.channel.send(JSON.stringify({
+        action: msg.action,
+        data
+      }))
+      break
+
+    case 'contacts:add':
+      if (!rn) {
+        return
+      }
+
+      try {
+        const { address, alias } = msg.data
+        log = await rn.getLog(msg.data.logId)
+        data = await log.contacts.findOrCreate({ address, alias })
+      } catch (e) {
+        console.log(e)
+      }
+      rnBridge.channel.send(JSON.stringify({
+        action: msg.action,
+        data
+      }))
+      break
+
+    case 'info:get':
+      if (!rn) {
+        return
+      }
+
+      try {
+        data = await rn.info()
+        console.log(data)
+      } catch (e) {
+        console.log(e)
+      }
+
+      rnBridge.channel.send(JSON.stringify({
+        action: msg.action,
+        data
+      }))
+      break
+
+    case 'tracks:get':
+      if (!rn) {
+        return
+      }
+
+      try {
+        log = await rn.getLog(msg.data.logId)
+        data = log.tracks.all()
+      } catch(e) {
+        console.log(e)
+      }
+
+      rnBridge.channel.send(JSON.stringify({
+        action: msg.action,
+        data
+      }))
+      break
+
+    default:
+      console.log(`Invalid message action: ${msg.action}`)
+  }
+
 })

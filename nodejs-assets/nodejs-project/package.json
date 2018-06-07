@@ -7,8 +7,10 @@
   "license": "",
   "scripts": {},
   "dependencies": {
-    "debug": "^3.1.0",
-    "logplease": "^1.2.14",
+    "debug": "3.1.0",
+    "ipfs": "0.29.2",
+    "logplease": "1.2.14",
+    "orbit-db": "0.19.8",
     "record-node": "github:mistakia/record-node"
   }
 }

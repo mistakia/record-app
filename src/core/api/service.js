@@ -1,10 +1,6 @@
 /* global fetch */
 
 export const api = {
-  fetch (path) {
-    const url = `http://localhost:3000/${path}`
-    return dispatch({url})
-  },
   fetchContacts (logId) {
     const url = `http://localhost:3000/logs/contacts/${logId}`
     return dispatch({url})
