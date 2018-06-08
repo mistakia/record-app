@@ -40,10 +40,10 @@ export class App extends React.Component {
   componentDidMount () {
     AppState.addEventListener('change', (state) => {
       if (state === 'active') {
-        // nodejs.channel.send('resume')
+        nodejs.channel.send(JSON.stringify({ action: 'resume' }))
       }
       if (state === 'background') {
-        // nodejs.channel.send('suspend')
+        nodejs.channel.send(JSON.stringify({ action: 'suspend' }))
       }
     })
   }

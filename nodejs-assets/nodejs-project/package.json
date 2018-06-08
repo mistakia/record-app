@@ -11,6 +11,6 @@
     "ipfs": "0.29.2",
     "logplease": "1.2.14",
     "orbit-db": "0.19.8",
-    "record-node": "github:mistakia/record-node"
+    "record-node": "github:mistakia/record-node#aeb32c3"
   }
 }

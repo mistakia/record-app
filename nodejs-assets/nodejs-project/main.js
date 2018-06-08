@@ -23,6 +23,7 @@ process.on('uncaughtException', (err) => {
 logger('starting')
 
 let rn = null
+let ipfs = null
 let started = false
 
 const init = (docsPath) => {
@@ -69,9 +70,11 @@ const init = (docsPath) => {
 
   try {
     // Create the IPFS node instance
-    const node = new IPFS(nodeConfig.ipfsConfig)
+    const ipfs = new IPFS(nodeConfig.ipfsConfig)
 
-    node.on('ready', () => {
+    // TODO: throttle ipfs attemptDials
+
+    ipfs.on('ready', async () => {
       const orbitAddressPath = path.resolve(recorddir, 'address.txt')
 
       const orbitAddress = fs.existsSync(orbitAddressPath) ?
@@ -87,22 +90,21 @@ const init = (docsPath) => {
         }
       }
 
-      rn = new RecordNode(node, OrbitDB, opts)
+      rn = new RecordNode(ipfs, OrbitDB, opts)
 
-      setTimeout(async () => {
+      try {
+        await rn.load()
+        fs.writeFileSync(orbitAddressPath, rn._log.address)
+      } catch(e) {
+        console.log(e)
+      }
 
-        try {
-          await rn.load()
-          fs.writeFileSync(orbitAddressPath, rn._log.address)
-        } catch(e) {
-          console.log(e)
-        }
+      console.log('ipfs ready')
+      rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
 
-        console.log('ipfs ready')
-        rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
-
+      // TODO: syncContacts once dialing is complete
+      setTimeout(() => {
         rn.syncContacts()
-
       }, 30000)
 
     })
@@ -126,6 +128,20 @@ rnBridge.channel.on('message', async (message) => {
   switch(msg.action) {
     case 'init':
       init(msg.data.docsPath)
+      break
+
+    case 'suspend':
+      ipfs.stop()
+      break
+
+    case 'resume':
+      ipfs.start((err) => {
+        if (err) {
+          console.log(err)
+        }
+
+        logger('ipfs started')
+      })
       break
 
     case 'contacts:get':

@@ -9,6 +9,7 @@ export const initialState = new Map({
     protocolVersion: null,
     addresses: new List()
   }),
+  state: null,
   orbitdb: new Map(),
   peers: new List(),
   subs: new Map()
@@ -19,6 +20,7 @@ export function infoReducer (state = initialState, { payload, type }) {
     case infoActions.INFO_INIT_FULFILLED:
       return state.withMutations(state => {
         state.merge({
+          state: payload.state,
           ipfs: payload.ipfs,
           peers: payload.peers,
           orbitdb: payload.orbitdb,

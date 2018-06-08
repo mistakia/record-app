@@ -43,6 +43,10 @@ export class HomePage extends Component {
 
     const body = (
       <View style={{margin: 5}}>
+        <Text style={styles.label}>State</Text>
+        <View style={styles.container}>
+          <Text style={styles.pre}>{info.state}</Text>
+        </View>
         <Text style={styles.label}>Orbit DB Address</Text>
         <View style={styles.container}>
           <Text style={styles.pre}>{info.orbitdb.address}</Text>
