@@ -1,9 +1,3 @@
-/* global fetch */
-
-/* const OrbitDB = require('orbit-db')
- * const IPFS = require('ipfs-api')
- *  */
-
 import nodejs from 'nodejs-mobile-react-native'
 
 export const api = {
