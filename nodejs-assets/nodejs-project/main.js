@@ -38,41 +38,37 @@ const init = (docsPath) => {
 
   logger(`Record Dir: ${recorddir}`)
 
-  const nodeConfig = {
-    path: recorddir,
-    orbitPath: path.resolve(recorddir, './orbitdb'),
-    ipfsConfig: {
-      init: {
-        bits: 1024
-      },
-      repo: path.resolve(recorddir, './ipfs'),
-      EXPERIMENTAL: {
-        dht: false, // TODO: BRICKS COMPUTER
-        relay: {
-          enabled: true,
-          hop: {
-            enabled: false, // TODO: CPU hungry on mobile
-            active: false
-          }
-        },
-        pubsub: true
-      },
-      config: {
-        Bootstrap: [],
-        Addresses: {
-	  Swarm: [
-            '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
-	  ]
+  const ipfsConfig = {
+    init: {
+      bits: 1024
+    },
+    repo: path.resolve(recorddir, './ipfs'),
+    EXPERIMENTAL: {
+      dht: false, // TODO: BRICKS COMPUTER
+      relay: {
+        enabled: true,
+        hop: {
+          enabled: false, // TODO: CPU hungry on mobile
+          active: false
         }
+      },
+      pubsub: true
+    },
+    config: {
+      Bootstrap: [],
+      Addresses: {
+	Swarm: [
+          '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
+	]
       }
     }
   }
 
   try {
     // Create the IPFS node instance
-    const ipfs = new IPFS(nodeConfig.ipfsConfig)
+    const ipfs = new IPFS(ipfsConfig)
 
-    // TODO: throttle ipfs attemptDials
+    // TODO: throttle ipfs attemptDials & incoming connections from same peer
 
     ipfs.on('ready', async () => {
       const orbitAddressPath = path.resolve(recorddir, 'address.txt')
@@ -99,7 +95,6 @@ const init = (docsPath) => {
         console.log(e)
       }
 
-      console.log('ipfs ready')
       rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
 
       // TODO: syncContacts once dialing is complete
@@ -217,7 +212,7 @@ rnBridge.channel.on('message', async (message) => {
       break
 
     default:
-      console.log(`Invalid message action: ${msg.action}`)
+      logger(`Invalid message action: ${msg.action}`)
   }
 
 })
