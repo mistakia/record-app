@@ -34,6 +34,8 @@ export class HomePage extends React.Component {
 
     const body = (
       <div>
+        <label>State</label>
+        <pre>{info.state}</pre>
         <label>Orbit DB Address</label>
         <pre>{info.orbitdb.address}</pre>
         <label>Orbit DB Public Key</label>
