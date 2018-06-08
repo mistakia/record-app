@@ -14,7 +14,7 @@ import { infoActions } from '@core/info'
 
 export class App extends React.Component {
   componentWillMount () {
-    nodejs.start('main.js')
+    nodejs.start('bundle.js')
     const msg = {
       action: 'init',
       data: { docsPath: RNFS.DocumentDirectoryPath }

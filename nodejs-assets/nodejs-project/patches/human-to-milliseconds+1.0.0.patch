@@ -1,0 +1,12 @@
+patch-package
+--- a/node_modules/human-to-milliseconds/src/index.js
++++ b/node_modules/human-to-milliseconds/src/index.js
+@@ -9,7 +9,7 @@ const measure = /(ns|ms|us|µs|m|s|h)/g
+ const multipliers = {
+   ns: 1e-6,
+   us: 0.001,
+-  µs: 0.001,
++  'µs': 0.001,
+   ms: 1,
+   s: 1000,
+   m: 60000,
