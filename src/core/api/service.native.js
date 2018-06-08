@@ -26,7 +26,6 @@ export const api = {
 
       const listener = (message) => {
         const msg = JSON.parse(message)
-        console.log(msg)
         if (msg.action === 'info:get') {
           resolve(msg.data)
           nodejs.channel.removeListener('message', listener)
@@ -41,13 +40,10 @@ export const api = {
         action: 'tracks:get',
         data: { logId }
       }
-      console.log(msg)
       nodejs.channel.send(JSON.stringify(msg))
-      console.log('here tracks')
 
       const listener = (message) => {
         const msg = JSON.parse(message)
-        console.log(msg)
         if (msg.action === 'tracks:get') {
           resolve(msg.data)
           nodejs.channel.removeListener('message', listener)
