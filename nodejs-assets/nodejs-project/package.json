@@ -5,12 +5,18 @@
   "main": "main.js",
   "author": "janeasystems",
   "license": "",
-  "scripts": {},
+  "scripts": {
+    "prepare": "patch-package"
+  },
   "dependencies": {
     "debug": "3.1.0",
     "ipfs": "0.29.2",
     "logplease": "1.2.14",
     "orbit-db": "0.19.8",
     "record-node": "github:mistakia/record-node#aeb32c3"
+  },
+  "devDependencies": {
+    "browserify": "^16.2.2",
+    "patch-package": "^5.1.1"
   }
 }
