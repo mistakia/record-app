@@ -23,7 +23,6 @@ export class App extends React.Component {
 
     this.listenerRef = (message) => {
       const msg = JSON.parse(message)
-      console.log(msg)
       if (msg.action === 'ready') { this.props.init() }
     }
     nodejs.channel.addListener(
