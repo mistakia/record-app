@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 import { createSelector } from 'reselect'
 import { connect } from 'react-redux'
 import {
@@ -9,8 +9,9 @@ import {
 
 import PageLayout from '@layouts/page'
 import { getInfo, infoActions } from '@core/info'
+import CopyText from '@components/CopyText'
 
-export class HomePage extends Component {
+export class HomePage extends React.Component {
   componentWillMount () {
     this.props.init()
   }
@@ -48,21 +49,21 @@ export class HomePage extends Component {
           <Text style={styles.pre}>{info.state}</Text>
         </View>
         <Text style={styles.label}>Orbit DB Address</Text>
-        <View style={styles.container}>
+        <CopyText style={styles.container} text={info.orbitdb.address}>
           <Text style={styles.pre}>{info.orbitdb.address}</Text>
-        </View>
+        </CopyText>
         <Text style={styles.label}>Orbit DB Public Key</Text>
-        <View style={styles.container}>
+        <CopyText style={styles.container} text={info.orbitdb.publickey}>
           <Text style={styles.pre}>{info.orbitdb.publicKey}</Text>
-        </View>
+        </CopyText>
         <Text style={styles.label}>IPFS ID</Text>
-        <View style={styles.container}>
+        <CopyText style={styles.container} text={info.ipfs.id}>
           <Text style={styles.pre}>{info.ipfs.id}</Text>
-        </View>
+        </CopyText>
         <Text style={styles.label}>IPFS Public Key</Text>
-        <View style={styles.container}>
+        <CopyText style={styles.container} text={info.ipfs.publicKey}>
           <Text style={styles.pre}>{info.ipfs.publicKey}</Text>
-        </View>
+        </CopyText>
         <Text style={styles.label}>IPFS Agent Version</Text>
         <View style={styles.container}>
           <Text style={styles.pre}>{info.ipfs.agentVersion}</Text>

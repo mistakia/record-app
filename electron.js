@@ -131,7 +131,6 @@ app.on('ready', () => {
       await rn.load()
       fs.writeFileSync(orbitAddressPath, rn._log.address)
 
-      console.log('ipfs ready')
       rn.syncContacts()
     })
   } catch (err) {
