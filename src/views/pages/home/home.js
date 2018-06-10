@@ -4,6 +4,7 @@ import { createSelector } from 'reselect'
 
 import { getInfo } from '@core/info'
 import PageLayout from '@layouts/page'
+import CopyText from '@components/CopyText'
 
 export class HomePage extends React.Component {
   render () {
@@ -36,14 +37,22 @@ export class HomePage extends React.Component {
       <div>
         <label>State</label>
         <pre>{info.state}</pre>
-        <label>Orbit DB Address</label>
-        <pre>{info.orbitdb.address}</pre>
-        <label>Orbit DB Public Key</label>
-        <pre>{info.orbitdb.publicKey}</pre>
-        <label>IPFS ID</label>
-        <pre>{info.ipfs.id}</pre>
-        <label>IPFS Public Key</label>
-        <pre>{info.ipfs.publicKey}</pre>
+        <CopyText text={info.orbitdb.address}>
+          <label>Orbit DB Address</label>
+          <pre>{info.orbitdb.address}</pre>
+        </CopyText>
+        <CopyText text={info.orbitdb.publicKey}>
+          <label>Orbit DB Public Key</label>
+          <pre>{info.orbitdb.publicKey}</pre>
+        </CopyText>
+        <CopyText text={info.ipfs.id}>
+          <label>IPFS ID</label>
+          <pre>{info.ipfs.id}</pre>
+        </CopyText>
+        <CopyText text={info.ipfs.publicKey}>
+          <label>IPFS Public Key</label>
+          <pre>{info.ipfs.publicKey}</pre>
+        </CopyText>
         <label>IPFS Agent Version</label>
         <pre>{info.ipfs.agentVersion}</pre>
         <label>IPFS Protocol Version</label>
