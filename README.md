@@ -20,12 +20,18 @@ npm install
 npm run start:electron
 ```
 
-### iOS (React Native)
+### Mobile (React Native)
+First, start react native packager with:
+```
+npm run start
+```
+
+#### iOS
 ```
 npm run start:ios
 ```
 
-### Android (React Native)
+#### Android
 ```
 npm run start:android
 ```
