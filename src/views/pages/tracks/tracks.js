@@ -1,5 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
+import { Link } from 'react-router-dom'
 
 import { tracklistActions } from '@core/tracklists'
 import Tracklist from '@components/Tracklist'
@@ -13,8 +14,12 @@ export class TracksPage extends React.Component {
   }
 
   render () {
+    const { logId } = this.props.match.params
     const head = (
-      <h1>Tracks</h1>
+      <div>
+        <h1>Tracks</h1>
+        { logId === 'me' && <Link className='button' to='/tracks/new'>Add Track</Link> }
+      </div>
     )
 
     const body = (

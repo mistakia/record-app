@@ -1,4 +1,8 @@
-export { tracklistActions, tracklistRequestActions } from './actions'
+export {
+  tracklistActions,
+  tracklistRequestActions,
+  tracklistPostActions
+} from './actions'
 export { tracklistSagas } from './sagas'
 
 export {

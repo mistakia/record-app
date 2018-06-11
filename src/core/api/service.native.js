@@ -70,5 +70,24 @@ export const api = {
       }
       nodejs.channel.addListener('message', listener, this)
     })
+  },
+  postTrack (logId, data) {
+    const { title, url } = data
+    return new Promise((resolve, reject) => {
+      const msg = {
+        action: 'tracks:add',
+        data: { logId, title, url }
+      }
+      nodejs.channel.send(JSON.stringify(msg))
+
+      const listener = (message) => {
+        const msg = JSON.parse(message)
+        if (msg.action === 'tracks:add') {
+          resolve(msg.data)
+          nodejs.channel.removeListener('message', listener)
+        }
+      }
+      nodejs.channel.addListener('message', listener, this)
+    })
   }
 }

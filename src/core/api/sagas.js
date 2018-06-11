@@ -6,7 +6,10 @@ import {
   contactlistPostActions
 } from '@core/contactlists'
 import { infoRequestActions } from '@core/info'
-import { tracklistRequestActions } from '@core/tracklists'
+import {
+  tracklistRequestActions,
+  tracklistPostActions
+} from '@core/tracklists'
 
 function * fetchAPI (apiFunction, actions, id, param) {
   try {
@@ -22,3 +25,4 @@ export const fetchContacts = fetchAPI.bind(null, api.fetchContacts, contactlistR
 export const fetchInfo = fetchAPI.bind(null, api.fetchInfo, infoRequestActions)
 export const fetchTracks = fetchAPI.bind(null, api.fetchTracks, tracklistRequestActions)
 export const postContact = fetchAPI.bind(null, api.postContact, contactlistPostActions)
+export const postTrack = fetchAPI.bind(null, api.postTrack, tracklistPostActions)
