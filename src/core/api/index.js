@@ -2,5 +2,6 @@ export {
   fetchContacts,
   fetchInfo,
   fetchTracks,
-  postContact
+  postContact,
+  postTrack
 } from './sagas'

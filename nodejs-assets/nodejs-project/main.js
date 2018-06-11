@@ -182,7 +182,6 @@ rnBridge.channel.on('message', async (message) => {
 
       try {
         data = await rn.info()
-        console.log(data)
       } catch (e) {
         console.log(e)
       }
@@ -202,6 +201,25 @@ rnBridge.channel.on('message', async (message) => {
         log = await rn.getLog(msg.data.logId)
         data = log.tracks.all()
       } catch(e) {
+        console.log(e)
+      }
+
+      rnBridge.channel.send(JSON.stringify({
+        action: msg.action,
+        data
+      }))
+      break
+
+    case 'tracks:add':
+      if (!rn) {
+        return
+      }
+
+      try {
+        const { title, url } = msg.data
+        log = await rn.getLog(msg.data.logId)
+        data = await log.tracks.findOrCreate({ title, url })
+      } catch (e) {
         console.log(e)
       }
 

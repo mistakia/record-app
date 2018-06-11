@@ -23,6 +23,17 @@ export const api = {
         'Content-Type': 'application/json'
       }
     })
+  },
+  postTrack (logId, data) {
+    const url = `http://localhost:3000/logs/tracks/${logId}`
+    return dispatch({
+      url,
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
   }
 }
 

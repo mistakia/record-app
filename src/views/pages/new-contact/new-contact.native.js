@@ -1,7 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import {
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -10,6 +9,7 @@ import {
 
 import { contactlistActions } from '@core/contactlists'
 import PageLayout from '@layouts/page'
+import formStyles from '@styles/form'
 
 export class NewContactPage extends React.Component {
   constructor (props) {
@@ -39,20 +39,20 @@ export class NewContactPage extends React.Component {
 
     const body = (
       <View>
-        <Text style={styles.label}>Alias</Text>
+        <Text style={formStyles.label}>Alias</Text>
         <TextInput
-          style={styles.input}
+          style={formStyles.input}
           placeholder='Contact Nickname'
           onChangeText={(alias) => this.setState({alias})} value={this.state.alias} />
-        <Text style={styles.label}>Address</Text>
+        <Text style={formStyles.label}>Address</Text>
         <TextInput
-          style={styles.input}
+          style={formStyles.input}
           placeholder='/orbitdb/Qm.../record'
           onChangeText={(address) => this.setState({address})}
           value={this.state.address}
         />
         <TouchableOpacity
-          style={styles.button}
+          style={formStyles.button}
           onPress={this.handleSubmit}>
           <Text>Submit</Text>
         </TouchableOpacity>
@@ -64,33 +64,6 @@ export class NewContactPage extends React.Component {
     )
   }
 }
-
-const styles = StyleSheet.create({
-  button: {
-    marginLeft: 5,
-    marginRight: 5,
-    padding: 5,
-    borderColor: '#CCC',
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  label: {
-    backgroundColor: 'white',
-    marginLeft: 5,
-    marginRight: 5,
-    paddingLeft: 5,
-    fontSize: 10
-
-  },
-  input: {
-    backgroundColor: 'white',
-    padding: 5,
-    marginLeft: 5,
-    marginRight: 5,
-    marginBottom: 10
-  }
-})
 
 const mapDispatchToProps = {
   addContact: contactlistActions.addContact

@@ -33,8 +33,8 @@ export class CopyText extends React.Component {
     return (
       <TouchableWithoutFeedback onPress={this.copyToClipboard}>
         <View style={style}>
-          {(this.state.copied ?
-            <View style={styles.overlay}>
+          {(this.state.copied
+            ? <View style={styles.overlay}>
               <Text style={styles.text}>Copied</Text>
             </View> : null)}
           {this.props.children}

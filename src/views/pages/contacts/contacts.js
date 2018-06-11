@@ -14,10 +14,11 @@ export class ContactsPage extends React.Component {
   }
 
   render () {
+    const { logId } = this.props.match.params
     const head = (
       <div>
         <h1>Contacts</h1>
-        <Link className='button' to='/contacts/new'>Add Contact</Link>
+        { logId === 'me' && <Link className='button' to='/contacts/new'>Add Contact</Link> }
       </div>
     )
 
