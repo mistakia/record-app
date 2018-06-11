@@ -1,10 +1,10 @@
 {
   "name": "record-nodejs-react-native",
   "version": "0.0.1",
-  "description": "node part of the project",
+  "description": "Mobile Record Node via janeasystems/nodejs-mobilej",
   "main": "main.js",
-  "author": "janeasystems",
-  "license": "",
+  "author": "",
+  "license": "MIT",
   "scripts": {
     "prepare": "patch-package"
   },
