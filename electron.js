@@ -128,10 +128,14 @@ app.on('ready', () => {
       }
 
       const rn = new RecordNode(ipfs, OrbitDB, opts)
-      await rn.load()
-      fs.writeFileSync(orbitAddressPath, rn._log.address)
+      try {
+        await rn.loadLog()
+        fs.writeFileSync(orbitAddressPath, rn._log.address)
 
-      rn.syncContacts()
+        rn.syncContacts()
+      } catch (e) {
+        console.log(e)
+      }
     })
   } catch (err) {
     logger.error(`Error starting node: ${err.toString()}`)
