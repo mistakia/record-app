@@ -89,7 +89,7 @@ const init = (docsPath) => {
       rn = new RecordNode(ipfs, OrbitDB, opts)
 
       try {
-        await rn.load()
+        await rn.loadLog()
         fs.writeFileSync(orbitAddressPath, rn._log.address)
       } catch(e) {
         console.log(e)
@@ -145,7 +145,7 @@ rnBridge.channel.on('message', async (message) => {
       }
 
       try {
-        log = await rn.getLog(msg.data.logId)
+        log = await rn.loadLog(msg.data.logId)
         data = log.contacts.all()
       } catch (e) {
         console.log(e)
@@ -164,7 +164,7 @@ rnBridge.channel.on('message', async (message) => {
 
       try {
         const { address, alias } = msg.data
-        log = await rn.getLog(msg.data.logId)
+        log = await rn.loadLog(msg.data.logId)
         data = await log.contacts.findOrCreate({ address, alias })
       } catch (e) {
         console.log(e)
@@ -198,7 +198,7 @@ rnBridge.channel.on('message', async (message) => {
       }
 
       try {
-        log = await rn.getLog(msg.data.logId)
+        log = await rn.loadLog(msg.data.logId)
         data = log.tracks.all()
       } catch(e) {
         console.log(e)
@@ -217,7 +217,7 @@ rnBridge.channel.on('message', async (message) => {
 
       try {
         const { title, url } = msg.data
-        log = await rn.getLog(msg.data.logId)
+        log = await rn.loadLog(msg.data.logId)
         data = await log.tracks.findOrCreate({ title, url })
       } catch (e) {
         console.log(e)
