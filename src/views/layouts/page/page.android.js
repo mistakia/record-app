@@ -1,1 +1,1 @@
-export { default } from './home.native'
+export { default } from './page.native'
