@@ -80,10 +80,7 @@ const init = (docsPath) => {
 
       const opts = {
         orbitPath: path.resolve(recorddir, './orbitdb'),
-        orbitAddress: orbitAddress,
-        logConfig: {
-          replicate: false
-        }
+        orbitAddress: orbitAddress
       }
 
       rn = new RecordNode(ipfs, OrbitDB, opts)
