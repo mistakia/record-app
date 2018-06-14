@@ -2,7 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 
 import Menu from '@components/Menu'
-import { infoActions } from '@core/info'
+import { appActions } from '@core/app'
 import Routes from '@views/routes'
 
 import 'normalize.css'
@@ -10,25 +10,29 @@ import '@styles/normalize.css'
 import '@styles/index.styl'
 import './App.styl'
 
+const { ipcRenderer } = window.require('electron')
+
 export class App extends React.Component {
   componentWillMount () {
-    this.props.init()
+    this.listener = (event, message) => {
+      // TODO: error handling
+      this.props.init()
+    }
+    ipcRenderer.once('ready', this.listener)
   }
 
   render () {
     return (
-      <div>
-        <main className='main scroll'>
-          <Menu />
-          <Routes />
-        </main>
-      </div>
+      <main className='main scroll'>
+        <Menu />
+        <Routes />
+      </main>
     )
   }
 }
 
 const mapDispatchToProps = {
-  init: infoActions.init
+  init: appActions.initApp
 }
 
 export default connect(

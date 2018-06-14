@@ -48,7 +48,8 @@ function createWindow () {
     minWidth: 600,
     minHeight: 475,
     maxWidth: 1000,
-    maxHeight: 800
+    maxHeight: 800,
+    show: false
   })
 
   const indexUrl = config.globals.__DEV__
@@ -61,12 +62,16 @@ function createWindow () {
   mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', function() {
+  mainWindow.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null
 
+  })
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show()
   })
 }
 
@@ -84,6 +89,7 @@ app.on('ready', () => {
     .then((name) => logger.info(`Added Extension: ${name}`))
     .catch((err) => logger.error('An error occurred: ', err));
 
+  createWindow()
 
   try {
     const ipfsConfig = {
@@ -113,7 +119,12 @@ app.on('ready', () => {
     }
     const ipfs = new IPFS(ipfsConfig)
     ipfs.on('ready', async () => {
-      createWindow()
+
+      mainWindow.webContents.send('ready')
+      mainWindow.webContents.on('did-finish-load', () => {
+        // TODO: check if ipfs status first
+        mainWindow.webContents.send('ready')
+      })
 
       const orbitAddressPath = path.resolve(recorddir, 'address.txt')
       const orbitAddress = fs.existsSync(orbitAddressPath) ?

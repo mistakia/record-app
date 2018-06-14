@@ -10,7 +10,7 @@ import {
 
 import Menu from '@components/Menu'
 import Routes from '@views/routes'
-import { infoActions } from '@core/info'
+import { appActions } from '@core/app'
 
 export class App extends React.Component {
   componentWillMount () {
@@ -21,19 +21,23 @@ export class App extends React.Component {
     }
     nodejs.channel.send(JSON.stringify(msg))
 
-    this.listenerRef = (message) => {
+    this.listener = (message) => {
       const msg = JSON.parse(message)
-      if (msg.action === 'ready') { this.props.init() }
+      if (msg.action === 'ready') {
+        // TODO: error handling
+        this.props.init()
+        nodejs.channel.removeListener('message', this.listener)
+      }
     }
     nodejs.channel.addListener(
       'message',
-      this.listenerRef,
+      this.listener,
       this
     )
   }
 
   componentWillUnmount () {
-    if (this.listenerRef) { nodejs.channel.removeListener('message', this.listenerRef) }
+    if (this.listener) { nodejs.channel.removeListener('message', this.listener) }
   }
 
   componentDidMount () {
@@ -67,7 +71,7 @@ const styles = StyleSheet.create({
 })
 
 const mapDispatchToProps = {
-  init: infoActions.init
+  init: appActions.initApp
 }
 
 export default connect(
