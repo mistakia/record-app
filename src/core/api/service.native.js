@@ -1,5 +1,20 @@
 import nodejs from 'nodejs-mobile-react-native'
 
+const handleResponse = (action, resolve, reject) => {
+  const listener = (message) => {
+    const msg = JSON.parse(message)
+    if (msg.action === action) {
+      nodejs.channel.removeListener('message', listener)
+
+      if (msg.error) {
+        return reject(msg.error)
+      }
+      resolve(msg.data)
+    }
+  }
+  nodejs.channel.addListener('message', listener, this)
+}
+
 export const api = {
   fetchContacts (logId) {
     return new Promise((resolve, reject) => {
@@ -8,30 +23,14 @@ export const api = {
         data: { logId }
       }
       nodejs.channel.send(JSON.stringify(msg))
-
-      const listener = (message) => {
-        const msg = JSON.parse(message)
-        if (msg.action === 'contacts:get') {
-          resolve(msg.data)
-          nodejs.channel.removeListener('message', listener)
-        }
-      }
-      nodejs.channel.addListener('message', listener, this)
+      handleResponse(msg.action, resolve, reject)
     })
   },
   fetchInfo () {
     return new Promise((resolve, reject) => {
       const msg = { action: 'info:get' }
       nodejs.channel.send(JSON.stringify(msg))
-
-      const listener = (message) => {
-        const msg = JSON.parse(message)
-        if (msg.action === 'info:get') {
-          resolve(msg.data)
-          nodejs.channel.removeListener('message', listener)
-        }
-      }
-      nodejs.channel.addListener('message', listener, this)
+      handleResponse(msg.action, resolve, reject)
     })
   },
   fetchTracks (logId) {
@@ -41,15 +40,7 @@ export const api = {
         data: { logId }
       }
       nodejs.channel.send(JSON.stringify(msg))
-
-      const listener = (message) => {
-        const msg = JSON.parse(message)
-        if (msg.action === 'tracks:get') {
-          resolve(msg.data)
-          nodejs.channel.removeListener('message', listener)
-        }
-      }
-      nodejs.channel.addListener('message', listener, this)
+      handleResponse(msg.action, resolve, reject)
     })
   },
   postContact (logId, data) {
@@ -60,15 +51,7 @@ export const api = {
         data: { logId, address, alias }
       }
       nodejs.channel.send(JSON.stringify(msg))
-
-      const listener = (message) => {
-        const msg = JSON.parse(message)
-        if (msg.action === 'contacts:add') {
-          resolve(msg.data)
-          nodejs.channel.removeListener('message', listener)
-        }
-      }
-      nodejs.channel.addListener('message', listener, this)
+      handleResponse(msg.action, resolve, reject)
     })
   },
   postTrack (logId, data) {
@@ -79,15 +62,7 @@ export const api = {
         data: { logId, title, url }
       }
       nodejs.channel.send(JSON.stringify(msg))
-
-      const listener = (message) => {
-        const msg = JSON.parse(message)
-        if (msg.action === 'tracks:add') {
-          resolve(msg.data)
-          nodejs.channel.removeListener('message', listener)
-        }
-      }
-      nodejs.channel.addListener('message', listener, this)
+      handleResponse(msg.action, resolve, reject)
     })
   }
 }
