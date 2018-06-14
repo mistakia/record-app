@@ -27,8 +27,23 @@ let ipfs = null
 let started = false
 
 const init = (docsPath) => {
-  if (started)
+  if (started) {
+    if (!ipfs) {
+      // shit
+
+      return
+    }
+
+    if (ipfs.state.state() === 'running') {
+      return rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
+    }
+
+    ipfs.on('ready', () => {
+      console.log('sending ready')
+      rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
+    })
     return
+  }
 
   started = true
 
@@ -66,7 +81,7 @@ const init = (docsPath) => {
 
   try {
     // Create the IPFS node instance
-    const ipfs = new IPFS(ipfsConfig)
+    ipfs = new IPFS(ipfsConfig)
 
     // TODO: throttle ipfs attemptDials & incoming connections from same peer
 
