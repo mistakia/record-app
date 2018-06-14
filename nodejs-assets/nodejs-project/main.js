@@ -144,14 +144,17 @@ rnBridge.channel.on('message', async (message) => {
       try {
         log = await rn.loadLog(msg.data.logId)
         data = log.contacts.all()
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          data
+        }))
       } catch (e) {
         console.log(e)
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          error: e.toString()
+        }))
       }
-
-      rnBridge.channel.send(JSON.stringify({
-        action: msg.action,
-        data
-      }))
       break
 
     case 'contacts:add':
@@ -163,13 +166,17 @@ rnBridge.channel.on('message', async (message) => {
         const { address, alias } = msg.data
         log = await rn.loadLog(msg.data.logId)
         data = await log.contacts.findOrCreate({ address, alias })
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          data
+        }))
       } catch (e) {
         console.log(e)
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          error: e.toString()
+        }))
       }
-      rnBridge.channel.send(JSON.stringify({
-        action: msg.action,
-        data
-      }))
       break
 
     case 'info:get':
@@ -179,14 +186,17 @@ rnBridge.channel.on('message', async (message) => {
 
       try {
         data = await rn.info()
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          data
+        }))
       } catch (e) {
         console.log(e)
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          error: e.toString()
+        }))
       }
-
-      rnBridge.channel.send(JSON.stringify({
-        action: msg.action,
-        data
-      }))
       break
 
     case 'tracks:get':
@@ -197,14 +207,17 @@ rnBridge.channel.on('message', async (message) => {
       try {
         log = await rn.loadLog(msg.data.logId)
         data = log.tracks.all()
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          data
+        }))
       } catch(e) {
         console.log(e)
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          error: e.toString()
+        }))
       }
-
-      rnBridge.channel.send(JSON.stringify({
-        action: msg.action,
-        data
-      }))
       break
 
     case 'tracks:add':
@@ -216,14 +229,17 @@ rnBridge.channel.on('message', async (message) => {
         const { title, url } = msg.data
         log = await rn.loadLog(msg.data.logId)
         data = await log.tracks.findOrCreate({ title, url })
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          data
+        }))
       } catch (e) {
         console.log(e)
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          error: e.toString()
+        }))
       }
-
-      rnBridge.channel.send(JSON.stringify({
-        action: msg.action,
-        data
-      }))
       break
 
     default:
