@@ -5,8 +5,7 @@ import { contactlistReducer } from './contactlist-reducer'
 import { Contactlist } from './contactlist'
 
 export const initialState = new Map({
-  currentContactlistId: 'DEFAULT_CONTACTLSIT_ID',
-  'DEFAULT_CONTACTLIST_ID': new Contactlist({id: 'DEFAULT_CONTACTLIST_ID', isNew: false})
+  currentContactlistId: null
 })
 
 export function contactlistsReducer (state = initialState, action) {
