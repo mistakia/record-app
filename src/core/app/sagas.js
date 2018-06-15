@@ -10,10 +10,12 @@ export function * watchInitApp () {
   // TODO: update to takeLeading when released
   while (true) {
     const { payload } = yield take(appActions.INIT_APP)
-    console.log(payload)
+
     if (!payload) {
       yield call(goToInfo)
     }
+
+    // TODO: handle error on ipfs initialization
   }
 }
 
