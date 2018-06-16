@@ -1,6 +1,6 @@
-MIT License
+Much of this project adapted from Richard Park - [Soundcloud Redux](https://github.com/r-park/soundcloud-redux)
 
-Copyright (c) 2018 Kia Rahimian
+Copyright (c) 2016 Richard Park <objectiv@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
