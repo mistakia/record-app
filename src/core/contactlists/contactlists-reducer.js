@@ -2,7 +2,6 @@ import { Map } from 'immutable'
 
 import { contactlistActions } from './actions'
 import { contactlistReducer } from './contactlist-reducer'
-import { Contactlist } from './contactlist'
 
 export const initialState = new Map({
   currentContactlistId: null
