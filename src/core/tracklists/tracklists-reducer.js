@@ -1,12 +1,13 @@
 import { Map } from 'immutable'
 
+import { SESSION_TRACKLIST_ID } from '@core/constants'
 import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
 import { Tracklist } from './tracklist'
 
 export const initialState = new Map({
-  currentTracklistId: 'DEFAULT_TRACKLIST_ID',
-  'DEFAULT_TRACKLIST_ID': new Tracklist({id: 'DEFAULT_TRACKLIST_ID', isNew: false})
+  currentTracklistId: SESSION_TRACKLIST_ID,
+  [SESSION_TRACKLIST_ID]: new Tracklist({id: SESSION_TRACKLIST_ID, isNew: false})
 })
 
 export function tracklistsReducer (state = initialState, action) {

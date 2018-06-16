@@ -7,6 +7,8 @@ export { tracklistSagas } from './sagas'
 
 export {
   getCurrentTracklist,
+  getTracklistById,
+  getTracklistCursor,
   getTracksForCurrentTracklist
 } from './selectors'
 
