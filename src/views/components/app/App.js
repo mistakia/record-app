@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import Menu from '@components/Menu'
 import { appActions } from '@core/app'
 import Routes from '@views/routes'
+import Player from '@components/player'
 
 import 'normalize.css'
 import '@styles/normalize.css'
@@ -26,6 +27,7 @@ export class App extends React.Component {
       <main className='main scroll'>
         <Menu />
         <Routes />
+        <Player />
       </main>
     )
   }
