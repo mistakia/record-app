@@ -13,7 +13,7 @@
     "ipfs": "0.29.2",
     "logplease": "1.2.14",
     "orbit-db": "0.19.8",
-    "record-node": "github:mistakia/record-node#e48a1bb"
+    "record-node": "github:mistakia/record-node#50f96bd"
   },
   "devDependencies": {
     "browserify": "^16.2.2",

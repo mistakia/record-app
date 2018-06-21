@@ -103,7 +103,7 @@ const init = (docsPath) => {
       try {
         await rn.loadLog()
         fs.writeFileSync(orbitAddressPath, rn._log.address)
-      } catch(e) {
+      } catch (e) {
         console.log(e)
       }
 
@@ -116,7 +116,7 @@ const init = (docsPath) => {
 
     })
 
-  } catch(e) {
+  } catch (e) {
     console.log(e)
   }
 
@@ -150,6 +150,25 @@ rnBridge.channel.on('message', async (message) => {
         logger('ipfs started')
       })
       break
+
+    case 'resolve':
+      if (!rn) {
+        return
+      }
+
+      try {
+        data = await rn.resolve(msg.data.url)
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          data
+        }))
+      } catch (e) {
+        console.log(e)
+        rnBridge.channel.send(JSON.stringify({
+          action: msg.action,
+          error: e.toString()
+        }))
+      }
 
     case 'contacts:get':
       if (!rn) {
@@ -226,7 +245,7 @@ rnBridge.channel.on('message', async (message) => {
           action: msg.action,
           data
         }))
-      } catch(e) {
+      } catch (e) {
         console.log(e)
         rnBridge.channel.send(JSON.stringify({
           action: msg.action,
