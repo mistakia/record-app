@@ -4,14 +4,14 @@ export const Track = new Record({
   id: null,
   title: null,
   url: null,
-  stream_url: null
+  webpage_url: null
 })
 
 export function createTrack (data) {
   return new Track({
     id: data._id,
-    title: data.content.title,
+    title: data.content.fulltitle,
     url: data.content.url,
-    stream_url: data.content.stream_url
+    webpage_url: data.content.webpage_url
   })
 }

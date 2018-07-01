@@ -19,7 +19,7 @@ class Track extends React.Component {
         </div>
         <div className='track__body'>
           <h2>{track.title}</h2>
-          <p>{track.url}</p>
+          <p>{track.webpage_url}</p>
         </div>
         <div className='track__actions'>
 
