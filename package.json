@@ -60,6 +60,7 @@
     "react-dom": "^16.2.0",
     "react-native": "^0.55.4",
     "react-native-fs": "^2.9.12",
+    "react-native-vector-icons": "^4.6.0",
     "react-redux": "^5.0.4",
     "react-router": "^4.1.1",
     "react-router-dom": "^4.1.1",
