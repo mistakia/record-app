@@ -10,7 +10,7 @@ import './audio-timeline.styl'
 
 export class AudioTimeline extends React.Component {
   static propTypes = {
-    seek: PropTypes.func.isRequred,
+    seek: PropTypes.func.isRequired,
     times: PropTypes.instanceOf(PlayerTimesState).isRequired
   }
 
