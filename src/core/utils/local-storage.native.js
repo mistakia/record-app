@@ -2,7 +2,8 @@ import { AsyncStorage } from 'react-native'
 
 export const localStorageAdapter = {
   async getItem (key) {
-    const d = await JSON.parse(AsyncStorage.getItem(key))
+    const item = await AsyncStorage.getItem(key)
+    const d = await JSON.parse(item)
     return d
   },
 
