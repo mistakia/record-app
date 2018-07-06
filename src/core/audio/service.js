@@ -17,7 +17,7 @@ export function initAudio (emit, audio = new Audio()) {
 }
 
 export function getTimes (event) {
-  const { buffered, currentTime, duration } = event.target
+  const { buffered, currentTime, duration } = event.target ? event.target : event
   const bufferedTime = buffered.length ? buffered.end(0) : 0
 
   return {

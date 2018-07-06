@@ -16,7 +16,7 @@ export function * playNextTrack () {
 
 export function * playSelectedTrack () {
   const track = yield select(getPlayerTrack)
-  yield call(audio.load, track.streamUrl)
+  yield call(audio.load, track.url)
   yield call(audio.play)
 }
 
