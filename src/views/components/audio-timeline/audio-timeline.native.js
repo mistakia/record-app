@@ -21,13 +21,13 @@ export default class AudioTimeline extends React.Component {
   }
 
   render () {
-    let { bufferedTime, percentBuffered, percentCompleted } = this.props.times
+    let { percentBuffered, percentCompleted } = this.props.times
 
     return (
       <TouchableOpacity onPress={this.handleClick} style={styles.barContainer}>
         <View style={styles.bar}>
-          <View style={[styles.complete, { width: percentCompleted }]}></View>
-          <View style={[styles.buffer, { width: percentBuffered }]}></View>
+          <View style={[styles.complete, { width: percentCompleted }]} />
+          <View style={[styles.buffer, { width: percentBuffered }]} />
         </View>
       </TouchableOpacity>
     )

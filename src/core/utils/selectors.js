@@ -8,7 +8,7 @@ export const createShallowEqualSelector = createSelectorCreator(
 // copied from redux
 // https://github.com/reactjs/react-redux/blob/65a80f89dbad5e1d3d4ff8ec11472ce0c966aad5/src/utils/shallowEqual.js
 
-function shallowEqual(objA, objB) {
+function shallowEqual (objA, objB) {
   if (objA === objB) {
     return true
   }

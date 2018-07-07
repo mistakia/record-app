@@ -15,7 +15,7 @@ export function getCurrentTracklist (state) {
   return tracklists.get(tracklists.get('currentTracklistId'))
 }
 
-export function getTracklistCursor(selectedTrackId, trackIds) {
+export function getTracklistCursor (selectedTrackId, trackIds) {
   let index = trackIds.indexOf(selectedTrackId)
   let nextTrackId = null
   let previousTrackId = null
