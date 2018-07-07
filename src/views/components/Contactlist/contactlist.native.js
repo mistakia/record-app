@@ -1,46 +1,25 @@
 import React from 'react'
-import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
 import { View } from 'react-native'
 
-import {
-  getCurrentContactlist,
-  getContactsForCurrentContactlist
-} from '@core/contactlists'
 import LoadingIndicator from '@components/LoadingIndicator'
 import Contact from '@components/Contact'
 
-class Contactlist extends React.Component {
-  render () {
-    const { contacts } = this.props
-
-    const contactItems = contacts.map((contact, index) => {
-      return (
-        <View key={index}>
-          <Contact contact={contact} />
-        </View>
-      )
-    })
-
+export default function Contactlist ({ contacts, displayLoadingIndicator }) {
+  const contactItems = contacts.map((contact, index) => {
     return (
-      <View>
-        {contactItems}
-
-        <View>
-          {(this.props.displayLoadingIndicator) ? <LoadingIndicator /> : null}
-        </View>
+      <View key={index}>
+        <Contact contact={contact} />
       </View>
     )
-  }
-}
-
-const mapStateToProps = createSelector(
-  getCurrentContactlist,
-  getContactsForCurrentContactlist,
-  (contactlist, contacts) => ({
-    displayLoadingIndicator: contactlist.isPending,
-    contacts
   })
-)
 
-export default connect(mapStateToProps, null)(Contactlist)
+  return (
+    <View>
+      {contactItems}
+
+      <View>
+        {(displayLoadingIndicator) ? <LoadingIndicator /> : null}
+      </View>
+    </View>
+  )
+}
