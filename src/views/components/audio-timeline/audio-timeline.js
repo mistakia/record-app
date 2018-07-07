@@ -1,19 +1,8 @@
 import React from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
-
-import { getPlayerTimes, PlayerTimesState } from '@core/player'
-import { audio } from '@core/audio'
 
 import './audio-timeline.styl'
 
-export class AudioTimeline extends React.Component {
-  static propTypes = {
-    seek: PropTypes.func.isRequired,
-    times: PropTypes.instanceOf(PlayerTimesState).isRequired
-  }
-
+export default class AudioTimeline extends React.Component {
   constructor () {
     super(...arguments)
     this.handleClick = this.handleClick.bind(this)
@@ -39,13 +28,3 @@ export class AudioTimeline extends React.Component {
     )
   }
 }
-
-const mapStateToProps = createSelector(
-  getPlayerTimes,
-  times => ({
-    seek: audio.seek,
-    times
-  })
-)
-
-export default connect(mapStateToProps)(AudioTimeline)
