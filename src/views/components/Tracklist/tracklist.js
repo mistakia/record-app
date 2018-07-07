@@ -4,6 +4,7 @@ import LoadingIndicator from '@components/LoadingIndicator'
 import Track from '@components/Track'
 
 export default function Tracklist ({
+  displayLoadingIndicator,
   isPlaying,
   pause,
   play,
@@ -32,7 +33,7 @@ export default function Tracklist ({
       {trackItems}
 
       <div>
-        {(this.props.displayLoadingIndicator) ? <LoadingIndicator /> : null}
+        {(displayLoadingIndicator) ? <LoadingIndicator /> : null}
       </div>
     </div>
   )
