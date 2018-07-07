@@ -1,4 +1,3 @@
-import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
@@ -25,10 +24,6 @@ Player.propTypes = {
   track: PropTypes.instanceOf(Track),
   volume: PropTypes.number.isRequired
 }
-
-//=====================================
-//  CONNECT
-//-------------------------------------
 
 const mapStateToProps = createShallowEqualSelector(
   getPlayer,

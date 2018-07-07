@@ -2,7 +2,6 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 function FormattedTime ({ value = 0 }) {
-
   let hours = Math.floor(value / 3600)
   let minutes = `0${Math.floor((value % 3600) / 60)}`.slice(-2)
   let seconds = `0${Math.floor((value % 60))}`.slice(-2)

@@ -7,7 +7,7 @@ import IconButton from '@components/icon-button'
 
 import './player.styl'
 
-export default function Player({
+export default function Player ({
   isPlaying,
   nextTrack,
   pause,

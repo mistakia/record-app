@@ -1,5 +1,7 @@
+/* global localStorage */
+
 export const localStorageAdapter = {
-  getItem(key) {
+  getItem (key) {
     // return promise to match AsyncStorage usage on mobile
     return new Promise((resolve, reject) => {
       try {
@@ -11,11 +13,11 @@ export const localStorageAdapter = {
     })
   },
 
-  removeItem(key) {
+  removeItem (key) {
     localStorage.removeItem(key)
   },
 
-  setItem(key, value) {
+  setItem (key, value) {
     localStorage.setItem(key, JSON.stringify(value))
   }
 }
