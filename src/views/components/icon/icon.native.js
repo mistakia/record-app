@@ -1,9 +1,9 @@
 import React from 'react'
 import Iconicons from 'react-native-vector-icons/Ionicons'
 
-function Icon ({ name }) {
+function Icon ({ name, iconStyle }) {
   return (
-    <Iconicons name={name} />
+    <Iconicons name={name} style={iconStyle} />
   )
 }
 

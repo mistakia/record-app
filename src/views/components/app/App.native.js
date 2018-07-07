@@ -10,6 +10,7 @@ import {
 
 import Menu from '@components/Menu'
 import Routes from '@views/routes'
+import Player from '@components/player'
 import { appActions } from '@core/app'
 
 export class App extends React.Component {
@@ -56,6 +57,7 @@ export class App extends React.Component {
       <View style={styles.appContainer}>
         <Menu />
         <Routes />
+        <Player />
       </View>
     )
   }

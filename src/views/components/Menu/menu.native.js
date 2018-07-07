@@ -18,10 +18,9 @@ const Menu = () => (
 
 const styles = StyleSheet.create({
   menu: {
-    position: 'absolute',
+    ...StyleSheet.absoluteFillObject,
     bottom: 0,
-    left: 0,
-    right: 0,
+    top: 'auto',
     height: 50,
     flexDirection: 'row',
     justifyContent: 'space-between',
