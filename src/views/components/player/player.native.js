@@ -1,7 +1,6 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 
-import AudioCurrentTime from '@components/audio-current-time'
 import AudioTimeline from '@components/audio-timeline'
 import IconButton from '@components/icon-button'
 
