@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     top: 'auto',
     bottom: 50,
     height: 40,
-    backgroundColor: '#666',
+    backgroundColor: '#2d2e2f',
     zIndex: 1
   },
   text: {
