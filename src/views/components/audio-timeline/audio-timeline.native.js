@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   bar: {
     width: '100%',
     height: 3,
-    backgroundColor: '#F0F0F0'
+    backgroundColor: '#3a3b3c'
   },
   complete: {
     ...StyleSheet.absoluteFillObject,
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   },
   buffer: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#666666',
+    opacity: 0.3,
     height: 3
   }
 })
