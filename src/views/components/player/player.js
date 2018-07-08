@@ -44,11 +44,11 @@ export default function Player ({
           />
         </div>
 
+        <div className='player-controls__title'>{track.title}</div>
+
         <div className='player-controls__time'>
           <AudioCurrentTime /> / <FormattedTime value={track.duration} unit={'ms'} />
         </div>
-
-        <div className='player-controls__title'>{track.title}</div>
       </div>
     </div>
   )
