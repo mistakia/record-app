@@ -1,6 +1,7 @@
 import React from 'react'
 
 import IconButton from '@components/icon-button'
+import FormattedTime from '@components/formatted-time'
 
 import './track.styl'
 
@@ -16,10 +17,13 @@ class Track extends React.Component {
             label={isPlaying ? 'Pause' : 'Play'}
             onClick={isPlaying ? pause : play}
           />
+          <img src={track.thumbnail} />
         </div>
         <div className='track__body'>
-          <h2>{track.title}</h2>
-          <p>{track.webpage_url}</p>
+          <div className='track__title'>{track.title}</div>
+          <small className='track__duration'>
+            <FormattedTime value={track.duration} unit={'ms'} />
+          </small>
         </div>
         <div className='track__actions'>
 
