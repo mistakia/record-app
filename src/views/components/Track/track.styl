@@ -1,13 +1,40 @@
+$trackHeight = 75px
+
 .track
     border-bottom 1px solid $borderColor
     padding 0
+    min-height $trackHeight
     .track__play
-        absolute top left
-        background $borderColor
-        width 100px
-        height 100px
+      absolute top left
+      width $trackHeight
+      height $trackHeight
+      button
+        position absolute
+        width 100%
+        height 100%
+        background rgba(0,0,0,.5)
+        display none
+        border-radius 0
+        .icon
+          fill white
+    &:hover
+      .track__play button
+        display block
     .track__actions
-        absolute top right
+      absolute top right
     .track__body
-        padding 10px 130px 0 10px
-        margin-left 100px
+      display flex
+      flex-wrap nowrap
+      padding 10px
+      margin-left $trackHeight
+    .track__title
+      flex-grow 1
+    .track__duration
+      flex-grow 0
+      font-weight 500
+      letter-spacing -.02em
+      color #999
+    img
+      width 100%
+      height 100%
+      background $borderColor

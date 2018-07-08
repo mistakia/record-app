@@ -16,15 +16,14 @@ export default function Tracklist ({
   const trackItems = tracks.map((track, index) => {
     const isSelected = track.id === selectedTrackId
     return (
-      <div key={index}>
-        <Track
-          track={track}
-          isPlaying={isSelected && isPlaying}
-          isSelected={isSelected}
-          pause={pause}
-          play={isSelected ? play : selectTrack.bind(null, track.id, tracklistId)}
-        />
-      </div>
+      <Track
+        key={index}
+        track={track}
+        isPlaying={isSelected && isPlaying}
+        isSelected={isSelected}
+        pause={pause}
+        play={isSelected ? play : selectTrack.bind(null, track.id, tracklistId)}
+      />
     )
   })
 
