@@ -59,7 +59,7 @@
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-native": "^0.55.4",
-    "react-native-audio-polyfill": "github:mistakia/react-native-audio-polyfill#patch",
+    "react-native-audio-polyfill": "^1.1.6",
     "react-native-fs": "^2.9.12",
     "react-native-vector-icons": "^4.6.0",
     "react-redux": "^5.0.4",
