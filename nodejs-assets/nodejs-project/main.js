@@ -72,10 +72,15 @@ const init = (docsPath) => {
     config: {
       Bootstrap: [],
       Addresses: {
-	Swarm: [
+	    Swarm: [
           '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
-	]
+	    ]
       }
+    },
+    connectionManager: {
+      maxPeers: 10,
+      minPeers: 2,
+      pollInterval: 10000 // ms
     }
   }
 

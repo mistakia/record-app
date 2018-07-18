@@ -111,10 +111,14 @@ app.on('ready', () => {
       config: {
         Bootstrap: [],
         Addresses: {
-	  Swarm: [
+	      Swarm: [
             '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
-	  ]
+	      ]
         }
+      },
+      connectionManager: {
+        maxPeers: 100,
+        minPeers: 10
       }
     }
     const ipfs = new IPFS(ipfsConfig)
