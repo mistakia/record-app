@@ -16,7 +16,6 @@
     "record-node": "github:mistakia/record-node#1b28727"
   },
   "devDependencies": {
-    "browserify": "^16.2.2",
     "patch-package": "^5.1.1"
   }
 }
