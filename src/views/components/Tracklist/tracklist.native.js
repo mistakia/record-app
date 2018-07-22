@@ -1,12 +1,15 @@
 import React from 'react'
-import { View } from 'react-native'
+import { View, Text } from 'react-native'
 
+import Button from '@components/button'
 import LoadingIndicator from '@components/LoadingIndicator'
 import Track from '@components/Track'
 
 export default function Tracklist ({
   displayLoadingIndicator,
+  hasMore,
   isPlaying,
+  loadNextTracks,
   pause,
   play,
   selectedTrackId,
@@ -29,13 +32,25 @@ export default function Tracklist ({
     )
   })
 
+  const buttonStyle = {
+    marginTop: 30,
+    marginBottom: 20,
+    marginLeft: 15,
+    marginRight: 15
+  }
+  const loadStatus = displayLoadingIndicator ?
+                     <LoadingIndicator /> :
+                     ( hasMore ?
+                       (<Button
+                          onClick={loadNextTracks}
+                          style={buttonStyle}>
+                         <Text>Load More</Text>
+                       </Button>) :
+                       null)
   return (
     <View>
       {trackItems}
-
-      <View>
-        {(displayLoadingIndicator) ? <LoadingIndicator /> : null}
-      </View>
+      {loadStatus}
     </View>
   )
 }

@@ -99,25 +99,20 @@ const init = (docsPath) => {
       logger(`Orbit Address: ${orbitAddress}`)
 
       const opts = {
-        orbitPath: path.resolve(recorddir, './orbitdb'),
-        orbitAddress: orbitAddress
+        orbitPath: path.resolve(recorddir, './orbitdb')
       }
 
       rn = new RecordNode(ipfs, OrbitDB, opts)
 
       try {
-        await rn.loadLog()
+        await rn.init(orbitAddress)
+        const log = await rn.loadLog()
         fs.writeFileSync(orbitAddressPath, rn._log.address)
       } catch (e) {
         console.log(e)
       }
 
       rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
-
-      // TODO: syncContacts once dialing is complete
-      setTimeout(() => {
-        rn.syncContacts()
-      }, 30000)
 
     })
 
@@ -182,7 +177,8 @@ rnBridge.channel.on('message', async (message) => {
 
       try {
         log = await rn.loadLog(msg.data.logId)
-        data = log.contacts.all()
+        const entries = await log.contacts.all()
+        data = entries.map(e => e.payload.value)
         rnBridge.channel.send(JSON.stringify({
           action: msg.action,
           data
@@ -245,7 +241,9 @@ rnBridge.channel.on('message', async (message) => {
 
       try {
         log = await rn.loadLog(msg.data.logId)
-        data = log.tracks.all()
+        const { start, end } = msg.data.params
+        const entries = await log.tracks.all(start, end)
+        data = entries.map(e => e.payload.value)
         rnBridge.channel.send(JSON.stringify({
           action: msg.action,
           data

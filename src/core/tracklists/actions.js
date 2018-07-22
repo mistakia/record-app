@@ -4,6 +4,7 @@ export const tracklistActions = {
   FETCH_TRACKS_PENDING: 'FETCH_TRACKS_PENDING',
 
   LOAD_TRACKS: 'LOAD_TRACKS',
+  LOAD_NEXT_TRACKS: 'LOAD_NEXT_TRACKS',
 
   POST_TRACK_FAILED: 'POST_TRACK_FAILED',
   POST_TRACK_FULFILLED: 'POST_TRACK_FULFILLED',
@@ -36,6 +37,10 @@ export const tracklistActions = {
     payload: {
       logId
     }
+  }),
+
+  loadNextTracks: () => ({
+    type: tracklistActions.LOAD_NEXT_TRACKS
   }),
 
   postTrackFailed: error => ({

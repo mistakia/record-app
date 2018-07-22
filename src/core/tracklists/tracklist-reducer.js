@@ -1,5 +1,6 @@
 import { List } from 'immutable'
 
+import { TRACKS_PER_LOAD } from '@core/constants'
 import { tracklistActions } from './actions'
 import { Tracklist } from './tracklist'
 
@@ -10,6 +11,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         tracklist.merge({
           isNew: false,
           isPending: false,
+          hasMore: payload.data.length === TRACKS_PER_LOAD,
           trackIds: mergeTrackIds(tracklist.trackIds, payload.data)
         })
       })
