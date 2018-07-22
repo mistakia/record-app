@@ -33,11 +33,11 @@ export const api = {
       handleResponse(msg.action, resolve, reject)
     })
   },
-  fetchTracks (logId) {
+  fetchTracks (logId, params) {
     return new Promise((resolve, reject) => {
       const msg = {
         action: 'tracks:get',
-        data: { logId }
+        data: { logId, params }
       }
       nodejs.channel.send(JSON.stringify(msg))
       handleResponse(msg.action, resolve, reject)

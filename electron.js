@@ -13,7 +13,7 @@ const IPFS = require('ipfs')
 
 const config = require('./config/project.config')
 
-debug.enable('repo,jsipfs:*,record:*,libp2p:*,bitswap:*')
+debug.enable('record:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
@@ -136,18 +136,16 @@ app.on('ready', () => {
 
       logger.info(`Orbit Address: ${orbitAddress}`)
 
-      const opts = {
-        orbitAddress: orbitAddress,
+      let opts = {
         orbitPath: path.resolve(recorddir, './orbitdb'),
         api: true
       }
 
       const rn = new RecordNode(ipfs, OrbitDB, opts)
       try {
-        await rn.loadLog()
+        await rn.init(orbitAddress)
+        const log = await rn.loadLog()
         fs.writeFileSync(orbitAddressPath, rn._log.address)
-
-        rn.syncContacts()
       } catch (e) {
         console.log(e)
       }

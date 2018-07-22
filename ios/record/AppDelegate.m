@@ -25,7 +25,7 @@
         // Run from locally running dev server
         jsCodeLocation = [NSURL URLWithString:@"http://localhost:8081/src/index.ios.bundle?platform=ios&dev=true"];
     #else
-        // Run on device with code coming from dev server on comp (change the IP to your comps IP)
+        // Run on device with code coming from dev server on comp
         jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"src/index.ios" fallbackResource:nil];
     #endif
   #else
