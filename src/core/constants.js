@@ -11,3 +11,4 @@ export const PLAYER_STORAGE_KEY = 'player'
 //  TRACKLISTS
 // -------------------------------------
 export const SESSION_TRACKLIST_ID = 'session'
+export const TRACKS_PER_LOAD = 20
