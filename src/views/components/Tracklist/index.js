@@ -1,7 +1,11 @@
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { getCurrentTracklist, getTracksForCurrentTracklist } from '@core/tracklists'
+import {
+  getCurrentTracklist,
+  getTracksForCurrentTracklist,
+  tracklistActions
+} from '@core/tracklists'
 import { getPlayerIsPlaying, getPlayerTrackId, playerActions } from '@core/player'
 import { audio } from '@core/audio'
 
@@ -19,12 +23,14 @@ const mapStateToProps = createSelector(
     play: audio.play,
     selectedTrackId: playerTrackId,
     tracklistId: tracklist.id,
+    hasMore: tracklist.hasMore,
     tracks
   })
 )
 
 const mapDispatchToProps = {
-  selectTrack: playerActions.playSelectedTrack
+  selectTrack: playerActions.playSelectedTrack,
+  loadNextTracks: tracklistActions.loadNextTracks
 }
 
 export default connect(
