@@ -10,7 +10,7 @@ export const api = {
     return dispatch({url})
   },
   fetchTracks (logId) {
-    const url = `http://localhost:3000/logs/tracks/${logId}`
+    const url = `http://localhost:3000/logs/tracks${logId}`
     return dispatch({url})
   },
   postContact (logId, data) {
