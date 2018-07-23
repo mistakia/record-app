@@ -10,6 +10,14 @@ import headStyles from '@styles/head'
 
 export class ContactsPage extends React.Component {
   componentWillMount () {
+    this._load()
+  }
+
+  componentDidUpdate () {
+    this._load()
+  }
+
+  _load () {
     // '/me' or proper orbitdb adadress
     const { logId } = this.props.match.params
     this.props.loadContacts(`/${logId}`)
