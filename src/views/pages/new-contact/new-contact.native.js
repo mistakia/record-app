@@ -3,10 +3,10 @@ import { connect } from 'react-redux'
 import {
   Text,
   TextInput,
-  TouchableOpacity,
   View
 } from 'react-native'
 
+import Button from '@components/button'
 import { contactlistActions } from '@core/contactlists'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
@@ -51,11 +51,10 @@ export class NewContactPage extends React.Component {
           onChangeText={(address) => this.setState({address})}
           value={this.state.address}
         />
-        <TouchableOpacity
-          style={formStyles.button}
-          onPress={this.handleSubmit}>
+        <Button
+          onClick={this.handleSubmit}>
           <Text>Submit</Text>
-        </TouchableOpacity>
+        </Button>
       </View>
     )
 

@@ -3,10 +3,10 @@ import { connect } from 'react-redux'
 import {
   Text,
   TextInput,
-  TouchableOpacity,
   View
 } from 'react-native'
 
+import Button from '@components/button'
 import { tracklistActions } from '@core/tracklists'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
@@ -50,11 +50,10 @@ export class NewTrackPage extends React.Component {
           onChangeText={(url) => this.setState({url})}
           value={this.state.url}
         />
-        <TouchableOpacity
-          style={formStyles.button}
-          onPress={this.handleSubmit}>
+        <Button
+          onClick={this.handleSubmit}>
           <Text>Submit</Text>
-        </TouchableOpacity>
+        </Button>
       </View>
     )
 
