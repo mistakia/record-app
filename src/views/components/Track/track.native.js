@@ -7,8 +7,6 @@ import {
   TouchableOpacity
 } from 'react-native'
 
-import IconButton from '@components/icon-button'
-
 class Track extends React.Component {
   render () {
     const { isPlaying, isSelected, pause, play, track } = this.props
@@ -31,7 +29,7 @@ class Track extends React.Component {
 const styles = StyleSheet.create({
   track: {
     flex: 1,
-    minHeight:60,
+    minHeight: 60,
     flexDirection: 'row'
   },
   thumbnail: {

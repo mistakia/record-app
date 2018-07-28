@@ -8,7 +8,7 @@ import {
   View
 } from 'react-native'
 
-import Menu from '@components/Menu'
+import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
 import { appActions } from '@core/app'
