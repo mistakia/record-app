@@ -9,7 +9,7 @@ import {
 
 import PageLayout from '@layouts/page'
 import { getInfo, infoActions } from '@core/info'
-import CopyText from '@components/CopyText'
+import CopyText from '@components/copy-text'
 import ItemStyles from '@styles/item'
 import TextStyles from '@styles/text'
 
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 5
-  },
+  }
 })
 
 const mapStateToProps = createSelector(

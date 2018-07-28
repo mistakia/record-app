@@ -4,7 +4,7 @@ import { Text, View } from 'react-native'
 import { Link } from 'react-router-native'
 
 import { contactlistActions } from '@core/contactlists'
-import Contactlist from '@components/Contactlist'
+import Contactlist from '@components/contactlist'
 import PageLayout from '@layouts/page'
 import headStyles from '@styles/head'
 
