@@ -38,7 +38,9 @@ export class ContactsPage extends React.Component {
     )
 
     const body = (
-      <Contactlist />
+      <View style={{margin: 5}}>
+        <Contactlist />
+      </View>
     )
 
     return (

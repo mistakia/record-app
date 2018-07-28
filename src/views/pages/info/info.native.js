@@ -10,6 +10,8 @@ import {
 import PageLayout from '@layouts/page'
 import { getInfo, infoActions } from '@core/info'
 import CopyText from '@components/CopyText'
+import ItemStyles from '@styles/item'
+import TextStyles from '@styles/text'
 
 export class InfoPage extends React.Component {
   componentWillMount () {
@@ -44,37 +46,37 @@ export class InfoPage extends React.Component {
 
     const body = (
       <View style={{margin: 5}}>
-        <Text style={styles.label}>State</Text>
-        <View style={styles.container}>
-          <Text style={styles.pre}>{info.state}</Text>
+        <Text style={ItemStyles.label}>State</Text>
+        <View style={ItemStyles.container}>
+          <Text style={TextStyles.small}>{info.state}</Text>
         </View>
-        <Text style={styles.label}>Orbit DB Address</Text>
-        <CopyText style={styles.container} text={info.orbitdb.address}>
-          <Text style={styles.pre}>{info.orbitdb.address}</Text>
+        <Text style={ItemStyles.label}>Orbit DB Address</Text>
+        <CopyText style={ItemStyles.container} text={info.orbitdb.address}>
+          <Text style={TextStyles.small}>{info.orbitdb.address}</Text>
         </CopyText>
-        <Text style={styles.label}>Orbit DB Public Key</Text>
-        <CopyText style={styles.container} text={info.orbitdb.publickey}>
-          <Text style={styles.pre}>{info.orbitdb.publicKey}</Text>
+        <Text style={ItemStyles.label}>Orbit DB Public Key</Text>
+        <CopyText style={ItemStyles.container} text={info.orbitdb.publickey}>
+          <Text style={TextStyles.small}>{info.orbitdb.publicKey}</Text>
         </CopyText>
-        <Text style={styles.label}>IPFS ID</Text>
-        <CopyText style={styles.container} text={info.ipfs.id}>
-          <Text style={styles.pre}>{info.ipfs.id}</Text>
+        <Text style={ItemStyles.label}>IPFS ID</Text>
+        <CopyText style={ItemStyles.container} text={info.ipfs.id}>
+          <Text style={TextStyles.small}>{info.ipfs.id}</Text>
         </CopyText>
-        <Text style={styles.label}>IPFS Public Key</Text>
-        <CopyText style={styles.container} text={info.ipfs.publicKey}>
-          <Text style={styles.pre}>{info.ipfs.publicKey}</Text>
+        <Text style={ItemStyles.label}>IPFS Public Key</Text>
+        <CopyText style={ItemStyles.container} text={info.ipfs.publicKey}>
+          <Text style={TextStyles.small}>{info.ipfs.publicKey}</Text>
         </CopyText>
-        <Text style={styles.label}>IPFS Agent Version</Text>
-        <View style={styles.container}>
-          <Text style={styles.pre}>{info.ipfs.agentVersion}</Text>
+        <Text style={ItemStyles.label}>IPFS Agent Version</Text>
+        <View style={ItemStyles.container}>
+          <Text style={TextStyles.small}>{info.ipfs.agentVersion}</Text>
         </View>
-        <Text style={styles.label}>IPFS Protocol Version</Text>
-        <View style={styles.container}>
-          <Text style={styles.pre}>{info.ipfs.protocolVersion}</Text>
+        <Text style={ItemStyles.label}>IPFS Protocol Version</Text>
+        <View style={ItemStyles.container}>
+          <Text style={TextStyles.small}>{info.ipfs.protocolVersion}</Text>
         </View>
-        <Text style={styles.label}>Subs</Text>
+        <Text style={ItemStyles.label}>Subs</Text>
         <View style={styles.table}>{subs}</View>
-        <Text style={styles.label}>Peers</Text>
+        <Text style={ItemStyles.label}>Peers</Text>
         <View style={styles.table}>{peers}</View>
       </View>
     )
@@ -86,15 +88,6 @@ export class InfoPage extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  label: {
-    fontSize: 10,
-    padding: 5,
-    backgroundColor: 'white'
-  },
-  pre: {
-    padding: 5,
-    fontSize: 12
-  },
   table: {
     padding: 5,
     backgroundColor: 'white',
@@ -114,11 +107,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 5
   },
-  container: {
-    backgroundColor: 'white',
-    marginBottom: 5,
-    padding: 5
-  }
 })
 
 const mapStateToProps = createSelector(
