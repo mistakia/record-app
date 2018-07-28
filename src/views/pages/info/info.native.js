@@ -30,7 +30,7 @@ export class InfoPage extends React.Component {
       return (
         <View key={index} style={styles.row}>
           <View style={styles.cell}><Text>{subPeers.length}</Text></View>
-          <View style={[styles.cell, {flex: 5}]}><Text>{id}</Text></View>
+          <View style={[styles.cell, {flex: 5}]}><Text style={TextStyles.small}>{id}</Text></View>
         </View>
       )
     })
@@ -39,7 +39,7 @@ export class InfoPage extends React.Component {
       return (
         <View key={index} style={styles.row}>
           <View style={styles.cell}><Text>{index + 1}</Text></View>
-          <View style={[styles.cell, {flex: 5}]}><Text>{peer.address}</Text></View>
+          <View style={[styles.cell, {flex: 5}]}><Text style={TextStyles.small}>{peer.address}</Text></View>
         </View>
       )
     })
