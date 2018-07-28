@@ -1,17 +1,23 @@
 import React from 'react'
-import { View, Text } from 'react-native'
+import { Text, TouchableOpacity } from 'react-native'
 import { Link } from 'react-router-native'
+
+import ItemStyles from '@styles/item'
+import TextStyles from '@styles/text'
+import CopyText from '@components/CopyText'
 
 class Contact extends React.Component {
   render () {
     const { contact } = this.props
 
     return (
-      <View>
-        <Text>Alias: {contact.alias}</Text>
-        <Text>Address: {contact.address}</Text>
-        <Link to={`/tracks${contact.address}`}><Text>Tracks</Text></Link>
-      </View>
+      <Link
+        to={`/tracks${contact.address}`}
+        component={TouchableOpacity}
+        style={ItemStyles.container}>
+        <Text style={TextStyles.title}>{contact.alias}</Text>
+        <Text style={TextStyles.small}>{contact.address}</Text>
+      </Link>
     )
   }
 }

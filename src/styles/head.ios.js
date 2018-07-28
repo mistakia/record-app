@@ -1,1 +1,1 @@
-export { default } from './head.native.js'
+export { default } from './head.native'
