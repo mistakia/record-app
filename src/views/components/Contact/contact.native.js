@@ -4,7 +4,6 @@ import { Link } from 'react-router-native'
 
 import ItemStyles from '@styles/item'
 import TextStyles from '@styles/text'
-import CopyText from '@components/CopyText'
 
 class Contact extends React.Component {
   render () {

@@ -1,1 +1,1 @@
-export { default } from './App.native'
+export { default } from './app.native'

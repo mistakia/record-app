@@ -12,7 +12,7 @@ const defaultStyle = {
 }
 
 function Button ({ children, onClick, style = {} }) {
-  style = Object.assign(defaultStyle, style)
+  style = [defaultStyle, style]
   return (
     <TouchableOpacity
       style={style}

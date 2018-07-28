@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-import Tracklist from '@components/Tracklist'
+import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
 
 export default function () {
@@ -9,7 +9,7 @@ export default function () {
   const head = (
     <div>
       <h1>Tracks</h1>
-      { logId === 'me' && <Link className='button' to='/tracks/new'>Add Track</Link> }
+      {logId === 'me' && <Link className='button' to='/tracks/new'>Add Track</Link>}
     </div>
   )
 
