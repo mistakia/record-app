@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
 
 import { contactlistActions } from '@core/contactlists'
-import Contactlist from '@components/Contactlist'
+import Contactlist from '@components/contactlist'
 import PageLayout from '@layouts/page'
 
 export class ContactsPage extends React.Component {
@@ -26,7 +26,7 @@ export class ContactsPage extends React.Component {
     const head = (
       <div>
         <h1>Contacts</h1>
-        { logId === 'me' && <Link className='button' to='/contacts/new'>Add Contact</Link> }
+        {logId === 'me' && <Link className='button' to='/contacts/new'>Add Contact</Link>}
       </div>
     )
 

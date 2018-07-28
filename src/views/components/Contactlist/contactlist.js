@@ -1,7 +1,7 @@
 import React from 'react'
 
-import LoadingIndicator from '@components/LoadingIndicator'
-import Contact from '@components/Contact'
+import LoadingIndicator from '@components/loading-indicator'
+import Contact from '@components/contact'
 
 export default function Contactlist ({ contacts, displayLoadingIndicator }) {
   const contactItems = contacts.map((contact, index) => {

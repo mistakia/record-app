@@ -10,7 +10,7 @@ export class TracksPage extends React.Component {
     this._load()
   }
 
-  componentDidUpdate() {
+  componentDidUpdate () {
     this._load()
   }
 

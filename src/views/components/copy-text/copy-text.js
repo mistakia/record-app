@@ -1,6 +1,6 @@
 import React from 'react'
 
-import './CopyText.styl'
+import './copy-text.styl'
 
 const copyToClipboard = str => {
   // https://gist.github.com/Chalarangelo/4ff1e8c0ec03d9294628efbae49216db#file-copytoclipboard-js

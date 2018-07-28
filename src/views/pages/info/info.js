@@ -4,7 +4,7 @@ import { createSelector } from 'reselect'
 
 import { getInfo, infoActions } from '@core/info'
 import PageLayout from '@layouts/page'
-import CopyText from '@components/CopyText'
+import CopyText from '@components/copy-text'
 
 export class InfoPage extends React.Component {
   componentWillMount () {

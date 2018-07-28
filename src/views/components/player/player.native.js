@@ -53,7 +53,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     left: 'auto',
     height: '100%',
-    width: 40
+    width: 40,
+    marginLeft: 0,
+    marginRight: 0,
+    padding: 0,
+    borderWidth: 0
   },
   play: {
     color: '#f0f0f0',

@@ -1,7 +1,7 @@
 import React from 'react'
 
-import LoadingIndicator from '@components/LoadingIndicator'
-import Track from '@components/Track'
+import LoadingIndicator from '@components/loading-indicator'
+import Track from '@components/track'
 
 export default function Tracklist ({
   displayLoadingIndicator,
