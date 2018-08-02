@@ -22,7 +22,12 @@ npm run start:electron
 ```
 
 ### Mobile (React Native)
-First, start react native packager with:
+First, install packages needed by nodejs-mobile:
+```
+npm run install:nodejs-mobile
+```
+
+Then, start react native packager with:
 ```
 npm run start
 ```
