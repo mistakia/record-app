@@ -25,9 +25,6 @@ class Track extends React.Component {
             <FormattedTime value={track.duration} unit={'ms'} />
           </small>
         </div>
-        <div className='track__actions'>
-
-        </div>
       </article>
     )
   }

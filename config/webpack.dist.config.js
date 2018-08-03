@@ -12,6 +12,7 @@ const nib = require('nib')
 const path = require('path')
 
 module.exports = {
+  mode: 'production',
   output: {
     publicPath: '/assets/',
     path: path.resolve(__dirname, '../dist/assets/'),
@@ -32,25 +33,25 @@ module.exports = {
     new webpack.optimize.AggressiveMergingPlugin()
   ],
   module: {
-    loaders: [{
+    rules: [{
       test: /\.js$/,
       exclude: /node_modules/,
       loader: 'babel-loader'
     }, {
       test: /\.(styl|css)$/,
       use: [{
-	loader: 'style-loader'
+	    loader: 'style-loader'
       }, {
-	loader: 'css-loader',
+	    loader: 'css-loader',
       }, {
-	loader: 'stylus-loader',
-	options: {
-	  use: [nib()],
-	  import: [
-	    '~nib/lib/nib/index.styl',
-	    path.resolve(__dirname, '../src/styles/variables.styl')
-	  ]
-	}
+	    loader: 'stylus-loader',
+	    options: {
+	      use: [nib()],
+	      import: [
+	        '~nib/lib/nib/index.styl',
+	        path.resolve(__dirname, '../src/styles/variables.styl')
+	      ]
+	    }
       }]
     }, {
       test: /\.(png|jpg)$/,

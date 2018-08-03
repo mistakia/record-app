@@ -38,19 +38,29 @@ export default function Tracklist ({
     marginLeft: 15,
     marginRight: 15
   }
-  const loadStatus = displayLoadingIndicator ?
-                     <LoadingIndicator /> :
-                     ( hasMore ?
-                       (<Button
-                          onClick={loadNextTracks}
-                          style={buttonStyle}>
-                         <Text>Load More</Text>
-                       </Button>) :
-                       null)
+
+  const loadStatus = () => {
+    if (displayLoadingIndicator) {
+      return <LoadingIndicator />
+    }
+
+    if (hasMore) {
+      return (
+        <Button
+          onClick={loadNextTracks}
+          style={buttonStyle}>
+          <Text>Load More</Text>
+        </Button>
+      )
+    }
+
+    return null
+  }
+
   return (
     <View>
       {trackItems}
-      {loadStatus}
+      {loadStatus()}
     </View>
   )
 }
