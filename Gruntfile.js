@@ -33,9 +33,9 @@ module.exports = function (grunt) {
         webpack: webpackDevConfig,
         publicPath: '/assets/',
         contentBase: './<%= pkg.src %>/',
-	historyApiFallback: {
-	  index: 'index.web.html'
-	}
+	    historyApiFallback: {
+	      index: 'index.web.html'
+	    }
       },
 
       start: {
@@ -122,10 +122,10 @@ module.exports = function (grunt) {
         }
       },
       electron_dist: {
-	task: ['webpack', 'exec:launch_electron_dist'],
-	options: {
-	  logConcurrentOutput: true
-	}
+	    task: ['webpack', 'exec:launch_electron_dist'],
+	    options: {
+	      logConcurrentOutput: true
+	    }
       }
     }
   })

@@ -17,7 +17,7 @@ class Track extends React.Component {
         onPress={isPlaying ? pause : play}>
         <Image
           style={styles.thumbnail}
-          source={{uri: track.thumbnail}}/>
+          source={{uri: track.thumbnail}} />
         <View style={styles.title}>
           <Text>{track.title}</Text>
         </View>
