@@ -2,52 +2,35 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { AppContainer } from 'react-hot-loader'
+import { hot } from 'react-hot-loader'
 
 import Root from '@views/root'
 
 const rootElement = document.getElementById('root')
 
 let render = () => {
-  ReactDOM.render(
-    <AppContainer>
-      <Root />
-    </AppContainer>,
-    rootElement
-  )
+  const App = hot(module)(Root)
+  ReactDOM.render(<App />, rootElement)
 }
 
 // This code is excluded from production bundle
-if (__DEV__) {
-  if (module.hot) {
-    // Development render functions
-    const renderApp = render
-    const renderError = (error) => {
-      const RedBox = require('redbox-react').default
+if (__DEV__ && module.hot) {
+  // Development render functions
+  const renderApp = render
+  const renderError = (error) => {
+    const RedBox = require('redbox-react').default
 
-      ReactDOM.render(<RedBox error={error} />, rootElement)
+    ReactDOM.render(<RedBox error={error} />, rootElement)
+  }
+
+  // Wrap render in try/catch
+  render = () => {
+    try {
+      renderApp()
+    } catch (error) {
+      console.error(error)
+      renderError(error)
     }
-
-    // Wrap render in try/catch
-    render = () => {
-      try {
-        renderApp()
-      } catch (error) {
-        console.error(error)
-        renderError(error)
-      }
-    }
-
-    // Hot Module Replacement API
-    module.hot.accept('./views/root', () => {
-      const NextApp = require('./views/root').default
-      ReactDOM.render(
-        <AppContainer>
-          <NextApp />
-        </AppContainer>,
-        rootElement
-      )
-    })
   }
 }
 

@@ -9,6 +9,7 @@ const webpack = require('webpack')
 const project = require('./project.config')
 
 module.exports = {
+  mode: 'development',
   output: {
     filename: 'main.js',
     publicPath: '/assets/'
@@ -16,9 +17,7 @@ module.exports = {
   cache: false,
   devtool: false,
   entry: [
-    'react-hot-loader/patch',
     'webpack-dev-server/client?http://localhost:8000',
-    'webpack/hot/only-dev-server',
     'whatwg-fetch',
     'babel-polyfill',
     './src/index.js'
@@ -45,24 +44,24 @@ module.exports = {
     }, {
       test: /\.(styl|css)$/,
       use: [{
-	loader: 'style-loader'
+	    loader: 'style-loader'
       }, {
-	loader: 'css-loader',
+	    loader: 'css-loader',
       }, {
-	loader: 'stylus-loader',
-	options: {
-	  use: [nib()],
-	  import: [
-	    '~nib/lib/nib/index.styl',
-	    path.resolve(__dirname, '../src/styles/variables.styl')
-	  ]
-	}
+	    loader: 'stylus-loader',
+	    options: {
+	      use: [nib()],
+	      import: [
+	        '~nib/lib/nib/index.styl',
+	        path.resolve(__dirname, '../src/styles/variables.styl')
+	      ]
+	    }
       }]
     }, {
       test: /\.(png|jpg)$/,
       loader: 'url-loader',
       options: {
-	limit: 8192
+	    limit: 8192
       }
     }]
   }
