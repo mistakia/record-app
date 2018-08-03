@@ -118,7 +118,8 @@ app.on('ready', () => {
       },
       connectionManager: {
         maxPeers: 100,
-        minPeers: 10
+        minPeers: 10,
+        pollInterval: 60000 // ms
       }
     }
     const ipfs = new IPFS(ipfsConfig)

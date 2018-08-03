@@ -80,7 +80,7 @@ const init = (docsPath) => {
     connectionManager: {
       maxPeers: 10,
       minPeers: 2,
-      pollInterval: 10000 // ms
+      pollInterval: 20000 // ms
     }
   }
 
