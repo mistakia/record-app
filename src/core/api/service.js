@@ -2,7 +2,7 @@
 
 export const api = {
   fetchContacts (logId) {
-    const url = `http://localhost:3000/logs/contacts/${logId}`
+    const url = `http://localhost:3000/contacts/${logId}`
     return dispatch({url})
   },
   fetchInfo () {
@@ -10,11 +10,11 @@ export const api = {
     return dispatch({url})
   },
   fetchTracks (logId) {
-    const url = `http://localhost:3000/logs/tracks${logId}`
+    const url = `http://localhost:3000/tracks${logId}`
     return dispatch({url})
   },
   postContact (logId, data) {
-    const url = `http://localhost:3000/logs/contacts/${logId}`
+    const url = `http://localhost:3000/contacts/${logId}`
     return dispatch({
       url,
       method: 'POST',
@@ -25,7 +25,7 @@ export const api = {
     })
   },
   postTrack (logId, data) {
-    const url = `http://localhost:3000/logs/tracks/${logId}`
+    const url = `http://localhost:3000/tracks/${logId}`
     return dispatch({
       url,
       method: 'POST',
