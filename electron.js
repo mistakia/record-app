@@ -145,7 +145,7 @@ app.on('ready', () => {
       const rn = new RecordNode(ipfs, OrbitDB, opts)
       try {
         await rn.init(orbitAddress)
-        const log = await rn.loadLog()
+        const log = await rn.log.get()
         fs.writeFileSync(orbitAddressPath, rn._log.address)
       } catch (e) {
         console.log(e)

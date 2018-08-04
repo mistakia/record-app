@@ -13,7 +13,7 @@
     "ipfs": "~0.31.2",
     "logplease": "1.2.14",
     "orbit-db": "github:mistakia/orbit-db#test/override-store",
-    "record-node": "github:mistakia/record-node#f037257"
+    "record-node": "github:mistakia/record-node#28b01e3"
   },
   "devDependencies": {
     "patch-package": "^5.1.1"
