@@ -7,6 +7,8 @@ import {
   TouchableOpacity
 } from 'react-native'
 
+import Tags from '@components/tags'
+
 class Track extends React.Component {
   render () {
     const { isPlaying, isSelected, pause, play, track } = this.props
@@ -18,8 +20,11 @@ class Track extends React.Component {
         <Image
           style={styles.thumbnail}
           source={{uri: track.thumbnail}} />
-        <View style={styles.title}>
-          <Text>{track.title}</Text>
+        <View style={styles.body}>
+          <View style={styles.title}>
+            <Text>{track.title}</Text>
+          </View>
+          <Tags track={track.toJS()} />
         </View>
       </TouchableOpacity>
     )
@@ -27,16 +32,19 @@ class Track extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  title: {
+    marginBottom: 8
+  },
   track: {
-    flex: 1,
     minHeight: 60,
     flexDirection: 'row'
   },
   thumbnail: {
     margin: 4,
+    maxHeight: 60,
     flex: 1
   },
-  title: {
+  body: {
     flex: 5,
     margin: 4,
     borderBottomWidth: 1,
