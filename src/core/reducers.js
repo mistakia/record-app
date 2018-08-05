@@ -4,6 +4,7 @@ import { contactsReducer } from './contacts'
 import { contactlistsReducer } from './contactlists'
 import { infoReducer } from './info'
 import { playerReducer, playerTimesReducer } from './player'
+import { taglistsReducer } from './taglists'
 import { tracklistsReducer } from './tracklists'
 import { tracksReducer } from './tracks'
 
@@ -14,6 +15,7 @@ const rootReducer = asyncReducers => {
     info: infoReducer,
     player: playerReducer,
     playerTimes: playerTimesReducer,
+    taglists: taglistsReducer,
     tracklists: tracklistsReducer,
     tracks: tracksReducer,
     ...asyncReducers

@@ -7,6 +7,11 @@ import {
 } from '@core/contactlists'
 import { infoRequestActions } from '@core/info'
 import {
+  taglistRequestActions,
+  taglistPostActions,
+  taglistDeleteActions
+} from '@core/taglists'
+import {
   tracklistRequestActions,
   tracklistPostActions
 } from '@core/tracklists'
@@ -22,7 +27,13 @@ function * fetchAPI (apiFunction, actions, id, param) {
 }
 
 export const fetchContacts = fetchAPI.bind(null, api.fetchContacts, contactlistRequestActions)
-export const fetchInfo = fetchAPI.bind(null, api.fetchInfo, infoRequestActions)
-export const fetchTracks = fetchAPI.bind(null, api.fetchTracks, tracklistRequestActions)
 export const postContact = fetchAPI.bind(null, api.postContact, contactlistPostActions)
+
+export const fetchInfo = fetchAPI.bind(null, api.fetchInfo, infoRequestActions)
+
+export const fetchTags = fetchAPI.bind(null, api.fetchTags, taglistRequestActions)
+export const postTag = fetchAPI.bind(null, api.postTag, taglistPostActions)
+export const deleteTag = fetchAPI.bind(null, api.deleteTag, taglistDeleteActions)
+
+export const fetchTracks = fetchAPI.bind(null, api.fetchTracks, tracklistRequestActions)
 export const postTrack = fetchAPI.bind(null, api.postTrack, tracklistPostActions)

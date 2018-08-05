@@ -6,16 +6,16 @@ import { TRACKS_PER_LOAD } from '@core/constants'
 import { tracklistActions } from './actions'
 import { getCurrentTracklist } from './selectors'
 
-export function * loadTracks ({payload}) {
-  const { logId } = payload
-  const params = { start: 0, end: TRACKS_PER_LOAD }
+export function * loadTracks ({ payload = {} }) {
+  const logId = payload.logId || '/me'
+  const params = { start: 0, limit: TRACKS_PER_LOAD }
   yield call(fetchTracks, logId, params)
 }
 
 export function * loadNextTracks () {
   const tracklist = yield select(getCurrentTracklist)
   const start = tracklist.trackIds.size
-  const params = { start, end: start + TRACKS_PER_LOAD }
+  const params = { start, limit: start + TRACKS_PER_LOAD }
   yield call(fetchTracks, tracklist.id, params)
 }
 

@@ -33,6 +33,38 @@ export const api = {
       handleResponse(msg.action, resolve, reject)
     })
   },
+  fetchTags (logId) {
+    return new Promise((resolve, reject) => {
+      const msg = {
+        action: 'tags:get',
+        data: { logId }
+      }
+      nodejs.channel.send(JSON.stringify(msg))
+      handleResponse(msg.action, resolve, reject)
+    })
+  },
+  postTag (logId, data) {
+    return new Promise((resolve, reject) => {
+      const { track, tag } = data
+      const msg = {
+        action: 'tags:add',
+        data: { track, tag }
+      }
+      nodejs.channel.send(JSON.stringify(msg))
+      handleResponse(msg.action, resolve, reject)
+    })
+  },
+  deleteTag (logId, data) {
+    return new Promise((resolve, reject) => {
+      const { trackId, tag } = data
+      const msg = {
+        action: 'tags:delete',
+        data: { trackId, tag }
+      }
+      nodejs.channel.send(JSON.stringify(msg))
+      handleResponse(msg.action, resolve, reject)
+    })
+  },
   fetchTracks (logId, params) {
     return new Promise((resolve, reject) => {
       const msg = {

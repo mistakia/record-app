@@ -1,15 +1,16 @@
 import React from 'react'
-import { StyleSheet, ScrollView, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 export const PageLayout = ({ head, body }) => (
-  <ScrollView>
+  <KeyboardAwareScrollView>
     <View style={styles.head}>
       { head }
     </View>
     <View>
       { body }
     </View>
-  </ScrollView>
+  </KeyboardAwareScrollView>
 )
 
 const styles = StyleSheet.create({
