@@ -2,6 +2,7 @@ import React from 'react'
 
 import IconButton from '@components/icon-button'
 import FormattedTime from '@components/formatted-time'
+import Tags from '@components/tags'
 
 import './track.styl'
 
@@ -25,6 +26,7 @@ class Track extends React.Component {
             <FormattedTime value={track.duration} unit={'ms'} />
           </small>
         </div>
+        <Tags track={track.toJS()} />
       </article>
     )
   }

@@ -13,7 +13,7 @@ debug.useColors = () => false // disable colors in log (fixes xcode issue)
 
 // Log Record / IPFS / OrbitDB
 const logger = debug('main')
-debug.enable('main,jsipfs:*,libp2p:*,bitswap:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
+debug.enable('main,jsipfs,record:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 process.on('uncaughtException', (err) => {
@@ -211,8 +211,8 @@ rnBridge.channel.on('message', async (message) => {
       }
 
       try {
-        const { start, end } = msg.data.params
-        data = await rn.tracks.list(msg.data.logId, { start, end })
+        const { start, limit } = msg.data.params
+        data = await rn.tracks.list(msg.data.logId, { start, limit })
         send({ data })
       } catch (e) {
         console.log(e)
@@ -234,6 +234,50 @@ rnBridge.channel.on('message', async (message) => {
         send({ error: e.toString() })
       }
       break
+
+    case 'tags:get':
+      if (!rn) {
+        return
+      }
+
+      try {
+        const { logId } = msg.data
+        data = await rn.tags.list(logId)
+        send({ data })
+      } catch (e) {
+        console.log(e)
+        send({ error: e.toString() })
+      }
+      break
+
+    case 'tags:add':
+      if (!rn) {
+        return
+      }
+
+      try {
+        const { track, tag } = msg.data
+        data = await rn.tags.add(track, tag)
+        send({ data })
+      } catch (e) {
+        console.log(e)
+        send({ error: e.toString() })
+      }
+      break
+
+    case 'tags:delete':
+      if (!rn) {
+        return
+      }
+
+      try {
+        const { trackId, tag } = msg.data
+        data = await rn.tags.remove(trackId, tag)
+        send({ data })
+      } catch (e) {
+        console.log(e)
+        send({ error: e.toString() })
+      }
 
     default:
       logger(`Invalid message action: ${msg.action}`)
