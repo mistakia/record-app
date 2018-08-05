@@ -14,7 +14,7 @@ export const api = {
     return dispatch({url})
   },
   postContact (logId, data) {
-    const url = `http://localhost:3000/contacts/${logId}`
+    const url = 'http://localhost:3000/contacts'
     return dispatch({
       url,
       method: 'POST',
@@ -25,7 +25,7 @@ export const api = {
     })
   },
   postTrack (logId, data) {
-    const url = `http://localhost:3000/tracks/${logId}`
+    const url = 'http://localhost:3000/tracks'
     return dispatch({
       url,
       method: 'POST',
