@@ -13,6 +13,10 @@ const IPFS = require('ipfs')
 
 const config = require('./config/project.config')
 
+if (config.globals.__DEV__) {
+  require('electron-debug')()
+}
+
 debug.enable('record:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
@@ -57,9 +61,6 @@ function createWindow () {
 		 : 'file://' + __dirname + '/index.desktop.html'
 
   mainWindow.loadURL(indexUrl)
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {

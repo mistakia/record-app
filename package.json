@@ -81,6 +81,7 @@
     "browserify": "^16.2.2",
     "css-loader": "^1.0.0",
     "electron": "^2.0.5",
+    "electron-debug": "^2.0.0",
     "electron-devtools-installer": "^2.2.3",
     "electron-rebuild": "^1.7.3",
     "eslint-plugin-react": "^7.10.0",
