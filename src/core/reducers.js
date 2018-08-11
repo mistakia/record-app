@@ -3,6 +3,7 @@ import { combineReducers } from 'redux-immutable'
 import { contactsReducer } from './contacts'
 import { contactlistsReducer } from './contactlists'
 import { infoReducer } from './info'
+import { modalReducer } from './modal'
 import { playerReducer, playerTimesReducer } from './player'
 import { taglistsReducer } from './taglists'
 import { tracklistsReducer } from './tracklists'
@@ -13,6 +14,7 @@ const rootReducer = asyncReducers => {
     contacts: contactsReducer,
     contactlists: contactlistsReducer,
     info: infoReducer,
+    modal: modalReducer,
     player: playerReducer,
     playerTimes: playerTimesReducer,
     taglists: taglistsReducer,
