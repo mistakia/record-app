@@ -22,7 +22,7 @@ process.on('uncaughtException', (err) => {
 
 logger('starting')
 
-let rn = null
+let record = null
 let ipfs = null
 let started = false
 
@@ -30,7 +30,6 @@ const init = (docsPath) => {
   if (started) {
     if (!ipfs) {
       // shit
-
       return
     }
 
@@ -39,7 +38,6 @@ const init = (docsPath) => {
     }
 
     ipfs.on('ready', () => {
-      console.log('sending ready')
       rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
     })
     return
@@ -48,9 +46,7 @@ const init = (docsPath) => {
   started = true
 
   const recorddir = path.resolve(docsPath, './record')
-
   if (!fs.existsSync(recorddir)) { fs.mkdirSync(recorddir) }
-
   logger(`Record Dir: ${recorddir}`)
 
   const ipfsConfig = {
@@ -98,12 +94,12 @@ const init = (docsPath) => {
       const opts = {
         orbitPath: path.resolve(recorddir, './orbitdb')
       }
-      rn = new RecordNode(ipfs, OrbitDB, opts)
+      record = new RecordNode(ipfs, OrbitDB, opts)
 
       try {
-        await rn.init(orbitAddress)
-        const log = await rn.log.get()
-        fs.writeFileSync(orbitAddressPath, rn._log.address)
+        await record.init(orbitAddress)
+        const log = await record.log.get()
+        fs.writeFileSync(orbitAddressPath, record._log.address)
       } catch (e) {
         console.log(e)
       }
@@ -123,12 +119,24 @@ rnBridge.channel.on('message', async (message) => {
   const msg = JSON.parse(message)
   logger(msg)
 
-  const send = (reply) => {
-    const m = Object.assign({}, { action: msg.action }, reply)
+  const send = (data) => {
+    const m = Object.assign({}, { action: msg.action }, data)
     rnBridge.channel.send(JSON.stringify(m))
   }
 
-  let data
+  const RPC = async (apiFunction, params = []) => {
+    if (!record) {
+      return
+    }
+
+    try {
+      const data = await apiFunction(...params)
+      send({ data })
+    } catch (e) {
+      console.log(e)
+      send({ error: e.toString() })
+    }
+  }
 
   switch(msg.action) {
     case 'init':
@@ -150,134 +158,50 @@ rnBridge.channel.on('message', async (message) => {
       break
 
     case 'resolve':
-      if (!rn) {
-        return
-      }
-
-      try {
-        data = await rn.resolve(msg.data.url)
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+      RPC(record.resolve, [msg.data.url])
+      break
 
     case 'contacts:get':
-      if (!rn) {
-        return
-      }
-
-      try {
-        data = await rn.contacts.list(msg.data.logId)
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+      RPC(record.contacts.list, [msg.data.logId])
       break
 
-    case 'contacts:add':
-      if (!rn) {
-        return
-      }
-
-      try {
-        const { address, alias } = msg.data
-        data = await log.contacts.add({ address, alias })
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+    case 'contacts:add': {
+      const { address, alias } = msg.data
+      RPC(log.contacts.add, [{ address, alias }])
       break
+    }
 
     case 'info:get':
-      if (!rn) {
-        return
-      }
-
-      try {
-        data = await rn.info()
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+      RPC(record.info)
       break
 
-    case 'tracks:get':
-      if (!rn) {
-        return
-      }
-
-      try {
-        const { start, limit } = msg.data.params
-        data = await rn.tracks.list(msg.data.logId, { start, limit })
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+    case 'tracks:get': {
+      const { start, limit } = msg.data
+      RPC(record.tracks.list, [msg.data.logId, { start, limit }])
       break
+    }
 
-    case 'tracks:add':
-      if (!rn) {
-        return
-      }
-
-      try {
-        const { title, url } = msg.data
-        data = await rn.tracks.add({ url, title })
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+    case 'tracks:add': {
+      const { url, title } = msg.data
+      RPC(record.tracks.add, [{ url, title }])
       break
+    }
 
     case 'tags:get':
-      if (!rn) {
-        return
-      }
-
-      try {
-        const { logId } = msg.data
-        data = await rn.tags.list(logId)
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+      RPC(record.tags.list, [msg.data.logId])
       break
 
-    case 'tags:add':
-      if (!rn) {
-        return
-      }
-
-      try {
-        const { track, tag } = msg.data
-        data = await rn.tags.add(track, tag)
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+    case 'tags:add': {
+      const { track, tag } = msg.data
+      RPC(record.tags.add, [track, tag])
       break
+    }
 
-    case 'tags:delete':
-      if (!rn) {
-        return
-      }
-
-      try {
-        const { trackId, tag } = msg.data
-        data = await rn.tags.remove(trackId, tag)
-        send({ data })
-      } catch (e) {
-        console.log(e)
-        send({ error: e.toString() })
-      }
+    case 'tags:delete': {
+      const { trackId, tag } = msg.data
+      RPC(record.tags.remove, [trackId, tag])
+      break
+    }
 
     default:
       logger(`Invalid message action: ${msg.action}`)
