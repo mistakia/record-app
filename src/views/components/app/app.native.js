@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 
 import Menu from '@components/menu'
+import ModalContainer from '@components/modal-container'
 import Routes from '@views/routes'
 import Player from '@components/player'
 import { appActions } from '@core/app'
@@ -55,9 +56,12 @@ export class App extends React.Component {
   render () {
     return (
       <View style={styles.appContainer}>
-        <Menu />
-        <Routes />
-        <Player />
+        <View style={styles.mainContainer}>
+          <Menu />
+          <Routes />
+          <Player />
+        </View>
+        <ModalContainer />
       </View>
     )
   }
@@ -65,6 +69,9 @@ export class App extends React.Component {
 
 const styles = StyleSheet.create({
   appContainer: {
+    ...StyleSheet.absoluteFillObject
+  },
+  mainContainer: {
     ...StyleSheet.absoluteFillObject,
     top: 20,
     paddingBottom: 52,

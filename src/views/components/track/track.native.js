@@ -1,4 +1,5 @@
 import React from 'react'
+import { connect } from 'react-redux'
 import {
   Image,
   View,
@@ -7,11 +8,13 @@ import {
   TouchableOpacity
 } from 'react-native'
 
+import { modalActions } from '@core/modal'
+import IconButton from '@components/icon-button'
 import Tags from '@components/tags'
 
 class Track extends React.Component {
   render () {
-    const { isPlaying, isSelected, pause, play, track } = this.props
+    const { isPlaying, isSelected, pause, play, track, showTrackModal } = this.props
 
     return (
       <TouchableOpacity
@@ -26,12 +29,23 @@ class Track extends React.Component {
           </View>
           <Tags track={track.toJS()} />
         </View>
+        <IconButton
+          style={styles.more}
+          onClick={showTrackModal}
+          icon='ios-more'
+        />
       </TouchableOpacity>
     )
   }
 }
 
 const styles = StyleSheet.create({
+  more: {
+    position: 'absolute',
+    borderWidth: 0,
+    top: 0,
+    right: 0
+  },
   title: {
     marginBottom: 8
   },
@@ -53,4 +67,8 @@ const styles = StyleSheet.create({
   }
 })
 
-export default Track
+const mapDispatchToProps = {
+  showTrackModal: modalActions.showTrackModal
+}
+
+export default connect(null, mapDispatchToProps)(Track)
