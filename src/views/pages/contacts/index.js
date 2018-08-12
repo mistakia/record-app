@@ -17,7 +17,7 @@ class ContactsPage extends React.Component {
   _load () {
     // '/me' or proper orbitdb adadress
     const { logId } = this.props.match.params
-    this.props.loadContacts(logId)
+    this.props.loadContacts(`/${logId}`)
   }
 
   render () {

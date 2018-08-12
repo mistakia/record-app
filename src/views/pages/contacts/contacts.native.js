@@ -11,12 +11,10 @@ export default function () {
   const head = (
     <View style={headStyles.content}>
       <Text>Contacts</Text>
-      {(
-         logId === 'me' &&
-         <Link style={headStyles.button} to='/contacts/new'>
-           <Text>Add Contact</Text>
-         </Link>
-      )}
+      {(logId === 'me' &&
+        <Link style={headStyles.button} to='/contacts/new'>
+          <Text>Add Contact</Text>
+        </Link>)}
     </View>
   )
 

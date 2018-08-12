@@ -4,6 +4,7 @@ import { View, Text } from 'react-native'
 import Button from '@components/button'
 import LoadingIndicator from '@components/loading-indicator'
 import Track from '@components/track'
+import loadingStyles from '@styles/loading'
 
 export default function Tracklist ({
   displayLoadingIndicator,
@@ -32,13 +33,6 @@ export default function Tracklist ({
     )
   })
 
-  const buttonStyle = {
-    marginTop: 30,
-    marginBottom: 20,
-    marginLeft: 15,
-    marginRight: 15
-  }
-
   const loadStatus = () => {
     if (displayLoadingIndicator) {
       return <LoadingIndicator />
@@ -48,7 +42,7 @@ export default function Tracklist ({
       return (
         <Button
           onClick={loadNextTracks}
-          style={buttonStyle}>
+          style={loadingStyles.button}>
           <Text>Load More</Text>
         </Button>
       )

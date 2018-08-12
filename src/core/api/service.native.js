@@ -26,6 +26,16 @@ export const api = {
       handleResponse(msg.action, resolve, reject)
     })
   },
+  fetchFeed (logId, params) {
+    return new Promise((resolve, reject) => {
+      const msg = {
+        action: 'feed:get',
+        data: { params }
+      }
+      nodejs.channel.send(JSON.stringify(msg))
+      handleResponse(msg.action, resolve, reject)
+    })
+  },
   fetchInfo () {
     return new Promise((resolve, reject) => {
       const msg = { action: 'info:get' }
