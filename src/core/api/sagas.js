@@ -5,6 +5,7 @@ import {
   contactlistRequestActions,
   contactlistPostActions
 } from '@core/contactlists'
+import { feedRequestActions } from '@core/feed'
 import { infoRequestActions } from '@core/info'
 import {
   taglistRequestActions,
@@ -22,12 +23,15 @@ function * fetchAPI (apiFunction, actions, id, param) {
     const data = yield call(apiFunction, id, param)
     yield put(actions.fulfilled(id, data))
   } catch (err) {
+    console.log(err)
     yield put(actions.failed(err))
   }
 }
 
 export const fetchContacts = fetchAPI.bind(null, api.fetchContacts, contactlistRequestActions)
 export const postContact = fetchAPI.bind(null, api.postContact, contactlistPostActions)
+
+export const fetchFeed = fetchAPI.bind(null, api.fetchFeed, feedRequestActions)
 
 export const fetchInfo = fetchAPI.bind(null, api.fetchInfo, infoRequestActions)
 

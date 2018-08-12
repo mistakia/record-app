@@ -4,7 +4,7 @@ import { push } from 'react-router-redux'
 import { fetchContacts, postContact } from '@core/api'
 import { contactlistActions } from './actions'
 
-export function * loadContacts ({ payload = {}}) {
+export function * loadContacts ({ payload = {} }) {
   const logId = payload.logId || '/me'
   yield call(fetchContacts, logId)
 }

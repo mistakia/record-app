@@ -1,4 +1,9 @@
 //= ====================================
+//  GENERAL
+// -------------------------------------
+export const ITEMS_PER_LOAD = 20
+
+//= ====================================
 //  PLAYER
 // -------------------------------------
 export const PLAYER_INITIAL_VOLUME = 10
@@ -11,4 +16,3 @@ export const PLAYER_STORAGE_KEY = 'player'
 //  TRACKLISTS
 // -------------------------------------
 export const SESSION_TRACKLIST_ID = 'session'
-export const TRACKS_PER_LOAD = 20

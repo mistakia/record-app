@@ -6,11 +6,11 @@ import './tag.styl'
 const Tag = ({ tag, onClick, remove }) => (
   <span className='tag'>
     <a onClick={onClick}>{tag}</a>
-    {remove && <IconButton
-                 icon='remove'
-                 className='tag--remove'
-                 label='remove'
-                 onClick={remove} />}
+    {remove &&
+      <IconButton icon='remove'
+        className='tag--remove'
+        label='remove'
+        onClick={remove} />}
   </span>
 )
 

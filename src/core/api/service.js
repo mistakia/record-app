@@ -16,7 +16,11 @@ const DELETE = {
 
 export const api = {
   fetchContacts (logId) {
-    const url = `http://localhost:3000/contacts/${logId}`
+    const url = `http://localhost:3000/contacts${logId}`
+    return dispatch({url})
+  },
+  fetchFeed (logId, params) {
+    const url = `http://localhost:3000/feed?${qs(params)}`
     return dispatch({url})
   },
   fetchInfo () {

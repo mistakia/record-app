@@ -43,7 +43,7 @@ export const getCurrentTrackIds = createSelector(
 
 export const getTracksForCurrentTracklist = createSelector(
   getCurrentTrackIds,
-  getTracks,
+  (state) => getTracks(state), // FIX for https://stackoverflow.com/questions/35240716/webpack-import-returns-undefined-depending-on-the-order-of-imports
   (trackIds, tracks) => {
     return trackIds.map(id => tracks.get(id))
   }

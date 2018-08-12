@@ -2,6 +2,7 @@ import { Map } from 'immutable'
 
 import { tracklistActions } from '@core/tracklists'
 import { taglistActions } from '@core/taglists'
+import { feedActions } from '@core/feed'
 import { createTrack } from './track'
 
 export function tracksReducer (state = new Map(), {payload, type}) {
@@ -17,6 +18,15 @@ export function tracksReducer (state = new Map(), {payload, type}) {
     case taglistActions.DELETE_TAG_FULFILLED:
       const track = payload.data
       return state.withMutations(tracks => tracks.set(track._id, createTrack(track)))
+
+    case feedActions.FETCH_FEED_FULFILLED:
+      return state.withMutations(tracks => {
+        payload.data.forEach(feedData => {
+          if (feedData.type === 'track') {
+            tracks.set(feedData.content._id, createTrack(feedData.content))
+          }
+        })
+      })
 
     default:
       return state
