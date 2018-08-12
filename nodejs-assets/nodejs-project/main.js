@@ -167,19 +167,21 @@ rnBridge.channel.on('message', async (message) => {
 
     case 'contacts:add': {
       const { address, alias } = msg.data
-      RPC(log.contacts.add, [{ address, alias }])
+      RPC(record.contacts.add, [{ address, alias }])
       break
     }
+
+    case 'feed:get':
+      RPC(record.feed.list, [msg.data.params])
+      break
 
     case 'info:get':
       RPC(record.info)
       break
 
-    case 'tracks:get': {
-      const { start, limit } = msg.data
-      RPC(record.tracks.list, [msg.data.logId, { start, limit }])
+    case 'tracks:get':
+      RPC(record.tracks.list, [msg.data.logId, msg.data.params])
       break
-    }
 
     case 'tracks:add': {
       const { url, title } = msg.data
