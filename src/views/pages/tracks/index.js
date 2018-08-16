@@ -10,8 +10,11 @@ export class TracksPage extends React.Component {
     this._load()
   }
 
-  componentDidUpdate () {
-    this._load()
+  componentDidUpdate (prevProps) {
+    const { logId } = this.props.match.params
+    if (prevProps.match.params.logId !== logId) {
+      this._load()
+    }
   }
 
   _load () {

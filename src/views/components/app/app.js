@@ -1,8 +1,6 @@
 import React from 'react'
-import { connect } from 'react-redux'
 
 import Menu from '@components/menu'
-import { appActions } from '@core/app'
 import Routes from '@views/routes'
 import Player from '@components/player'
 
@@ -13,7 +11,14 @@ import './app.styl'
 
 const { ipcRenderer } = window.require('electron')
 
-export class App extends React.Component {
+export default class App extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      ipfs: ''
+    }
+  }
+
   componentWillMount () {
     this.listener = (event, message) => {
       // TODO: error handling
@@ -32,12 +37,3 @@ export class App extends React.Component {
     )
   }
 }
-
-const mapDispatchToProps = {
-  init: appActions.initApp
-}
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(App)

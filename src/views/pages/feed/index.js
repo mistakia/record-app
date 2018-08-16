@@ -1,6 +1,5 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
 
 import { feedActions } from '@core/feed'
 
@@ -8,10 +7,6 @@ import render from './feed'
 
 class FeedPage extends React.Component {
   componentWillMount () {
-    this._load()
-  }
-
-  componentWillUpdate () {
     this._load()
   }
 
