@@ -95,7 +95,7 @@ app.on('ready', () => {
   try {
     const ipfsConfig = {
       init: {
-        bits: 1024
+        bits: 2048
       },
       repo: path.resolve(recorddir, './ipfs'),
       EXPERIMENTAL: {
@@ -124,6 +124,9 @@ app.on('ready', () => {
       }
     }
     const ipfs = new IPFS(ipfsConfig)
+    ipfs.state.on('done', () => {
+      mainWindow.webContents.send('ipfs:state', ipfs.state._state)
+    })
     ipfs.on('ready', async () => {
 
       mainWindow.webContents.send('ready')

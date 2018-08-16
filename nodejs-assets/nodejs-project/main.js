@@ -49,9 +49,18 @@ const init = (docsPath) => {
   if (!fs.existsSync(recorddir)) { fs.mkdirSync(recorddir) }
   logger(`Record Dir: ${recorddir}`)
 
+  const sendState = (state) => {
+    rnBridge.channel.send(JSON.stringify({
+      action: 'ipfs:state',
+      data: state
+    }))
+  }
+
   const ipfsConfig = {
     init: {
-      bits: 1024
+      bits: 1024,
+      emptyRepo: true,
+      log: sendState
     },
     repo: path.resolve(recorddir, './ipfs'),
     EXPERIMENTAL: {
@@ -83,6 +92,10 @@ const init = (docsPath) => {
   try {
     // Create the IPFS node instance
     ipfs = new IPFS(ipfsConfig)
+
+    ipfs.state.on('done', () => {
+      sendState(ipfs.state._state)
+    })
 
     ipfs.on('ready', async () => {
       const orbitAddressPath = path.resolve(recorddir, 'address.txt')

@@ -14,7 +14,6 @@ export function * loadNextFeed () {
   const feed = yield select(getFeed)
   const start = feed.content.size
   const params = { start, limit: start + ITEMS_PER_LOAD }
-  console.log(params)
   yield call(fetchFeed, null, params)
 }
 
