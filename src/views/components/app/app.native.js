@@ -1,19 +1,25 @@
 import React from 'react'
 import nodejs from 'nodejs-mobile-react-native'
-import { connect } from 'react-redux'
 import RNFS from 'react-native-fs'
 import {
   AppState,
   StyleSheet,
-  View
+  View,
+  Text
 } from 'react-native'
 
 import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
-import { appActions } from '@core/app'
 
-export class App extends React.Component {
+export default class App extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      ipfs: 'Loading'
+    }
+  }
+
   componentWillMount () {
     nodejs.start('bundle.js')
     const msg = {
@@ -24,10 +30,18 @@ export class App extends React.Component {
 
     this.listener = (message) => {
       const msg = JSON.parse(message)
-      if (msg.action === 'ready') {
-        // TODO: error handling
-        this.props.init()
-        nodejs.channel.removeListener('message', this.listener)
+      switch (msg.action) {
+        case 'ready':
+          this.props.init()
+          return nodejs.channel.removeListener('message', this.listener)
+
+        case 'ipfs:state':
+          return this.setState({
+            ipfs: msg.data
+          })
+
+        default:
+          console.log(`Invalid action: ${msg.action}`)
       }
     }
     nodejs.channel.addListener(
@@ -53,6 +67,15 @@ export class App extends React.Component {
   }
 
   render () {
+    console.log(this.props.app)
+    if (!this.props.app.loaded) {
+      return (
+        <View style={styles.appLoading}>
+          <Text>{this.state.ipfs}</Text>
+        </View>
+      )
+    }
+
     return (
       <View style={styles.appContainer}>
         <Menu />
@@ -64,6 +87,12 @@ export class App extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  appLoading: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
   appContainer: {
     ...StyleSheet.absoluteFillObject,
     top: 20,
@@ -71,12 +100,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#f6f6f6'
   }
 })
-
-const mapDispatchToProps = {
-  init: appActions.initApp
-}
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(App)
