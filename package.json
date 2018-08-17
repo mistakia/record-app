@@ -43,6 +43,7 @@
     "max_height": 600
   },
   "dependencies": {
+    "abortcontroller-polyfill": "^1.1.9",
     "babel-polyfill": "^6.23.0",
     "debug": "^3.1.0",
     "history": "^4.6.1",

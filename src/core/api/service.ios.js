@@ -1,1 +1,1 @@
-export { api } from './service.native'
+export { api, apiRequest } from './service.native'

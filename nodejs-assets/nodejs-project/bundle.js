@@ -60,6 +60,7 @@ const init = (docsPath) => {
   const ipfsConfig = {
     init: {
       bits: 1024,
+      emptyRepo: true,
       log: sendState
     },
     repo: path.resolve(recorddir, './ipfs'),

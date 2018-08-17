@@ -7,14 +7,14 @@ import { getFeed } from './selectors'
 
 export function * loadFeed () {
   const params = { start: 0, limit: ITEMS_PER_LOAD }
-  yield call(fetchFeed, null, params)
+  yield call(fetchFeed, { params })
 }
 
 export function * loadNextFeed () {
   const feed = yield select(getFeed)
   const start = feed.content.size
   const params = { start, limit: start + ITEMS_PER_LOAD }
-  yield call(fetchFeed, null, params)
+  yield call(fetchFeed, { params })
 }
 
 export function * watchLoadFeed () {

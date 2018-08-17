@@ -6,17 +6,17 @@ import { taglistActions } from './actions'
 
 export function * loadTags ({ payload = {} }) {
   const logId = payload.logId || '/me'
-  yield call(fetchTags, logId)
+  yield call(fetchTags, { logId })
 }
 
 export function * addTag ({ payload }) {
   const { logId, data } = payload
-  yield call(postTag, logId, data)
+  yield call(postTag, { logId, data })
 }
 
 export function * removeTag ({ payload }) {
   const { logId, data } = payload
-  yield call(deleteTag, logId, data)
+  yield call(deleteTag, { logId, data })
 }
 
 export function * watchLoadTags () {
