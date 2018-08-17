@@ -18,7 +18,6 @@ module.exports = {
   devtool: false,
   entry: [
     'webpack-dev-server/client?http://localhost:8000',
-    'whatwg-fetch',
     'babel-polyfill',
     './src/index.js'
   ],
