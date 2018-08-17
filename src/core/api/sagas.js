@@ -1,5 +1,6 @@
-import { call, put } from 'redux-saga/effects'
-import { api } from '@core/api/service'
+import { call, put, fork, take, cancel, cancelled } from 'redux-saga/effects'
+import { api, apiRequest } from '@core/api/service'
+import { LOCATION_CHANGE } from 'react-router-redux'
 
 import {
   contactlistRequestActions,
@@ -17,27 +18,38 @@ import {
   tracklistPostActions
 } from '@core/tracklists'
 
-function * fetchAPI (apiFunction, actions, id, param) {
+function * fetchAPI (apiFunction, actions, opts = {}) {
+  const { abort, request } = apiRequest(apiFunction, opts)
   try {
-    yield put(actions.pending(id))
-    const data = yield call(apiFunction, id, param)
-    yield put(actions.fulfilled(id, data))
+    yield put(actions.pending(opts.logId))
+    const data = yield call(request)
+    yield put(actions.fulfilled(opts.logId, data))
   } catch (err) {
     console.log(err)
     yield put(actions.failed(err))
+  } finally {
+    if (yield cancelled()) {
+      abort()
+    }
   }
 }
 
-export const fetchContacts = fetchAPI.bind(null, api.fetchContacts, contactlistRequestActions)
-export const postContact = fetchAPI.bind(null, api.postContact, contactlistPostActions)
+function * fetch (...args) {
+  const task = yield fork(fetchAPI.bind(null, ...args))
+  yield take(LOCATION_CHANGE)
+  yield cancel(task)
+}
 
-export const fetchFeed = fetchAPI.bind(null, api.fetchFeed, feedRequestActions)
+export const fetchContacts = fetch.bind(null, api.fetchContacts, contactlistRequestActions)
+export const postContact = fetch.bind(null, api.postContact, contactlistPostActions)
 
-export const fetchInfo = fetchAPI.bind(null, api.fetchInfo, infoRequestActions)
+export const fetchFeed = fetch.bind(null, api.fetchFeed, feedRequestActions)
 
-export const fetchTags = fetchAPI.bind(null, api.fetchTags, taglistRequestActions)
-export const postTag = fetchAPI.bind(null, api.postTag, taglistPostActions)
-export const deleteTag = fetchAPI.bind(null, api.deleteTag, taglistDeleteActions)
+export const fetchInfo = fetch.bind(null, api.fetchInfo, infoRequestActions)
 
-export const fetchTracks = fetchAPI.bind(null, api.fetchTracks, tracklistRequestActions)
-export const postTrack = fetchAPI.bind(null, api.postTrack, tracklistPostActions)
+export const fetchTags = fetch.bind(null, api.fetchTags, taglistRequestActions)
+export const postTag = fetch.bind(null, api.postTag, taglistPostActions)
+export const deleteTag = fetch.bind(null, api.deleteTag, taglistDeleteActions)
+
+export const fetchTracks = fetch.bind(null, api.fetchTracks, tracklistRequestActions)
+export const postTrack = fetch.bind(null, api.postTrack, tracklistPostActions)

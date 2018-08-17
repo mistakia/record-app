@@ -20,7 +20,6 @@ module.exports = {
   },
   devtool: false,
   entry: [
-    'whatwg-fetch',
     'babel-polyfill',
     './src/index.js'
   ],

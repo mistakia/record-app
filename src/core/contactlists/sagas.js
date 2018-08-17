@@ -6,12 +6,12 @@ import { contactlistActions } from './actions'
 
 export function * loadContacts ({ payload = {} }) {
   const logId = payload.logId || '/me'
-  yield call(fetchContacts, logId)
+  yield call(fetchContacts, { logId })
 }
 
 export function * addContact ({payload}) {
   const { logId, data } = payload
-  yield call(postContact, logId, data)
+  yield call(postContact, { logId, data })
 }
 
 export function * goToContacts () {

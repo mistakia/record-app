@@ -9,19 +9,19 @@ import { getCurrentTracklist } from './selectors'
 export function * loadTracks ({ payload = {} }) {
   const logId = payload.logId || '/me'
   const params = { start: 0, limit: ITEMS_PER_LOAD }
-  yield call(fetchTracks, logId, params)
+  yield call(fetchTracks, { logId, params })
 }
 
 export function * loadNextTracks () {
   const tracklist = yield select(getCurrentTracklist)
   const start = tracklist.trackIds.size
   const params = { start, limit: start + ITEMS_PER_LOAD }
-  yield call(fetchTracks, tracklist.id, params)
+  yield call(fetchTracks, { logId: tracklist.id, params })
 }
 
 export function * addTrack ({ payload }) {
   const { logId, data } = payload
-  yield call(postTrack, logId, data)
+  yield call(postTrack, { logId, data })
 }
 
 export function * goToTracks () {

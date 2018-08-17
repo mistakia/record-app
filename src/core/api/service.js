@@ -1,4 +1,4 @@
-/* global fetch */
+/* global fetch, AbortController */
 
 const qs = (params) => Object.keys(params).map(key => key + '=' + params[key]).join('&')
 
@@ -15,47 +15,55 @@ const DELETE = {
 }
 
 export const api = {
-  fetchContacts (logId) {
+  fetchContacts ({ logId }) {
     const url = `http://localhost:3000/contacts${logId}`
-    return dispatch({url})
+    return { url }
   },
-  fetchFeed (logId, params) {
+  fetchFeed ({ logId, params }) {
     const url = `http://localhost:3000/feed?${qs(params)}`
-    return dispatch({url})
+    return { url }
   },
   fetchInfo () {
     const url = 'http://localhost:3000/info'
-    return dispatch({url})
+    return { url }
   },
-  fetchTags (logId) {
+  fetchTags ({ logId }) {
     const url = `http://localhost:3000/tags${logId}`
-    return dispatch({url})
+    return { url }
   },
-  fetchTracks (logId) {
+  fetchTracks ({ logId }) {
     const url = `http://localhost:3000/tracks${logId}`
-    return dispatch({url})
+    return { url }
   },
-  postTag (logId, data) {
+  postTag ({ logId, data }) {
     const url = 'http://localhost:3000/tags'
     const post = POST(data)
-    return dispatch({ url, ...post })
+    return { url, ...post }
   },
-  deleteTag (logId, data) {
+  deleteTag ({ logId, data }) {
     const url = `http://localhost:3000/tags?${qs(data)}`
-    return dispatch({ url, ...DELETE })
+    return { url, ...DELETE }
   },
-  postContact (logId, data) {
+  postContact ({ logId, data }) {
     const url = 'http://localhost:3000/contacts'
     const post = POST(data)
-    return dispatch({ url, ...post })
+    return { url, ...post }
   },
-  postTrack (logId, data) {
+  postTrack ({ logId, data }) {
     const url = 'http://localhost:3000/tracks'
     const post = POST(data)
-    return dispatch({ url, ...post })
+    return { url, ...post }
   }
 }
 
-export function dispatch (options) {
+export const apiRequest = (apiFunction, opts) => {
+  const abort = new AbortController()
+  const signal = abort.signal
+  const options = Object.assign(apiFunction(opts), signal)
+  const request = dispatchFetch.bind(null, options)
+  return { abort, request }
+}
+
+export const dispatchFetch = (options) => {
   return fetch(options.url, options).then(response => response.json())
 }
