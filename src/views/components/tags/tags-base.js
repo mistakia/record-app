@@ -2,6 +2,7 @@ import React from 'react'
 
 import Tag from '@components/tag'
 import { fuzzyFilter } from '@core/utils'
+import history from '@core/history'
 
 class TagsBase extends React.Component {
   constructor (props) {
@@ -25,7 +26,7 @@ class TagsBase extends React.Component {
   }
 
   onClick (tag) {
-    console.log(`change page to /:logId/tracks/${tag}`)
+    history.push(`/tracks/me?tags=${tag}`)
   }
 
   getTagItems (tags, onClick, remove) {

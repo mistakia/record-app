@@ -3,11 +3,12 @@ import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 
 import IconButton from '@components/icon-button'
 
-const Tag = ({ tag, onClick, remove }) => (
+const Tag = ({ tag, onClick, remove, count, isSelected }) => (
   <TouchableOpacity
-    style={styles.tagContainer}
+    style={[styles.tagContainer, isSelected ? styles.active : null]}
     onPress={onClick}>
     <Text style={[styles.tagItem, styles.tag]}>{tag}</Text>
+    { count && <Text style={[styles.tagItem, styles.count]}>{count}</Text> }
     { remove && <IconButton
       icon='ios-close'
       style={[styles.tagItem, styles.remove]}
@@ -18,6 +19,13 @@ const Tag = ({ tag, onClick, remove }) => (
 )
 
 const styles = StyleSheet.create({
+  active: {
+    borderColor: 'rgba(211,228,120,.9)',
+    backgroundColor: 'rgba(211,228,120,.1)'
+  },
+  count: {
+    fontSize: 10
+  },
   tagItem: {
     padding: 2,
     paddingLeft: 6,

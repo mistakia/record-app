@@ -1,11 +1,11 @@
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { taglistActions, getTagsForUserTaglist } from '@core/taglists'
+import { taglistActions, getTagsForUser } from '@core/taglists'
 import Tags from './tags'
 
 const mapStateToProps = createSelector(
-  getTagsForUserTaglist,
+  getTagsForUser,
   (tags) => ({ tags })
 )
 

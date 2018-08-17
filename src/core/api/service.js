@@ -1,6 +1,6 @@
 /* global fetch, AbortController */
 
-const qs = (params) => Object.keys(params).map(key => key + '=' + params[key]).join('&')
+import { toQueryString } from '@core/utils'
 
 const POST = (data) => ({
   method: 'POST',
@@ -20,7 +20,7 @@ export const api = {
     return { url }
   },
   fetchFeed ({ logId, params }) {
-    const url = `http://localhost:3000/feed?${qs(params)}`
+    const url = `http://localhost:3000/feed?${toQueryString(params)}`
     return { url }
   },
   fetchInfo () {
@@ -31,8 +31,8 @@ export const api = {
     const url = `http://localhost:3000/tags${logId}`
     return { url }
   },
-  fetchTracks ({ logId }) {
-    const url = `http://localhost:3000/tracks${logId}`
+  fetchTracks ({ logId, params }) {
+    const url = `http://localhost:3000/tracks${logId}?${toQueryString(params)}`
     return { url }
   },
   postTag ({ logId, data }) {
@@ -41,7 +41,7 @@ export const api = {
     return { url, ...post }
   },
   deleteTag ({ logId, data }) {
-    const url = `http://localhost:3000/tags?${qs(data)}`
+    const url = `http://localhost:3000/tags?${toQueryString(data)}`
     return { url, ...DELETE }
   },
   postContact ({ logId, data }) {
@@ -57,9 +57,9 @@ export const api = {
 }
 
 export const apiRequest = (apiFunction, opts) => {
-  const abort = new AbortController()
-  const signal = abort.signal
-  const options = Object.assign(apiFunction(opts), signal)
+  const controller = new AbortController()
+  const abort = controller.abort.bind(controller)
+  const options = Object.assign(apiFunction(opts), controller.signal)
   const request = dispatchFetch.bind(null, options)
   return { abort, request }
 }
