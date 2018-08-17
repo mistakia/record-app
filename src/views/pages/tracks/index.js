@@ -1,7 +1,9 @@
 import React from 'react'
 import { connect } from 'react-redux'
 
+import { parseQueryString } from '@core/utils'
 import { tracklistActions } from '@core/tracklists'
+import { taglistActions } from '@core/taglists'
 
 import render from './tracks'
 
@@ -11,16 +13,19 @@ export class TracksPage extends React.Component {
   }
 
   componentDidUpdate (prevProps) {
-    const { logId } = this.props.match.params
-    if (prevProps.match.params.logId !== logId) {
+    const location = JSON.stringify(this.props.location)
+    const prevLocation = JSON.stringify(prevProps.location)
+    if (location !== prevLocation) {
       this._load()
     }
   }
 
   _load () {
     // '/me' or proper orbitdb address
-    const { logId } = this.props.match.params
-    this.props.loadTracks(`/${logId}`)
+    const { logId } = this.props.match.params || 'me'
+    const { tags } = parseQueryString(this.props.location.search)
+    this.props.loadTracks(`/${logId}`, tags || '')
+    this.props.loadTags(`/${logId}`)
   }
 
   render () {
@@ -29,7 +34,8 @@ export class TracksPage extends React.Component {
 }
 
 const mapDispatchToProps = {
-  loadTracks: tracklistActions.loadTracks
+  loadTracks: tracklistActions.loadTracks,
+  loadTags: taglistActions.loadTags
 }
 
 export default connect(

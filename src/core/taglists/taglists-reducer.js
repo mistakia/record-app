@@ -1,9 +1,11 @@
-import { Map } from 'immutable'
+import { Map, List } from 'immutable'
 
 import { taglistActions } from './actions'
 import { taglistReducer } from './taglist-reducer'
+import { tracklistActions } from '@core/tracklists'
 
 export const initialState = new Map({
+  currentSelectedTags: new List(),
   currentTaglistId: null
 })
 
@@ -21,7 +23,14 @@ export function taglistsReducer (state = initialState, action) {
     case taglistActions.LOAD_TAGS:
       return state.merge({
         currentTaglistId: payload.logId,
-        [payload.logId]: taglistsReducer(state.get(payload.logId), action)
+        [payload.logId]: taglistReducer(undefined, action)
+      })
+
+    case tracklistActions.LOAD_TRACKS:
+      const { tags } = payload
+      const t = tags && !Array.isArray(tags) ? [tags] : tags
+      return state.merge({
+        currentSelectedTags: t ? new List(t) : new List()
       })
 
     default:

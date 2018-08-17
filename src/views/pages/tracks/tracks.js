@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+import Taglist from '@components/taglist'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
 
@@ -14,7 +15,10 @@ export default function () {
   )
 
   const body = (
-    <Tracklist />
+    <div>
+      <Taglist />
+      <Tracklist />
+    </div>
   )
 
   return (

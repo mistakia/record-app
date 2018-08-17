@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text } from 'react-native'
 import { Link } from 'react-router-native'
 
+import Taglist from '@components/taglist'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
 import headStyles from '@styles/head'
@@ -18,7 +19,10 @@ export default function () {
   )
 
   const body = (
-    <Tracklist />
+    <View>
+      <Taglist />
+      <Tracklist />
+    </View>
   )
 
   return (

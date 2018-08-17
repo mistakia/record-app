@@ -67,7 +67,6 @@ export default class App extends React.Component {
   }
 
   render () {
-    console.log(this.props.app)
     if (!this.props.app.loaded) {
       return (
         <View style={styles.appLoading}>
