@@ -21,7 +21,7 @@ export function contactlistsReducer (state = initialState, action) {
     case contactlistActions.LOAD_CONTACTS:
       return state.merge({
         currentContactlistId: payload.logId,
-        [payload.logId]: contactlistReducer(state.get(payload.logId), action)
+        [payload.logId]: contactlistReducer(undefined, action)
       })
 
     default:

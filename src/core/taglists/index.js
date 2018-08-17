@@ -1,5 +1,10 @@
 export { taglistsReducer } from './taglists-reducer'
-export { getTagsForUserTaglist } from './selectors'
+export {
+  getCurrentTaglist,
+  getTagsForUser,
+  getCurrentSelectedTags,
+  getTagsForCurrentTaglist
+} from './selectors'
 export { taglistSagas } from './sagas'
 export {
   taglistActions,

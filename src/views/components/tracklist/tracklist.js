@@ -2,6 +2,7 @@ import React from 'react'
 
 import LoadingIndicator from '@components/loading-indicator'
 import Track from '@components/track'
+import Button from '@components/button'
 
 export default function Tracklist ({
   displayLoadingIndicator,
@@ -11,7 +12,10 @@ export default function Tracklist ({
   selectedTrackId,
   selectTrack,
   tracklistId,
-  tracks
+  tracks,
+  hasMore,
+  loadNextTracks,
+  tags
 }) {
   const trackItems = tracks.map((track, index) => {
     const isSelected = track.id === selectedTrackId
@@ -27,13 +31,25 @@ export default function Tracklist ({
     )
   })
 
+  const loadStatus = () => {
+    if (displayLoadingIndicator) {
+      return <LoadingIndicator />
+    }
+
+    if (hasMore) {
+      return (
+        <Button
+          onClick={loadNextTracks}>
+          Load More
+        </Button>
+      )
+    }
+  }
+
   return (
     <div>
       {trackItems}
-
-      <div>
-        {(displayLoadingIndicator) ? <LoadingIndicator /> : null}
-      </div>
+      {loadStatus()}
     </div>
   )
 }

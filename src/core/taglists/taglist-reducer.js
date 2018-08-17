@@ -1,4 +1,4 @@
-import { List } from 'immutable'
+import { List, Record } from 'immutable'
 
 import { taglistActions } from './actions'
 import { Taglist } from './taglist'
@@ -9,7 +9,7 @@ export function taglistReducer (state = new Taglist(), { payload, type }) {
       return state.withMutations(taglist => {
         taglist.merge({
           isPending: false,
-          tags: mergeTags(taglist.tags, payload.data)
+          tags: new List(payload.data)
         })
       })
 
@@ -17,19 +17,9 @@ export function taglistReducer (state = new Taglist(), { payload, type }) {
       return state.set('isPending', true)
 
     case taglistActions.LOAD_TAGS:
-      return state.isNew ? state.set('id', payload.logId) : state
+      return state.set('id', payload.logId)
 
     default:
       return state
   }
-}
-
-function mergeTags (taglist, collection) {
-  let tags = taglist.toJS()
-  let newTags = collection.reduce((list, tag) => {
-    if (tags.indexOf(tag) === -1) list.push(tag)
-    return list
-  }, [])
-
-  return newTags.length ? new List(tags.concat(newTags)) : taglist
 }

@@ -17,7 +17,7 @@ export function contactlistReducer (state = new Contactlist(), {payload, type}) 
       return state.set('isPending', true)
 
     case contactlistActions.LOAD_CONTACTS:
-      return state.isNew ? state.set('id', payload.logId) : state
+      return state.set('id', payload.logId)
 
     default:
       return state

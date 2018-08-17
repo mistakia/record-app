@@ -9,7 +9,6 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
     case tracklistActions.FETCH_TRACKS_FULFILLED:
       return state.withMutations(tracklist => {
         tracklist.merge({
-          isNew: false,
           isPending: false,
           hasMore: payload.data.length === ITEMS_PER_LOAD,
           trackIds: mergeTrackIds(tracklist.trackIds, payload.data)
@@ -20,7 +19,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
       return state.set('isPending', true)
 
     case tracklistActions.LOAD_TRACKS:
-      return state.isNew ? state.set('id', payload.logId) : state
+      return state.set('id', payload.logId)
 
     default:
       return state

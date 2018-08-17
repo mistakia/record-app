@@ -6,6 +6,8 @@ export const tracklistActions = {
   LOAD_TRACKS: 'LOAD_TRACKS',
   LOAD_NEXT_TRACKS: 'LOAD_NEXT_TRACKS',
 
+  TOGGLE_TAG: 'TOGGLE_TAG',
+
   POST_TRACK_FAILED: 'POST_TRACK_FAILED',
   POST_TRACK_FULFILLED: 'POST_TRACK_FULFILLED',
   POST_TRACK_PENDING: 'POST_TRACK_PENDING',
@@ -32,10 +34,18 @@ export const tracklistActions = {
     }
   }),
 
-  loadTracks: (logId) => ({
+  loadTracks: (logId, tags) => ({
     type: tracklistActions.LOAD_TRACKS,
     payload: {
-      logId
+      logId,
+      tags
+    }
+  }),
+
+  toggleTag: (tag) => ({
+    type: tracklistActions.TOGGLE_TAG,
+    payload: {
+      tag
     }
   }),
 
