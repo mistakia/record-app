@@ -1,0 +1,132 @@
+$size = 45px
+
+.md-loading-indicator
+  width $size
+  height $size
+  display block
+  position relative
+  margin 0 auto
+  overflow hidden
+
+  .md-inner
+    width $size
+    height $size
+    position relative
+
+    .md-gap
+      position absolute
+      left ($size / 2)
+      right ($size / 2)
+      top 0
+      bottom 0
+      border-top 1px solid $accentColor
+      box-sizing border-box
+
+    .md-left
+    .md-right
+      position absolute
+      top 0
+      height $size
+      width ($size / 2)
+      overflow hidden
+
+      .md-half-circle
+        position absolute
+        top 0
+        width $size
+        height $size
+        box-sizing border-box
+        border-width 1px
+        border-style solid
+        border-color $accentColor $accentColor transparent
+        border-radius 50%
+    .md-left
+      left 0
+      .md-half-circle
+        left 0
+        border-right-color transparent
+    .md-right
+      right 0
+      .md-half-circle
+        right 0
+        border-left-color transparent
+
+  &.indeterminate .md-spinner-wrapper
+    animation outer-rotate 2.91667s linear infinite
+    .md-inner
+      animation sporadic-rotate 5.25s cubic-bezier(0.35, 0, 0.25, 1) infinite
+      .md-left .md-half-circle
+      .md-right .md-half-circle
+        animation-iteration-count infinite
+        animation-duration 1.3125s
+        animation-timing-function cubic-bezier(0.35, 0, 0.25, 1)
+      .md-left .md-half-circle
+        animation-name left-wobble
+      .md-right .md-half-circle
+        animation-name right-wobble
+
+  &.determinate .md-inner .md-gap
+    border-bottom-width 5px
+    border-bottom-style solid
+
+button > .md-loading-indicator
+  margin 0
+
+.md-loading-error
+  animation blink 1400ms linear infinite
+  width $size
+  height $size
+  display block
+  margin 45px auto
+  border 3px solid red
+  border-radius 999em
+  &:after
+    absolute bottom -$size left right
+    content "Loading Error"
+    padding 10px 15px
+    margin 0 auto
+    width 150px
+    text-align center
+    background red
+    color white
+    border-radius 3px
+
+@keyframes outer-rotate
+  100%
+    transform rotate(360deg)
+
+@keyframes sporadic-rotate
+  12.5%
+    transform rotate(135deg)
+  25%
+    transform rotate(270deg)
+  37.5%
+    transform rotate(405deg)
+  50%
+    transform rotate(540deg)
+  62.5%
+    transform rotate(675deg)
+  75%
+    transform rotate(810deg)
+  87.5%
+    transform rotate(945deg)
+  100%
+    transform rotate(1080deg)
+
+@keyframes left-wobble
+  0%, 100%
+    transform rotate(130deg)
+  50%
+    transform rotate(-5deg)
+
+@keyframes right-wobble
+  0%, 100%
+    transform rotate(-130deg)
+  50%
+    transform rotate(5deg)
+
+@keyframes blink
+  0%, 100%
+    opacity 1
+  50%
+    opacity 0
