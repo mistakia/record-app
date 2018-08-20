@@ -1,6 +1,7 @@
 import { Map } from 'immutable'
 
 import { contactlistActions } from '@core/contactlists'
+import { profileActions } from '@core/profiles'
 import { feedActions } from '@core/feed'
 import { createContact } from './contact'
 
@@ -22,6 +23,17 @@ export function contactsReducer (state = new Map(), {payload, type}) {
 
           contacts.set(feedData.contactId, createContact(feedData.contact))
         })
+      })
+
+
+    case profileActions.FETCH_PROFILE_FULFILLED:
+      return state.withMutations(contacts => {
+        contacts.set(payload.data._id, createContact(payload.data))
+      })
+
+    case contactlistActions.DELETE_CONTACT_FULFILLED:
+      return state.withMutations(contacts => {
+        contacts.setIn([payload.data._id, 'haveContact'], false)
       })
 
     default:

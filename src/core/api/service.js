@@ -27,6 +27,10 @@ export const api = {
     const url = 'http://localhost:3000/info'
     return { url }
   },
+  fetchProfile ({ logId }) {
+    const url = `http://localhost:3000/profile${logId}`
+    return { url }
+  },
   fetchTags ({ logId }) {
     const url = `http://localhost:3000/tags${logId}`
     return { url }
@@ -46,6 +50,15 @@ export const api = {
   },
   postContact ({ logId, data }) {
     const url = 'http://localhost:3000/contacts'
+    const post = POST(data)
+    return { url, ...post }
+  },
+  deleteContact ({ logId, data }) {
+    const url = `http://localhost:3000/contacts?${toQueryString(data)}`
+    return { url, ...DELETE }
+  },
+  postProfile ({ data }) {
+    const url = 'http://localhost:3000/profile'
     const post = POST(data)
     return { url, ...post }
   },

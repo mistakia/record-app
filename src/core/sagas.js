@@ -5,6 +5,7 @@ import { contactlistSagas } from './contactlists'
 import { feedSagas } from './feed'
 import { infoSagas } from './info'
 import { playerSagas } from './player'
+import { profileSagas } from './profiles'
 import { taglistSagas } from './taglists'
 import { tracklistSagas } from './tracklists'
 
@@ -15,6 +16,7 @@ export default function * rootSaga () {
     ...feedSagas,
     ...infoSagas,
     ...playerSagas,
+    ...profileSagas,
     ...taglistSagas,
     ...tracklistSagas
   ])

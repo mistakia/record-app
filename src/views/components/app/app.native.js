@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
   appContainer: {
     ...StyleSheet.absoluteFillObject,
     top: 20,
-    paddingBottom: 52,
-    backgroundColor: '#f6f6f6'
+    paddingBottom: 50
   }
 })

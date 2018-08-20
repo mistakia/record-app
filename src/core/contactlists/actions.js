@@ -11,6 +11,12 @@ export const contactlistActions = {
 
   ADD_CONTACT: 'ADD_CONTACT',
 
+  DELETE_CONTACT_FAILED: 'DELETE_CONTACT_FAILED',
+  DELETE_CONTACT_FULFILLED: 'DELETE_CONTACT_FULFILLED',
+  DELETE_CONTACT_PENDING: 'DELETE_CONTACT_PENDING',
+
+  REMOVE_CONTACT: 'REMOVE_CONTACT',
+
   fetchContactsFailed: error => ({
     type: contactlistActions.FETCH_CONTACTS_FAILED,
     payload: error
@@ -64,6 +70,33 @@ export const contactlistActions = {
       logId,
       data
     }
+  }),
+
+  removeContact: (data) => ({
+    type: contactlistActions.REMOVE_CONTACT,
+    payload: {
+      data
+    }
+  }),
+
+  deleteContactFailed: error => ({
+    type: contactlistActions.DELETE_CONTACT_FAILED,
+    payload: error
+  }),
+
+  deleteContactFulfilled: (logId, data) => ({
+    type: contactlistActions.DELETE_CONTACT_FULFILLED,
+    payload: {
+      logId,
+      data
+    }
+  }),
+
+  deleteContactPending: logId => ({
+    type: contactlistActions.DELETE_CONTACT_PENDING,
+    payload: {
+      logId
+    }
   })
 }
 
@@ -77,4 +110,10 @@ export const contactlistPostActions = {
   failed: contactlistActions.postContactFailed,
   fulfilled: contactlistActions.postContactFulfilled,
   pending: contactlistActions.postContactPending
+}
+
+export const contactlistDeleteActions = {
+  failed: contactlistActions.deleteContactFailed,
+  fulfilled: contactlistActions.deleteContactFulfilled,
+  pending: contactlistActions.deleteContactPending
 }

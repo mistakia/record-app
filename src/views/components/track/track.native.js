@@ -46,10 +46,7 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 5,
-    margin: 4,
-    borderBottomWidth: 1,
-    borderStyle: 'solid',
-    borderColor: '#f0f0f0'
+    margin: 4
   }
 })
 

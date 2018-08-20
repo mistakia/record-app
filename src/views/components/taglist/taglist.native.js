@@ -10,7 +10,11 @@ const render = (tagItems, loading) => (
 
 const styles = StyleSheet.create({
   tagsContainer: {
-    padding: 5,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 5,
+    paddingRight: 5,
+    marginBottom: -5,
     flex: 1,
     flexWrap: 'wrap',
     flexDirection: 'row'
