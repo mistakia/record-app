@@ -4,14 +4,11 @@ import { Link } from 'react-router-dom'
 import Taglist from '@components/taglist'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
+import Profile from '@components/profile'
 
 export default function () {
-  const { logId } = this.props.match.params
   const head = (
-    <div>
-      <h1>Tracks</h1>
-      {logId === 'me' && <Link className='button' to='/tracks/new'>Add Track</Link>}
-    </div>
+    <Profile />
   )
 
   const body = (

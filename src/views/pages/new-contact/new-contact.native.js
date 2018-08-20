@@ -6,6 +6,7 @@ import {
   View
 } from 'react-native'
 
+import { parseQueryString } from '@core/utils'
 import Button from '@components/button'
 import { contactlistActions } from '@core/contactlists'
 import PageLayout from '@layouts/page'
@@ -15,9 +16,12 @@ export class NewContactPage extends React.Component {
   constructor (props) {
     super(props)
 
+    const { logId } = this.props.match.params
+    const { alias } = parseQueryString(this.props.location.search)
+
     this.state = {
-      alias: '',
-      address: ''
+      alias: alias || '',
+      address: logId || ''
     }
 
     this.handleSubmit = this.handleSubmit.bind(this)

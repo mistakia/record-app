@@ -1,6 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 
+import { parseQueryString } from '@core/utils'
 import { contactlistActions } from '@core/contactlists'
 import PageLayout from '@layouts/page'
 
@@ -26,6 +27,9 @@ export class NewContactPage extends React.Component {
   }
 
   render () {
+    const { logId } = this.props.match.params
+    const { alias } = parseQueryString(this.props.location.search)
+
     const head = (
       <h1>Add Contact</h1>
     )
@@ -34,11 +38,11 @@ export class NewContactPage extends React.Component {
       <form onSubmit={this.handleSubmit}>
         <label>
           Alias
-          <input type='text' name='alias' placeholder='Contact Nickname' />
+          <input type='text' name='alias' defaultValue={alias} placeholder='Contact Nickname' />
         </label>
         <label>
           Address
-          <input type='text' name='address' placeholder='/orbitdb/Qm.../record' />
+          <input type='text' name='address' defaultValue={logId} placeholder='/orbitdb/Qm.../record' />
         </label>
         <input className='button' type='submit' value='Submit' />
       </form>

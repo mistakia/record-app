@@ -4,7 +4,7 @@ import './page.styl'
 
 export const PageLayout = ({ head, body }) => (
   <section className='page__container'>
-    <div>
+    <div className='page__head'>
       { head }
     </div>
     <div>

@@ -1,0 +1,76 @@
+.contact
+  padding 0
+
+.contact__avatar
+  absolute top left
+
+.contact__bio
+  font-style italic
+  &:before
+  &:after
+    font-size 18px
+    color #ccc
+  &:before
+    content open-quote
+  &:after
+    content close-quote
+
+.contact__title
+  display block
+
+.contact__action
+  absolute top right
+  .button
+    border none
+    padding 10px
+    background #f0f0f0
+    display block
+
+.contact__menu
+  background $backgroundColor
+  a
+    background white
+    padding 15px
+    margin-top 4px
+    display inline-block
+    + a
+      margin-left 4px
+    &:hover
+      background #f0f0f0
+      color #444
+    &.active
+      border-bottom 4px solid $accentColor
+
+.contact.contact__profile
+  .contact__body
+    display inline-block
+    min-height 100px
+    margin-left 115px
+  .contact__bio
+    margin 25px 15px
+  .contact__title
+    font-weight 100
+    line-height 1.1
+    font-size 38px
+
+.contact__heading.contact
+  background $backgroundColor
+  &:not(:first-child)
+    margin-top 45px
+  .contact__avatar
+    background white
+    width 35px
+    height 35px
+    border-radius 999em
+  .contact__body
+    margin-left 45px
+    min-height 45px
+
+.contact__item.contact
+  .contact__avatar
+    width 90px
+    height 90px
+  .contact__body
+    margin-left 100px
+    min-height 90px
+    padding-top 15px

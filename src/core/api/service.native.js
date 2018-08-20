@@ -12,6 +12,10 @@ export const api = {
   fetchInfo: () => ({
     action: 'info:get'
   }),
+  fetchProfile: ({ logId }) => ({
+    action: 'profile:get',
+    data: { logId }
+  }),
   fetchTags: ({ logId }) => ({
     action: 'tags:get',
     data: { logId }
@@ -41,6 +45,17 @@ export const api = {
       data: { logId, address, alias }
     }
   },
+  deleteContact: ({ logId, data }) => {
+    const { contactId } = data
+    return {
+      action: 'contacts:delete',
+      data: { contactId }
+    }
+  },
+  postProfile: ({ data }) => ({
+    action: 'profile:set',
+    data
+  }),
   postTrack: ({ logId, data }) => {
     const { title, url } = data
     return {

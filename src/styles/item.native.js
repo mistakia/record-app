@@ -2,14 +2,13 @@ import { StyleSheet } from 'react-native'
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
-    marginBottom: 5,
+    marginBottom: 15,
     padding: 10
   },
   label: {
     fontSize: 10,
-    padding: 5,
-    backgroundColor: 'white'
+    padding: 10,
+    paddingBottom: 0
   }
 })
 

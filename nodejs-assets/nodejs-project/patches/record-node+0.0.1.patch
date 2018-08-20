@@ -1,18 +1,57 @@
 patch-package
+--- a/node_modules/record-node/components/contacts.js
++++ b/node_modules/record-node/components/contacts.js
+@@ -36,7 +36,7 @@ module.exports = function contacts (self) {
+       const entry = await self.contacts.getEntry(logId, contactId)
+       const relations = await self.contacts.getRelations(entry)
+       const profile = await self.profile.getEntry(entry.content.address)
+-      return { ...profile, ...relations, ...entry }
++      return Object.assign({}, profile, relations, entry)
+     },
+
+     getRelations: async (contact, opts = {}) => {
+@@ -74,7 +74,7 @@ module.exports = function contacts (self) {
+       for (const entry of entries) {
+         const profile = await self.profile.getEntry(entry.payload.value.content.address)
+         const relations = await self.contacts.getRelations(entry.payload.value)
+-        contacts.push({ ...profile, ...relations, ...entry.payload.value })
++        contacts.push(Object.assign({}, profile, relations, entry.payload.value))
+       }
+       return contacts
+     }
 --- a/node_modules/record-node/components/feed.js
 +++ b/node_modules/record-node/components/feed.js
-@@ -25,11 +25,11 @@ module.exports = function feed (self) {
+@@ -33,11 +33,10 @@ module.exports = function feed (self) {
          const { type } = feedEntry.payload
          // TODO: make this readable and less suspect :(
          const entry = await self[`${type}s`].get(address, feedEntry.payload.entryId)
 -        entries.push({
 -          ...feedEntry.payload,
-+        const item = Object.assign({
-           contact: contact.payload.value,
-           content: entry.payload.value
+-          contact: contact,
+-          content: entry
 -        })
-+        }, feedEntry.payload)
-+        entries.push(item)
++        entries.push(Object.assign({},
++          feedEntry.payload,
++          { contact: contact, content: entry }
++        ))
        }
        return entries
      }
+--- a/node_modules/record-node/components/profile.js
++++ b/node_modules/record-node/components/profile.js
+@@ -27,13 +27,13 @@ module.exports = function profile (self) {
+       const entry = await self.profile.getEntry(logId)
+
+       if (self.isMe(logId)) {
+-        return { ...entry, isMe: true, haveContact: false, content: { address: self.address }}
++        return Object.assign({}, entry, { isMe: true }, { haveContact: false }, { content: { address: self.address }})
+       }
+
+       const contact = await self.contacts.get('/me', entry._id)
+       const relations = await self.contacts.getRelations(contact)
+
+-      return { ...entry, ...relations, ...contact }
++      return Object.assign({}, entry, relations, contact)
+     }
+   }
+ }

@@ -28,8 +28,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     backgroundColor: 'white',
-    borderTopColor: '#f0f0f0',
-    borderTopWidth: 2,
+    backgroundColor: '#f0f0f0',
     zIndex: 1
   },
   menuItem: {

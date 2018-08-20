@@ -28,21 +28,21 @@ const Feedlist = ({
   const groupLimit = 5
   let feedItems = []
 
-  const contactItem = (contact) => {
+  const contactItem = (contact, type) => {
     feedItems.push(
-      <Contact contact={contact} key={feedItems.length} />
+      <Contact type={type} contact={contact} key={feedItems.length} />
     )
   }
 
   items.forEach((item, index) => {
     // group items by contact and limit to groupLimit
     if (lastContactId !== item.contact.id) {
-      contactItem(item.contact)
+      contactItem(item.contact, 'heading')
       lastContactId = item.contact.id
     } else {
       groupCount++
       if (groupCount >= groupLimit) {
-        contactItem(item.contact)
+        contactItem(item.contact, 'heading')
         groupCount = 0
       }
     }
@@ -64,7 +64,7 @@ const Feedlist = ({
         break
 
       case 'contact':
-        contactItem(item.content)
+        contactItem(item.content, 'item')
         break
 
       default:

@@ -1,7 +1,8 @@
 export {
   contactlistActions,
   contactlistRequestActions,
-  contactlistPostActions
+  contactlistPostActions,
+  contactlistDeleteActions
 } from './actions'
 
 export { contactlistSagas } from './sagas'
