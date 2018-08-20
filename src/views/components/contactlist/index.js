@@ -16,7 +16,7 @@ const Contactlist = ({
   displayLoadingIndicator
 }) => {
   const contactItems = contacts.map((contact, index) => (
-    <Contact contact={contact} key={index} />
+    <Contact type='item' contact={contact} key={index} />
   ))
 
   const loading = (displayLoadingIndicator && <LoadingIndicator />)

@@ -143,7 +143,7 @@ rnBridge.channel.on('message', async (message) => {
     }
 
     try {
-      const data = await apiFunction(...params)
+      const data = await apiFunction.call(record, ...params)
       send({ data })
     } catch (e) {
       console.log(e)
@@ -184,12 +184,26 @@ rnBridge.channel.on('message', async (message) => {
       break
     }
 
+    case 'contacts:delete': {
+      const { contactId } = msg.data
+      RPC(record.contacts.remove, [contactId])
+      break
+    }
+
     case 'feed:get':
       RPC(record.feed.list, [msg.data.params])
       break
 
     case 'info:get':
       RPC(record.info)
+      break
+
+    case 'profile:get':
+      RPC(record.profile.get, [msg.data.logId])
+      break
+
+    case 'profile:set':
+      RPC(record.profile.set, [msg.data])
       break
 
     case 'tracks:get':

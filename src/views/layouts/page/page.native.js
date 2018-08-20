@@ -7,7 +7,7 @@ export const PageLayout = ({ head, body }) => (
     <View style={styles.head}>
       { head }
     </View>
-    <View>
+    <View style={styles.body}>
       { body }
     </View>
   </KeyboardAwareScrollView>
@@ -15,9 +15,12 @@ export const PageLayout = ({ head, body }) => (
 
 const styles = StyleSheet.create({
   head: {
-    padding: 15,
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center'
+  },
+  body: {
+    paddingBottom: 75
   }
 })
 

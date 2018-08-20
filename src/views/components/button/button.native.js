@@ -11,12 +11,12 @@ const defaultStyle = {
   alignItems: 'center'
 }
 
-function Button ({ children, onClick, style = {} }) {
+function Button ({ children, onClick, onPress, style = {} }) {
   style = [defaultStyle, style]
   return (
     <TouchableOpacity
       style={style}
-      onPress={onClick}>
+      onPress={onClick || onPress}>
       {children}
     </TouchableOpacity>
   )
