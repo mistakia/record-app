@@ -1,12 +1,15 @@
 import React from 'react'
 import { connect } from 'react-redux'
+import { createSelector } from 'reselect'
 
 import { parseQueryString } from '@core/utils'
 import { tracklistActions } from '@core/tracklists'
 import { profileActions } from '@core/profiles'
 import { taglistActions } from '@core/taglists'
-
-import render from './tracks'
+import { getApp } from '@core/app'
+import Tracklist from '@components/tracklist'
+import PageLayout from '@layouts/page'
+import Profile from '@components/profile'
 
 export class TracksPage extends React.Component {
   componentWillMount () {
@@ -24,15 +27,30 @@ export class TracksPage extends React.Component {
   _load () {
     const { logId } = this.props.match.params
     const { tags } = parseQueryString(this.props.location.search)
-    this.props.loadTracks(`/${logId}`, tags || '')
-    this.props.loadTags(`/${logId}`)
-    this.props.loadProfile(`/${logId}`)
+    this.props.loadTracks(logId, tags || '')
+    this.props.loadTags(logId)
+    this.props.loadProfile(logId)
   }
 
   render () {
-    return render.call(this)
+    const { logId } = this.props.match.params
+    const { app } = this.props
+
+    const head = <Profile />
+
+    const showAdd = logId === app.address
+    const body = <Tracklist showAdd={showAdd} />
+
+    return (
+      <PageLayout head={head} body={body} />
+    )
   }
 }
+
+const mapStateToProps = createSelector(
+  getApp,
+  (app) => ({app})
+)
 
 const mapDispatchToProps = {
   loadTracks: tracklistActions.loadTracks,
@@ -41,6 +59,6 @@ const mapDispatchToProps = {
 }
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(TracksPage)

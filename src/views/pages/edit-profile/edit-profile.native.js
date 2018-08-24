@@ -25,7 +25,7 @@ export default class EditProfilePage extends React.Component {
   }
 
   handleSubmit () {
-    const { name, location, bio} = this.state
+    const { name, location, bio } = this.state
 
     if (name && location && bio) {
       this.props.setProfile({ name, location, bio })
@@ -36,8 +36,6 @@ export default class EditProfilePage extends React.Component {
     const head = (
       <Text>Edit Profile</Text>
     )
-
-    const { contact } = this.props
 
     const body = (
       <View>
@@ -56,7 +54,7 @@ export default class EditProfilePage extends React.Component {
         <Text style={formStyles.label}>Bio</Text>
         <TextInput
           style={formStyles.input}
-          multiline={true}
+          multiline
           placeholder='Bio'
           onChangeText={(bio) => this.setState({ bio })}
           value={this.state.bio} />

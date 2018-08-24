@@ -9,10 +9,8 @@ import {
 } from '@core/tracklists'
 import { getPlayerIsPlaying, getPlayerTrackId, playerActions } from '@core/player'
 import { audio } from '@core/audio'
-import LoadingIndicator from '@components/loading-indicator'
 import Loading from '@components/loading'
 import Track from '@components/track'
-import Button from '@components/button'
 
 import render from './tracklist'
 
@@ -27,6 +25,7 @@ const Tracklist = ({
   tracks,
   hasMore,
   loadNextTracks,
+  showAdd,
   tags
 }) => {
   const trackItems = tracks.map((track, index) => {
@@ -51,7 +50,7 @@ const Tracklist = ({
     />
   )
 
-  return render(trackItems, loading)
+  return render({ trackItems, loading, showAdd })
 }
 
 const mapStateToProps = createSelector(
