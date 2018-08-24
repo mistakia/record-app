@@ -9,21 +9,21 @@ const Loading = ({
   loading,
   onClick
 }) => {
-    if (loading) {
-      return <LoadingIndicator style={styles.loadingContainer}/>
-    }
+  if (loading) {
+    return <LoadingIndicator style={styles.loadingContainer}/>
+  }
 
-    if (hasMore) {
-      return (
-        <Button
-          onClick={onClick}
-          style={styles.loadingContainer}>
-          <Text>Load More</Text>
-        </Button>
-      )
-    }
+  if (hasMore) {
+    return (
+      <Button
+        onClick={onClick}
+        style={styles.loadingContainer}>
+        <Text>Load More</Text>
+      </Button>
+    )
+  }
 
-    return null
+  return null
 }
 
 const styles = StyleSheet.create({
