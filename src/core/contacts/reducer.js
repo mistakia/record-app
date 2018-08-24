@@ -25,7 +25,6 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         })
       })
 
-
     case profileActions.FETCH_PROFILE_FULFILLED:
       return state.withMutations(contacts => {
         contacts.set(payload.data._id, createContact(payload.data))

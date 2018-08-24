@@ -17,7 +17,7 @@ export function getMyProfile (state) {
 
 export const getContactForMyProfile = createSelector(
   getMyProfile,
-  (state) => getContacts(state),  // FIX for https://stackoverflow.com/questions/35240716/webpack-import-returns-undefined-depending-on-the-order-of-imports
+  (state) => getContacts(state), // FIX for https://stackoverflow.com/questions/35240716/webpack-import-returns-undefined-depending-on-the-order-of-imports
   (myProfile, contacts) => {
     return contacts.get(myProfile && myProfile.contactId) || new Contact()
   }

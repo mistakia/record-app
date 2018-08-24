@@ -1,5 +1,3 @@
-import { List } from 'immutable'
-
 import { profileActions } from './actions'
 import { Profile } from './profile'
 

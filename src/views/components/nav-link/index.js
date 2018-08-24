@@ -9,8 +9,8 @@ const NavLink = ({
   children,
   ...rest
 }) => {
-  const path = typeof to === "object" ? to.pathname : to
-  const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1")
+  const path = typeof to === 'object' ? to.pathname : to
+  const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1')
 
   const getChildren = ({ location, match }) => {
     const isActive = !!match
