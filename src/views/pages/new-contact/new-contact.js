@@ -18,9 +18,10 @@ export class NewContactPage extends React.Component {
       alias: event.target.alias.value,
       address: event.target.address.value
     }
+    const { app } = this.props
 
     if (data.address && data.alias) {
-      this.props.addContact('me', data)
+      this.props.addContact(app.address, data)
     }
 
     event.preventDefault()

@@ -22,7 +22,7 @@ export default class App extends React.Component {
   componentWillMount () {
     this.listener = (event, message) => {
       // TODO: error handling
-      this.props.init()
+      this.props.init(message)
     }
     ipcRenderer.once('ready', this.listener)
   }

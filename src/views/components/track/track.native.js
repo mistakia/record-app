@@ -24,7 +24,7 @@ class Track extends React.Component {
           <View style={styles.title}>
             <Text>{track.title}</Text>
           </View>
-          <Tags track={track.toJS()} />
+          <Tags track={track} />
         </View>
       </TouchableOpacity>
     )

@@ -3,19 +3,15 @@ import { Link } from 'react-router-dom'
 
 import './menu.styl'
 
-class Menu extends React.Component {
-  render () {
-    return (
-      <div id='menu'>
-        <ul>
-          <li><Link to='/feed'>Home</Link></li>
-          <li><Link to='/info'>Info</Link></li>
-          <li><Link to='/tracks/me'>Tracks</Link></li>
-          <li><Link to='/contacts/me'>Contacts</Link></li>
-        </ul>
-      </div>
-    )
-  }
-}
+const Menu = ({ app }) => (
+  <div id='menu'>
+    <ul>
+      <li><Link to='/feed'>Home</Link></li>
+      <li><Link to='/info'>Info</Link></li>
+      <li><Link to={`/tracks${app.address}`}>Tracks</Link></li>
+      <li><Link to={`/contacts${app.address}`}>Contacts</Link></li>
+    </ul>
+  </div>
+)
 
 export default Menu

@@ -26,7 +26,7 @@ class Track extends React.Component {
             <FormattedTime value={track.duration} unit={'ms'} />
           </small>
         </div>
-        <Tags track={track.toJS()} />
+        <Tags track={track} />
       </article>
     )
   }
