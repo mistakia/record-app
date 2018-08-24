@@ -10,7 +10,7 @@ const Loading = ({
   onClick
 }) => {
   if (loading) {
-    return <LoadingIndicator style={styles.loadingContainer}/>
+    return <LoadingIndicator style={styles.loadingContainer} />
   }
 
   if (hasMore) {

@@ -6,10 +6,44 @@ import NavLink from '@components/nav-link'
 import Button from '@components/button'
 import TextStyles from '@styles/text'
 
-const Contact = ({ contact, type, removeContact }) => {
+const Contact = ({
+  contactName,
+  contactLocation,
+  contactBio,
+  contact,
+  type,
+  removeContact
+}) => {
   const style = styles[type]
 
-  removeContact = removeContact.bind(null, { contactId: contact.id })
+  const connectAction = (
+    <Link
+      style={style.action}
+      component={Button}
+      to={`/contacts/new/${contact.address}?alias=${contact.name || contact.alias}`}>
+      <Text>Connect</Text>
+    </Link>
+  )
+
+  const disconnectAction = (
+    <Button
+      style={style.action}
+      onClick={removeContact}>
+      <Text>Disconnect</Text>
+    </Button>
+  )
+
+  const selfAction = (
+    <Link to='/edit-profile' component={Button}><Text>Edit</Text></Link>
+  )
+
+  const contactAction = (contact.isMe
+    ? selfAction
+    : (contact.haveContact
+      ? disconnectAction
+      : connectAction
+    )
+  )
 
   if (type !== 'profile') {
     return (
@@ -19,34 +53,14 @@ const Contact = ({ contact, type, removeContact }) => {
         style={style.contact}>
         <Image
           style={style.avatar}
-          source={{uri: contact.avatar }} />
+          source={{ uri: contact.avatar }} />
         <View style={style.body}>
-          <Text style={TextStyles.title}>
-            { contact.isMe ?
-              (contact.name || 'set your name' ) :
-              (contact.alias || contact.name) }
-          </Text>
-          { (contact.isMe || contact.location) && <Text>
-            { contact.isMe ?
-              (contact.location || 'set your location') :
-              contact.location}
-          </Text> }
+          <Text style={TextStyles.title}>{contactName}</Text>
+          {contactLocation && <Text>{contactLocation}</Text>}
         </View>
-        { type === 'item' && <View>
-          { contact.haveContact ?
-            <Button
-              style={style.action}
-              onClick={removeContact}>
-              <Text>Disconnect</Text>
-            </Button> :
-            <Link
-              style={style.action}
-              component={Button}
-              to={`/contacts/new/${contact.address}?alias=${contact.name || contact.alias}`}>
-              <Text>Connect</Text>
-            </Link>
-          }
-        </View> }
+        {type === 'item' && <View>
+          {contact.haveContact ? disconnectAction : connectAction}
+        </View>}
       </Link>
     )
   }
@@ -56,35 +70,11 @@ const Contact = ({ contact, type, removeContact }) => {
       <View style={style.body}>
         <Image
           style={style.avatar}
-          source={{uri: contact.avatar }} />
-        <Text style={style.title}>
-          { contact.isMe ?
-            (contact.name || 'set your name' ) :
-            (contact.alias || contact.name) }
-        </Text>
-        { (contact.isMe || contact.location) && <Text>
-          { contact.isMe ?
-            (contact.location || 'set your location') :
-            contact.location}
-        </Text> }
-        { (contact.isMe || contact.bio) && <Text>
-          { contact.isMe ?
-            (contact.bio || 'set your bio') :
-            contact.bio }
-        </Text> }
-        <View style={style.action}>
-          { contact.isMe ?
-            <Link to='/edit-profile' component={Button}><Text>Edit</Text></Link> :
-            ( contact.haveContact ?
-              <Button onClick={removeContact}><Text>Disconnect</Text></Button> :
-              <Link
-                component={Button}
-                to={`/contacts/new/${contact.address}?alias=${contact.name || contact.alias}`}>
-                <Text>Connect</Text>
-              </Link>
-            )
-          }
-        </View>
+          source={{ uri: contact.avatar }} />
+        <Text style={style.title}>{contactName}</Text>
+        {contactLocation && <Text>{contactLocation}</Text>}
+        {contactBio && <Text>{contactBio}</Text>}
+        <View style={style.action}>{contactAction}</View>
       </View>
       <View style={style.menu}>
         <NavLink
@@ -110,8 +100,7 @@ const profile = StyleSheet.create({
     fontSize: 38
   },
   action: {
-    ...StyleSheet.absoluteFillObject,
-    left: 'auto',
+    position: 'absolute',
     top: 15,
     right: 15
   },
@@ -128,7 +117,7 @@ const profile = StyleSheet.create({
     paddingRight: 5,
     marginBottom: 10,
     flexDirection: 'row',
-    alignSelf: 'stretch',
+    alignSelf: 'stretch'
   },
   contact: {
     alignSelf: 'stretch'
@@ -158,9 +147,6 @@ const heading = StyleSheet.create({
     height: 30,
     width: 30,
     borderRadius: 15,
-    marginLeft: 7,
-    marginRight: 7,
-    backgroundColor: 'white',
     borderColor: '#f0f0f0',
     borderWidth: 1,
     marginLeft: 10,

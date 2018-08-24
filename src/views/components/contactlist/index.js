@@ -6,7 +6,6 @@ import {
   getCurrentContactlist,
   getContactsForCurrentContactlist
 } from '@core/contactlists'
-import { getApp } from '@core/app'
 import LoadingIndicator from '@components/loading-indicator'
 import Contact from '@components/contact'
 
