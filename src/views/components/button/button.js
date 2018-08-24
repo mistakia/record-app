@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 import './button.styl'
 
 function Button ({ children, className, label, onClick, type = 'button' }) {
-  const classNames = ['btn', className]
+  const classNames = ['button', className]
   return (
     <button
       aria-label={label}
