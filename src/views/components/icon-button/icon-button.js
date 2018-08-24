@@ -7,7 +7,7 @@ import Icon from '@components/icon'
 import './icon-button.styl'
 
 function IconButton ({ className, icon, label, onClick, type = 'button' }) {
-  const classNames = ['btn--icon', `btn--${icon}`, className]
+  const classNames = ['button__icon', `button__${icon}`, className]
 
   return (
     <Button
