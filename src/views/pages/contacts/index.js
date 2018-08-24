@@ -5,8 +5,9 @@ import { connect } from 'react-redux'
 import { getApp } from '@core/app'
 import { contactlistActions } from '@core/contactlists'
 import { profileActions } from '@core/profiles'
-
-import render from './contacts'
+import Contactlist from '@components/contactlist'
+import PageLayout from '@layouts/page'
+import Profile from '@components/profile'
 
 class ContactsPage extends React.Component {
   componentWillMount () {
@@ -22,12 +23,22 @@ class ContactsPage extends React.Component {
 
   _load () {
     const { logId } = this.props.match.params
-    this.props.loadContacts(`/${logId}`)
-    this.props.loadProfile(`/${logId}`)
+    this.props.loadContacts(logId)
+    this.props.loadProfile(logId)
   }
 
   render () {
-    return render.call(this)
+    const { logId } = this.props.match.params
+    const { app } = this.props
+
+    const head = <Profile />
+
+    const showAdd = logId === app.address
+    const body = <Contactlist showAdd={showAdd} />
+
+    return (
+      <PageLayout head={head} body={body} />
+    )
   }
 }
 

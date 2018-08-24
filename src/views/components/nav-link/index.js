@@ -12,16 +12,18 @@ const NavLink = ({
   const path = typeof to === "object" ? to.pathname : to
   const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1")
 
+  const getChildren = ({ location, match }) => {
+    const isActive = !!match
+
+    return (
+      <Link to={to} style={isActive ? [style, active] : style}>{children}</Link>
+    )
+  }
+
   return (
     <Route
       path={escapedPath}
-      children={({ location, match }) => {
-          const isActive = !!match
-
-          return (
-            <Link to={to} style={isActive ? [style, active] : style}>{children}</Link>
-          )
-      }} />
+      children={getChildren} />
   )
 }
 
