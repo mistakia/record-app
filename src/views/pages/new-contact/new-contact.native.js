@@ -8,11 +8,10 @@ import {
 
 import { parseQueryString } from '@core/utils'
 import Button from '@components/button'
-import { contactlistActions } from '@core/contactlists'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
 
-export class NewContactPage extends React.Component {
+export default class NewContactPage extends React.Component {
   constructor (props) {
     super(props)
 
@@ -30,9 +29,10 @@ export class NewContactPage extends React.Component {
   handleSubmit () {
     // TODO: validation
     const { alias, address } = this.state
+    const { app } = this.props
 
     if (address && alias) {
-      this.props.addContact('/me', { alias, address })
+      this.props.addContact(app.address, { alias, address })
     }
   }
 
@@ -67,12 +67,3 @@ export class NewContactPage extends React.Component {
     )
   }
 }
-
-const mapDispatchToProps = {
-  addContact: contactlistActions.addContact
-}
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(NewContactPage)

@@ -28,18 +28,16 @@ let started = false
 
 const init = (docsPath) => {
   if (started) {
-    if (!ipfs) {
+    if (!ipfs || !record) {
       // shit
       return
     }
 
     if (ipfs.state.state() === 'running') {
-      return rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
+      return rnBridge.channel.send(JSON.stringify({ action: 'ready', data: record.address }))
     }
 
-    ipfs.on('ready', () => {
-      rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
-    })
+    // shit
     return
   }
 
@@ -117,7 +115,7 @@ const init = (docsPath) => {
         console.log(e)
       }
 
-      rnBridge.channel.send(JSON.stringify({ action: 'ready' }))
+      rnBridge.channel.send(JSON.stringify({ action: 'ready', data: record.address }))
     })
 
   } catch (e) {

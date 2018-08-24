@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect'
 
+import { getApp } from '@core/app'
 import { Contact, getContacts } from '@core/contacts'
 
 export function getCurrentProfile (state) {
@@ -9,8 +10,9 @@ export function getCurrentProfile (state) {
 }
 
 export function getMyProfile (state) {
+  let app = getApp(state)
   let profiles = state.get('profiles')
-  return profiles.get('/me')
+  return profiles.get(app.address)
 }
 
 export const getContactForMyProfile = createSelector(

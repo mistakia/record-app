@@ -1,11 +1,12 @@
-import { call, fork, takeLatest, put } from 'redux-saga/effects'
+import { call, fork, takeLatest, put, select } from 'redux-saga/effects'
 import { push } from 'react-router-redux'
 
+import { getApp } from '@core/app'
 import { fetchContacts, postContact, deleteContact } from '@core/api'
 import { contactlistActions } from './actions'
 
 export function * loadContacts ({ payload = {} }) {
-  const logId = payload.logId || '/me'
+  const { logId } = payload
   yield call(fetchContacts, { logId })
 }
 
@@ -20,7 +21,8 @@ export function * removeContact ({ payload }) {
 }
 
 export function * goToContacts () {
-  yield put(push('/contacts/me'))
+  const app = yield select(getApp)
+  yield put(push(`/contacts${app.address}`))
 }
 
 export function * watchLoadContacts () {

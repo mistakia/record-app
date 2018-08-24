@@ -2,6 +2,7 @@ import React from 'react'
 import { createSelector } from 'reselect'
 import { connect } from 'react-redux'
 
+import { getApp } from '@core/app'
 import { contactlistActions } from '@core/contactlists'
 import { profileActions } from '@core/profiles'
 
@@ -20,7 +21,6 @@ class ContactsPage extends React.Component {
   }
 
   _load () {
-    // '/me' or proper orbitdb adadress
     const { logId } = this.props.match.params
     this.props.loadContacts(`/${logId}`)
     this.props.loadProfile(`/${logId}`)
@@ -31,12 +31,17 @@ class ContactsPage extends React.Component {
   }
 }
 
+const mapStateToProps = createSelector(
+  getApp,
+  (app) => ({app})
+)
+
 const mapDispatchToProps = {
   loadContacts: contactlistActions.loadContacts,
   loadProfile: profileActions.loadProfile
 }
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(ContactsPage)

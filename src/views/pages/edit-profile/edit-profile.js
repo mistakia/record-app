@@ -10,7 +10,8 @@ export default class EditProfilePage extends React.Component {
   }
 
   componentWillMount () {
-    this.props.loadProfile('/me')
+    const { app } = this.props
+    this.props.loadProfile(app.address)
   }
 
   handleSubmit (event) {

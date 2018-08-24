@@ -2,11 +2,13 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { taglistActions, getTagsForUser } from '@core/taglists'
+import { getApp } from '@core/app'
 import Tags from './tags'
 
 const mapStateToProps = createSelector(
   getTagsForUser,
-  (tags) => ({ tags })
+  getApp,
+  (tags, app) => ({ tags, app })
 )
 
 const mapDispatchToProps = {

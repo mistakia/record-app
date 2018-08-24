@@ -9,13 +9,15 @@ import Button from '@components/button'
 
 export default function () {
   const { logId } = this.props.match.params
+  const { app } = this.props
+
   const head = (
     <Profile />
   )
 
   const body = (
     <View style={{margin: 5}}>
-      { logId === 'me' &&
+      { `/${logId}` === app.address &&
         <Link component={Button} to='/contacts/new/'>
           <Text>Add Contact</Text>
         </Link> }

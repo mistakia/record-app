@@ -2,15 +2,15 @@ import React from 'react'
 import { Link } from 'react-router-native'
 import { StyleSheet, View, Text } from 'react-native'
 
-const Menu = () => (
+const Menu = ({ app }) => (
   <View style={styles.menu}>
     <Link style={styles.menuItem} to='/feed'>
       <Text>Feed</Text>
     </Link>
-    <Link style={styles.menuItem} to='/tracks/me'>
+    <Link style={styles.menuItem} to={`/tracks${app.address}`}>
       <Text>Tracks</Text>
     </Link>
-    <Link style={styles.menuItem} to='/contacts/me'>
+    <Link style={styles.menuItem} to={`/contacts${app.address}`}>
       <Text>Contacts</Text>
     </Link>
     <Link style={styles.menuItem} to='/info'>

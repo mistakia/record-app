@@ -1,6 +1,7 @@
 import { call, fork, put, select, takeLatest } from 'redux-saga/effects'
 import { push } from 'react-router-redux'
 
+import { getApp } from '@core/app'
 import { fetchTracks, postTrack } from '@core/api'
 import { ITEMS_PER_LOAD } from '@core/constants'
 import { tracklistActions } from './actions'
@@ -42,7 +43,8 @@ export function * addTrack ({ payload }) {
 }
 
 export function * goToTracks () {
-  yield put(push('/tracks/me'))
+  const app = yield select(getApp)
+  yield put(push(`/tracks${app.address}`))
 }
 
 //= ====================================

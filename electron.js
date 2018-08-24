@@ -129,12 +129,6 @@ app.on('ready', () => {
     })
     ipfs.on('ready', async () => {
 
-      mainWindow.webContents.send('ready')
-      mainWindow.webContents.on('did-finish-load', () => {
-        // TODO: check if ipfs status first
-        mainWindow.webContents.send('ready')
-      })
-
       const orbitAddressPath = path.resolve(recorddir, 'address.txt')
       const orbitAddress = fs.existsSync(orbitAddressPath) ?
                            fs.readFileSync(orbitAddressPath, 'utf8') : undefined
@@ -146,11 +140,18 @@ app.on('ready', () => {
         api: true
       }
 
-      const rn = new RecordNode(ipfs, OrbitDB, opts)
+      const record = new RecordNode(ipfs, OrbitDB, opts)
       try {
-        await rn.init(orbitAddress)
-        const log = await rn.log.get()
-        fs.writeFileSync(orbitAddressPath, rn._log.address)
+        await record.init(orbitAddress)
+        const log = await record.log.get()
+
+        fs.writeFileSync(orbitAddressPath, record.address)
+
+        mainWindow.webContents.send('ready', record.adresss)
+        mainWindow.webContents.on('did-finish-load', () => {
+          // TODO: check if ipfs status first
+          mainWindow.webContents.send('ready', record.address)
+        })
       } catch (e) {
         console.log(e)
       }

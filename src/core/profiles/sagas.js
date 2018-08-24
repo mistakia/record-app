@@ -5,7 +5,7 @@ import { fetchProfile, postProfile } from '@core/api'
 import { profileActions } from './actions'
 
 export function * loadProfile ({ payload = {} }) {
-  const logId = payload.logId || '/me'
+  const { logId } = payload
   yield call(fetchProfile, { logId })
 }
 

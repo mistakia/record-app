@@ -7,11 +7,10 @@ import {
 } from 'react-native'
 
 import Button from '@components/button'
-import { tracklistActions } from '@core/tracklists'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
 
-export class NewTrackPage extends React.Component {
+export default class NewTrackPage extends React.Component {
   constructor (props) {
     super(props)
 
@@ -25,9 +24,10 @@ export class NewTrackPage extends React.Component {
 
   handleSubmit () {
     const { url, title } = this.state
+    const { app } = this.props
 
     if (url && title) {
-      this.props.addTrack('/me', { url, title })
+      this.props.addTrack(app.address, { url, title })
     }
   }
 
@@ -62,12 +62,3 @@ export class NewTrackPage extends React.Component {
     )
   }
 }
-
-const mapDispatchToProps = {
-  addTrack: tracklistActions.addTrack
-}
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(NewTrackPage)

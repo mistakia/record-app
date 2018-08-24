@@ -1,5 +1,4 @@
 import React from 'react'
-import { createSelector } from 'reselect'
 import { connect } from 'react-redux'
 
 import { parseQueryString } from '@core/utils'
@@ -23,8 +22,7 @@ export class TracksPage extends React.Component {
   }
 
   _load () {
-    // '/me' or proper orbitdb address
-    const { logId } = this.props.match.params || 'me'
+    const { logId } = this.props.match.params
     const { tags } = parseQueryString(this.props.location.search)
     this.props.loadTracks(`/${logId}`, tags || '')
     this.props.loadTags(`/${logId}`)

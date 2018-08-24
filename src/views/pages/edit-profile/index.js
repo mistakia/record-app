@@ -1,13 +1,15 @@
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
+import { getApp } from '@core/app'
 import { profileActions, getContactForMyProfile } from '@core/profiles'
 
 import EditProfilePage from './edit-profile'
 
 const mapStateToProps = createSelector(
   getContactForMyProfile,
-  (contact) => ({ contact })
+  getApp,
+  (contact, app) => ({ contact, app })
 )
 
 const mapDispatchToProps = {
