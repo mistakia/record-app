@@ -274135,7 +274135,7 @@ module.exports = function contacts (self) {
       const log = await self.log.mine()
       const entry = await log.contacts.findOrCreate({ address, alias })
       await self.contacts.sync(entry.payload.value)
-      return self.contacts.get('/me', entry.payload.key)
+      return self.contacts.get(self.address, entry.payload.key)
     },
 
     getEntry: async (logId, contactId) => {
@@ -274208,11 +274208,11 @@ module.exports = function feed (self) {
       await self._feedLog.load()
     },
 
-    isMe: (logId) => {
-      if (logId === '/feed') {
-        return true
-      }
+    get address() {
+      return self._feedLog.address.toString()
+    },
 
+    isMe: (logId) => {
       return self._feedLog.address.toString() === logId
     },
 
@@ -274224,7 +274224,7 @@ module.exports = function feed (self) {
       const feedEntries = await self._feedLog.query(opts)
       let entries = []
       for (const feedEntry of feedEntries) {
-        const contact = await self.contacts.get('/me', feedEntry.payload.contactId)
+        const contact = await self.contacts.get(self.address, feedEntry.payload.contactId)
         const { address } = contact.content
         const { type } = feedEntry.payload
         // TODO: make this readable and less suspect :(
@@ -274320,11 +274320,11 @@ module.exports = function listens (self) {
       await self._listensLog.load()
     },
 
-    isMe: (logId) => {
-      if (logId === '/listens') {
-        return true
-      }
+    get address () {
+      return self._listensLog.address.toString()
+    },
 
+    isMe: (logId) => {
       return self._listensLog.address.toString() === logId
     },
 
@@ -274374,11 +274374,7 @@ module.exports = function log (self) {
       return !!self._orbitdb.stores[logId]
     },
 
-    get: async function (logId = '/me', options = {}, load) {
-      if (!logId) {
-        throw new Error('logId missing')
-      }
-
+    get: async function (logId = self.address, options = {}, load) {
       if (self.isMe(logId)) {
         return self._log
       }
@@ -274441,10 +274437,11 @@ module.exports = function profile (self) {
       const entry = await self.profile.getEntry(logId)
 
       if (self.isMe(logId)) {
+        entry.content.address = self.address
         return Object.assign({}, entry, { isMe: true }, { haveContact: false }, { content: { address: self.address }})
       }
 
-      const contact = await self.contacts.get('/me', entry._id)
+      const contact = await self.contacts.get(self.address, entry._id)
       const relations = await self.contacts.getRelations(contact)
 
       return Object.assign({}, entry, relations, contact)
@@ -274574,10 +274571,6 @@ class RecordNode {
   }
 
   isMe (logId) {
-    if (logId === '/me') {
-      return true
-    }
-
     return this.address === logId
   }
 
