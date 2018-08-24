@@ -16,9 +16,10 @@ export class NewTrackPage extends React.Component {
       url: event.target.url.value,
       title: event.target.title.value
     }
+    const { app } = this.props
 
     if (data.url && data.title) {
-      this.props.addTrack('me', data)
+      this.props.addTrack(app.address, data)
     }
 
     event.preventDefault()

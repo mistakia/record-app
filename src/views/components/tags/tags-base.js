@@ -13,20 +13,21 @@ class TagsBase extends React.Component {
   }
 
   add (tag = this.state.tag) {
-    const { track } = this.props
-    this.props.addTag('/me', { track, tag })
+    const { track, app } = this.props
+    this.props.addTag(app.address, { track, tag })
     this.setState({ tag: '' })
   }
 
   remove (tag) {
-    const { track } = this.props
+    const { track, app } = this.props
     const trackId = track.id
     tag = tag || track.tags[track.tags.length - 1]
-    this.props.removeTag('/me', { trackId, tag })
+    this.props.removeTag(app.address, { trackId, tag })
   }
 
   onClick (tag) {
-    history.push(`/tracks/me?tags=${tag}`)
+    const { app } = this.props
+    history.push(`/tracks${app.address}?tags=${tag}`)
   }
 
   getTagItems (tags, onClick, remove) {

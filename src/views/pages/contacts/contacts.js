@@ -8,13 +8,14 @@ import Button from '@components/button'
 
 export default function () {
   const { logId } = this.props.match.params
+  const { app } = this.props
   const head = (
     <Profile />
   )
 
   const body = (
     <div>
-      { logId === 'me' &&
+      { `/${logId}` === app.address &&
         <Link className='button' to='/contacts/new/'>
           Add Contact
         </Link> }

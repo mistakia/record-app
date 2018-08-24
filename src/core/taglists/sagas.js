@@ -1,11 +1,12 @@
-import { call, fork, takeLatest, takeLeading } from 'redux-saga/effects'
+import { call, fork, takeLatest, takeLeading, select } from 'redux-saga/effects'
 
 import { fetchTags, postTag, deleteTag } from '@core/api'
-import { appActions } from '@core/app'
+import { appActions, getApp } from '@core/app'
 import { taglistActions } from './actions'
 
-export function * loadTags ({ payload = {} }) {
-  const logId = payload.logId || '/me'
+export function * loadTags ({ payload }) {
+  const app = yield select(getApp)
+  const logId = payload.logId || app.address
   yield call(fetchTags, { logId })
 }
 

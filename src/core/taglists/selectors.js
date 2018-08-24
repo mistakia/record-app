@@ -1,5 +1,7 @@
 import { createSelector } from 'reselect'
 
+import { getApp } from '@core/app'
+
 export function getTaglists (state) {
   return state.get('taglists')
 }
@@ -9,12 +11,13 @@ export function getTaglistById (state, logId) {
 }
 
 export function getCurrentTaglist (state) {
-  let taglists = getTaglists(state)
+  const taglists = getTaglists(state)
   return taglists.get(taglists.get('currentTaglistId'))
 }
 
 export function getUserTaglist (state) {
-  return getTaglistById(state, '/me')
+  const app = getApp(state)
+  return getTaglistById(state, app.address)
 }
 
 export function getCurrentSelectedTags (state) {

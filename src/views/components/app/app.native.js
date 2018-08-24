@@ -32,7 +32,7 @@ export default class App extends React.Component {
       const msg = JSON.parse(message)
       switch (msg.action) {
         case 'ready':
-          this.props.init()
+          this.props.init(msg.data)
           return nodejs.channel.removeListener('message', this.listener)
 
         case 'ipfs:state':
@@ -67,7 +67,7 @@ export default class App extends React.Component {
   }
 
   render () {
-    if (!this.props.app.loaded) {
+    if (!this.props.app.address) {
       return (
         <View style={styles.appLoading}>
           <Text>{this.state.ipfs}</Text>
