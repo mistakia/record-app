@@ -1,5 +1,7 @@
 .contact
   padding 0
+  &:not(.contact__profile)
+    cursor pointer
 
 .contact__avatar
   absolute top left
@@ -19,17 +21,15 @@
   display block
 
 .contact__action
-  absolute top right
+  absolute top 5px right 5px
   .button
-    border none
     padding 10px
-    background #f0f0f0
+    background #f5f5f5
     display block
 
 .contact__menu
-  background $backgroundColor
+  margin-bottom -1px
   a
-    background white
     padding 15px
     margin-top 4px
     display inline-block
@@ -39,12 +39,15 @@
       background #f0f0f0
       color #444
     &.active
-      border-bottom 4px solid $accentColor
+      background $backgroundColor
+      border-top 2px solid $accentColor
+      border-left 1px solid $borderColor
+      border-right 1px solid $borderColor
 
 .contact.contact__profile
   .contact__body
     display inline-block
-    min-height 100px
+    min-height 120px
     margin-left 115px
   .contact__bio
     margin 25px 15px
@@ -54,23 +57,37 @@
     font-size 38px
 
 .contact__heading.contact
+  margin-left -45px
   background $backgroundColor
   &:not(:first-child)
+    border-top 1px solid $borderColor
+    padding-top 15px
     margin-top 45px
+    .contact__avatar
+      top 15px
   .contact__avatar
     background white
     width 35px
     height 35px
     border-radius 999em
+    border 1px solid $borderColor
   .contact__body
     margin-left 45px
     min-height 45px
 
 .contact__item.contact
+  border 1px solid $borderColor
+  border-radius $borderRadius
+  &:hover
+    background #fbfbfb
   .contact__avatar
-    width 90px
-    height 90px
+    width 45px
+    height 45px
+    padding 5px
+    background #f9f9f9
   .contact__body
-    margin-left 100px
-    min-height 90px
-    padding-top 15px
+    display flex
+    flex-direction column
+    justify-content center
+    margin-left 55px
+    min-height 45px

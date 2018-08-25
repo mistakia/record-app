@@ -6,7 +6,7 @@ import Button from '@components/button'
 
 const render = ({ contactItems, loading, showAdd }) => (
   <View>
-    {showAdd && <Link component={Button} to='/contacts/new'>
+    {showAdd && <Link component={Button} to='/new-contact'>
       <Text>Add Contact</Text>
     </Link>}
     {contactItems}

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
+import history from '@core/history'
 import Button from '@components/button'
 
 import './contact.styl'
@@ -11,18 +12,20 @@ const Contact = ({
   contactBio,
   contact,
   type,
-  removeContact
+  disconnect
 }) => {
+  const noPropagation = e => e.stopPropagation()
   const connectAction = (
     <Link
       className='button'
-      to={`/contacts/new/${contact.address}?alias=${contact.name || contact.alias}`}>
+      onClick={noPropagation}
+      to={`/new-contact${contact.address}?alias=${contact.name || contact.alias}`}>
       Connect
     </Link>
   )
 
   const disconnectAction = (
-    <Button className='button' onClick={removeContact}>Disconnect</Button>
+    <Button className='button' onClick={disconnect}>Disconnect</Button>
   )
 
   const selfAction = (
@@ -37,17 +40,23 @@ const Contact = ({
     )
   )
 
+  const viewUser = () => {
+    history.push(`/tracks${contact.address}`)
+  }
+
   return (
-    <article className={`contact contact__${type}`}>
+    <article
+      className={`contact contact__${type}`}
+      onClick={type !== 'profile' ? viewUser : null}>
       <img className='contact__avatar' src={contact.avatar} />
       <div className='contact__body'>
-        <Link to={`/tracks${contact.address}`} className='contact__title'>
+        <div className='contact__title'>
           {contactName}
-        </Link>
+        </div>
         {contactLocation && <small>{contactLocation}</small>}
         <small>{contact.address}</small>
-        {(type === 'profile' && contactLocation) && <div className='contact__bio'>
-          {contactLocation}
+        {(type === 'profile' && contactBio) && <div className='contact__bio'>
+          {contactBio}
         </div> }
         <div className='contact__action'>
           {type !== 'heading' && contactAction}

@@ -1,19 +1,20 @@
 #menu
-    fixed left top bottom
-    z-index 10001
-    width 95px
-    background white
-    border-right 1px solid $borderColor
-    padding 71px 10px 0
-    ul
-        padding 15px 0
-        border-bottom 1px solid $borderColor
-        border-top 1px solid $borderColor
-    a
-        text-transform lowercase
-        text-decoration none
-        min-width 45px
-        padding 5px 10px
-        vertical-align top
-        position relative
-        font-size 14px
+  fixed left top right
+  z-index 10001
+  height 45px
+  background #2d2e2f
+  padding 10px
+  display flex
+  a
+    text-transform lowercase
+    text-decoration none
+    min-width 45px
+    padding 5px 10px
+    vertical-align top
+    position relative
+    font-size 14px
+    text-transform capitalize
+    color rgba(255,255,255,0.9)
+    border-radius $borderRadius
+    &:hover
+      background rgba(255,255,255,0.15)

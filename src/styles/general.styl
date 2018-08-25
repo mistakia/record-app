@@ -1,49 +1,53 @@
 .scroll
-    overflow-x hidden
-    overflow-y auto
-    -webkit-overflow-scrolling touch
+  overflow-x hidden
+  overflow-y auto
+  -webkit-overflow-scrolling touch
 
 .cursor
 a
 button
 .button
-    cursor pointer
+  cursor pointer
 
 a:hover
   text-decoration underline
   color #00f
 
 pre
-    font-family "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    font-size 1em
-    margin 0
-    word-wrap normal
-    padding 16px
-    overflow auto
-    line-height 1.45
-    background-color white
-    border-radius 3px
+  font-family "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size 1em
+  margin 0
+  word-wrap normal
+  padding 16px
+  overflow auto
+  line-height 1.45
+  background-color #fbfbfb
+  border 1px solid $borderColor
+  border-radius 3px
 
 table
-    display block
-    width 100%
-    overflow auto
-    th
-        font-weight 600
+  width 100%
+  word-break break-all
+  background-color #fbfbfb
+  border 1px solid $borderColor
+  border-radius $borderRadius
+  th
+    font-weight 600
+    min-width 70px
+    text-align left
 
-    th
-    td
-        padding 6px 13px
-        border 1px solid #dfe2e5
+  th
+  td
+    padding 6px 13px
+    border 1px solid $borderColor
 
-    tr
-        background-color white
-        border-top 1px solid #c6cbd1
+  tr
+    border-top 1px solid #c6cbd1
 
-    tr:nth-child(2n)
-        background-color #f6f8fa
+  tr:nth-child(2n)
+    background-color rgba(255,255,255,0.8)
 
 p
 table
 pre
-    margin-bottom 16px
+  margin-bottom 16px
