@@ -31,6 +31,7 @@ const mapStateToProps = createShallowEqualSelector(
     decreaseVolume: audio.decreaseVolume,
     increaseVolume: audio.increaseVolume,
     isPlaying: player.isPlaying,
+    isFullscreen: player.isFullscreen,
     pause: audio.pause,
     play: audio.play,
     track,
@@ -40,6 +41,7 @@ const mapStateToProps = createShallowEqualSelector(
 )
 
 const mapDispatchToProps = {
+  toggleFullscreen: playerActions.toggleFullscreen,
   select: playerActions.playSelectedTrack
 }
 

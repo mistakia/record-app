@@ -7,7 +7,7 @@ import Button from '@components/button'
 
 const render = ({ trackItems, loading, showAdd }) => (
   <View>
-    {showAdd && <Link component={Button} to='/tracks/new'>
+    {showAdd && <Link component={Button} to='/new-track'>
       <Text>Add Track</Text>
     </Link>}
     <Taglist />

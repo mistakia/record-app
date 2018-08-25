@@ -9,22 +9,36 @@ import './player.styl'
 
 export default function Player ({
   isPlaying,
+  isFullscreen,
   nextTrack,
   pause,
   play,
   previousTrack,
+  toggleFullscreen,
   track
 }) {
   if (!track) return null
 
+  let classNames = ['player']
+  if (isFullscreen) {
+    classNames.push('player__fullscreen')
+  }
+
+  const defaultArtwork = 'https://lastfm-img2.akamaized.net/i/u/300x300/c6f59c1e5e7240a4c0d427abd71f3dbb'
+
   return (
-    <div className='player'>
+    <div>
+
       <div className='player-timeline'>
         <AudioTimeline />
       </div>
 
-      <div className='player-controls'>
-        <div>
+      <div className={classNames.join(' ')}>
+
+        <div className='player__controls'>
+          <div className='player__artwork'>
+            <img src={track.thumbnail || defaultArtwork} />
+          </div>
           <IconButton
             icon='skip-previous'
             label='Skip to previous track'
@@ -42,14 +56,14 @@ export default function Player ({
             label='Skip to next track'
             onClick={nextTrack}
           />
-        </div>
+          <div className='player-controls__title'>{track.title}</div>
 
-        <div className='player-controls__title'>{track.title}</div>
-
-        <div className='player-controls__time'>
-          <AudioCurrentTime /> / <FormattedTime value={track.duration} unit={'ms'} />
+          <div className='player-controls__time'>
+            <AudioCurrentTime /> / <FormattedTime value={track.duration} unit={'ms'} />
+          </div>
         </div>
       </div>
+
     </div>
   )
 }

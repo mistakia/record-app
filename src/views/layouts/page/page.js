@@ -3,11 +3,13 @@ import React from 'react'
 import './page.styl'
 
 export const PageLayout = ({ head, body }) => (
-  <section className='page__container'>
+  <section className='page'>
     <div className='page__head'>
-      { head }
+      <div className='page__container'>
+        { head }
+      </div>
     </div>
-    <div>
+    <div className='page__container'>
       { body }
     </div>
   </section>

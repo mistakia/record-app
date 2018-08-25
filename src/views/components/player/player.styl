@@ -1,52 +1,75 @@
+$playerHeight = 45px
+$textColor = rgba(255,255,255,0.6)
+
 @keyframes show-player
-    0%
-        top -80px
-    100%
-        top -10px
+  0%
+      top -80px
+  100%
+      top -10px
 
 
 .player
-    fixed left top
-    z-index 10002
-    display block
-    transform translateZ(0)
-    box-shadow 0 -3px 0 0 rgba(0, 0, 0, .1)
-    width 100%
-    background #2d2e2f
+  fixed top right
+  z-index 10002
+  display block
+  transform translateZ(0)
+  box-shadow 0 -3px 0 0 rgba(0, 0, 0, .1)
+  width 100%
+  height $playerHeight
+  color $textColor
 
-    animation-name show-player
-    animation-iteration-count 1
-    animation-timing-function ease-in-out
-    animation-duration 300ms
+  max-width 400px
+  background #2d2e2f
+  transition all 0.35s ease
+
+  animation-name show-player
+  animation-iteration-count 1
+  animation-timing-function ease-in-out
+  animation-duration 300ms
+  &.player__fullscreen
+    height 100vh
+
+.player__artwork
+  height $playerHeight
+
+  img
+    max-height 100%
 
 .player-timeline
-    height 4px
-    background #3a3b3c
-    cursor pointer
+  fixed top right left
+  z-index 10003
+  height 4px
+  background #3a3b3c
+  cursor pointer
 
-.player-controls
-    display flex
-    align-items center
-    margin 0 auto
-    max-width 970px
-    font-size rem(13px)
+.player__controls
+  display flex
+  align-items center
+  margin 0 auto
+  max-width 970px
+  font-size rem(13px)
+  height $playerHeight
 
-    .button__icon
-        fill #5d5e5f
+  .button
+    border 0
 
-        &:active
-            background rgba(0, 0, 0, 0.15)
+  .button__icon
+    fill $textColor
 
-        &:hover
-            fill #78797a
+    &:hover
+      fill rgba(255,255,255,0.9)
+      background transparent
+
+    &:active
+      background rgba(255, 255, 255, 0.15)
 
 .player-controls__time
-    padding 0 10px
+  padding 0 10px
 
 .player-controls__title
-    flex 1
-    padding 0 10px
-    overflow hidden
-    text-overflow ellipsis
-    white-space nowrap
-    word-wrap normal
+  flex 1
+  padding 0 10px
+  overflow hidden
+  text-overflow ellipsis
+  white-space nowrap
+  word-wrap normal

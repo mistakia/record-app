@@ -6,9 +6,12 @@ form
 
 label
     display block
-    padding 2px 8px
     font-size 0.8em
     background-color white
+    margin-bottom 5px
+    input
+    textarea
+      margin-top 5px
 
 input
 textarea
@@ -18,6 +21,9 @@ textarea
     box-shadow none
     padding 10px
     margin 0
+    background #fbfbfb
+    border 1px solid $borderColor
+    border-radius $borderRadius
     &::placeholder
         color rgba(0,0,0,0.3)
     &:hover

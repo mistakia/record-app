@@ -14,8 +14,8 @@ export default function () {
     const subPeers = info.subs[id]
     return (
       <tr key={index}>
-        <td>{id}</td>
         <td>{subPeers.length}</td>
+        <td>{id}</td>
       </tr>
     )
   })
@@ -56,8 +56,8 @@ export default function () {
       <table>
         <thead>
           <tr>
-            <th>Sub</th>
             <th>Peers</th>
+            <th>Topic</th>
           </tr>
         </thead>
         <tbody>
@@ -67,7 +67,7 @@ export default function () {
       <table>
         <thead>
           <tr>
-            <th>#</th>
+            <th />
             <th>IPFS Peer</th>
           </tr>
         </thead>

@@ -5,12 +5,10 @@ import './menu.styl'
 
 const Menu = ({ app }) => (
   <div id='menu'>
-    <ul>
-      <li><Link to='/feed'>Home</Link></li>
-      <li><Link to='/info'>Info</Link></li>
-      <li><Link to={`/tracks${app.address}`}>Tracks</Link></li>
-      <li><Link to={`/contacts${app.address}`}>Contacts</Link></li>
-    </ul>
+    <Link to='/feed'>Home</Link>
+    <Link to='/info'>Info</Link>
+    <Link to={`/tracks${app.address}`}>Tracks</Link>
+    <Link to={`/contacts${app.address}`}>Contacts</Link>
   </div>
 )
 
