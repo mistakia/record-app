@@ -12,7 +12,7 @@ const Contact = ({
   contactBio,
   contact,
   type,
-  removeContact
+  disconnect
 }) => {
   const style = styles[type]
 
@@ -20,7 +20,7 @@ const Contact = ({
     <Link
       style={style.action}
       component={Button}
-      to={`/contacts/new/${contact.address}?alias=${contact.name || contact.alias}`}>
+      to={`/new-contact${contact.address}?alias=${contact.name || contact.alias}`}>
       <Text>Connect</Text>
     </Link>
   )
@@ -28,7 +28,7 @@ const Contact = ({
   const disconnectAction = (
     <Button
       style={style.action}
-      onClick={removeContact}>
+      onClick={disconnect}>
       <Text>Disconnect</Text>
     </Button>
   )

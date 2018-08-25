@@ -16,11 +16,14 @@ const ContactBase = ({ removeContact, contact, ...props }) => {
     ? (contact.bio || 'set your bio')
     : contact.bio
 
-  removeContact = removeContact.bind(null, { contactId: contact.id })
+  const disconnect = (event) => {
+    event && event.stopPropagation && event.stopPropagation()
+    removeContact({ contactId: contact.id })
+  }
 
   return Contact({
     contact,
-    removeContact,
+    disconnect,
     contactName,
     contactLocation,
     contactBio,

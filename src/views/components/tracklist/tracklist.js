@@ -6,7 +6,7 @@ import Taglist from '@components/taglist'
 const render = ({ trackItems, loading, showAdd }) => (
   <div className='list'>
     {showAdd && <div className='list__action'>
-      <Link className='button' to='/tracks/new'>Add Track</Link>
+      <Link className='button' to='/new-track'>Add Track</Link>
     </div>}
     <Taglist />
     {trackItems}

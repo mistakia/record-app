@@ -5,6 +5,7 @@ export const playerActions = {
   AUDIO_TIME_UPDATED: 'AUDIO_TIME_UPDATED',
   AUDIO_VOLUME_CHANGED: 'AUDIO_VOLUME_CHANGED',
   PLAY_SELECTED_TRACK: 'PLAY_SELECTED_TRACK',
+  TOGGLE_FULLSCREEN: 'TOGGLE_FULLSCREEN',
 
   audioEnded: () => ({
     type: playerActions.AUDIO_ENDED
@@ -28,6 +29,10 @@ export const playerActions = {
     payload: {
       volume
     }
+  }),
+
+  toggleFullscreen: () => ({
+    type: playerActions.TOGGLE_FULLSCREEN
   }),
 
   playSelectedTrack: (trackId, tracklistId) => ({

@@ -4,6 +4,7 @@ import { playerActions } from './actions'
 
 export const PlayerState = new Record({
   isPlaying: false,
+  isFullscreen: false,
   trackId: null,
   tracklistId: SESSION_TRACKLIST_ID,
   volume: PLAYER_INITIAL_VOLUME
@@ -26,6 +27,9 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         trackId: payload.trackId,
         tracklistId: payload.tracklistId || state.get('tracklistId')
       })
+
+    case playerActions.TOGGLE_FULLSCREEN:
+      return state.set('isFullscreen', !state.isFullscreen)
 
     default:
       return state

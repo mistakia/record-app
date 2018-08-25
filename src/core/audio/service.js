@@ -52,11 +52,13 @@ export const audio = {
     if (url) _audio.src = url
   },
 
-  pause () {
+  pause (event) {
+    event && event.stopPropagation()
     _audio.pause()
   },
 
-  play () {
+  play (event) {
+    event && event.stopPropagation()
     let promise = _audio.play()
     if (promise && promise.catch) promise.catch(() => {})
   },
