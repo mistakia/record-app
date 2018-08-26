@@ -24,8 +24,6 @@ export default function Player ({
     classNames.push('player__fullscreen')
   }
 
-  const defaultArtwork = 'https://lastfm-img2.akamaized.net/i/u/300x300/c6f59c1e5e7240a4c0d427abd71f3dbb'
-
   return (
     <div>
 

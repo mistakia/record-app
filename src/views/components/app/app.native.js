@@ -3,7 +3,9 @@ import nodejs from 'nodejs-mobile-react-native'
 import RNFS from 'react-native-fs'
 import {
   AppState,
+  Platform,
   StyleSheet,
+  StatusBar,
   View,
   Text
 } from 'react-native'
@@ -11,6 +13,12 @@ import {
 import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
+
+const AppStatusBar = ({backgroundColor, ...props}) => (
+  <View style={[styles.statusBar, { backgroundColor }]}>
+    <StatusBar translucent backgroundColor={backgroundColor} {...props} barStyle='default' />
+  </View>
+)
 
 export default class App extends React.Component {
   constructor (props) {
@@ -77,6 +85,7 @@ export default class App extends React.Component {
 
     return (
       <View style={styles.appContainer}>
+        <AppStatusBar backgroundColor="#f9f9f9" barStyle="light-content" />
         <Menu />
         <Routes />
         <Player />
@@ -85,7 +94,12 @@ export default class App extends React.Component {
   }
 }
 
+const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight
+
 const styles = StyleSheet.create({
+  statusBar: {
+    height: STATUSBAR_HEIGHT,
+  },
   appLoading: {
     flex: 1,
     flexDirection: 'column',
@@ -94,7 +108,6 @@ const styles = StyleSheet.create({
   },
   appContainer: {
     ...StyleSheet.absoluteFillObject,
-    top: 20,
     paddingBottom: 50
   }
 })

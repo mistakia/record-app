@@ -56,6 +56,7 @@ const Feedlist = ({
             track={track}
             isPlaying={isSelected && isPlaying}
             isSelected={isSelected}
+            isFeed
             pause={pause}
             play={isSelected ? play : selectTrack.bind(null, track.id)}
           />

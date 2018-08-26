@@ -13,10 +13,6 @@ import TextStyles from '@styles/text'
 export default function () {
   const { info } = this.props
 
-  const head = (
-    <Text>Info</Text>
-  )
-
   const subs = Object.keys(info.subs).map((id, index) => {
     const subPeers = info.subs[id]
     return (
@@ -37,7 +33,7 @@ export default function () {
   })
 
   const body = (
-    <View style={{margin: 5}}>
+    <View style={{margin: 20}}>
       <Text style={ItemStyles.label}>State</Text>
       <View style={ItemStyles.container}>
         <Text style={TextStyles.small}>{info.state}</Text>
@@ -74,13 +70,12 @@ export default function () {
   )
 
   return (
-    <PageLayout head={head} body={body} />
+    <PageLayout title='Info' body={body} />
   )
 }
 
 const styles = StyleSheet.create({
   table: {
-    padding: 5,
     backgroundColor: 'white',
     marginBottom: 5
   },
@@ -89,7 +84,10 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: 'white'
+    backgroundColor: '#fbfbfb',
+    borderColor: '#f0f0f0',
+    borderWidth: 1,
+    marginTop: -1
   },
   cell: {
     flex: 1,

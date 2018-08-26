@@ -5,16 +5,16 @@ import { StyleSheet, View, Text } from 'react-native'
 const Menu = ({ app }) => (
   <View style={styles.menu}>
     <Link style={styles.menuItem} to='/feed'>
-      <Text>Feed</Text>
+      <Text style={styles.menuItemText}>Feed</Text>
     </Link>
     <Link style={styles.menuItem} to={`/tracks${app.address}`}>
-      <Text>Tracks</Text>
+      <Text style={styles.menuItemText}>Tracks</Text>
     </Link>
     <Link style={styles.menuItem} to={`/contacts${app.address}`}>
-      <Text>Contacts</Text>
+      <Text style={styles.menuItemText}>Contacts</Text>
     </Link>
     <Link style={styles.menuItem} to='/info'>
-      <Text>Info</Text>
+      <Text style={styles.menuItemText}>Info</Text>
     </Link>
   </View>
 )
@@ -27,13 +27,16 @@ const styles = StyleSheet.create({
     height: 50,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#2d2e2f',
     zIndex: 1
   },
   menuItem: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center'
+  },
+  menuItemText: {
+    color: 'rgba(255,255,255,0.9)'
   }
 })
 

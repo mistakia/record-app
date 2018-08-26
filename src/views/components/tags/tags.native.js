@@ -48,6 +48,7 @@ class Tags extends TagsBase {
 const styles = StyleSheet.create({
   tagsContainer: {
     flex: 1,
+    marginLeft: 5,
     flexWrap: 'wrap',
     flexDirection: 'row'
   },
