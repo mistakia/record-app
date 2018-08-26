@@ -274126,7 +274126,11 @@ module.exports = function contacts (self) {
       self.logger(`Syncing contact: ${address}`)
       const log = await self.log.get(address, { replicate: true })
       log.events.on('replicate.progress', async (id, hash, entry) => {
-        await self.feed.add(entry, contact)
+        const { type } = entry.payload.value
+        // TODO: consider including about entries in feed
+        if (type !== 'about') {
+          await self.feed.add(entry, contact)
+        }
       })
       await log.load()
     },
@@ -274148,7 +274152,8 @@ module.exports = function contacts (self) {
       const entry = await self.contacts.getEntry(logId, contactId)
       const relations = await self.contacts.getRelations(entry)
       const profile = await self.profile.getEntry(entry.content.address)
-      return Object.assign({}, profile, relations, entry)
+      const content = Object.assign({}, profile.content, entry.content)
+      return Object.assign({}, relations, entry, { content })
     },
 
     getRelations: async (contact, opts = {}) => {
@@ -274186,7 +274191,8 @@ module.exports = function contacts (self) {
       for (const entry of entries) {
         const profile = await self.profile.getEntry(entry.payload.value.content.address)
         const relations = await self.contacts.getRelations(entry.payload.value)
-        contacts.push(Object.assign({}, profile, relations, entry.payload.value))
+        const content = Object.assign({}, profile.content, entry.content)
+        contacts.push(Object.assign({}, relations, entry.payload.value, { content }))
       }
       return contacts
     }
@@ -274443,8 +274449,9 @@ module.exports = function profile (self) {
 
       const contact = await self.contacts.get(self.address, entry._id)
       const relations = await self.contacts.getRelations(contact)
+      const content = Object.assign({}, entry.content, contact.content)
 
-      return Object.assign({}, entry, relations, contact)
+      return Object.assign({}, relations, contact, { content })
     }
   }
 }
