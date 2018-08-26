@@ -1,11 +1,11 @@
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, View, Text } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
-export const PageLayout = ({ head, body }) => (
+export const PageLayout = ({ head, body, title }) => (
   <KeyboardAwareScrollView>
     <View style={styles.head}>
-      { head }
+      { title ? <Text style={styles.title}>{title}</Text> : head }
     </View>
     <View style={styles.body}>
       { body }
@@ -15,12 +15,22 @@ export const PageLayout = ({ head, body }) => (
 
 const styles = StyleSheet.create({
   head: {
-    backgroundColor: 'white',
+    backgroundColor: '#f9f9f9',
     justifyContent: 'center',
-    alignItems: 'center'
+    paddingTop: 15,
+    borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    marginBottom: 5
   },
   body: {
-    paddingBottom: 75
+    paddingBottom: 45
+  },
+  title: {
+    paddingTop: 25,
+    paddingLeft: 15,
+    fontSize: 20,
+    fontWeight: 'bold',
+    paddingBottom: 15
   }
 })
 

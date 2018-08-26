@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, StyleSheet } from 'react-native'
+import { StyleSheet } from 'react-native'
 
 import Button from '@components/button'
 import LoadingIndicator from '@components/loading-indicator'
@@ -17,9 +17,8 @@ const Loading = ({
     return (
       <Button
         onClick={onClick}
-        style={styles.loadingContainer}>
-        <Text>Load More</Text>
-      </Button>
+        style={styles.loadingContainer}
+        text='Load More' />
     )
   }
 
