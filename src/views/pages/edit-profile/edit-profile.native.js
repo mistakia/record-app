@@ -33,12 +33,8 @@ export default class EditProfilePage extends React.Component {
   }
 
   render () {
-    const head = (
-      <Text>Edit Profile</Text>
-    )
-
     const body = (
-      <View>
+      <View style={{margin: 20}}>
         <Text style={formStyles.label}>Name</Text>
         <TextInput
           style={formStyles.input}
@@ -66,7 +62,7 @@ export default class EditProfilePage extends React.Component {
     )
 
     return (
-      <PageLayout head={head} body={body} />
+      <PageLayout title='Edit Profile' body={body} />
     )
   }
 }

@@ -36,12 +36,8 @@ export default class NewContactPage extends React.Component {
   }
 
   render () {
-    const head = (
-      <Text>Add Contact</Text>
-    )
-
     const body = (
-      <View>
+      <View style={{margin: 20}}>
         <Text style={formStyles.label}>Alias</Text>
         <TextInput
           style={formStyles.input}
@@ -62,7 +58,7 @@ export default class NewContactPage extends React.Component {
     )
 
     return (
-      <PageLayout head={head} body={body} />
+      <PageLayout title='Add Contact' body={body} />
     )
   }
 }

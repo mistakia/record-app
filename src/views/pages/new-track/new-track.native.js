@@ -31,12 +31,8 @@ export default class NewTrackPage extends React.Component {
   }
 
   render () {
-    const head = (
-      <Text>Add Track</Text>
-    )
-
     const body = (
-      <View>
+      <View style={{margin: 20}}>
         <Text style={formStyles.label}>Title</Text>
         <TextInput
           style={formStyles.input}
@@ -57,7 +53,7 @@ export default class NewTrackPage extends React.Component {
     )
 
     return (
-      <PageLayout head={head} body={body} />
+      <PageLayout title='Add Track' body={body} />
     )
   }
 }

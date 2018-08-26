@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     top: 'auto',
     bottom: 50,
     height: 40,
-    backgroundColor: '#2d2e2f',
+    backgroundColor: '#f9f9f9',
     zIndex: 1
   },
   text: {
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 40,
     fontSize: 8,
-    color: '#f0f0f0'
+    color: 'rgba(0,0,0,0.8)'
   },
   playContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     borderWidth: 0
   },
   play: {
-    color: '#f0f0f0',
+    color: 'rgba(0,0,0,0.8)',
     lineHeight: 40,
     textAlign: 'center',
     fontSize: 24

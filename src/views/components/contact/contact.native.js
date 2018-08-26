@@ -18,23 +18,21 @@ const Contact = ({
 
   const connectAction = (
     <Link
+      text='Connect'
       style={style.action}
       component={Button}
-      to={`/new-contact${contact.address}?alias=${contact.name || contact.alias}`}>
-      <Text>Connect</Text>
-    </Link>
+      to={`/new-contact${contact.address}?alias=${contact.name || contact.alias}`} />
   )
 
   const disconnectAction = (
     <Button
+      text='Disconnect'
       style={style.action}
-      onClick={disconnect}>
-      <Text>Disconnect</Text>
-    </Button>
+      onClick={disconnect} />
   )
 
   const selfAction = (
-    <Link to='/edit-profile' component={Button}><Text>Edit</Text></Link>
+    <Link to='/edit-profile' style={style.action} component={Button} text='Edit' />
   )
 
   const contactAction = (contact.isMe
@@ -58,7 +56,7 @@ const Contact = ({
           <Text style={TextStyles.title}>{contactName}</Text>
           {contactLocation && <Text>{contactLocation}</Text>}
         </View>
-        {type === 'item' && <View>
+        {type === 'item' && <View style={style.actionContainer}>
           {contact.haveContact ? disconnectAction : connectAction}
         </View>}
       </Link>
@@ -101,8 +99,7 @@ const profile = StyleSheet.create({
   },
   action: {
     position: 'absolute',
-    top: 15,
-    right: 15
+    right: 5
   },
   avatar: {
     width: 80,
@@ -111,11 +108,11 @@ const profile = StyleSheet.create({
   },
   menu: {
     borderColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    marginBottom: -1,
     backgroundColor: '#f9f9f9',
-    borderTopWidth: 2,
     paddingLeft: 5,
     paddingRight: 5,
-    marginBottom: 10,
     flexDirection: 'row',
     alignSelf: 'stretch'
   },
@@ -123,9 +120,15 @@ const profile = StyleSheet.create({
     alignSelf: 'stretch'
   },
   menuItem: {
-    padding: 10
+    padding: 10,
+    marginBottom: -1
   },
   menuItemActive: {
+    borderColor: '#f0f0f0',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderTopWidth: 2,
+    borderTopColor: '#D3E478',
     backgroundColor: 'white'
   },
   body: {
@@ -141,7 +144,8 @@ const heading = StyleSheet.create({
   contact: {
     flexDirection: 'row',
     flexWrap: 'nowrap',
-    paddingTop: 30
+    paddingTop: 30,
+    marginBottom: 10
   },
   avatar: {
     height: 30,
@@ -149,7 +153,7 @@ const heading = StyleSheet.create({
     borderRadius: 15,
     borderColor: '#f0f0f0',
     borderWidth: 1,
-    marginLeft: 10,
+    marginLeft: 5,
     marginRight: 10,
     backgroundColor: 'white'
   },
@@ -161,24 +165,27 @@ const heading = StyleSheet.create({
 const item = StyleSheet.create({
   contact: {
     flexDirection: 'row',
-    flexWrap: 'nowrap'
+    flexWrap: 'nowrap',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    marginLeft: 10,
+    marginRight: 10,
+    justifyContent: 'center'
   },
   avatar: {
     height: 50,
     width: 50,
-    borderRadius: 25,
-    borderColor: '#f0f0f0',
-    borderWidth: 1,
-    marginLeft: 10,
-    marginRight: 10,
-    backgroundColor: 'white'
+    backgroundColor: '#f0f0f0'
+  },
+  actionContainer: {
+    justifyContent: 'center'
   },
   action: {
-    marginTop: 5,
     width: 100
   },
   body: {
-    marginTop: 5,
+    paddingLeft: 10,
+    justifyContent: 'center',
     flex: 1
   }
 })
