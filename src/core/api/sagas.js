@@ -5,7 +5,9 @@ import { LOCATION_CHANGE } from 'react-router-redux'
 import {
   contactlistRequestActions,
   contactlistPostActions,
-  contactlistDeleteActions
+  contactlistDeleteActions,
+  suggestedContactlistRequestActions,
+  peerContactlistRequestActions
 } from '@core/contactlists'
 import { feedRequestActions } from '@core/feed'
 import { infoRequestActions } from '@core/info'
@@ -48,6 +50,9 @@ function * fetch (...args) {
 export const fetchContacts = fetch.bind(null, api.fetchContacts, contactlistRequestActions)
 export const postContact = fetch.bind(null, api.postContact, contactlistPostActions)
 export const deleteContact = fetch.bind(null, api.deleteContact, contactlistDeleteActions)
+
+export const fetchSuggestedContacts = fetch.bind(null, api.fetchSuggestedContacts, suggestedContactlistRequestActions)
+export const fetchPeers = fetch.bind(null, api.fetchPeers, peerContactlistRequestActions)
 
 export const fetchFeed = fetch.bind(null, api.fetchFeed, feedRequestActions)
 

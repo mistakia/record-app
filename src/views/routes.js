@@ -2,6 +2,7 @@ import React from 'react'
 import { Route, Redirect, Switch } from 'react-router'
 
 import ContactsPage from '@pages/contacts'
+import ExplorePage from '@pages/explore'
 import FeedPage from '@pages/feed'
 import EditProfilePage from '@pages/edit-profile'
 import InfoPage from '@pages/info'
@@ -15,6 +16,7 @@ const Routes = () => (
     <Route path='/contacts:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
     <Route exact path='/edit-profile' component={EditProfilePage} />
     <Route exact path='/feed' component={FeedPage} />
+    <Route exact path='/explore' component={ExplorePage} />
     <Route exact path='/info' component={InfoPage} />
     <Route exact path='/new-track' component={NewTrackPage} />
     <Route path='/tracks:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
