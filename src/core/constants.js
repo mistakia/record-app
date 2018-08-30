@@ -16,3 +16,9 @@ export const PLAYER_STORAGE_KEY = 'player'
 //  TRACKLISTS
 // -------------------------------------
 export const SESSION_TRACKLIST_ID = 'session'
+
+//= ====================================
+//  TRACKLISTS
+// -------------------------------------
+export const PEER_CONTACTLIST_ID = '/peers'
+export const SUGGESTED_CONTACTLIST_ID = '/suggested'

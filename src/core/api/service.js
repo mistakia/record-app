@@ -27,8 +27,16 @@ export const api = {
     const url = 'http://localhost:3000/info'
     return { url }
   },
+  fetchPeers () {
+    const url = 'http://localhost:3000/peers'
+    return { url }
+  },
   fetchProfile ({ logId }) {
     const url = `http://localhost:3000/profile${logId}`
+    return { url }
+  },
+  fetchSuggestedContacts () {
+    const url = 'http://localhost:3000/suggested/contacts'
     return { url }
   },
   fetchTags ({ logId }) {

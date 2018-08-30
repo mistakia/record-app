@@ -168,6 +168,7 @@ const item = StyleSheet.create({
     flexWrap: 'nowrap',
     borderWidth: 1,
     borderColor: '#f0f0f0',
+    marginTop: -1,
     marginLeft: 10,
     marginRight: 10,
     justifyContent: 'center'

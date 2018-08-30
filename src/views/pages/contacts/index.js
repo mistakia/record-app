@@ -3,7 +3,11 @@ import { createSelector } from 'reselect'
 import { connect } from 'react-redux'
 
 import { getApp } from '@core/app'
-import { contactlistActions } from '@core/contactlists'
+import {
+  contactlistActions,
+  getCurrentContactlist,
+  getContactsForCurrentContactlist
+} from '@core/contactlists'
 import { profileActions } from '@core/profiles'
 import Contactlist from '@components/contactlist'
 import PageLayout from '@layouts/page'
@@ -29,12 +33,12 @@ class ContactsPage extends React.Component {
 
   render () {
     const { logId } = this.props.match.params
-    const { app } = this.props
+    const { app, contacts, displayLoadingIndicator } = this.props
 
     const head = <Profile />
 
     const showAdd = logId === app.address
-    const body = <Contactlist showAdd={showAdd} />
+    const body = <Contactlist {...{contacts, displayLoadingIndicator, showAdd}} />
 
     return (
       <PageLayout head={head} body={body} />
@@ -44,7 +48,13 @@ class ContactsPage extends React.Component {
 
 const mapStateToProps = createSelector(
   getApp,
-  (app) => ({app})
+  getCurrentContactlist,
+  getContactsForCurrentContactlist,
+  (app, contactlist, contacts) => ({
+    displayLoadingIndicator: contactlist.isPending,
+    contacts,
+    app
+  })
 )
 
 const mapDispatchToProps = {

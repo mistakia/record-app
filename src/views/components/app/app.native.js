@@ -85,7 +85,7 @@ export default class App extends React.Component {
 
     return (
       <View style={styles.appContainer}>
-        <AppStatusBar backgroundColor="#f9f9f9" barStyle="light-content" />
+        <AppStatusBar backgroundColor='#f9f9f9' barStyle='light-content' />
         <Menu />
         <Routes />
         <Player />
@@ -98,7 +98,7 @@ const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight
 
 const styles = StyleSheet.create({
   statusBar: {
-    height: STATUSBAR_HEIGHT,
+    height: STATUSBAR_HEIGHT
   },
   appLoading: {
     flex: 1,

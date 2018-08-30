@@ -12,9 +12,15 @@ export const api = {
   fetchInfo: () => ({
     action: 'info:get'
   }),
+  fetchPeers: () => ({
+    action: 'peers:get'
+  }),
   fetchProfile: ({ logId }) => ({
     action: 'profile:get',
     data: { logId }
+  }),
+  fetchSuggestedContacts: () => ({
+    action: 'suggested:contacts:get'
   }),
   fetchTags: ({ logId }) => ({
     action: 'tags:get',
