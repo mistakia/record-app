@@ -35,7 +35,7 @@ export default function Player ({
 
         <div className='player__controls'>
           <div className='player__artwork'>
-            <img src={track.thumbnail || defaultArtwork} />
+            <img src={track.thumbnail} />
           </div>
           <IconButton
             icon='skip-previous'

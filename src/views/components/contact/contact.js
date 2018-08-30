@@ -54,7 +54,6 @@ const Contact = ({
           {contactName}
         </div>
         {contactLocation && <small>{contactLocation}</small>}
-        <small>{contact.address}</small>
         {(type === 'profile' && contactBio) && <div className='contact__bio'>
           {contactBio}
         </div> }

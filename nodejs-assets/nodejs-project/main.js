@@ -196,12 +196,20 @@ rnBridge.channel.on('message', async (message) => {
       RPC(record.info)
       break
 
+    case 'peers:get':
+      RPC(record.peers.list)
+      break
+
     case 'profile:get':
       RPC(record.profile.get, [msg.data.logId])
       break
 
     case 'profile:set':
       RPC(record.profile.set, [msg.data])
+      break
+
+    case 'suggested:contacts:get':
+      RPC(record.suggested.contacts)
       break
 
     case 'tracks:get':

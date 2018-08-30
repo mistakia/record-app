@@ -2,11 +2,11 @@ import React from 'react'
 
 import './page.styl'
 
-export const PageLayout = ({ head, body }) => (
+export const PageLayout = ({ head, body, title }) => (
   <section className='page'>
     <div className='page__head'>
       <div className='page__container'>
-        { head }
+        { title ? <h1>{title}</h1> : head }
       </div>
     </div>
     <div className='page__container'>

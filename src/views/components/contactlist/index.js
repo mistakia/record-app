@@ -1,11 +1,5 @@
 import React from 'react'
-import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
 
-import {
-  getCurrentContactlist,
-  getContactsForCurrentContactlist
-} from '@core/contactlists'
 import LoadingIndicator from '@components/loading-indicator'
 import Contact from '@components/contact'
 
@@ -25,13 +19,4 @@ const Contactlist = ({
   return render({ contactItems, loading, showAdd })
 }
 
-const mapStateToProps = createSelector(
-  getCurrentContactlist,
-  getContactsForCurrentContactlist,
-  (contactlist, contacts) => ({
-    displayLoadingIndicator: contactlist.isPending,
-    contacts
-  })
-)
-
-export default connect(mapStateToProps, null)(Contactlist)
+export default Contactlist

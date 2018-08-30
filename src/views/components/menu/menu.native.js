@@ -7,11 +7,11 @@ const Menu = ({ app }) => (
     <Link style={styles.menuItem} to='/feed'>
       <Text style={styles.menuItemText}>Feed</Text>
     </Link>
+    <Link style={styles.menuItem} to='/explore'>
+      <Text style={styles.menuItemText}>Explore</Text>
+    </Link>
     <Link style={styles.menuItem} to={`/tracks${app.address}`}>
       <Text style={styles.menuItemText}>Tracks</Text>
-    </Link>
-    <Link style={styles.menuItem} to={`/contacts${app.address}`}>
-      <Text style={styles.menuItemText}>Contacts</Text>
     </Link>
     <Link style={styles.menuItem} to='/info'>
       <Text style={styles.menuItemText}>Info</Text>

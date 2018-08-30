@@ -6,6 +6,7 @@ import './menu.styl'
 const Menu = ({ app }) => (
   <div id='menu'>
     <Link to='/feed'>Home</Link>
+    <Link to='/explore'>Explore</Link>
     <Link to='/info'>Info</Link>
     <Link to={`/tracks${app.address}`}>Tracks</Link>
     <Link to={`/contacts${app.address}`}>Contacts</Link>

@@ -6,10 +6,6 @@ import CopyText from '@components/copy-text'
 export default function () {
   const { info } = this.props
 
-  const head = (
-    <h1>Info</h1>
-  )
-
   const subs = Object.keys(info.subs).map((id, index) => {
     const subPeers = info.subs[id]
     return (
@@ -79,6 +75,6 @@ export default function () {
   )
 
   return (
-    <PageLayout head={head} body={body} />
+    <PageLayout title='Info' body={body} />
   )
 }
