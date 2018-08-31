@@ -20,9 +20,9 @@ class Track extends React.Component {
         style={trackStyles}
         onPress={isPlaying ? pause : play}>
         <View style={styles.thumbnailContainer}>
-        <Image
-          style={styles.thumbnail}
-          source={{uri: track.thumbnail}} />
+          <Image
+            style={styles.thumbnail}
+            source={{uri: track.thumbnail}} />
         </View>
         <View style={styles.body}>
           <View style={styles.title}>
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   feed: {
     borderRightWidth: 1,
     marginLeft: 15,
-    marginRight: 10,
+    marginRight: 10
   },
   track: {
     minHeight: 60,
