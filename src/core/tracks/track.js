@@ -11,6 +11,10 @@ export const Track = new Record({
 })
 
 export function createTrack (data) {
+  if (!data.content) {
+    return
+  }
+
   return new Track({
     duration: data.content.duration,
     id: data._id,
