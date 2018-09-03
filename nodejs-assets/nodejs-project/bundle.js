@@ -214343,6 +214343,14 @@ const PassThrough = require('stream').PassThrough;
 
 const httpLibs = { 'http:': http, 'https:': https };
 const redirectCodes = { 301: true, 302: true, 303: true, 307: true };
+const defaults = {
+  maxRedirects: 2,
+  maxRetries: 2,
+  maxReconnects: 0,
+  backoff: { inc: 100, max: 10000 },
+  highWaterMark: null,
+  transform: null,
+};
 
 /**
 * @param {String} url
@@ -214357,78 +214365,133 @@ module.exports = (url, options, callback) => {
   } else if (!options) {
     options = {};
   }
-  const maxRedirects = options.maxRedirects || 3;
+  options = Object.assign({}, defaults, options);
   const stream = new PassThrough({ highWaterMark: options.highWaterMark });
-  let req, aborted = false;
+  let myreq, myres;
+  let aborted = false;
+  let redirects = 0;
+  let retries = 0;
+  let retryTimeout;
+  let reconnects = 0;
+  let contentLength;
+  let acceptRanges = false;
+  let rangeStart = 0, rangeEnd;
+  let downloaded = 0;
 
-  function onError(err) {
-    if (callback) {
-      callback(err);
-    } else {
-      stream.emit('error', err);
+  // Check if this is a ranged request.
+  if (options.headers && options.headers.Range) {
+    let r = /bytes=(\d+)-(\d+)?/.exec(options.headers.Range);
+    if (r) {
+      rangeStart = parseInt(r[1], 10);
+      rangeEnd = parseInt(r[2], 10);
     }
   }
 
-  function doDownload(url, tryCount) {
+  function onRequestError(err, statusCode) {
+    if (!aborted) {
+      // If there is an error when the download has already started,
+      // but not finished, try reconnecting.
+      if (myres && acceptRanges &&
+        0 < downloaded && downloaded < contentLength) {
+        if (reconnects++ < options.maxReconnects) {
+          myres = null;
+          retries = 0;
+          let ms = Math.min(options.backoff.inc, options.backoff.max);
+          retryTimeout = setTimeout(doDownload, ms);
+          stream.emit('reconnect');
+          return;
+        }
+      } else if ((!statusCode || err.message === 'ENOTFOUND') &&
+        retries++ < options.maxRetries) {
+        let ms = Math.min(retries * options.backoff.inc, options.backoff.max);
+        retryTimeout = setTimeout(doDownload, ms);
+        stream.emit('retry', retries, err);
+        return;
+      }
+    }
+    stream.emit('error', err);
+  }
+
+  function doDownload() {
     if (aborted) { return; }
     let parsed = urlParse(url);
     let httpLib = httpLibs[parsed.protocol];
     if (!httpLib) {
-      setImmediate(() => {
-        onError(new Error('Invalid URL: ' + url));
+      stream.emit('error', new Error('Invalid URL: ' + url));
+      return;
+    }
+
+    Object.assign(parsed, options);
+    for (let key in defaults) {
+      delete parsed[key];
+    }
+    if (acceptRanges && downloaded > 0) {
+      parsed.headers = Object.assign({}, parsed.headers, {
+        Range: `bytes=${downloaded + rangeStart}-${rangeEnd || ''}`
       });
-      return stream;
     }
 
-    for (let key in options) {
-      parsed[key] = options[key];
-    }
-    delete parsed.maxRedirects;
-    delete parsed.highWaterMark;
-    delete parsed.transform;
     if (options.transform) {
-      let transform = options.transform;
-      parsed = transform(parsed);
+      parsed = options.transform(parsed);
     }
 
-    req = httpLib.get(parsed, (res) => {
+    myreq = httpLib.get(parsed, (res) => {
       if (redirectCodes[res.statusCode] === true) {
-        if (tryCount >= maxRedirects) {
-          onError(new Error('Too many redirects'));
+        if (redirects++ >= options.maxRedirects) {
+          stream.emit('error', new Error('Too many redirects'));
         } else {
-          doDownload(res.headers.location, tryCount + 1);
+          url = res.headers.location;
+          stream.emit('redirect', url);
+          doDownload();
         }
         return;
       } else if (res.statusCode < 200 || 400 <= res.statusCode) {
-        onError(new Error('Status code: ' + res.statusCode));
+        let err = new Error('Status code: ' + res.statusCode);
+        if (res.statusCode >= 500) {
+          onRequestError(err, res.statusCode);
+        } else {
+          stream.emit('error', err);
+        }
         return;
       }
-      if (callback) {
-        let body = '';
-        res.setEncoding('utf8');
-        res.on('data', (chunk) => {
-          body += chunk;
-        });
-        res.on('end', () => {
-          callback(null, res, body);
-        });
-      } else {
-        stream.emit('response', res);
-        res.on('error', onError);
-        res.pipe(stream);
+      if (!contentLength) {
+        contentLength = parseInt(res.headers['content-length'], 10);
+        acceptRanges = res.headers['accept-ranges'] === 'bytes' &&
+          contentLength > 0 && options.maxReconnects > 0;
       }
+      if (acceptRanges) {
+        res.on('data', (chunk) => { downloaded += chunk.length; });
+        res.on('end', () => {
+          if (downloaded === contentLength) {
+            stream.end();
+          }
+        });
+      }
+      res.pipe(stream, { end: !acceptRanges });
+      myres = res;
+      stream.emit('response', res);
+      res.on('error', stream.emit.bind(stream, 'error'));
     });
-    req.on('error', onError);
-    stream.emit('request', req);
+    myreq.on('error', onRequestError);
+    stream.emit('request', myreq);
   }
 
   stream.abort = () => {
     aborted = true;
     stream.emit('abort');
-    if (req) { req.abort(); }
+    if (myreq) { myreq.abort(); }
+    if (myres) { myres.unpipe(stream); }
+    clearTimeout(retryTimeout);
   };
 
-  process.nextTick(() => { doDownload(url, 1); });
+  process.nextTick(doDownload);
+  if (callback) {
+    let body = '';
+    stream.setEncoding('utf8');
+    stream.on('data', (chunk) => { body += chunk; });
+    stream.on('end', () => { callback(null, myres, body); });
+    stream.on('error', callback);
+  }
   return callback ? null : stream;
 };
 
@@ -277729,8 +277792,13 @@ module.exports = function contacts (self) {
       const log = await self._orbitdb.open(address, opts)
 
       log.events.on('replicate.progress', async (id, hash, entry) => {
-        const { type } = entry.payload.value
+        const { op } = entry.payload
+        if (op !== 'PUT') {
+          return
+        }
+
         // TODO: consider including about entries in feed
+        const { type } = entry.payload.value
         if (type !== 'about') {
           await self.feed.add(entry, contact)
         }
@@ -277801,7 +277869,7 @@ module.exports = function contacts (self) {
       let contacts = []
       for (const entry of entries) {
         const profile = await self.profile.getEntry(entry.payload.value.content.address)
-        const relations = await self.contacts.getRelations(entry.payload.value)
+        const relations = await self.contacts.getRelations(entry.payload.value, { haveContact })
         contacts.push(extend(relations, profile, entry.payload.value))
       }
       return contacts
@@ -277825,7 +277893,7 @@ module.exports = function feed (self) {
       await self._feedLog.load()
     },
 
-    get address() {
+    get address () {
       return self._feedLog.address.toString()
     },
 
@@ -278028,9 +278096,7 @@ const Room = require('ipfs-pubsub-room')
 const extend = require('deep-extend')
 
 const defaults = {
-  peerMonitor: {
-    pollInterval: 5000
-  }
+  pollInterval: 5000
 }
 
 module.exports = function peers (self) {
@@ -278038,7 +278104,7 @@ module.exports = function peers (self) {
     _topic: 'RECORD',
     _index: {},
     init: async () => {
-      self._room = Room(self._ipfs, self.peers._topic)
+      self._room = Room(self._ipfs, self.peers._topic, defaults)
       self._room.on('peer joined', self.peers._onJoin)
       self._room.on('peer left', self.peers._onLeave)
       self._room.on('message', self.peers._onMessage)
@@ -278063,7 +278129,6 @@ module.exports = function peers (self) {
       self.peers._index[peerId] = extend(peer, profile)
     },
     _onJoin: async (peer) => {
-      self.peers._index[peer] = {}
       const profile = await self.profile.get(self.address)
       const data = extend(profile, { isMe: false })
       const message = Buffer.from(JSON.stringify(data))
@@ -278290,7 +278355,7 @@ class RecordNode {
     }
   }
 
-  get address() {
+  get address () {
     return this._log.address.toString()
   }
 
@@ -278515,9 +278580,7 @@ class RecordIndex {
         }
 
         if (item.payload.op === 'PUT') {
-
           if (type === 'about') {
-            const { content, timestamp } = item.payload.value
             this._index.about = item
             return handled
           }
@@ -278559,7 +278622,7 @@ class RecordIndex {
     // Build tags Index
     this._index.tags = {}
     for (const track of this._index.track.values()) {
-      track.tags && track.tags.forEach(t => this._index.tags[t] = (this._index.tags[t]+1) || 1)
+      track.tags && track.tags.forEach(t => { this._index.tags[t] = (this._index.tags[t] + 1) || 1 })
     }
 
     // Re-sort Index
@@ -278633,7 +278696,7 @@ class RecordStore extends Store {
     this._type = RecordStore.type
 
     this._operations = []
-    this._pendingOperation = false
+    this._operationPending = false
 
     // Overwrite oplog
     this._oplog = new Log(this._ipfs, this.id, null, null, null, this._key, this.access.write)
@@ -278644,6 +278707,40 @@ class RecordStore extends Store {
     this.contacts = contacts(this)
     this.tags = tags(this)
     this.about = about(this)
+  }
+
+  async _loadLogFromIndex (heads, index, amount) {
+    console.log('Creating log with nextsIndex')
+    let log = new Log(
+      this._ipfs,
+      this.id,
+      null,
+      heads,
+      null,
+      this._key,
+      this.access.write,
+      index
+    )
+    await this._oplog.join(log, amount)
+  }
+
+  async _loadLogFromHeads (heads, amount) {
+    console.log('Creating log from heads')
+    for (const head of heads) {
+      this._recalculateReplicationMax(head.clock.time)
+      let log = await Log.fromEntryHash(
+        this._ipfs,
+        head.hash,
+        this._oplog.id,
+        amount,
+        [],
+        this._key,
+        this.access.write,
+        this._onLoadProgress.bind(this)
+      )
+      await this._oplog.join(log, amount)
+    }
+    await this._cache.set('_nextsIndex', Array.from(this._oplog._nextsIndex.entries()))
   }
 
   async load (amount) {
@@ -278663,35 +278760,9 @@ class RecordStore extends Store {
       this.events.emit('load', this.address.toString(), heads)
 
       if (nextsIndex.size) {
-        console.log('Creating log with nextsIndex')
-        let log = new Log(
-          this._ipfs,
-          this.id,
-          null,
-          heads,
-          null,
-          this._key,
-          this.access.write,
-          nextsIndex
-        )
-        await this._oplog.join(log, amount)
+        await this._loadLogFromIndex(heads, nextsIndex, amount)
       } else {
-        console.log('Creating log from heads')
-        for (const head of heads) {
-          this._recalculateReplicationMax(head.clock.time)
-          let log = await Log.fromEntryHash(
-            this._ipfs,
-            head.hash,
-            this._oplog.id,
-            amount,
-            [],
-            this._key,
-            this.access.write,
-            this._onLoadProgress.bind(this)
-          )
-          await this._oplog.join(log, amount)
-        }
-        await this._cache.set('_nextsIndex', Array.from(this._oplog._nextsIndex.entries()))
+        await this._loadLogFromHeads(heads, amount)
       }
 
       console.log(`Oplog nextsIndex length: ${this._oplog._nextsIndex.size}`)
@@ -278820,13 +278891,13 @@ module.exports = function (self) {
 
       // save if no profile exists
       if (!currentEntry) {
-        return await save()
+        return save()
       }
 
       // save if new profile is different
       const { content } = currentEntry.payload.value
       if (JSON.stringify(content) !== JSON.stringify(data)) {
-        return await save()
+        return save()
       }
 
       // dont save
@@ -278896,7 +278967,7 @@ module.exports = function (self) {
 }
 
 },{"../RecordEntry":1990}],1999:[function(require,module,exports){
-module.exports = function (self ) {
+module.exports = function (self) {
   return {
     all: () => {
       const { tags } = self._index._index

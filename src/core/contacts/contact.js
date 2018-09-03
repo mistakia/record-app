@@ -23,6 +23,10 @@ export const Contact = new Record({
 })
 
 export function createContact (data) {
+  if (!data.content) {
+    return
+  }
+
   return new Contact({
     id: data._id,
     address: data.content.address,

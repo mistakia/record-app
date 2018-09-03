@@ -10,6 +10,10 @@ class Track extends React.Component {
   render () {
     const { isPlaying, isSelected, pause, play, track } = this.props
 
+    if (!track) {
+      return null
+    }
+
     return (
       <article className='track'>
         <div className='track__play'>
