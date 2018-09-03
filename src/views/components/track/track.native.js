@@ -15,6 +15,10 @@ class Track extends React.Component {
 
     const trackStyles = isFeed ? [styles.track, styles.feed] : [styles.track]
 
+    if (!track) {
+      return null
+    }
+
     return (
       <TouchableOpacity
         style={trackStyles}

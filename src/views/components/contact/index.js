@@ -4,6 +4,10 @@ import { contactlistActions } from '@core/contactlists'
 import Contact from './contact'
 
 const ContactBase = ({ removeContact, contact, ...props }) => {
+  if (!contact) {
+    return null
+  }
+
   const contactName = contact.isMe
     ? (contact.name || 'set your name')
     : (contact.alias || contact.name)
