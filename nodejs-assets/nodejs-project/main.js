@@ -262,8 +262,8 @@ rnBridge.channel.on('message', async (message) => {
       break
 
     case 'tags:add': {
-      const { track, tag } = msg.data
-      RPC(record.tags.add, [track, tag])
+      const { cid, tag } = msg.data
+      RPC(record.tags.add, [cid, tag])
       break
     }
 

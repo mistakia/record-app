@@ -27,10 +27,10 @@ export const api = {
     data: { logId }
   }),
   postTag: ({ logId, data }) => {
-    const { track, tag } = data
+    const { cid, tag } = data
     return {
       action: 'tags:add',
-      data: { track, tag }
+      data: { cid, tag }
     }
   },
   deleteTag: ({ logId, data }) => {
