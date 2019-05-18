@@ -103,6 +103,9 @@ app.on('ready', () => {
       init: {
         bits: 2048
       },
+      preload: {
+        enabled: false
+      },
       repo: path.resolve(recorddir, './ipfs'),
       EXPERIMENTAL: {
         dht: false, // TODO: BRICKS COMPUTER
