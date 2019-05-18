@@ -1,7 +1,7 @@
 {
-  "presets": ["react-native"],
+  "presets": ["module:metro-react-native-babel-preset"],
   "plugins": [
-    "transform-object-rest-spread", [
+    "@babel/plugin-proposal-object-rest-spread", [
       "module-resolver", {
 	    "root": ["./"],
 	    "alias": {

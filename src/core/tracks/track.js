@@ -15,12 +15,14 @@ export function createTrack (data) {
     return
   }
 
+  const { metadata } = data.content
+
   return new Track({
-    duration: data.content.duration,
+    duration: metadata.duration,
     id: data._id,
-    thumbnail: data.content.thumbnail || '',
-    title: data.content.fulltitle || data.content.title,
-    url: data.content.url,
+    thumbnail: metadata.thumbnail || '',
+    title: metadata.fulltitle || data.content.title,
+    url: metadata.url,
     tags: new List(data.content.tags),
     webpage_url: data.content.webpage_url
   })

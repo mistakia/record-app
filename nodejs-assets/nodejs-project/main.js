@@ -1,3 +1,7 @@
+console.log(`Node version: ${process.versions.node}`)
+
+require('@babel/polyfill')
+
 const rnBridge = require('rn-bridge')
 const os = require('os')
 const fs = require('fs')
@@ -6,7 +10,6 @@ const path = require('path')
 const debug = require('debug')
 const Logger = require('logplease')
 
-const OrbitDB = require('orbit-db')
 const RecordNode = require('record-node')
 
 debug.useColors = () => false // disable colors in log (fixes xcode issue)
@@ -61,23 +64,28 @@ const init = (docsPath) => {
       log: sendState
     },
     repo: path.resolve(recorddir, './ipfs'),
+    preload: {
+      enabled: false
+    },
     EXPERIMENTAL: {
       dht: false, // TODO: BRICKS COMPUTER
-      relay: {
-        enabled: true,
-        hop: {
-          enabled: false, // TODO: CPU hungry on mobile
-          active: false
-        }
-      },
       pubsub: true
     },
     config: {
       Bootstrap: [],
       Addresses: {
 	    Swarm: [
+          '/ip4/0.0.0.0/tcp/4002',
+          '/ip4/0.0.0.0/tcp/4003/ws',
           '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
 	    ]
+      }
+    },
+    libp2p: {
+      config: {
+        relay: {
+          enabled: false
+        }
       }
     },
     connectionManager: {
@@ -89,6 +97,7 @@ const init = (docsPath) => {
 
   try {
     // Create the IPFS node instance
+    logger('Starting IPFS')
     ipfs = new IPFS(ipfsConfig)
 
     ipfs.state.on('done', () => {
@@ -103,9 +112,14 @@ const init = (docsPath) => {
       logger(`Orbit Address: ${orbitAddress}`)
 
       const opts = {
-        orbitPath: path.resolve(recorddir, './orbitdb')
+        orbitdb: {
+          directory: path.resolve(recorddir, './orbitdb')
+        },
+        bitboot: {
+          enabled: true
+        }
       }
-      record = new RecordNode(ipfs, OrbitDB, opts)
+      record = new RecordNode(ipfs, opts)
 
       try {
         await record.init(orbitAddress)
@@ -124,6 +138,27 @@ const init = (docsPath) => {
 
   logger('initialized')
 }
+
+init(rnBridge.app.datadir())
+
+rnBridge.app.on('pause', (pauseLock) => {
+  logger('node app paused')
+  ipfs.stop(() => {
+    logger('ipfs stopped, pauseLock releasing')
+    pauseLock.release()
+  })
+})
+
+rnBridge.app.on('resume', () => {
+  logger('node app resumed')
+  ipfs.start((err) => {
+    if (err) {
+      return logger(err)
+    }
+
+    logger('ipfs started')
+  })
+})
 
 rnBridge.channel.on('message', async (message) => {
 
@@ -151,21 +186,21 @@ rnBridge.channel.on('message', async (message) => {
 
   switch(msg.action) {
     case 'init':
-      init(msg.data.docsPath)
+      //init(msg.data.docsPath)
       break
 
     case 'suspend':
-      ipfs.stop()
+      //ipfs.stop()
       break
 
     case 'resume':
-      ipfs.start((err) => {
-        if (err) {
-          console.log(err)
-        }
+      /* ipfs.start((err) => {
+       *   if (err) {
+       *     return console.log(err)
+       *   }
 
-        logger('ipfs started')
-      })
+       *   logger('ipfs started')
+       * }) */
       break
 
     case 'resolve':

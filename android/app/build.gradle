@@ -137,10 +137,10 @@ android {
 }
 
 dependencies {
+    implementation project(':nodejs-mobile-react-native')
     compile project(':react-native-vector-icons')
     compile project(':react-native-fs')
     compile project(':react-native-audio-polyfill')
-    compile project(':nodejs-mobile-react-native')
     compile fileTree(dir: "libs", include: ["*.jar"])
     compile "com.android.support:appcompat-v7:23.0.1"
     compile "com.facebook.react:react-native:+"  // From node_modules
