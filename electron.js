@@ -8,7 +8,6 @@ const os = require('os')
 const fs = require('fs')
 const RecordNode = require('record-node')
 const debug = require('debug')
-const OrbitDB = require('orbit-db')
 const IPFS = require('ipfs')
 
 const config = require('./config/project.config')
@@ -21,10 +20,17 @@ debug.enable('record:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
-process.on('uncaughtException', (err) => {
-  console.log(err)
+process.on('uncaughtException', error => {
+  logger.error(error)
   process.exit()
 })
+
+process.on('unhandledRejection', error => {
+  logger.error(error)
+  process.exit()
+});
+
+logger.info(`Electron Node version: ${process.versions.node}`)
 
 // Module to control application life.
 const app = electron.app
@@ -100,21 +106,23 @@ app.on('ready', () => {
       repo: path.resolve(recorddir, './ipfs'),
       EXPERIMENTAL: {
         dht: false, // TODO: BRICKS COMPUTER
-        relay: {
-          enabled: true,
-          hop: {
-            enabled: false, // TODO: CPU hungry on mobile
-            active: false
-          }
-        },
         pubsub: true
       },
       config: {
         Bootstrap: [],
         Addresses: {
 	      Swarm: [
+            '/ip4/0.0.0.0/tcp/4002',
+            '/ip4/0.0.0.0/tcp/4003/ws',
             '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
 	      ]
+        }
+      },
+      libp2p: {
+        config: {
+          relay: {
+            enabled: true
+          }
         }
       },
       connectionManager: {
@@ -136,11 +144,13 @@ app.on('ready', () => {
       logger.info(`Orbit Address: ${orbitAddress}`)
 
       let opts = {
-        orbitPath: path.resolve(recorddir, './orbitdb'),
+        orbitdb: {
+          directory: path.resolve(recorddir, './orbitdb')
+        },
         api: true
       }
 
-      const record = new RecordNode(ipfs, OrbitDB, opts)
+      const record = new RecordNode(ipfs, opts)
       try {
         await record.init(orbitAddress)
         const log = await record.log.get()

@@ -1,7 +1,7 @@
 {
   "name": "record-nodejs-react-native",
   "version": "0.0.1",
-  "description": "Mobile Record Node via janeasystems/nodejs-mobilej",
+  "description": "Mobile Record Node via janeasystems/nodejs-mobile",
   "main": "main.js",
   "author": "",
   "license": "MIT",
@@ -9,11 +9,11 @@
     "install": "patch-package"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.4.4",
     "debug": "3.1.0",
-    "ipfs": "~0.31.2",
+    "ipfs": "~0.34.4",
     "logplease": "1.2.14",
-    "orbit-db": "github:mistakia/orbit-db#test/override-store",
-    "record-node": "github:mistakia/record-node#6cb6334"
+    "record-node": "github:mistakia/record-node#0d1899c"
   },
   "devDependencies": {
     "patch-package": "^5.1.1"

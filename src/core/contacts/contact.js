@@ -27,12 +27,14 @@ export function createContact (data) {
     return
   }
 
+  console.log(data)
+
   return new Contact({
     id: data._id,
     address: data.content.address,
     alias: data.content.alias,
     avatar: data.content.avatar || data.avatar,
-    name: data.content.name || shortAddress(data.content.address),
+    name: data.content.name,// || shortAddress(data.content.address),
     location: data.content.location,
     bio: data.content.bio,
     haveContact: !!data.haveContact,
