@@ -5,7 +5,7 @@
 
 > Desktop, mobile and web app for Record.
 
-A proof of concept distributed social & music application (library, sharing, discovery & curation) network built entirely on [IPFS](https://github.com/ipfs/js-ipfs). User data is stored via a [scuttlebot](http://scuttlebot.io/)-like immutable log via [IPFS-Log](https://github.com/orbitdb/ipfs-log) & [OrbitDB](https://github.com/orbitdb/orbit-db).
+A proof of concept distributed social & music application (library, sharing, discovery & curation) network built entirely on [IPFS](https://github.com/ipfs/js-ipfs). User data is stored via a [scuttlebot](http://scuttlebot.io/)-like immutable log via [IPFS-Log](https://github.com/orbitdb/ipfs-log) & [OrbitDB](https://github.com/orbitdb/orbit-db). Bootstraping/peer discovery is done via [bitboot](https://github.com/tintfoundation/bitboot)
 
 ##### Record Node
 This repo is a react & react native UI for [Record Node](https://github.com/mistakia/record-node).
@@ -18,6 +18,7 @@ npm install
 ## Usage
 ### Desktop (Electron)
 ```
+npm run rebuild:electron // rebuild node bindings for electron
 npm run start:electron
 ```
 
@@ -34,11 +35,13 @@ npm run start
 
 #### iOS
 ```
-npm run start:ios
+npm run build:ios // or `npm run build:ios:dev`
+npm run start:ios // or open & build with xcode `open ios/Record.xcodeproj/`
 ```
 
 #### Android
 ```
+npm run build:android
 npm run start:android
 ```
 
