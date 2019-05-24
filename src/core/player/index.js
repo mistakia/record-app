@@ -6,8 +6,10 @@ export { playerSagas } from './sagas'
 export {
   getPlayer,
   getPlayerIsPlaying,
+  getPlayerIsShuffling,
   getPlayerTimes,
   getPlayerTrack,
   getPlayerTrackId,
+  getPlayerTracklistId,
   getPlayerTracklistCursor
 } from './selectors'

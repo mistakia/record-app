@@ -40,6 +40,10 @@ export const api = {
       data: { trackId, tag }
     }
   },
+  fetchTrack: ({ logId, params }) => ({
+    action: 'tracks:get',
+    data: { logId, params }
+  }),
   fetchTracks: ({ logId, params }) => ({
     action: 'tracks:get',
     data: { logId, params }

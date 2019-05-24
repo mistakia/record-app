@@ -43,6 +43,10 @@ export const api = {
     const url = `http://localhost:3000/tags${logId}`
     return { url }
   },
+  fetchTrack ({ logId, params }) {
+    const url = `http://localhost:3000/tracks${logId}?${toQueryString(params)}`
+    return { url }
+  },
   fetchTracks ({ logId, params }) {
     const url = `http://localhost:3000/tracks${logId}?${toQueryString(params)}`
     return { url }

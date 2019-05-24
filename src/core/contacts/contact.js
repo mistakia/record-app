@@ -14,10 +14,10 @@ export const Contact = new Record({
   id: null,
   address: null,
   alias: null,
-  avatar: '',
-  name: '',
-  location: '',
-  bio: '',
+  avatar: null,
+  name: null,
+  location: null,
+  bio: null,
   haveContact: false,
   isMe: false
 })

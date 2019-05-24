@@ -5,6 +5,7 @@ export const playerActions = {
   AUDIO_TIME_UPDATED: 'AUDIO_TIME_UPDATED',
   AUDIO_VOLUME_CHANGED: 'AUDIO_VOLUME_CHANGED',
   PLAY_SELECTED_TRACK: 'PLAY_SELECTED_TRACK',
+  SHUFFLE_TRACKLIST: 'SHUFFLE_TRACKLIST',
   TOGGLE_FULLSCREEN: 'TOGGLE_FULLSCREEN',
 
   audioEnded: () => ({
@@ -39,6 +40,13 @@ export const playerActions = {
     type: playerActions.PLAY_SELECTED_TRACK,
     payload: {
       trackId,
+      tracklistId
+    }
+  }),
+
+  shuffleTracklist: (tracklistId) => ({
+    type: playerActions.SHUFFLE_TRACKLIST,
+    payload: {
       tracklistId
     }
   })

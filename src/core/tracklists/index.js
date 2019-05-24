@@ -1,5 +1,6 @@
 export {
   tracklistActions,
+  trackRequestActions,
   tracklistRequestActions,
   tracklistPostActions
 } from './actions'

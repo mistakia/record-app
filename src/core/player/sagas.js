@@ -1,17 +1,34 @@
 import { eventChannel } from 'redux-saga'
 import { call, fork, put, select, take } from 'redux-saga/effects'
+
 import { appActions } from '@core/app'
-import { PLAYER_INITIAL_VOLUME } from '@core/constants'
+import { fetchTracks, fetchTrack } from '@core/api'
+import { PLAYER_INITIAL_VOLUME, ITEMS_PER_LOAD } from '@core/constants'
+import { tracklistActions, getCurrentTracklist } from '@core/tracklists'
 import { playerActions } from './actions'
 import { audio, initAudio, setVolume } from '@core/audio'
-import { getPlayerTrack, getPlayerTracklistCursor } from './selectors'
+import { getPlayer, getPlayerTrack, getPlayerTracklist, getPlayerTracklistCursor } from './selectors'
 import { playerStorage } from './storage'
 
 export function * playNextTrack () {
   const cursor = yield select(getPlayerTracklistCursor)
   if (cursor.nextTrackId) {
     yield put(playerActions.playSelectedTrack(cursor.nextTrackId))
+  } else {
+    const tracklist = yield select(getPlayerTracklist)
+    const start = tracklist.trackIds.size
+    const params = { start, end: start + ITEMS_PER_LOAD }
+    yield call(fetchTracks, { logId: tracklist.id, params })
+    const newCursor = yield select(getPlayerTracklistCursor)
+    if (newCursor.nextTrackid) {
+      yield put(playerActions.playSelectedTrack(newCursor.nextTrackId))
+    }
   }
+}
+
+export function * shuffleTracklist ({ tracklistId }) {
+  const params = { random: true }
+  yield call (fetchTrack, { logId: tracklistId, params })
 }
 
 export function * playSelectedTrack () {
@@ -45,7 +62,12 @@ export function * subscribeToAudio () {
 export function * watchAudioEnded () {
   while (true) {
     yield take(playerActions.AUDIO_ENDED)
-    yield fork(playNextTrack)
+    const { isShuffling, tracklistId } = yield select(getPlayer)
+    if (isShuffling) {
+      yield fork(shuffleTracklist, { tracklistId })
+    } else {
+      yield fork(playNextTrack)
+    }
   }
 }
 
@@ -71,6 +93,20 @@ export function * watchPlaySelectedTrack () {
   }
 }
 
+export function * watchShuffleTracklist () {
+  while (true) {
+    const { payload } = yield take(playerActions.SHUFFLE_TRACKLIST)
+    yield fork(shuffleTracklist, payload)
+  }
+}
+
+export function * watchTrackFulfilled () {
+  while (true) {
+    yield take(tracklistActions.FETCH_TRACK_FULFILLED)
+    yield fork(playSelectedTrack)
+  }
+}
+
 //= ====================================
 //  ROOT
 // -------------------------------------
@@ -79,5 +115,7 @@ export const playerSagas = [
   fork(watchAudioEnded),
   fork(watchAudioVolumeChanged),
   fork(watchInitApp),
-  fork(watchPlaySelectedTrack)
+  fork(watchPlaySelectedTrack),
+  fork(watchShuffleTracklist),
+  fork(watchTrackFulfilled)
 ]

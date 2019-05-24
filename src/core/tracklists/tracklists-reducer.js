@@ -12,7 +12,7 @@ export function tracklistsReducer (state = initialState, action) {
 
   switch (action.type) {
     case tracklistActions.FETCH_TRACKS_FULFILLED:
-    case tracklistActions.FETCH_TRACKS_PENDING:
+    case tracklistActions.FETCH_TRACK_FULFILLED:
       return state.set(
         payload.logId,
         tracklistReducer(state.get(payload.logId), action)

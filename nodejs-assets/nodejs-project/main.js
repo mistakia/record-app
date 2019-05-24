@@ -16,7 +16,7 @@ debug.useColors = () => false // disable colors in log (fixes xcode issue)
 
 // Log Record / IPFS / OrbitDB
 const logger = debug('main')
-debug.enable('main,jsipfs,record:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
+debug.enable('*') //main,jsipfs,record:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 process.on('uncaughtException', (err) => {
@@ -77,7 +77,7 @@ const init = (docsPath) => {
 	    Swarm: [
           '/ip4/0.0.0.0/tcp/4002',
           '/ip4/0.0.0.0/tcp/4003/ws',
-          '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
+          //'/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
 	    ]
       }
     },
@@ -186,7 +186,7 @@ rnBridge.channel.on('message', async (message) => {
 
   switch(msg.action) {
     case 'init':
-      //init(msg.data.docsPath)
+      init(rnBridge.app.datadir())
       break
 
     case 'suspend':
