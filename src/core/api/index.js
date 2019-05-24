@@ -8,6 +8,7 @@ export {
   fetchTags,
   postTag,
   deleteTag,
+  fetchTrack,
   fetchTracks,
   postContact,
   deleteContact,

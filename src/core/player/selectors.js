@@ -9,6 +9,10 @@ export function getPlayerIsPlaying (state) {
   return getPlayer(state).isPlaying
 }
 
+export function getPlayerIsShuffling (state) {
+  return getPlayer(state).isShuffling
+}
+
 export function getPlayerTimes (state) {
   return state.get('playerTimes')
 }

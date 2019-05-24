@@ -10,7 +10,7 @@ import { getCurrentSelectedTags } from '@core/taglists'
 
 export function * loadTracks ({ payload = {} }) {
   const { logId, tags } = payload
-  const params = { start: 0, limit: ITEMS_PER_LOAD, tags }
+  const params = { start: 0, end: ITEMS_PER_LOAD, tags }
   yield call(fetchTracks, { logId, params })
 }
 
@@ -33,7 +33,7 @@ export function * loadNextTracks () {
   const tracklist = yield select(getCurrentTracklist)
   const start = tracklist.trackIds.size
   const tags = yield select(getCurrentSelectedTags)
-  const params = { start, limit: start + ITEMS_PER_LOAD, tags }
+  const params = { start, end: start + ITEMS_PER_LOAD, tags }
   yield call(fetchTracks, { logId: tracklist.id, params })
 }
 

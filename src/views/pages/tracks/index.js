@@ -26,6 +26,7 @@ export class TracksPage extends React.Component {
 
   _load () {
     const { logId } = this.props.match.params
+    console.log(logId)
     const { tags } = parseQueryString(this.props.location.search)
     this.props.loadTracks(logId, tags || '')
     this.props.loadTags(logId)

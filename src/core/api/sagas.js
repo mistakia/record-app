@@ -17,6 +17,7 @@ import {
   taglistDeleteActions
 } from '@core/taglists'
 import {
+  trackRequestActions,
   tracklistRequestActions,
   tracklistPostActions
 } from '@core/tracklists'
@@ -43,7 +44,7 @@ function * fetchAPI (apiFunction, actions, opts = {}) {
 
 function * fetch (...args) {
   const task = yield fork(fetchAPI.bind(null, ...args))
-  yield take(LOCATION_CHANGE)
+  yield take(LOCATION_CHANGE) // TODO: make optional, not all requests should be cancelled
   yield cancel(task)
 }
 
@@ -62,6 +63,7 @@ export const fetchTags = fetch.bind(null, api.fetchTags, taglistRequestActions)
 export const postTag = fetch.bind(null, api.postTag, taglistPostActions)
 export const deleteTag = fetch.bind(null, api.deleteTag, taglistDeleteActions)
 
+export const fetchTrack = fetch.bind(null, api.fetchTrack, trackRequestActions)
 export const fetchTracks = fetch.bind(null, api.fetchTracks, tracklistRequestActions)
 export const postTrack = fetch.bind(null, api.postTrack, tracklistPostActions)
 

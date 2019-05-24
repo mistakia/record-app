@@ -3,6 +3,10 @@ export const tracklistActions = {
   FETCH_TRACKS_FULFILLED: 'FETCH_TRACKS_FULFILLED',
   FETCH_TRACKS_PENDING: 'FETCH_TRACKS_PENDING',
 
+  FETCH_TRACK_FAILED: 'FETCH_TRACK_FAILED',
+  FETCH_TRACK_FULFILLED: 'FETCH_TRACK_FULFILLED',
+  FETCH_TRACK_PENDING: 'FETCH_TRACK_PENDING',
+
   LOAD_TRACKS: 'LOAD_TRACKS',
   LOAD_NEXT_TRACKS: 'LOAD_NEXT_TRACKS',
 
@@ -29,6 +33,26 @@ export const tracklistActions = {
 
   fetchTracksPending: logId => ({
     type: tracklistActions.FETCH_TRACKS_PENDING,
+    payload: {
+      logId
+    }
+  }),
+
+  fetchTrackFailed: error => ({
+    type: tracklistActions.FETCH_TRACK_FAILED,
+    payload: error
+  }),
+
+  fetchTrackFulfilled: (logId, data) => ({
+    type: tracklistActions.FETCH_TRACK_FULFILLED,
+    payload: {
+      data,
+      logId
+    }
+  }),
+
+  fetchTrackPending: logId => ({
+    type: tracklistActions.FETCH_TRACK_PENDING,
     payload: {
       logId
     }
@@ -86,6 +110,12 @@ export const tracklistRequestActions = {
   failed: tracklistActions.fetchTracksFailed,
   fulfilled: tracklistActions.fetchTracksFulfilled,
   pending: tracklistActions.fetchTracksPending
+}
+
+export const trackRequestActions = {
+  failed: tracklistActions.fetchTrackFailed,
+  fulfilled: tracklistActions.fetchTrackFulfilled,
+  pending: tracklistActions.fetchTrackPending
 }
 
 export const tracklistPostActions = {

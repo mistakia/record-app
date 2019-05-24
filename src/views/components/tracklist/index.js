@@ -7,7 +7,13 @@ import {
   getTracksForCurrentTracklist,
   tracklistActions
 } from '@core/tracklists'
-import { getPlayerIsPlaying, getPlayerTrackId, playerActions } from '@core/player'
+import {
+  getPlayerIsPlaying,
+  getPlayerIsShuffling,
+  getPlayerTrackId,
+  getPlayerTracklistId,
+  playerActions
+} from '@core/player'
 import { audio } from '@core/audio'
 import Loading from '@components/loading'
 import Track from '@components/track'
@@ -17,6 +23,7 @@ import render from './tracklist'
 const Tracklist = ({
   displayLoadingIndicator,
   isPlaying,
+  isShuffling,
   pause,
   play,
   selectedTrackId,
@@ -26,6 +33,7 @@ const Tracklist = ({
   hasMore,
   loadNextTracks,
   showAdd,
+  shuffle,
   tags
 }) => {
   const trackItems = tracks.map((track, index) => {
@@ -50,17 +58,20 @@ const Tracklist = ({
     />
   )
 
-  return render({ trackItems, loading, showAdd })
+  return render({ trackItems, loading, showAdd, shuffle, isShuffling, tracklistId })
 }
 
 const mapStateToProps = createSelector(
   getPlayerIsPlaying,
+  getPlayerIsShuffling,
+  getPlayerTracklistId,
   getPlayerTrackId,
   getCurrentTracklist,
   getTracksForCurrentTracklist,
-  (isPlaying, playerTrackId, tracklist, tracks) => ({
+  (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks) => ({
     displayLoadingIndicator: tracklist.isPending,
     isPlaying,
+    isShuffling: isShuffling && tracklist.id == playerTracklistId,
     pause: audio.pause,
     play: audio.play,
     selectedTrackId: playerTrackId,
@@ -72,7 +83,8 @@ const mapStateToProps = createSelector(
 
 const mapDispatchToProps = {
   selectTrack: playerActions.playSelectedTrack,
-  loadNextTracks: tracklistActions.loadNextTracks
+  loadNextTracks: tracklistActions.loadNextTracks,
+  shuffle: playerActions.shuffleTracklist,
 }
 
 export default connect(

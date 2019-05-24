@@ -1,3 +1,10 @@
 .list__action
   text-align right
   margin-bottom 15px
+  display flex
+  flex-direction: row-reverse
+  justify-content: flex-start
+  .action
+    flex 0 1 auto
+  .action + .action
+    margin-right 1%

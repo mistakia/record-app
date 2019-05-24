@@ -6,14 +6,14 @@ import { feedActions } from './actions'
 import { getFeed } from './selectors'
 
 export function * loadFeed () {
-  const params = { start: 0, limit: ITEMS_PER_LOAD }
+  const params = { start: 0, end: ITEMS_PER_LOAD }
   yield call(fetchFeed, { params })
 }
 
 export function * loadNextFeed () {
   const feed = yield select(getFeed)
   const start = feed.content.size
-  const params = { start, limit: start + ITEMS_PER_LOAD }
+  const params = { start, end: start + ITEMS_PER_LOAD }
   yield call(fetchFeed, { params })
 }
 

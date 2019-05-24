@@ -16,7 +16,7 @@ if (config.globals.__DEV__) {
   require('electron-debug')()
 }
 
-debug.enable('record:*')
+debug.enable('jsipfs,record:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
@@ -115,9 +115,8 @@ app.on('ready', () => {
         Bootstrap: [],
         Addresses: {
 	      Swarm: [
-            '/ip4/0.0.0.0/tcp/4002',
             '/ip4/0.0.0.0/tcp/4003/ws',
-            '/ip4/159.203.117.254/tcp/9090/ws/p2p-websocket-star'
+            '/ip4/206.189.77.125/tcp/9090/ws/p2p-websocket-star'
 	      ]
         }
       },
