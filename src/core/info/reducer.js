@@ -12,7 +12,9 @@ export const initialState = new Map({
   state: null,
   orbitdb: new Map(),
   peers: new List(),
-  subs: new Map()
+  subs: new Map(),
+  bitswap: new Map(),
+  repo: new Map()
 })
 
 export function infoReducer (state = initialState, { payload, type }) {
@@ -24,7 +26,9 @@ export function infoReducer (state = initialState, { payload, type }) {
           ipfs: payload.ipfs,
           peers: payload.peers,
           orbitdb: payload.orbitdb,
-          subs: payload.subs
+          subs: payload.subs,
+          bitswap: payload.bitswap,
+          repo: payload.repo
         })
       })
 

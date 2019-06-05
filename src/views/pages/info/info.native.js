@@ -54,13 +54,31 @@ export default function () {
       <CopyText style={ItemStyles.container} text={info.ipfs.publicKey}>
         <Text style={TextStyles.small}>{info.ipfs.publicKey}</Text>
       </CopyText>
-      <Text style={ItemStyles.label}>IPFS Agent Version</Text>
-      <View style={ItemStyles.container}>
-        <Text style={TextStyles.small}>{info.ipfs.agentVersion}</Text>
-      </View>
-      <Text style={ItemStyles.label}>IPFS Protocol Version</Text>
-      <View style={ItemStyles.container}>
-        <Text style={TextStyles.small}>{info.ipfs.protocolVersion}</Text>
+      <View style={styles.table}>
+        <View style={styles.row}>
+          <View style={styles.cell}><Text style={ItemStyles.label}>IPFS Agent Version</Text></View>
+          <View style={styles.cell}><Text style={TextStyles.small}>{info.ipfs.agentVersion}</Text></View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.cell}><Text style={ItemStyles.label}>IPFS Protocol Version</Text></View>
+          <View style={styles.cell}><Text style={TextStyles.small}>{info.ipfs.protocolVersion}</Text></View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.cell}><Text style={ItemStyles.label}>Data Sent</Text></View>
+          <View style={styles.cell}><Text style={TextStyles.small}>{info.bitswap.dataSent}</Text></View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.cell}><Text style={ItemStyles.label}>Data Received</Text></View>
+          <View style={styles.cell}><Text style={TextStyles.small}>{info.bitswap.dataReceived}</Text></View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.cell}><Text style={ItemStyles.label}>Repo Objects</Text></View>
+          <View style={styles.cell}><Text style={TextStyles.small}>{info.repo.numObjects}</Text></View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.cell}><Text style={ItemStyles.label}>Repo Size</Text></View>
+          <View style={styles.cell}><Text style={TextStyles.small}>{parseFloat(info.repo.repoSize).toFixed(2)} Mb</Text></View>
+        </View>
       </View>
       <Text style={ItemStyles.label}>Subs</Text>
       <View style={styles.table}>{subs}</View>
