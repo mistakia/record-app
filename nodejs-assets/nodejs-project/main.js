@@ -16,7 +16,7 @@ debug.useColors = () => false // disable colors in log (fixes xcode issue)
 
 // Log Record / IPFS / OrbitDB
 const logger = debug('main')
-debug.enable('*') //main,jsipfs,record:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
+debug.enable('main,jsipfs,record:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 
 process.on('uncaughtException', (err) => {

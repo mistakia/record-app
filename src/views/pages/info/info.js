@@ -6,6 +6,8 @@ import CopyText from '@components/copy-text'
 export default function () {
   const { info } = this.props
 
+  console.log(info)
+
   const subs = Object.keys(info.subs).map((id, index) => {
     const subPeers = info.subs[id]
     return (
@@ -45,15 +47,43 @@ export default function () {
         <label>IPFS Public Key</label>
         <pre>{info.ipfs.publicKey}</pre>
       </CopyText>
-      <label>IPFS Agent Version</label>
-      <pre>{info.ipfs.agentVersion}</pre>
-      <label>IPFS Protocol Version</label>
-      <pre>{info.ipfs.protocolVersion}</pre>
+      <table>
+        <tbody>
+          <tr>
+            <th><label>IPFS Agent Version</label></th>
+            <td>{info.ipfs.agentVersion}</td>
+          </tr>
+          <tr>
+            <th><label>IPFS Protocol Version</label></th>
+            <td>{info.ipfs.protocolVersion}</td>
+          </tr>
+          <tr>
+            <th><label>Data Sent</label></th>
+            <td>{info.bitswap.dataSent}</td>
+          </tr>
+          <tr>
+            <th><label>Data Received</label></th>
+            <td>{info.bitswap.dataReceived}</td>
+          </tr>
+          <tr>
+            <th><label>Repo Objects</label></th>
+            <td>{info.repo.numObjects}</td>
+          </tr>
+          <tr>
+            <th><label>Repo Size</label></th>
+            <td>{parseFloat(info.repo.repoSize).toFixed(2)} Mb</td>
+          </tr>
+          <tr>
+            <th><label>Repo Version</label></th>
+            <td>{info.repo.version}</td>
+          </tr>
+        </tbody>
+      </table>
       <table>
         <thead>
           <tr>
-            <th>Peers</th>
-            <th>Topic</th>
+            <th># Peers</th>
+            <th>PubSub Topic</th>
           </tr>
         </thead>
         <tbody>
