@@ -8,7 +8,6 @@ const os = require('os')
 const fs = require('fs')
 const RecordNode = require('record-node')
 const debug = require('debug')
-const IPFS = require('ipfs')
 
 const config = require('./config/project.config')
 
@@ -16,7 +15,7 @@ if (config.globals.__DEV__) {
   require('electron-debug')()
 }
 
-debug.enable('jsipfs,record:*')
+debug.enable('ipfs,record:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
@@ -99,65 +98,27 @@ app.on('ready', () => {
   createWindow()
 
   try {
-    const ipfsConfig = {
-      init: {
-        bits: 2048
+    const orbitAddressPath = path.resolve(recorddir, 'address.txt')
+    const orbitAddress = fs.existsSync(orbitAddressPath) ?
+      fs.readFileSync(orbitAddressPath, 'utf8') : 'record'
+
+    logger.info(`Orbit Address: ${orbitAddress}`)
+    let opts = {
+      orbitdb: {
+        directory: path.resolve(recorddir, './orbitdb')
       },
-      preload: {
-        enabled: false
+      address: orbitAddress,
+      ipfs: {
+        repo: path.resolve(recorddir, './ipfs')
       },
-      repo: path.resolve(recorddir, './ipfs'),
-      EXPERIMENTAL: {
-        dht: false, // TODO: BRICKS COMPUTER
-        pubsub: true
-      },
-      config: {
-        Bootstrap: [],
-        Addresses: {
-	      Swarm: [
-            //'/ip4/0.0.0.0/tcp/4002/',
-            '/ip4/0.0.0.0/tcp/4003/ws/',
-            '/ip4/206.189.77.125/tcp/9090/ws/p2p-websocket-star/'
-	      ]
-        }
-      },
-      libp2p: {
-        config: {
-          relay: {
-            enabled: true
-          }
-        }
-      },
-      connectionManager: {
-        maxPeers: 100,
-        minPeers: 10,
-        pollInterval: 60000 // ms
-      }
+      api: true
     }
-    const ipfs = new IPFS(ipfsConfig)
-    ipfs.state.on('done', () => {
-      mainWindow.webContents.send('ipfs:state', ipfs.state._state)
-    })
-    ipfs.on('ready', async () => {
 
-      const orbitAddressPath = path.resolve(recorddir, 'address.txt')
-      const orbitAddress = fs.existsSync(orbitAddressPath) ?
-                           fs.readFileSync(orbitAddressPath, 'utf8') : undefined
-
-      logger.info(`Orbit Address: ${orbitAddress}`)
-
-      let opts = {
-        orbitdb: {
-          directory: path.resolve(recorddir, './orbitdb')
-        },
-        api: true
-      }
-
-      const record = new RecordNode(ipfs, opts)
+    const record = new RecordNode(opts)
+    record.on('ipfs:state', (state) => mainWindow.webContents.send('ipfs:state', state))
+    record.on('ready', async () => {
       try {
-        await record.init(orbitAddress)
         const log = await record.log.get()
-
         fs.writeFileSync(orbitAddressPath, record.address)
 
         mainWindow.webContents.send('ready', record.adresss)

@@ -17,22 +17,26 @@ const getArtwork = (content) => {
   }
 
   if (content.resolver.length) {
-    return content.resolver.find(r => r.thumbnail).thumbnail
+    const data = content.resolver.find(r => r.thumbnail)
+    return data && data.thumbnail
   }
 
-  return ''
+  return null
 }
 
 const getTitle = (content) => {
-  if (content.tags.title || content.tags.artist) {
+  if (content.tags.title && content.tags.artist) {
     return `${content.tags.artist} - ${content.tags.title}`
+  } else if (content.tags.title || content.tags.artist) {
+    return content.tags.artist || content.tags.title
   }
 
   if (content.resolver.length) {
-    return content.resolver.find(r => r.fulltitle).fulltitle
+    const data = content.resolver.find(r => r.fulltitle)
+    return data && data.fulltitle
   }
 
-  return ''
+  return null
 }
 
 const getUrl = (content) => {
@@ -41,9 +45,10 @@ const getUrl = (content) => {
   }
 
   if (content.resolver.length) {
-    return content.resolver.find(r => r.url).url
+    const data = content.resolver.find(r => r.url)
+    return data && data.url
   }
-  return ''
+  return null
 }
 
 export function createTrack (data) {
