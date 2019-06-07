@@ -11,9 +11,8 @@
   "dependencies": {
     "@babel/polyfill": "^7.4.4",
     "debug": "3.1.0",
-    "ipfs": "~0.34.4",
     "logplease": "1.2.14",
-    "record-node": "github:mistakia/record-node#b5b2840"
+    "record-node": "github:mistakia/record-node#6dabeae"
   },
   "devDependencies": {
     "patch-package": "^5.1.1"
