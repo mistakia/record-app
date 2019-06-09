@@ -25,6 +25,8 @@ export function getTracklistCursor(selectedTrackId, trackIds) {
     if (index > 0) previousTrackId = trackIds.get(index - 1)
   }
 
+  // TODO: feat: if !nextTrackId loadmore
+
   return {
     nextTrackId,
     previousTrackId,

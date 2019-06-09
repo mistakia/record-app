@@ -6,12 +6,13 @@ import Icon from '@components/icon'
 
 import './icon-button.styl'
 
-function IconButton ({ className, icon, label, onClick, type = 'button' }) {
+function IconButton ({ className, icon, label, onClick, type = 'button', disabled }) {
   const classNames = ['button__icon', `button__${icon}`, className]
 
   return (
     <Button
       className={classNames.join(' ')}
+      disabled={disabled}
       label={label}
       onClick={onClick}
       type={type}>
@@ -24,6 +25,7 @@ IconButton.propTypes = {
   className: PropTypes.string,
   icon: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
+  disabled: PropTypes.bool,
   onClick: PropTypes.func,
   type: PropTypes.oneOf(['button', 'reset', 'submit'])
 }

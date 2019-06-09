@@ -3,13 +3,14 @@ import PropTypes from 'prop-types'
 
 import './button.styl'
 
-function Button ({ children, className, label, onClick, type = 'button' }) {
+function Button ({ children, className, label, onClick, type = 'button', disabled = false }) {
   const classNames = ['button', className]
   return (
     <button
       aria-label={label}
       className={classNames.join(' ')}
       onClick={onClick}
+      disabled={disabled}
       type={type}>
       {children}
     </button>

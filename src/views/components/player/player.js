@@ -41,6 +41,7 @@ export default function Player ({
             icon='skip-previous'
             label='Skip to previous track'
             onClick={previousTrack}
+            disabled={!previousTrack}
           />
 
           <IconButton
@@ -53,6 +54,7 @@ export default function Player ({
             icon='skip-next'
             label='Skip to next track'
             onClick={nextTrack}
+            disabled={!nextTrack}
           />
           <div className='player-controls__title'>{track.title}</div>
 
