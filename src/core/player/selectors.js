@@ -38,5 +38,9 @@ export function getPlayerTracklist (state) {
 export function getPlayerTracklistCursor (state) {
   const trackId = getPlayerTrackId(state)
   const tracklist = getPlayerTracklist(state)
-  return getTracklistCursor(trackId, tracklist.trackIds)
+  if (tracklist) {
+    return getTracklistCursor(trackId, tracklist.trackIds)
+  }
+
+  return {}
 }
