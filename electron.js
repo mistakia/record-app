@@ -32,6 +32,7 @@ process.on('unhandledRejection', error => {
 logger.info(`Electron Node version: ${process.versions.node}`)
 
 // Module to control application life.
+let record
 const app = electron.app
 
 // const userDataPath = app.getPath('userData')
@@ -114,7 +115,7 @@ app.on('ready', () => {
       api: true
     }
 
-    const record = new RecordNode(opts)
+    record = new RecordNode(opts)
     record.on('ipfs:state', (state) => mainWindow.webContents.send('ipfs:state', state))
     record.on('ready', async () => {
       try {
@@ -147,6 +148,12 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+app.on('before-quit', async (event) => {
+  event.preventDefault()
+  await record.stop()
+  app.exit()
 })
 
 app.on('activate', function () {

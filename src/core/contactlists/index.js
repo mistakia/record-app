@@ -3,7 +3,7 @@ export {
   contactlistRequestActions,
   contactlistPostActions,
   contactlistDeleteActions,
-  suggestedContactlistRequestActions,
+  allContactlistRequestActions,
   peerContactlistRequestActions
 } from './actions'
 
@@ -11,11 +11,12 @@ export { contactlistSagas } from './sagas'
 
 export {
   getCurrentContactlist,
+  getCurrentContactlistContact,
   getPeerContactlist,
-  getSuggestedContactlist,
+  getAllContactlist,
   getContactsForCurrentContactlist,
   getContactsForPeerContactlist,
-  getContactsForSuggestedContactlist
+  getContactsForAllContactlist
 } from './selectors'
 
 export { contactlistsReducer } from './contactlists-reducer'

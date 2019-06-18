@@ -3,8 +3,8 @@ export {
   fetchFeed,
   fetchInfo,
   fetchPeers,
-  fetchProfile,
-  fetchSuggestedContacts,
+  fetchContact,
+  fetchAllContacts,
   fetchTags,
   postTag,
   deleteTag,
@@ -12,6 +12,6 @@ export {
   fetchTracks,
   postContact,
   deleteContact,
-  postProfile,
+  postAbout,
   postTrack
 } from './sagas'

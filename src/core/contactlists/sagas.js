@@ -3,13 +3,13 @@ import { push } from 'react-router-redux'
 
 import {
   PEER_CONTACTLIST_ID,
-  SUGGESTED_CONTACTLIST_ID
+  ALL_CONTACTLIST_ID
 } from '@core/constants'
 import { getApp } from '@core/app'
 import {
   fetchContacts,
   fetchPeers,
-  fetchSuggestedContacts,
+  fetchAllContacts,
   postContact,
   deleteContact
 } from '@core/api'
@@ -20,12 +20,12 @@ export function * loadContacts ({ payload }) {
   yield call(fetchContacts, { logId })
 }
 
-export function * loadPeers () {
+export function * loadPeerContacts () {
   yield call(fetchPeers, { logId: PEER_CONTACTLIST_ID })
 }
 
-export function * loadSuggested () {
-  yield call(fetchSuggestedContacts, { logId: SUGGESTED_CONTACTLIST_ID })
+export function * loadAllContacts () {
+  yield call(fetchAllContacts, { logId: ALL_CONTACTLIST_ID })
 }
 
 export function * addContact ({ payload }) {
@@ -59,12 +59,12 @@ export function * watchAddContactFulfilled () {
   yield takeLatest(contactlistActions.POST_CONTACT_FULFILLED, goToContacts)
 }
 
-export function * watchLoadPeers () {
-  yield takeLatest(contactlistActions.LOAD_PEER_CONTACTS, loadPeers)
+export function * watchLoadPeerContacts () {
+  yield takeLatest(contactlistActions.LOAD_PEER_CONTACTS, loadPeerContacts)
 }
 
-export function * watchLoadSuggested () {
-  yield takeLatest(contactlistActions.LOAD_SUGGESTED_CONTACTS, loadSuggested)
+export function * watchLoadAllContacts () {
+  yield takeLatest(contactlistActions.LOAD_ALL_CONTACTS, loadAllContacts)
 }
 
 export const contactlistSagas = [
@@ -72,6 +72,6 @@ export const contactlistSagas = [
   fork(watchAddContact),
   fork(watchRemoveContact),
   fork(watchAddContactFulfilled),
-  fork(watchLoadPeers),
-  fork(watchLoadSuggested)
+  fork(watchLoadPeerContacts),
+  fork(watchLoadAllContacts)
 ]

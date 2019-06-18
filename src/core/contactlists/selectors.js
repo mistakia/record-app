@@ -2,13 +2,18 @@ import { createSelector } from 'reselect'
 
 import {
   PEER_CONTACTLIST_ID,
-  SUGGESTED_CONTACTLIST_ID
+  ALL_CONTACTLIST_ID
 } from '@core/constants'
-import { getContacts } from '@core/contacts'
+import { getContacts, getContactByAddress, Contact } from '@core/contacts'
 import { Contactlist } from './contactlist'
 
 export function getContactlists (state) {
   return state.get('contactlists')
+}
+
+export function getCurrentContactlistId (state) {
+  let contactlists = getContactlists(state)
+  return contactlists.get('currentContactlistId')
 }
 
 export function getCurrentContactlist (state) {
@@ -16,14 +21,22 @@ export function getCurrentContactlist (state) {
   return contactlists.get(contactlists.get('currentContactlistId')) || new Contactlist()
 }
 
+export function getCurrentContactlistContact (state) {
+  const logId = getCurrentContactlistId(state)
+  if (!logId) {
+    return new Contact()
+  }
+  return getContactByAddress(state, logId)
+}
+
 export function getPeerContactlist (state) {
   let contactlists = getContactlists(state)
   return contactlists.get(PEER_CONTACTLIST_ID) || new Contactlist()
 }
 
-export function getSuggestedContactlist (state) {
+export function getAllContactlist (state) {
   let contactlists = getContactlists(state)
-  return contactlists.get(SUGGESTED_CONTACTLIST_ID) || new Contactlist()
+  return contactlists.get(ALL_CONTACTLIST_ID) || new Contactlist()
 }
 
 export const getCurrentContactIds = createSelector(
@@ -36,8 +49,8 @@ export const getPeerContactIds = createSelector(
   contactlist => contactlist.contactIds
 )
 
-export const getSuggestedContactIds = createSelector(
-  getSuggestedContactlist,
+export const getAllContactIds = createSelector(
+  getAllContactlist,
   contactlist => contactlist.contactIds
 )
 
@@ -57,8 +70,8 @@ export const getContactsForPeerContactlist = createSelector(
   }
 )
 
-export const getContactsForSuggestedContactlist = createSelector(
-  getSuggestedContactIds,
+export const getContactsForAllContactlist = createSelector(
+  getAllContactIds,
   getContacts,
   (contactIds, contacts) => {
     return contactIds.map(id => contacts.get(id))

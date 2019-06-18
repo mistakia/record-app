@@ -6,7 +6,7 @@ import {
   contactlistRequestActions,
   contactlistPostActions,
   contactlistDeleteActions,
-  suggestedContactlistRequestActions,
+  allContactlistRequestActions,
   peerContactlistRequestActions
 } from '@core/contactlists'
 import { feedRequestActions } from '@core/feed'
@@ -22,9 +22,11 @@ import {
   tracklistPostActions
 } from '@core/tracklists'
 import {
-  profileRequestActions,
-  profilePostActions
-} from '@core/profiles'
+  contactRequestActions
+} from '@core/contacts'
+import {
+  aboutPostActions
+} from '@core/about'
 
 function * fetchAPI (apiFunction, actions, opts = {}) {
   const { abort, request } = apiRequest(apiFunction, opts)
@@ -52,7 +54,7 @@ export const fetchContacts = fetch.bind(null, api.fetchContacts, contactlistRequ
 export const postContact = fetch.bind(null, api.postContact, contactlistPostActions)
 export const deleteContact = fetch.bind(null, api.deleteContact, contactlistDeleteActions)
 
-export const fetchSuggestedContacts = fetch.bind(null, api.fetchSuggestedContacts, suggestedContactlistRequestActions)
+export const fetchAllContacts = fetch.bind(null, api.fetchAllContacts, allContactlistRequestActions)
 export const fetchPeers = fetch.bind(null, api.fetchPeers, peerContactlistRequestActions)
 
 export const fetchFeed = fetch.bind(null, api.fetchFeed, feedRequestActions)
@@ -67,5 +69,5 @@ export const fetchTrack = fetch.bind(null, api.fetchTrack, trackRequestActions)
 export const fetchTracks = fetch.bind(null, api.fetchTracks, tracklistRequestActions)
 export const postTrack = fetch.bind(null, api.postTrack, tracklistPostActions)
 
-export const fetchProfile = fetch.bind(null, api.fetchProfile, profileRequestActions)
-export const postProfile = fetch.bind(null, api.postProfile, profilePostActions)
+export const fetchContact = fetch.bind(null, api.fetchContact, contactRequestActions)
+export const postAbout = fetch.bind(null, api.postAbout, aboutPostActions)

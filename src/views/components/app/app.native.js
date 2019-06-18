@@ -1,8 +1,6 @@
 import React from 'react'
 import nodejs from 'nodejs-mobile-react-native'
-import RNFS from 'react-native-fs'
 import {
-  AppState,
   Platform,
   StyleSheet,
   StatusBar,
@@ -30,11 +28,6 @@ export default class App extends React.Component {
 
   componentWillMount () {
     nodejs.start('bundle.js')
-    const msg = {
-      action: 'init',
-      data: { docsPath: RNFS.DocumentDirectoryPath }
-    }
-    nodejs.channel.send(JSON.stringify(msg))
 
     this.listener = (message) => {
       const msg = JSON.parse(message)
@@ -61,17 +54,6 @@ export default class App extends React.Component {
 
   componentWillUnmount () {
     if (this.listener) { nodejs.channel.removeListener('message', this.listener) }
-  }
-
-  componentDidMount () {
-    AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        nodejs.channel.send(JSON.stringify({ action: 'resume' }))
-      }
-      if (state === 'background') {
-        nodejs.channel.send(JSON.stringify({ action: 'suspend' }))
-      }
-    })
   }
 
   render () {

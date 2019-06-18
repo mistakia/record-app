@@ -64,7 +64,7 @@
     "react-router-dom": "^4.1.1",
     "react-router-native": "^4.2.0",
     "react-router-redux": "^5.0.0-alpha.9",
-    "record-node": "github:mistakia/record-node#6dabeae",
+    "record-node": "github:mistakia/record-node#35a7bed",
     "redux": "^4.0.0",
     "redux-immutable": "^4.0.0",
     "redux-saga": "^1.0.0-beta.1",
