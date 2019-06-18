@@ -29,7 +29,7 @@ const Contact = ({
   )
 
   const selfAction = (
-    <Link className='button' to='/edit-profile'>Edit</Link>
+    <Link className='button' to='/edit-about'>Edit</Link>
   )
 
   const contactAction = (contact.isMe

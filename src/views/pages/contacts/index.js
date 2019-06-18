@@ -6,12 +6,13 @@ import { getApp } from '@core/app'
 import {
   contactlistActions,
   getCurrentContactlist,
+  getCurrentContactlistContact,
   getContactsForCurrentContactlist
 } from '@core/contactlists'
-import { profileActions } from '@core/profiles'
+import { contactActions } from '@core/contacts'
 import Contactlist from '@components/contactlist'
 import PageLayout from '@layouts/page'
-import Profile from '@components/profile'
+import Contact from '@components/contact'
 
 class ContactsPage extends React.Component {
   componentWillMount () {
@@ -28,14 +29,14 @@ class ContactsPage extends React.Component {
   _load () {
     const { logId } = this.props.match.params
     this.props.loadContacts(logId)
-    this.props.loadProfile(logId)
+    this.props.loadContact(logId)
   }
 
   render () {
     const { logId } = this.props.match.params
-    const { app, contacts, displayLoadingIndicator } = this.props
+    const { app, contacts, displayLoadingIndicator, contact } = this.props
 
-    const head = <Profile />
+    const head = <Contact type='profile' contact={contact} />
 
     const showAdd = logId === app.address
     const body = <Contactlist {...{contacts, displayLoadingIndicator, showAdd}} />
@@ -50,16 +51,18 @@ const mapStateToProps = createSelector(
   getApp,
   getCurrentContactlist,
   getContactsForCurrentContactlist,
-  (app, contactlist, contacts) => ({
+  getCurrentContactlistContact,
+  (app, contactlist, contacts, contact) => ({
     displayLoadingIndicator: contactlist.isPending,
     contacts,
-    app
+    app,
+    contact
   })
 )
 
 const mapDispatchToProps = {
   loadContacts: contactlistActions.loadContacts,
-  loadProfile: profileActions.loadProfile
+  loadContact: contactActions.loadContact
 }
 
 export default connect(

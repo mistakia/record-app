@@ -2,7 +2,7 @@ import React from 'react'
 
 import PageLayout from '@layouts/page'
 
-export default class EditProfilePage extends React.Component {
+export default class EditAboutPage extends React.Component {
   constructor (props) {
     super(props)
 
@@ -11,7 +11,7 @@ export default class EditProfilePage extends React.Component {
 
   componentWillMount () {
     const { app } = this.props
-    this.props.loadProfile(app.address)
+    this.props.loadContact(app.address)
   }
 
   handleSubmit (event) {
@@ -22,7 +22,7 @@ export default class EditProfilePage extends React.Component {
     }
 
     if (data.name && data.location && data.bio) {
-      this.props.setProfile(data)
+      this.props.setAbout(data)
     }
 
     event.preventDefault()

@@ -31,12 +31,12 @@ export const api = {
     const url = 'http://localhost:3000/peers'
     return { url }
   },
-  fetchProfile ({ logId }) {
-    const url = `http://localhost:3000/profile${logId}`
+  fetchContact ({ logId }) {
+    const url = `http://localhost:3000/contact${logId}`
     return { url }
   },
-  fetchSuggestedContacts () {
-    const url = 'http://localhost:3000/suggested/contacts'
+  fetchAllContacts () {
+    const url = 'http://localhost:3000/contacts/all'
     return { url }
   },
   fetchTags ({ logId }) {
@@ -69,8 +69,8 @@ export const api = {
     const url = `http://localhost:3000/contacts?${toQueryString(data)}`
     return { url, ...DELETE }
   },
-  postProfile ({ data }) {
-    const url = 'http://localhost:3000/profile'
+  postAbout ({ data }) {
+    const url = 'http://localhost:3000/about'
     const post = POST(data)
     return { url, ...post }
   },

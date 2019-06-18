@@ -1,7 +1,7 @@
 //= ====================================
 //  GENERAL
 // -------------------------------------
-export const ITEMS_PER_LOAD = 20
+export const ITEMS_PER_LOAD = 10
 
 //= ====================================
 //  PLAYER
@@ -21,4 +21,4 @@ export const SESSION_TRACKLIST_ID = 'session'
 //  TRACKLISTS
 // -------------------------------------
 export const PEER_CONTACTLIST_ID = '/peers'
-export const SUGGESTED_CONTACTLIST_ID = '/suggested'
+export const ALL_CONTACTLIST_ID = '/all'

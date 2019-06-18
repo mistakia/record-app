@@ -71,7 +71,7 @@ const mapStateToProps = createSelector(
   (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks) => ({
     displayLoadingIndicator: tracklist.isPending,
     isPlaying,
-    isShuffling: isShuffling && tracklist.id == playerTracklistId,
+    isShuffling: isShuffling && tracklist.id === playerTracklistId,
     pause: audio.pause,
     play: audio.play,
     selectedTrackId: playerTrackId,
@@ -84,7 +84,7 @@ const mapStateToProps = createSelector(
 const mapDispatchToProps = {
   selectTrack: playerActions.playSelectedTrack,
   loadNextTracks: tracklistActions.loadNextTracks,
-  shuffle: playerActions.shuffleTracklist,
+  shuffle: playerActions.shuffleTracklist
 }
 
 export default connect(

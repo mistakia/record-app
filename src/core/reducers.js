@@ -6,7 +6,6 @@ import { contactlistsReducer } from './contactlists'
 import { feedReducer } from './feed'
 import { infoReducer } from './info'
 import { playerReducer, playerTimesReducer } from './player'
-import { profilesReducer } from './profiles'
 import { taglistsReducer } from './taglists'
 import { tracklistsReducer } from './tracklists'
 import { tracksReducer } from './tracks'
@@ -20,7 +19,6 @@ const rootReducer = asyncReducers => {
     info: infoReducer,
     player: playerReducer,
     playerTimes: playerTimesReducer,
-    profiles: profilesReducer,
     taglists: taglistsReducer,
     tracklists: tracklistsReducer,
     tracks: tracksReducer,

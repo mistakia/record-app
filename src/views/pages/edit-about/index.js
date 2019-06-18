@@ -2,22 +2,23 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { getApp } from '@core/app'
-import { profileActions, getContactForMyProfile } from '@core/profiles'
+import { contactActions, getContactMe } from '@core/contacts'
+import { aboutActions } from '@core/about'
 
-import EditProfilePage from './edit-profile'
+import EditAboutPage from './edit-about'
 
 const mapStateToProps = createSelector(
-  getContactForMyProfile,
+  getContactMe,
   getApp,
   (contact, app) => ({ contact, app })
 )
 
 const mapDispatchToProps = {
-  loadProfile: profileActions.loadProfile,
-  setProfile: profileActions.setProfile
+  loadContact: contactActions.loadContact,
+  setAbout: aboutActions.setAbout
 }
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(EditProfilePage)
+)(EditAboutPage)

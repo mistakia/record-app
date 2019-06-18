@@ -8,6 +8,7 @@ export { tracklistSagas } from './sagas'
 
 export {
   getCurrentTracklist,
+  getCurrentTracklistContact,
   getTracklistById,
   getTracklistCursor,
   getTracksForCurrentTracklist

@@ -5,7 +5,7 @@ import Button from '@components/button'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
 
-export default class EditProfilePage extends React.Component {
+export default class EditAboutPage extends React.Component {
   constructor (props) {
     super(props)
 
@@ -21,14 +21,14 @@ export default class EditProfilePage extends React.Component {
 
   componentWillMount () {
     const { app } = this.props
-    this.props.loadProfile(app.address)
+    this.props.loadContact(app.address)
   }
 
   handleSubmit () {
     const { name, location, bio } = this.state
 
     if (name && location && bio) {
-      this.props.setProfile({ name, location, bio })
+      this.props.setAbout({ name, location, bio })
     }
   }
 

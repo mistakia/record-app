@@ -7,9 +7,9 @@ import PageLayout from '@layouts/page'
 export default function () {
   const {
     peerContactlist,
-    suggestedContactlist,
+    allContactlist,
     peerContacts,
-    suggestedContacts
+    allContacts
   } = this.props
 
   const body = (
@@ -18,10 +18,10 @@ export default function () {
       <Contactlist
         contacts={peerContacts}
         displayLoadingIndicator={peerContactlist.isPending} />
-      <Heading title='Suggested' />
+      <Heading title='All' />
       <Contactlist
-        contacts={suggestedContacts}
-        displayLoadingIndicator={suggestedContactlist.isPending} />
+        contacts={allContacts}
+        displayLoadingIndicator={allContactlist.isPending} />
     </div>
   )
 

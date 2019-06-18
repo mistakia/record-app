@@ -4,7 +4,7 @@ import { call, fork, put, select, take } from 'redux-saga/effects'
 import { appActions } from '@core/app'
 import { fetchTracks, fetchTrack } from '@core/api'
 import { PLAYER_INITIAL_VOLUME, ITEMS_PER_LOAD } from '@core/constants'
-import { tracklistActions, getCurrentTracklist } from '@core/tracklists'
+import { tracklistActions } from '@core/tracklists'
 import { playerActions } from './actions'
 import { audio, initAudio, setVolume } from '@core/audio'
 import { getPlayer, getPlayerTrack, getPlayerTracklist, getPlayerTracklistCursor } from './selectors'
@@ -28,7 +28,7 @@ export function * playNextTrack () {
 
 export function * shuffleTracklist ({ tracklistId }) {
   const params = { random: true }
-  yield call (fetchTrack, { logId: tracklistId, params })
+  yield call(fetchTrack, { logId: tracklistId, params })
 }
 
 export function * playSelectedTrack () {

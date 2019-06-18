@@ -3,13 +3,13 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { parseQueryString } from '@core/utils'
-import { tracklistActions } from '@core/tracklists'
-import { profileActions } from '@core/profiles'
+import { tracklistActions, getCurrentTracklistContact } from '@core/tracklists'
+import { contactActions } from '@core/contacts'
 import { taglistActions } from '@core/taglists'
 import { getApp } from '@core/app'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
-import Profile from '@components/profile'
+import Contact from '@components/contact'
 
 export class TracksPage extends React.Component {
   componentWillMount () {
@@ -26,18 +26,17 @@ export class TracksPage extends React.Component {
 
   _load () {
     const { logId } = this.props.match.params
-    console.log(logId)
     const { tags } = parseQueryString(this.props.location.search)
     this.props.loadTracks(logId, tags || '')
     this.props.loadTags(logId)
-    this.props.loadProfile(logId)
+    this.props.loadContact(logId)
   }
 
   render () {
     const { logId } = this.props.match.params
-    const { app } = this.props
+    const { app, contact } = this.props
 
-    const head = <Profile />
+    const head = <Contact type='profile' contact={contact} />
 
     const showAdd = logId === app.address
     const body = <Tracklist showAdd={showAdd} />
@@ -50,12 +49,13 @@ export class TracksPage extends React.Component {
 
 const mapStateToProps = createSelector(
   getApp,
-  (app) => ({app})
+  getCurrentTracklistContact,
+  (app, contact) => ({ app, contact })
 )
 
 const mapDispatchToProps = {
   loadTracks: tracklistActions.loadTracks,
-  loadProfile: profileActions.loadProfile,
+  loadContact: contactActions.loadContact,
   loadTags: taglistActions.loadTags
 }
 

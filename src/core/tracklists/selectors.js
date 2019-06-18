@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect'
 
+import { getContactByAddress } from '@core/contacts'
 import { getTracks } from '@core/tracks'
 
 export function getTracklists (state) {
@@ -10,12 +11,22 @@ export function getTracklistById (state, logId) {
   return getTracklists(state).get(logId)
 }
 
+export function getCurrentTracklistId (state) {
+  const tracklists = getTracklists(state)
+  return tracklists.get('currentTracklistId')
+}
+
 export function getCurrentTracklist (state) {
   let tracklists = getTracklists(state)
   return tracklists.get(tracklists.get('currentTracklistId'))
 }
 
-export function getTracklistCursor(selectedTrackId, trackIds) {
+export function getCurrentTracklistContact (state) {
+  const logId = getCurrentTracklistId(state)
+  return getContactByAddress(state, logId)
+}
+
+export function getTracklistCursor (selectedTrackId, trackIds) {
   let index = trackIds.indexOf(selectedTrackId)
   let nextTrackId = null
   let previousTrackId = null

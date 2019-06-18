@@ -5,9 +5,9 @@ import { createSelector } from 'reselect'
 import {
   contactlistActions,
   getPeerContactlist,
-  getSuggestedContactlist,
+  getAllContactlist,
   getContactsForPeerContactlist,
-  getContactsForSuggestedContactlist
+  getContactsForAllContactlist
 } from '@core/contactlists'
 
 import render from './explore'
@@ -18,8 +18,8 @@ class ExplorePage extends React.Component {
   }
 
   _load () {
-    this.props.loadPeers()
-    this.props.loadSuggested()
+    this.props.loadPeerContacts()
+    this.props.loadAllContacts()
   }
 
   render () {
@@ -29,20 +29,20 @@ class ExplorePage extends React.Component {
 
 const mapStateToProps = createSelector(
   getPeerContactlist,
-  getSuggestedContactlist,
+  getAllContactlist,
   getContactsForPeerContactlist,
-  getContactsForSuggestedContactlist,
-  (peerContactlist, suggestedContactlist, peerContacts, suggestedContacts) => ({
+  getContactsForAllContactlist,
+  (peerContactlist, allContactlist, peerContacts, allContacts) => ({
     peerContactlist,
-    suggestedContactlist,
+    allContactlist,
     peerContacts,
-    suggestedContacts
+    allContacts
   })
 )
 
 const mapDispatchToProps = {
-  loadSuggested: contactlistActions.loadSuggested,
-  loadPeers: contactlistActions.loadPeers
+  loadAllContacts: contactlistActions.loadAllContacts,
+  loadPeerContacts: contactlistActions.loadPeerContacts
 }
 
 export default connect(
