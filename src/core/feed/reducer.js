@@ -32,7 +32,7 @@ function mergeContent (content, collection) {
     items.push({
       contactId: item.contactId,
       timestamp: item.timestamp,
-      type: item.type,
+      type: item.entryType,
       id: item.entryId
     })
   }

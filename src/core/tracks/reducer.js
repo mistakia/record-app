@@ -23,7 +23,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
     case feedActions.FETCH_FEED_FULFILLED:
       return state.withMutations(tracks => {
         payload.data.forEach(feedData => {
-          if (feedData.type === 'track') {
+          if (feedData.entryType === 'track') {
             tracks.set(feedData.content._id, createTrack(feedData.content))
           }
         })

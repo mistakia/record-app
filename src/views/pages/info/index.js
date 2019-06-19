@@ -2,6 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
+import { getApp } from '@core/app'
 import { getInfo, infoActions } from '@core/info'
 
 import render from './info'
@@ -18,7 +19,8 @@ class InfoPage extends React.Component {
 
 const mapStateToProps = createSelector(
   getInfo,
-  (info) => ({info})
+  getApp,
+  (info, app) => ({info, app})
 )
 
 const mapDispatchToProps = {

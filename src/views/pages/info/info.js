@@ -5,8 +5,7 @@ import CopyText from '@components/copy-text'
 
 export default function () {
   const { info } = this.props
-
-  console.log(info)
+  const { app } = this.props
 
   const subs = Object.keys(info.subs).map((id, index) => {
     const subPeers = info.subs[id]
@@ -29,8 +28,6 @@ export default function () {
 
   const body = (
     <div>
-      <label>State</label>
-      <pre>{info.state}</pre>
       <CopyText text={info.orbitdb.address}>
         <label>Orbit DB Address</label>
         <pre>{info.orbitdb.address}</pre>
@@ -49,6 +46,14 @@ export default function () {
       </CopyText>
       <table>
         <tbody>
+          <tr>
+            <th><label>IPFS State</label></th>
+            <td>{info.state}</td>
+          </tr>
+          <tr>
+            <th><label>OrbitDB State</label></th>
+            <td>{app.isReplicating ? 'Replicating' : 'Offline'}</td>
+          </tr>
           <tr>
             <th><label>IPFS Agent Version</label></th>
             <td>{info.ipfs.agentVersion}</td>
