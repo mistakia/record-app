@@ -1,4 +1,5 @@
 import React from 'react'
+import { connect } from 'react-redux'
 import nodejs from 'nodejs-mobile-react-native'
 import {
   Platform,
@@ -11,6 +12,7 @@ import {
 import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
+import ReplicationProgress from '@components/replication-progress'
 
 const AppStatusBar = ({backgroundColor, ...props}) => (
   <View style={[styles.statusBar, { backgroundColor }]}>
@@ -18,7 +20,7 @@ const AppStatusBar = ({backgroundColor, ...props}) => (
   </View>
 )
 
-export default class App extends React.Component {
+class App extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -28,18 +30,22 @@ export default class App extends React.Component {
 
   componentWillMount () {
     nodejs.start('bundle.js')
+    nodejs.channel.send(JSON.stringify({ action: 'init' }))
 
     this.listener = (message) => {
       const msg = JSON.parse(message)
       switch (msg.action) {
         case 'ready':
           this.props.init(msg.data)
-          return nodejs.channel.removeListener('message', this.listener)
+          break
 
         case 'ipfs:state':
-          return this.setState({
-            ipfs: msg.data
-          })
+          this.setState({ ipfs: msg.data })
+          break
+
+        case 'redux':
+          this.props.dispatch(msg.data)
+          break
 
         default:
           console.log(`Invalid action: ${msg.action}`)
@@ -71,6 +77,7 @@ export default class App extends React.Component {
         <Menu />
         <Routes />
         <Player />
+        <ReplicationProgress />
       </View>
     )
   }
@@ -93,3 +100,5 @@ const styles = StyleSheet.create({
     paddingBottom: 50
   }
 })
+
+export default connect()(App)

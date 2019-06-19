@@ -89,6 +89,11 @@ function clearData () {
   })
 }
 
+const sendReady = () => {
+  const { address, isReplicating } = record
+  mainWindow.webContents.send('ready', { address, isReplicating })
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', () => {
@@ -108,6 +113,9 @@ app.on('ready', () => {
       orbitdb: {
         directory: path.resolve(recorddir, './orbitdb')
       },
+      store: {
+        replicationConcurrency: 128
+      },
       address: orbitAddress,
       ipfs: {
         repo: path.resolve(recorddir, './ipfs')
@@ -119,14 +127,17 @@ app.on('ready', () => {
     record.on('ipfs:state', (state) => mainWindow.webContents.send('ipfs:state', state))
     record.on('ready', async () => {
       try {
+        sendReady()
+        record.on('redux', (data) => mainWindow.webContents.send('redux', data))
+        mainWindow.webContents.on('did-finish-load', sendReady)
+
         const log = await record.log.get()
         fs.writeFileSync(orbitAddressPath, record.address)
 
-        mainWindow.webContents.send('ready', record.adresss)
-        mainWindow.webContents.on('did-finish-load', () => {
-          // TODO: check if ipfs status first
-          mainWindow.webContents.send('ready', record.address)
-        })
+        setTimeout(() => {
+          record.contacts.connect()
+        }, 5000)
+
       } catch (e) {
         console.log(e)
       }

@@ -19,12 +19,40 @@ export function contactsReducer (state = new Map(), {payload, type}) {
     case feedActions.FETCH_FEED_FULFILLED:
       return state.withMutations(contacts => {
         payload.data.forEach(feedData => {
-          if (feedData.type === 'contact') {
-            contacts.set(feedData.content._id, createContact(feedData.content))
+          if (feedData.entryType === 'contact') {
+            contacts.set(feedData.entryId, createContact(feedData.content))
           }
 
           contacts.set(feedData.contactId, createContact(feedData.contact))
         })
+      })
+
+    case contactActions.CONTACT_REPLICATED:
+      return state.withMutations(contacts => {
+        contacts.setIn([payload.contactId, 'replicationStats'], payload.replicationStats)
+        contacts.setIn([payload.contactId, 'replicationStatus'], payload.replicationStatus)
+      })
+
+    case contactActions.CONTACT_REPLICATE_PROGRESS:
+      return state.withMutations(contacts => {
+        contacts.setIn([payload.contactId, 'replicationStats'], payload.replicationStats)
+        contacts.setIn([payload.contactId, 'replicationStatus'], payload.replicationStatus)
+      })
+
+    case contactActions.CONTACT_CONNECTED:
+      return state.withMutations(contacts => {
+        const contact = contacts.get(payload.contactId)
+        if (contact) {
+          contacts.setIn([payload.contactId, 'isReplicating'], true)
+        }
+      })
+
+    case contactActions.CONTACT_DISCONNECTED:
+      return state.withMutations(contacts => {
+        const contact = contacts.get(payload.contactId)
+        if (contact) {
+          contacts.setIn([payload.contactId, 'isReplicating'], false)
+        }
       })
 
     case contactActions.FETCH_CONTACT_FULFILLED:

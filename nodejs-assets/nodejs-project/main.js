@@ -22,11 +22,8 @@ const recorddir = path.resolve(docsPath, './record')
 if (!fs.existsSync(recorddir)) { fs.mkdirSync(recorddir) }
 logger(`Record Dir: ${recorddir}`)
 
-const sendState = (state) => {
-  rnBridge.channel.send(JSON.stringify({
-    action: 'ipfs:state',
-    data: state
-  }))
+const sendApp = (action, data) => {
+  rnBridge.channel.send(JSON.stringify({ action, data }))
 }
 
 let record
@@ -83,7 +80,7 @@ try {
 
   logger('Starting Record & IPFS')
   record = new RecordNode(opts)
-  record.on('ipfs:state', (state) => sendState(state))
+  record.on('ipfs:state', (state) => sendApp('ipfs:state', state))
   record.on('ready', async () => {
     try {
       const log = await record.log.get()
@@ -93,10 +90,31 @@ try {
       console.log(e)
     }
 
-    rnBridge.channel.send(JSON.stringify({ action: 'ready', data: record.address }))
+    record.on('redux', (data) => sendApp('redux', data))
+    const { address, isReplicating } = record
+    sendApp('ready', { address, isReplicating })
+
+    setTimeout(() => { record.contacts.connect() }, 5000)
   })
 
 } catch (e) {
   logger(e)
-  sendState('failed')
+  sendApp('ipfs:state', 'failed')
 }
+
+rnBridge.channel.on('message', (message) => {
+  const msg = JSON.parse(message)
+  console.log(message)
+  if (msg.action === 'init') {
+    if (record._ipfs.state.state() === 'running') {
+      const { address, isReplicating } = record
+      sendApp('ready', { address, isReplicating })
+    } else {
+      sendApp('ipfs:state', 'failed')
+      /* record.on('ready' () => {
+       *   const { address, isReplicating } = record
+       *   sendApp('ready', { address, isReplicating })
+       * })         */
+    }
+  }
+})
