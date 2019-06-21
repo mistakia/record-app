@@ -312940,14 +312940,14 @@ function () {
 
               case 10:
                 if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-                  _context.next = 25;
+                  _context.next = 26;
                   break;
                 }
 
                 _step2$value = _slicedToArray(_step2.value, 1), entryHash = _step2$value[0];
 
                 if (entryHashes.includes(entryHash)) {
-                  _context.next = 22;
+                  _context.next = 23;
                   break;
                 }
 
@@ -312956,55 +312956,63 @@ function () {
 
               case 15:
                 entry = _context.sent;
+
+                if (!(entry.payload.op === 'PUT')) {
+                  _context.next = 22;
+                  break;
+                }
+
                 entry.payload.value.contentCID = entry.payload.value.content.toBaseEncodedString('base58btc');
-                _context.next = 19;
+                _context.next = 20;
                 return oplog._storage.dag.get(entry.payload.value.content);
 
-              case 19:
+              case 20:
                 dagNode = _context.sent;
                 entry.payload.value.content = dagNode.value;
-                values.push(entry);
 
               case 22:
+                values.push(entry);
+
+              case 23:
                 _iteratorNormalCompletion2 = true;
                 _context.next = 10;
                 break;
 
-              case 25:
-                _context.next = 31;
+              case 26:
+                _context.next = 32;
                 break;
 
-              case 27:
-                _context.prev = 27;
+              case 28:
+                _context.prev = 28;
                 _context.t0 = _context["catch"](8);
                 _didIteratorError2 = true;
                 _iteratorError2 = _context.t0;
 
-              case 31:
-                _context.prev = 31;
+              case 32:
                 _context.prev = 32;
+                _context.prev = 33;
 
                 if (!_iteratorNormalCompletion2 && _iterator2["return"] != null) {
                   _iterator2["return"]();
                 }
 
-              case 34:
-                _context.prev = 34;
+              case 35:
+                _context.prev = 35;
 
                 if (!_didIteratorError2) {
-                  _context.next = 37;
+                  _context.next = 38;
                   break;
                 }
 
                 throw _iteratorError2;
 
-              case 37:
-                return _context.finish(34);
-
               case 38:
-                return _context.finish(31);
+                return _context.finish(35);
 
               case 39:
+                return _context.finish(32);
+
+              case 40:
                 // Reverse new Hashes and add to Index
                 values.sort(Log.Entry.compare).reverse().reduce(reducer, {}); // Build tags Index
 
@@ -313012,12 +313020,12 @@ function () {
 
                 this.sort();
 
-              case 42:
+              case 43:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, this, [[8, 27, 31, 39], [32,, 34, 38]]);
+        }, _callee, this, [[8, 28, 32, 40], [33,, 35, 39]]);
       }));
 
       function updateIndex(_x, _x2) {
@@ -314237,9 +314245,13 @@ module.exports = function (self) {
                 dagNode = _context5.sent;
                 entry.payload.value.content = dagNode.value;
                 content = entry.payload.value.content;
-                entry.payload.value.content.hash = content.hash.toBaseEncodedString('base58btc');
+
+                if (CID.isCID(content.hash)) {
+                  entry.payload.value.content.hash = content.hash.toBaseEncodedString('base58btc');
+                }
+
                 entry.payload.value.content.artwork = content.artwork.map(function (a) {
-                  return a.toBaseEncodedString('base58btc');
+                  return CID.isCID(a) ? a.toBaseEncodedString('base58btc') : a;
                 });
                 return _context5.abrupt("return", entry);
 
