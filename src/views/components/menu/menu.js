@@ -9,7 +9,6 @@ const Menu = ({ app }) => (
     <Link to='/explore'>Explore</Link>
     <Link to='/info'>Info</Link>
     <Link to={`/tracks${app.address}`}>Tracks</Link>
-    <Link to={`/contacts${app.address}`}>Contacts</Link>
   </div>
 )
 

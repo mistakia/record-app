@@ -12,7 +12,7 @@
     "@babel/polyfill": "^7.4.4",
     "debug": "3.1.0",
     "logplease": "1.2.14",
-    "record-node": "github:mistakia/record-node#55e216a"
+    "record-node": "github:mistakia/record-node#0cf3943"
   },
   "devDependencies": {
     "patch-package": "^5.1.1"
