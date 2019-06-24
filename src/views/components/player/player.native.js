@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 
-import AudioTimeline from '@components/audio-timeline'
+import PlayerTimeline from '@components/player-timeline'
 import IconButton from '@components/icon-button'
 
 export default function Player ({
@@ -19,7 +19,7 @@ export default function Player ({
 
   return (
     <View style={styles.player}>
-      <AudioTimeline />
+      <PlayerTimeline />
       <Text style={styles.text}>{track.title}</Text>
       <IconButton
         style={styles.playContainer}

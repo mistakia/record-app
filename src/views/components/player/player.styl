@@ -3,22 +3,21 @@ $textColor = rgba(255,255,255,0.6)
 
 @keyframes show-player
   0%
-      top -80px
+      bottom -80px
   100%
-      top -10px
+      bottom -10px
 
 
 .player
-  fixed top right
+  fixed bottom right
   z-index 10002
   display block
   transform translateZ(0)
-  box-shadow 0 -3px 0 0 rgba(0, 0, 0, .1)
   width 100%
   height $playerHeight
   color $textColor
 
-  max-width 400px
+  max-width 60%
   background #2d2e2f
   transition all 0.35s ease
 
@@ -30,17 +29,11 @@ $textColor = rgba(255,255,255,0.6)
     height 100vh
 
 .player__artwork
-  height $playerHeight
+  height 180px
+  margin-bottom 110px
 
   img
     max-height 100%
-
-.player-timeline
-  fixed top right left
-  z-index 10003
-  height 4px
-  background #3a3b3c
-  cursor pointer
 
 .player__controls
   display flex
@@ -62,9 +55,6 @@ $textColor = rgba(255,255,255,0.6)
 
     &:active
       background rgba(255, 255, 255, 0.15)
-
-.player-controls__time
-  padding 0 10px
 
 .player-controls__title
   flex 1

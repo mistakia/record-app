@@ -4,7 +4,7 @@ export {
   tracklistRequestActions,
   tracklistPostActions
 } from './actions'
-export { tracklistSagas } from './sagas'
+export { goToTracks, tracklistSagas } from './sagas'
 
 export {
   getCurrentTracklist,

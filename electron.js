@@ -59,7 +59,8 @@ function createWindow () {
     minHeight: 475,
     maxWidth: 1000,
     maxHeight: 800,
-    show: false
+    show: false,
+    titleBarStyle: 'hiddenInset'
   })
 
   const indexUrl = config.globals.__DEV__
@@ -128,7 +129,12 @@ app.on('ready', () => {
     record.on('ready', async () => {
       try {
         sendReady()
-        record.on('redux', (data) => mainWindow.webContents.send('redux', data))
+        record.on('redux', (data) => {
+          if (data.type === 'TRACK_ADDED') {
+            mainWindow.show()
+          }
+          mainWindow.webContents.send('redux', data)
+        })
         mainWindow.webContents.on('did-finish-load', sendReady)
 
         const log = await record.log.get()
