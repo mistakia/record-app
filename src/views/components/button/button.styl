@@ -15,7 +15,8 @@ button
     vertical-align middle
     text-align center
     color rgba(0,0,0,0.44)
-    &:hover
+    &:hover:not(:disabled)
+    &:hover:not([disabled])
       background #f0f0f0
       color rgba(0,0,0,0.88)
       text-decoration underline

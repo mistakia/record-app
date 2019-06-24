@@ -1,16 +1,12 @@
 import { call, fork, takeLatest } from 'redux-saga/effects'
 
-import history from '@core/history'
 import { postAbout } from '@core/api'
 import { aboutActions } from './actions'
+import { goBack } from '@core/app'
 
 export function * setAbout ({ payload }) {
   const { data } = payload
   yield call(postAbout, { data })
-}
-
-export function * goBack () {
-  yield call(history.goBack)
 }
 
 export function * watchSetAbout () {
