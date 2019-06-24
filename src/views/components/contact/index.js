@@ -9,15 +9,15 @@ const ContactBase = ({ removeContact, contact, ...props }) => {
   }
 
   const contactName = contact.isMe
-    ? (contact.name || 'set your name')
+    ? (contact.name || contact.address)
     : (contact.alias || contact.name)
 
   const contactLocation = contact.isMe
-    ? (contact.location || 'set your location')
+    ? (contact.location || 'Location')
     : contact.location
 
   const contactBio = contact.isMe
-    ? (contact.bio || 'set your bio')
+    ? (contact.bio || 'Bio')
     : contact.bio
 
   const disconnect = (event) => {

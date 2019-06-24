@@ -73,7 +73,7 @@ export function createContact (data) {
     address: data.content.address,
     alias: data.content.alias,
     avatar: data.content.avatar || data.avatar,
-    name: data.content.name, // || shortAddress(data.content.address),
+    name: data.content.name || shortAddress(data.content.address),
     location: data.content.location,
     bio: data.content.bio,
     haveContact: !!data.haveContact,
