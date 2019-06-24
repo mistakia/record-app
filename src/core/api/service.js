@@ -74,7 +74,7 @@ export const api = {
     const post = POST(data)
     return { url, ...post }
   },
-  postTrack ({ logId, data }) {
+  postTrack ({ data }) {
     const url = 'http://localhost:3000/tracks'
     const post = POST(data)
     return { url, ...post }

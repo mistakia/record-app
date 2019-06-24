@@ -1,8 +1,14 @@
 import React from 'react'
 import { connect } from 'react-redux'
 
+import Button from '@components/button'
 import { tracklistActions } from '@core/tracklists'
 import PageLayout from '@layouts/page'
+import Heading from '@components/heading'
+
+import './new-track.styl'
+
+const { dialog } = window.require('electron').remote
 
 export class NewTrackPage extends React.Component {
   constructor (props) {
@@ -11,15 +17,26 @@ export class NewTrackPage extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
-  handleSubmit (event) {
-    const data = {
-      url: event.target.url.value,
-      title: event.target.title.value
-    }
-    const { app } = this.props
+  showDialog (event) {
+    dialog.showOpenDialog({
+      title: 'Add Track(s)',
+      properties: ['openFile', 'openDirectory'],
+      message: 'Select a file or folder'
+    }, (filepaths) => {
+      if (!filepaths || !filepaths.length) return
 
-    if (data.url && data.title) {
-      this.props.addTrack(app.address, data)
+      const file = filepaths[0]
+      if (file) {
+        this.props.addTrack({ file })
+      }
+    })
+  }
+
+  handleSubmit (event) {
+    const url = event.target.url.value
+
+    if (url) {
+      this.props.addTrack({ url })
     }
 
     event.preventDefault()
@@ -31,17 +48,16 @@ export class NewTrackPage extends React.Component {
     )
 
     const body = (
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          Title
-          <input type='text' name='title' placeholder='Track title' />
-        </label>
-        <label>
-          Url
-          <input type='text' name='url' placeholder='Track url' />
-        </label>
-        <input className='button' type='submit' value='Submit' />
-      </form>
+      <div id='new-track'>
+        <Button onClick={this.showDialog.bind(this)} className='add-track-file'>Select From Computer</Button>
+        <Heading title='or' center />
+        <form onSubmit={this.handleSubmit.bind(this)}>
+          <label>
+            <input type='text' name='url' placeholder='Paste URL' />
+          </label>
+          <input className='button' type='submit' value='Submit' />
+        </form>
+      </div>
     )
 
     return (

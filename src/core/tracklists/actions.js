@@ -97,10 +97,9 @@ export const tracklistActions = {
     }
   }),
 
-  addTrack: (logId, data) => ({
+  addTrack: (data) => ({
     type: tracklistActions.ADD_TRACK,
     payload: {
-      logId,
       data
     }
   })

@@ -38,8 +38,8 @@ export function * loadNextTracks () {
 }
 
 export function * addTrack ({ payload }) {
-  const { logId, data } = payload
-  yield call(postTrack, { logId, data })
+  const { data } = payload
+  yield call(postTrack, { data })
 }
 
 export function * goToTracks () {
