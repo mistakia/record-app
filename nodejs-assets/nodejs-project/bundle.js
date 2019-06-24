@@ -18653,31 +18653,118 @@ module.exports = Queue;
 },{}],122:[function(require,module,exports){
 "use strict";
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+  return obj;
+}
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
 
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  return Constructor;
+}
 
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+}
 
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance");
+}
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+function _iterableToArray(iter) {
+  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+}
 
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) {
+      arr2[i] = arr[i];
+    }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+    return arr2;
+  }
+}
 
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+}
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance");
+}
+
+function _iterableToArrayLimit(arr, i) {
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+  var _e = undefined;
+
+  try {
+    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+
+function _typeof(obj) {
+  if (typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol") {
+    _typeof = function _typeof(obj) {
+      return _typeof2(obj);
+    };
+  } else {
+    _typeof = function _typeof(obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : _typeof2(obj);
+    };
+  }
+
+  return _typeof(obj);
+}
 
 (function (global, factory) {
   (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? factory(exports) : typeof define === 'function' && define.amd ? define(['exports'], factory) : factory(global.async = {});
@@ -18755,6 +18842,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       return fn.call(this, args, callback);
     };
   }
+  /* istanbul ignore file */
+
 
   var hasSetImmediate = typeof setImmediate === 'function' && setImmediate;
   var hasNextTick = (typeof process === "undefined" ? "undefined" : _typeof(process)) === 'object' && typeof process.nextTick === 'function';
@@ -19088,8 +19177,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       awaiting = true;
       generator.next().then(function (_ref) {
         var value = _ref.value,
-            iterDone = _ref.done;
-        //console.log('got value', value)
+            iterDone = _ref.done; //console.log('got value', value)
+
         if (canceled || done) return;
         awaiting = false;
 
@@ -19386,13 +19475,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
    * function.
    * @param {Function} [callback] - the final argument should be the callback,
    * called when all functions have completed processing.
-   * @returns {Function} - If only the first argument, `fns`, is provided, it will
-   * return a function which lets you pass in the arguments as if it were a single
-   * function call. The signature is `(..args, callback)`. If invoked with any
-   * arguments, `callback` is required.
+   * @returns {AsyncFunction} - Returns a function that takes no args other than
+   * an optional callback, that is the result of applying the `args` to each
+   * of the functions.
    * @example
    *
-   * async.applyEach([enableSearch, updateSchema], 'bucket', (err, results) => {
+   * const appliedFn = async.applyEach([enableSearch, updateSchema], 'bucket')
+   *
+   * appliedFn((err, results) => {
    *     // results[0] is the results for `enableSearch`
    *     // results[1] is the results for `updateSchema`
    * });
@@ -19400,7 +19490,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
    * // partial application example:
    * async.each(
    *     buckets,
-   *     async.applyEach([enableSearch, updateSchema]),
+   *     async (bucket) => async.applyEach([enableSearch, updateSchema], bucket)(),
    *     callback
    * );
    */
@@ -19470,9 +19560,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
    * function.
    * @param {Function} [callback] - the final argument should be the callback,
    * called when all functions have completed processing.
-   * @returns {Function} - If only the first argument is provided, it will return
-   * a function which lets you pass in the arguments as if it were a single
-   * function call.
+   * @returns {AsyncFunction} - A function, that when called, is the result of
+   * appling the `args` to the list of functions.  It takes no args, other than
+   * a callback.
    */
 
   var applyEachSeries = applyEach(mapSeries$1);
@@ -19764,8 +19854,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return callback[PROMISE_SYMBOL];
   }
 
-  var FN_ARGS = /^(?:async\s+)?(?:function)?\s*[^(]*\(\s*([^)]+)\s*\)(?:\s*{)/m;
-  var ARROW_FN_ARGS = /^(?:async\s+)?(?:function\s+)?\(?\s*([^)^=]+)\s*\)?(?:\s*=>)/m;
+  var FN_ARGS = /^(?:async\s+)?(?:function)?\s*\w*\s*\(\s*([^)]+)\s*\)(?:\s*{)/;
+  var ARROW_FN_ARGS = /^(?:async\s+)?\(?\s*([^)=]+)\s*\)?(?:\s*=>)/;
   var FN_ARG_SPLIT = /,/;
   var FN_ARG = /(=.+)?(\s*)$/;
   var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
@@ -20103,31 +20193,30 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
     var processingScheduled = false;
 
-    function _insert(data, insertAtFront, callback) {
+    function _insert(data, insertAtFront, rejectOnError, callback) {
       if (callback != null && typeof callback !== 'function') {
         throw new Error('task callback must be a function');
       }
 
       q.started = true;
-      /*if (Array.isArray(data)) {
-           return data.map(datum => _insert(datum, insertAtFront, callback));
-      }*/
+      var res, rej;
 
-      var res;
+      function promiseCallback(err) {
+        // we don't care about the error, let the global error handler
+        // deal with it
+        if (err) return rejectOnError ? rej(err) : res();
+
+        for (var _len14 = arguments.length, args = new Array(_len14 > 1 ? _len14 - 1 : 0), _key14 = 1; _key14 < _len14; _key14++) {
+          args[_key14 - 1] = arguments[_key14];
+        }
+
+        if (args.length <= 1) return res(args[0]);
+        res(args);
+      }
+
       var item = {
         data: data,
-        callback: callback || function (err) {
-          // we don't care about the error, let the global error handler
-          // deal with it
-          if (err) return;
-
-          for (var _len14 = arguments.length, args = new Array(_len14 > 1 ? _len14 - 1 : 0), _key14 = 1; _key14 < _len14; _key14++) {
-            args[_key14 - 1] = arguments[_key14];
-          }
-
-          if (args.length <= 1) return res(args[0]);
-          res(args);
-        }
+        callback: rejectOnError ? promiseCallback : callback || promiseCallback
       };
 
       if (insertAtFront) {
@@ -20144,9 +20233,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         });
       }
 
-      if (!callback) {
-        return new Promise(function (resolve) {
+      if (rejectOnError || !callback) {
+        return new Promise(function (resolve, reject) {
           res = resolve;
+          rej = reject;
         });
       }
     }
@@ -20189,6 +20279,18 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       };
     }
 
+    function _maybeDrain(data) {
+      if (data.length === 0 && q.idle()) {
+        // call drain immediately if there are no tasks
+        setImmediate$1(function () {
+          return trigger('drain');
+        });
+        return true;
+      }
+
+      return false;
+    }
+
     var eventMethod = function eventMethod(name) {
       return function (handler) {
         if (!handler) {
@@ -20225,38 +20327,44 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       }, _callee);
     })), _defineProperty(_q, "concurrency", concurrency), _defineProperty(_q, "payload", payload), _defineProperty(_q, "buffer", concurrency / 4), _defineProperty(_q, "started", false), _defineProperty(_q, "paused", false), _defineProperty(_q, "push", function push(data, callback) {
       if (Array.isArray(data)) {
-        if (data.length === 0 && q.idle()) {
-          // call drain immediately if there are no tasks
-          return setImmediate$1(function () {
-            return trigger('drain');
-          });
-        }
-
+        if (_maybeDrain(data)) return;
         return data.map(function (datum) {
-          return _insert(datum, false, callback);
+          return _insert(datum, false, false, callback);
         });
       }
 
-      return _insert(data, false, callback);
+      return _insert(data, false, false, callback);
+    }), _defineProperty(_q, "pushAsync", function pushAsync(data, callback) {
+      if (Array.isArray(data)) {
+        if (_maybeDrain(data)) return;
+        return data.map(function (datum) {
+          return _insert(datum, false, true, callback);
+        });
+      }
+
+      return _insert(data, false, true, callback);
     }), _defineProperty(_q, "kill", function kill() {
       off();
 
       q._tasks.empty();
     }), _defineProperty(_q, "unshift", function unshift(data, callback) {
       if (Array.isArray(data)) {
-        if (data.length === 0 && q.idle()) {
-          // call drain immediately if there are no tasks
-          return setImmediate$1(function () {
-            return trigger('drain');
-          });
-        }
-
+        if (_maybeDrain(data)) return;
         return data.map(function (datum) {
-          return _insert(datum, true, callback);
+          return _insert(datum, true, false, callback);
         });
       }
 
-      return _insert(data, true, callback);
+      return _insert(data, true, false, callback);
+    }), _defineProperty(_q, "unshiftAsync", function unshiftAsync(data, callback) {
+      if (Array.isArray(data)) {
+        if (_maybeDrain(data)) return;
+        return data.map(function (datum) {
+          return _insert(datum, true, true, callback);
+        });
+      }
+
+      return _insert(data, true, true, callback);
     }), _defineProperty(_q, "remove", function remove(testFn) {
       q._tasks.remove(testFn);
     }), _defineProperty(_q, "process", function process() {
@@ -21916,9 +22024,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         _fn.apply(void 0, _toConsumableArray(args).concat([function (err) {
           for (var _len29 = arguments.length, resultArgs = new Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
             resultArgs[_key29 - 1] = arguments[_key29];
-          }
+          } // #1465 don't memoize if an error occurred
 
-          // #1465 don't memoize if an error occurred
+
           if (!err) {
             memo[key] = resultArgs;
           }
@@ -22124,12 +22232,16 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
    * @property {number} payload - an integer that specifies how many items are
    * passed to the worker function at a time. only applies if this is a
    * [cargo]{@link module:ControlFlow.cargo} object
-   * @property {Function} push - add a new task to the `queue`. Calls `callback`
+   * @property {AsyncFunction} push - add a new task to the `queue`. Calls `callback`
    * once the `worker` has finished processing the task. Instead of a single task,
    * a `tasks` array can be submitted. The respective callback is used for every
    * task in the list. Invoke with `queue.push(task, [callback])`,
-   * @property {Function} unshift - add a new task to the front of the `queue`.
+   * @property {AsyncFunction} unshift - add a new task to the front of the `queue`.
    * Invoke with `queue.unshift(task, [callback])`.
+   * @property {AsyncFunction} pushAsync - the same as `q.push`, except this returns
+   * a promise that rejects if an error occurs.
+   * @property {AsyncFunction} unshirtAsync - the same as `q.unshift`, except this returns
+   * a promise that rejects if an error occurs.
    * @property {Function} remove - remove items from the queue that match a test
    * function.  The test function will be passed an object with a `data` property,
    * and a `priority` property, if this is a
@@ -23663,14 +23775,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
    *
    * @example
    * const results = []
-   * async.until(function iter(next) {
+   * async.until(function test(page, cb) {
+   *     cb(null, page.next == null)
+   * }, function iter(next) {
    *     fetchPage(url, (err, body) => {
    *         if (err) return next(err)
    *         results = results.concat(body.objects)
    *         next(err, body)
    *     })
-   * }, function test(page, cb) {
-   *     cb(null, page.next == null)
    * }, function done (err) {
    *     // all pages have been fetched
    * })
@@ -83790,6 +83902,11 @@ Iterator.prototype._next = function (cb) {
 
     cb(null, key, value);
   });
+};
+
+Iterator.prototype._seek = function (key) {
+  key = this.codec.encodeKey(key, this.opts);
+  this.it.seek(key);
 };
 
 Iterator.prototype._end = function (cb) {
@@ -311521,7 +311638,7 @@ module.exports = function tracks(self) {
       var _addTrackFromFile = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee3(filepath, resolverData) {
-        var acoustid, metadata, pictures, extension, filename, processPath, audioFile, promises, results, trackData, track;
+        var acoustid, metadata, pictures, extension, filename, processPath, audioFile, promises, results, trackData;
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
@@ -311580,14 +311697,9 @@ module.exports = function tracks(self) {
                   trackData.resolver = [resolverData];
                 }
 
-                _context3.next = 28;
-                return self.tracks.add(trackData);
+                return _context3.abrupt("return", self.tracks.add(trackData));
 
-              case 28:
-                track = _context3.sent;
-                return _context3.abrupt("return", track);
-
-              case 30:
+              case 27:
               case "end":
                 return _context3.stop();
             }
@@ -311605,7 +311717,7 @@ module.exports = function tracks(self) {
       var _addTrackFromUrl = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee4(resolverData) {
-        var results, log, entry, filepath, track;
+        var results, log, entry, filepath;
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
@@ -311651,14 +311763,9 @@ module.exports = function tracks(self) {
 
               case 15:
                 filepath = _context4.sent;
-                _context4.next = 18;
-                return self.tracks.addTrackFromFile(filepath, resolverData);
+                return _context4.abrupt("return", self.tracks.addTrackFromFile(filepath, resolverData));
 
-              case 18:
-                track = _context4.sent;
-                return _context4.abrupt("return", track);
-
-              case 20:
+              case 17:
               case "end":
                 return _context4.stop();
             }
@@ -311720,9 +311827,15 @@ module.exports = function tracks(self) {
 
               case 3:
                 track = _context6.sent;
+                self.emit('redux', {
+                  type: 'TRACK_ADDED',
+                  payload: {
+                    track: track
+                  }
+                });
                 return _context6.abrupt("return", track);
 
-              case 5:
+              case 6:
               case "end":
                 return _context6.stop();
             }
@@ -314022,8 +314135,11 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var _require = require('../RecordEntry'),
-    TrackEntry = _require.TrackEntry;
+var _require = require('ipfs'),
+    CID = _require.CID;
+
+var _require2 = require('../RecordEntry'),
+    TrackEntry = _require2.TrackEntry;
 
 module.exports = function (self) {
   return {
@@ -314376,7 +314492,7 @@ module.exports = function (self) {
   };
 };
 
-},{"../RecordEntry":2754}],2765:[function(require,module,exports){
+},{"../RecordEntry":2754,"ipfs":1355}],2765:[function(require,module,exports){
 "use strict";
 
 var jdenticon = require('jdenticon');

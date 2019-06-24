@@ -1,3 +1,5 @@
 export { tracksReducer } from './reducer'
 export { getTrackById, getTracks } from './selectors'
 export { Track, createTrack } from './track'
+export { trackActions } from './actions'
+export { trackSagas } from './sagas'

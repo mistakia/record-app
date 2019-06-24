@@ -1,8 +1,8 @@
 import React from 'react'
 
-import './audio-timeline.styl'
+import './player-timeline.styl'
 
-export default class AudioTimeline extends React.Component {
+export default class PlayerTimeline extends React.Component {
   constructor () {
     super(...arguments)
     this.handleClick = this.handleClick.bind(this)
@@ -20,8 +20,12 @@ export default class AudioTimeline extends React.Component {
   render () {
     let { bufferedTime, percentBuffered, percentCompleted } = this.props.times
 
+    if (!bufferedTime) {
+      return null
+    }
+
     return (
-      <div className='audio-timeline' onClick={this.handleClick}>
+      <div id='player-timeline' onClick={this.handleClick}>
         <div className={'bar bar--buffered' + (bufferedTime > 0 && ' bar--animated')} style={{width: percentBuffered}} />
         <div className='bar bar--completed' style={{width: percentCompleted}} />
       </div>

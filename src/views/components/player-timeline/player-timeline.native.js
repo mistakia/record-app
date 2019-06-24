@@ -5,7 +5,7 @@ import {
   StyleSheet
 } from 'react-native'
 
-export default class AudioTimeline extends React.Component {
+export default class PlayerTimeline extends React.Component {
   constructor () {
     super(...arguments)
     this.handleClick = this.handleClick.bind(this)

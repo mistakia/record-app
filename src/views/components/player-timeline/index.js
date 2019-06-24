@@ -5,9 +5,9 @@ import { createSelector } from 'reselect'
 import { getPlayerTimes, PlayerTimesState } from '@core/player'
 import { audio } from '@core/audio'
 
-import AudioTimeline from './audio-timeline'
+import PlayerTimeline from './player-timeline'
 
-AudioTimeline.propTypes = {
+PlayerTimeline.propTypes = {
   seek: PropTypes.func.isRequired,
   times: PropTypes.instanceOf(PlayerTimesState).isRequired
 }
@@ -20,4 +20,4 @@ const mapStateToProps = createSelector(
   })
 )
 
-export default connect(mapStateToProps)(AudioTimeline)
+export default connect(mapStateToProps)(PlayerTimeline)

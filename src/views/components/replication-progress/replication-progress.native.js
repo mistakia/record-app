@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native'
 
 const ReplicationProgress = ({ progress }) => (
   <View style={styles.container}>
-    <View style={{ width: progress + '%', ...styles.progress}} />
+    <View style={{ width: progress + '%', ...styles.progress }} />
   </View>
 )
 

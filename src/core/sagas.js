@@ -8,6 +8,7 @@ import { infoSagas } from './info'
 import { playerSagas } from './player'
 import { aboutSagas } from './about'
 import { taglistSagas } from './taglists'
+import { trackSagas } from './tracks'
 import { tracklistSagas } from './tracklists'
 
 export default function * rootSaga () {
@@ -20,6 +21,7 @@ export default function * rootSaga () {
     ...playerSagas,
     ...aboutSagas,
     ...taglistSagas,
+    ...trackSagas,
     ...tracklistSagas
   ])
 }

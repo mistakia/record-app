@@ -4,6 +4,8 @@ import { connect } from 'react-redux'
 import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
+import PlayerTime from '@components/player-time'
+import PlayerTimeline from '@components/player-timeline'
 import ReplicationProgress from '@components/replication-progress'
 
 import 'normalize.css'
@@ -25,7 +27,6 @@ class App extends React.Component {
     this.listener = (event, message) => {
       // TODO: error handling
       this.props.init(message)
-
     }
     ipcRenderer.once('ready', this.listener)
     ipcRenderer.on('redux', (event, message) => {
@@ -36,6 +37,8 @@ class App extends React.Component {
   render () {
     return (
       <main className='main scroll'>
+        <PlayerTimeline />
+        <PlayerTime />
         <Menu />
         <Routes />
         <Player />
