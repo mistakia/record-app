@@ -8,11 +8,13 @@ import './track.styl'
 
 class Track extends React.Component {
   render () {
-    const { isPlaying, isSelected, pause, play, track } = this.props
+    const { isPlaying, isSelected, pause, play, track, remove, add } = this.props
 
     if (!track) {
       return null
     }
+
+    const { haveTrack } = track
 
     return (
       <article className='track'>
@@ -29,6 +31,13 @@ class Track extends React.Component {
           <small className='track__duration'>
             <FormattedTime value={track.duration} unit={'ms'} />
           </small>
+        </div>
+        <div className='track__actions'>
+          <IconButton
+            icon={haveTrack ? 'star-solid' : 'star-outline'}
+            label={haveTrack ? 'Save' : 'Remove'}
+            onClick={haveTrack ? remove.bind(null, { trackId: track.id }) : add.bind(null, { cid: track.contentCID })}
+          />
         </div>
         <Tags track={track} />
       </article>

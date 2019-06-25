@@ -13,5 +13,6 @@ export {
   postContact,
   deleteContact,
   postAbout,
-  postTrack
+  postTrack,
+  deleteTrack
 } from './sagas'

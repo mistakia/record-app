@@ -309306,6 +309306,52 @@ function () {
     return _ref2.apply(this, arguments);
   };
 }());
+router["delete"]('/?',
+/*#__PURE__*/
+function () {
+  var _ref3 = _asyncToGenerator(
+  /*#__PURE__*/
+  regeneratorRuntime.mark(function _callee3(req, res) {
+    var trackId, record, hash;
+    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            _context3.prev = 0;
+            trackId = req.query.trackId;
+            record = req.app.locals.record;
+            _context3.next = 5;
+            return record.tracks.remove(trackId);
+
+          case 5:
+            hash = _context3.sent;
+            res.send({
+              trackId: trackId,
+              hash: hash
+            });
+            _context3.next = 13;
+            break;
+
+          case 9:
+            _context3.prev = 9;
+            _context3.t0 = _context3["catch"](0);
+            req.app.locals.record.logger.err(_context3.t0);
+            res.status(500).send({
+              error: _context3.t0.toString()
+            });
+
+          case 13:
+          case "end":
+            return _context3.stop();
+        }
+      }
+    }, _callee3, null, [[0, 9]]);
+  }));
+
+  return function (_x5, _x6) {
+    return _ref3.apply(this, arguments);
+  };
+}());
 module.exports = router;
 
 },{"express":805}],2742:[function(require,module,exports){
@@ -311833,9 +311879,10 @@ module.exports = function tracks(self) {
                     track: track
                   }
                 });
+                track.payload.value.haveTrack = true;
                 return _context6.abrupt("return", track);
 
-              case 6:
+              case 7:
               case "end":
                 return _context6.stop();
             }
@@ -311853,7 +311900,7 @@ module.exports = function tracks(self) {
       var _get = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee7(logId, trackId) {
-        var log, entry;
+        var log, entry, myLog, haveTrack;
         return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
@@ -311870,9 +311917,18 @@ module.exports = function tracks(self) {
 
               case 5:
                 entry = _context7.sent;
+
+                if (!self.log.isMine(log)) {
+                  myLog = self.log.mine();
+                  haveTrack = myLog.tracks.has(entry.payload.key);
+                  entry.payload.value.haveTrack = haveTrack;
+                } else {
+                  entry.payload.value.haveTrack = true;
+                }
+
                 return _context7.abrupt("return", entry.payload.value);
 
-              case 7:
+              case 8:
               case "end":
                 return _context7.stop();
             }
@@ -311921,7 +311977,7 @@ module.exports = function tracks(self) {
       var _list = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee9(logId, opts) {
-        var log, entries, myLog, index, entry, trackId, tracks;
+        var log, entries, myLog, index, entry, trackId, haveTrack, tracks;
         return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
@@ -311940,7 +311996,7 @@ module.exports = function tracks(self) {
                 entries = _context9.sent;
 
                 if (self.log.isMine(log)) {
-                  _context9.next = 19;
+                  _context9.next = 23;
                   break;
                 }
 
@@ -311949,36 +312005,47 @@ module.exports = function tracks(self) {
 
               case 9:
                 if ((_context9.t1 = _context9.t0()).done) {
-                  _context9.next = 19;
+                  _context9.next = 21;
                   break;
                 }
 
                 index = _context9.t1.value;
                 entry = entries[index];
                 trackId = entry.payload.key;
+                haveTrack = myLog.tracks.has(trackId);
 
-                if (!myLog.tracks.has(trackId)) {
-                  _context9.next = 17;
+                if (!haveTrack) {
+                  _context9.next = 18;
                   break;
                 }
 
-                _context9.next = 16;
+                _context9.next = 17;
                 return myLog.tracks.getFromId(trackId);
 
-              case 16:
+              case 17:
                 entries[index] = _context9.sent;
 
-              case 17:
+              case 18:
+                entries[index].payload.value.haveTrack = haveTrack;
                 _context9.next = 9;
                 break;
 
-              case 19:
+              case 21:
+                _context9.next = 24;
+                break;
+
+              case 23:
+                entries.forEach(function (e) {
+                  e.payload.value.haveTrack = true;
+                });
+
+              case 24:
                 tracks = entries.map(function (e) {
                   return e.payload.value;
                 });
                 return _context9.abrupt("return", tracks);
 
-              case 21:
+              case 26:
               case "end":
                 return _context9.stop();
             }

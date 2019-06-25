@@ -2,13 +2,15 @@ export {
   tracklistActions,
   trackRequestActions,
   tracklistRequestActions,
-  tracklistPostActions
+  tracklistPostActions,
+  tracklistDeleteActions
 } from './actions'
 export { goToTracks, tracklistSagas } from './sagas'
 
 export {
   getCurrentTracklist,
   getCurrentTracklistContact,
+  getPendingTrackCID,
   getTracklistById,
   getTracklistCursor,
   getTracksForCurrentTracklist
