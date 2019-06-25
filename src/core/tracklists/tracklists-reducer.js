@@ -4,7 +4,8 @@ import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
 
 export const initialState = new Map({
-  currentTracklistId: null
+  currentTracklistId: null,
+  pendingTrackCID: null
 })
 
 export function tracklistsReducer (state = initialState, action) {
@@ -17,6 +18,13 @@ export function tracklistsReducer (state = initialState, action) {
         payload.logId,
         tracklistReducer(state.get(payload.logId), action)
       )
+
+    case tracklistActions.ADD_TRACK:
+      return state.set('pendingTrackCID', action.payload.data.cid)
+
+    case tracklistActions.POST_TRACK_FAILED:
+    case tracklistActions.POST_TRACK_FULFILLED:
+      return state.set('pendingTrackCID', null)
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({

@@ -20,6 +20,27 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       const track = payload.data
       return state.withMutations(tracks => tracks.set(track._id, createTrack(track)))
 
+    case tracklistActions.DELETE_TRACK_FULFILLED:
+      return state.withMutations(tracks => {
+        const track = tracks.get(payload.data.trackId)
+        const contentCID = track.get('contentCID')
+        tracks.map(track => {
+          if (track.contentCID === contentCID) {
+            tracks.setIn([track.id, 'haveTrack'], false)
+          }
+        })
+      })
+
+    case tracklistActions.POST_TRACK_FULFILLED:
+      const { contentCID } = payload.data.payload.value
+      return state.withMutations(tracks => {
+        tracks.map(track => {
+          if (track.contentCID === contentCID) {
+            tracks.setIn([track.id, 'haveTrack'], true)
+          }
+        })
+      })
+
     case feedActions.FETCH_FEED_FULFILLED:
       return state.withMutations(tracks => {
         payload.data.forEach(feedData => {

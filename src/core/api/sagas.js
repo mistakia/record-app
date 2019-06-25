@@ -19,7 +19,8 @@ import {
 import {
   trackRequestActions,
   tracklistRequestActions,
-  tracklistPostActions
+  tracklistPostActions,
+  tracklistDeleteActions
 } from '@core/tracklists'
 import {
   contactRequestActions
@@ -68,6 +69,7 @@ export const deleteTag = fetch.bind(null, api.deleteTag, taglistDeleteActions)
 export const fetchTrack = fetch.bind(null, api.fetchTrack, trackRequestActions)
 export const fetchTracks = fetch.bind(null, api.fetchTracks, tracklistRequestActions)
 export const postTrack = fetch.bind(null, api.postTrack, tracklistPostActions)
+export const deleteTrack = fetch.bind(null, api.deleteTrack, tracklistDeleteActions)
 
 export const fetchContact = fetch.bind(null, api.fetchContact, contactRequestActions)
 export const postAbout = fetch.bind(null, api.postAbout, aboutPostActions)

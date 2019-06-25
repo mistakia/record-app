@@ -2,7 +2,7 @@ import { call, fork, put, select, takeLatest } from 'redux-saga/effects'
 import { push } from 'react-router-redux'
 
 import { getApp } from '@core/app'
-import { fetchTracks, postTrack } from '@core/api'
+import { fetchTracks, postTrack, deleteTrack } from '@core/api'
 import { ITEMS_PER_LOAD } from '@core/constants'
 import { tracklistActions } from './actions'
 import { getCurrentTracklist } from './selectors'
@@ -47,6 +47,11 @@ export function * goToTracks () {
   yield put(push(`/tracks${app.address}`))
 }
 
+export function * removeTrack ({ payload }) {
+  const { data } = payload
+  yield call(deleteTrack, { data })
+}
+
 //= ====================================
 //  WATCHERS
 // -------------------------------------
@@ -67,8 +72,8 @@ export function * watchAddTrack () {
   yield takeLatest(tracklistActions.ADD_TRACK, addTrack)
 }
 
-export function * watchAddTrackFulfilled () {
-  yield takeLatest(tracklistActions.POST_TRACK_FULFILLED, goToTracks)
+export function * watchRemoveTrack () {
+  yield takeLatest(tracklistActions.REMOVE_TRACK, removeTrack)
 }
 
 //= ====================================
@@ -80,5 +85,5 @@ export const tracklistSagas = [
   fork(watchToggleTag),
   fork(watchLoadNextTracks),
   fork(watchAddTrack),
-  fork(watchAddTrackFulfilled)
+  fork(watchRemoveTrack)
 ]

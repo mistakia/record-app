@@ -7,6 +7,7 @@ export const Track = new Record({
   title: null,
   url: null,
   tags: new List(),
+  haveTrack: false,
   webpage_url: null,
   contentCID: null
 })
@@ -67,6 +68,7 @@ export function createTrack (data) {
     title: title,
     url: url,
     contentCID: data.contentCID,
+    haveTrack: !!data.haveTrack,
     tags: new List(data.tags)
   })
 }

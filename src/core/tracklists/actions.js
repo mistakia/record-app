@@ -16,7 +16,12 @@ export const tracklistActions = {
   POST_TRACK_FULFILLED: 'POST_TRACK_FULFILLED',
   POST_TRACK_PENDING: 'POST_TRACK_PENDING',
 
+  DELETE_TRACK_FAILED: 'DELETE_TRACK_FAILED',
+  DELETE_TRACK_FULFILLED: 'DELETE_TRACK_FULFILLED',
+  DELETE_TRACK_PENDING: 'DELETE_TRACK_PENDING',
+
   ADD_TRACK: 'ADD_TRACK',
+  REMOVE_TRACK: 'REMOVE_TRACK',
 
   fetchTracksFailed: error => ({
     type: tracklistActions.FETCH_TRACKS_FAILED,
@@ -102,6 +107,34 @@ export const tracklistActions = {
     payload: {
       data
     }
+  }),
+
+  removeTrack: (data) => ({
+    type: tracklistActions.REMOVE_TRACK,
+    payload: {
+      data
+    }
+  }),
+
+  deleteTrackFailed: error => ({
+    type: tracklistActions.DELETE_TRACK_FAILED,
+    payload: error
+  }),
+
+  deleteTrackPending: (logId, data) => ({
+    type: tracklistActions.DELETE_TRACK_PENDING,
+    payload: {
+      logId,
+      data
+    }
+  }),
+
+  deleteTrackFulfilled: (logId, data) => ({
+    type: tracklistActions.DELETE_TRACK_FULFILLED,
+    payload: {
+      logId,
+      data
+    }
   })
 }
 
@@ -121,4 +154,10 @@ export const tracklistPostActions = {
   failed: tracklistActions.postTrackFailed,
   fulfilled: tracklistActions.postTrackFulfilled,
   pending: tracklistActions.postTrackPending
+}
+
+export const tracklistDeleteActions = {
+  failed: tracklistActions.deleteTrackFailed,
+  fulfilled: tracklistActions.deleteTrackFulfilled,
+  pending: tracklistActions.deleteTrackPending
 }

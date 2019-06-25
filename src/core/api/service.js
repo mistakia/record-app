@@ -78,6 +78,10 @@ export const api = {
     const url = 'http://localhost:3000/tracks'
     const post = POST(data)
     return { url, ...post }
+  },
+  deleteTrack ({ data }) {
+    const url = `http://localhost:3000/tracks?${toQueryString(data)}`
+    return { url, ...DELETE }
   }
 }
 
