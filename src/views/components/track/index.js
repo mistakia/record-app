@@ -4,8 +4,8 @@ import { tracklistActions } from '@core/tracklists'
 import Track from './track'
 
 const mapDispatchToProps = {
-  add: tracklistActions.addTrack,
-  remove: tracklistActions.removeTrack
+  addTrack: tracklistActions.addTrack,
+  removeTrack: tracklistActions.removeTrack
 }
 
 export default connect(

@@ -10,6 +10,7 @@ import {
 import {
   getPlayerIsPlaying,
   getPlayerIsShuffling,
+  getPlayerIsLoading,
   getPlayerTrackId,
   getPlayerTracklistId,
   playerActions
@@ -24,6 +25,7 @@ const Tracklist = ({
   displayLoadingIndicator,
   isPlaying,
   isShuffling,
+  isLoading,
   pause,
   play,
   selectedTrackId,
@@ -43,6 +45,7 @@ const Tracklist = ({
         key={index}
         track={track}
         isPlaying={isSelected && isPlaying}
+        isLoading={isSelected && isLoading}
         isSelected={isSelected}
         pause={pause}
         play={isSelected ? play : selectTrack.bind(null, track.id, tracklistId)}
@@ -68,10 +71,12 @@ const mapStateToProps = createSelector(
   getPlayerTrackId,
   getCurrentTracklist,
   getTracksForCurrentTracklist,
-  (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks) => ({
+  getPlayerIsLoading,
+  (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks, isLoading) => ({
     displayLoadingIndicator: tracklist.isPending,
     isPlaying,
     isShuffling: isShuffling && tracklist.id === playerTracklistId,
+    isLoading,
     pause: audio.pause,
     play: audio.play,
     selectedTrackId: playerTrackId,

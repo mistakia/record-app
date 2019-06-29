@@ -38,8 +38,8 @@ export function * loadNextTracks () {
 }
 
 export function * addTrack ({ payload }) {
-  const { data } = payload
-  yield call(postTrack, { data })
+  const { logId, data } = payload
+  yield call(postTrack, { logId, data })
 }
 
 export function * goToTracks () {
@@ -48,8 +48,8 @@ export function * goToTracks () {
 }
 
 export function * removeTrack ({ payload }) {
-  const { data } = payload
-  yield call(deleteTrack, { data })
+  const { logId, data } = payload
+  yield call(deleteTrack, { logId, data })
 }
 
 //= ====================================

@@ -15,6 +15,20 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         })
       })
 
+    case tracklistActions.ADD_TRACK:
+      return state.withMutations(tracks => {
+        tracks.map(track => {
+          if (track.contentCID === payload.data.cid) {
+            tracks.setIn([track.id, 'isUpdating'], true)
+          }
+        })
+      })
+
+    case tracklistActions.REMOVE_TRACK:
+      return state.withMutations(tracks => {
+        tracks.setIn([payload.data.trackId, 'isUpdating'], true)
+      })
+
     case taglistActions.POST_TAG_FULFILLED:
     case taglistActions.DELETE_TAG_FULFILLED:
       const track = payload.data
@@ -24,6 +38,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       return state.withMutations(tracks => {
         const track = tracks.get(payload.data.trackId)
         const contentCID = track.get('contentCID')
+        tracks.setIn([payload.data.trackId, 'isUpdating'], false)
         tracks.map(track => {
           if (track.contentCID === contentCID) {
             tracks.setIn([track.id, 'haveTrack'], false)
@@ -33,7 +48,9 @@ export function tracksReducer (state = new Map(), {payload, type}) {
 
     case tracklistActions.POST_TRACK_FULFILLED:
       const { contentCID } = payload.data.payload.value
+      const trackId = payload.data.payload.value._id
       return state.withMutations(tracks => {
+        tracks.setIn([trackId, 'isUpdating'], false)
         tracks.map(track => {
           if (track.contentCID === contentCID) {
             tracks.setIn([track.id, 'haveTrack'], true)

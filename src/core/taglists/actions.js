@@ -17,9 +17,12 @@ export const taglistActions = {
 
   REMOVE_TAG: 'REMOVE_TAG',
 
-  fetchTagsFailed: error => ({
+  fetchTagsFailed: (logId, error) => ({
     type: taglistActions.FETCH_TAGS_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   fetchTagsFulfilled: (logId, data) => ({
@@ -44,9 +47,12 @@ export const taglistActions = {
     }
   }),
 
-  postTagFailed: error => ({
+  postTagFailed: (logId, error) => ({
     type: taglistActions.POST_TAG_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   postTagFulfilled: (logId, data) => ({
@@ -72,9 +78,12 @@ export const taglistActions = {
     }
   }),
 
-  deleteTagFailed: error => ({
+  deleteTagFailed: (logId, error) => ({
     type: taglistActions.DELETE_TAG_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   deleteTagFulfilled: (logId, data) => ({

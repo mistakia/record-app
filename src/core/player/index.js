@@ -7,6 +7,7 @@ export {
   getPlayer,
   getPlayerIsPlaying,
   getPlayerIsShuffling,
+  getPlayerIsLoading,
   getPlayerTimes,
   getPlayerTrack,
   getPlayerTrackId,

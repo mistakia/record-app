@@ -2,15 +2,16 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { getApp } from '@core/app'
+import { aboutActions, getAboutIsUpdating } from '@core/about'
 import { contactActions, getContactMe } from '@core/contacts'
-import { aboutActions } from '@core/about'
 
 import EditAboutPage from './edit-about'
 
 const mapStateToProps = createSelector(
   getContactMe,
   getApp,
-  (contact, app) => ({ contact, app })
+  getAboutIsUpdating,
+  (contact, app, isUpdating) => ({ contact, app, isUpdating })
 )
 
 const mapDispatchToProps = {

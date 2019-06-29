@@ -14,9 +14,12 @@ export const feedActions = {
     type: feedActions.LOAD_NEXT_FEED
   }),
 
-  fetchFeedFailed: error => ({
+  fetchFeedFailed: (logId, error) => ({
     type: feedActions.FETCH_FEED_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   fetchFeedFulfilled: (id, data) => ({

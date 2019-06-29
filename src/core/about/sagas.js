@@ -1,12 +1,13 @@
-import { call, fork, takeLatest } from 'redux-saga/effects'
+import { call, fork, takeLatest, select } from 'redux-saga/effects'
 
 import { postAbout } from '@core/api'
 import { aboutActions } from './actions'
-import { goBack } from '@core/app'
+import { getApp, goBack } from '@core/app'
 
 export function * setAbout ({ payload }) {
+  const app = yield select(getApp)
   const { data } = payload
-  yield call(postAbout, { data })
+  yield call(postAbout, { logId: app.address, data })
 }
 
 export function * watchSetAbout () {

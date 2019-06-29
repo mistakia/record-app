@@ -1,10 +1,15 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
+import LoadingIndicator from '@components/loading-indicator'
+
 import './button.styl'
 
-function Button ({ children, className, label, onClick, type = 'button', disabled = false }) {
+function Button ({ children, className, label, onClick, type = 'button', disabled = false, isLoading }) {
   const classNames = ['button', className]
+
+  if (isLoading) disabled = true
+
   return (
     <button
       aria-label={label}
@@ -12,7 +17,7 @@ function Button ({ children, className, label, onClick, type = 'button', disable
       onClick={onClick}
       disabled={disabled}
       type={type}>
-      {children}
+      {isLoading ? <LoadingIndicator /> : children }
     </button>
   )
 }

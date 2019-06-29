@@ -11,7 +11,7 @@ const Loading = ({
   onClick
 }) => {
   if (loading) {
-    return <LoadingIndicator className='loading' />
+    return <div className='loading'><LoadingIndicator /></div>
   }
 
   if (hasMore) {

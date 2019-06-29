@@ -1,6 +1,6 @@
-$size = 45px
+$size = 15px
 
-.md-loading-indicator
+.loading-indicator
   width $size
   height $size
   display block
@@ -8,71 +8,68 @@ $size = 45px
   margin 0 auto
   overflow hidden
 
-  .md-inner
+  .inner
     width $size
     height $size
     position relative
 
-    .md-gap
+    .gap
       position absolute
       left ($size / 2)
       right ($size / 2)
       top 0
       bottom 0
-      border-top 1px solid $accentColor
+      border-top 3px solid $accentColor
       box-sizing border-box
 
-    .md-left
-    .md-right
+    .left
+    .right
       position absolute
       top 0
       height $size
       width ($size / 2)
       overflow hidden
 
-      .md-half-circle
+      .half-circle
         position absolute
         top 0
         width $size
         height $size
         box-sizing border-box
-        border-width 1px
+        border-width 3px
         border-style solid
         border-color $accentColor $accentColor transparent
         border-radius 50%
-    .md-left
+    .left
       left 0
-      .md-half-circle
+      .half-circle
         left 0
         border-right-color transparent
-    .md-right
+    .right
       right 0
-      .md-half-circle
+      .half-circle
         right 0
         border-left-color transparent
 
-  &.indeterminate .md-spinner-wrapper
+  &.indeterminate .spinner-wrapper
     animation outer-rotate 2.91667s linear infinite
-    .md-inner
+    .inner
       animation sporadic-rotate 5.25s cubic-bezier(0.35, 0, 0.25, 1) infinite
-      .md-left .md-half-circle
-      .md-right .md-half-circle
+      .left .half-circle
+      .right .half-circle
         animation-iteration-count infinite
         animation-duration 1.3125s
         animation-timing-function cubic-bezier(0.35, 0, 0.25, 1)
-      .md-left .md-half-circle
+      .left .half-circle
         animation-name left-wobble
-      .md-right .md-half-circle
+      .right .half-circle
         animation-name right-wobble
 
-  &.determinate .md-inner .md-gap
+  &.determinate .inner .gap
     border-bottom-width 5px
     border-bottom-style solid
 
-button > .md-loading-indicator
-  margin 0
-
-.md-loading-error
+.loading-error
   animation blink 1400ms linear infinite
   width $size
   height $size

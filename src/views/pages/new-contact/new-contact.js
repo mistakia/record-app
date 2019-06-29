@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import { parseQueryString } from '@core/utils'
 import { contactlistActions } from '@core/contactlists'
 import PageLayout from '@layouts/page'
+import Button from '@components/button'
 
 export class NewContactPage extends React.Component {
   constructor (props) {
@@ -45,7 +46,7 @@ export class NewContactPage extends React.Component {
           Address
           <input type='text' name='address' defaultValue={logId} placeholder='/orbitdb/Qm.../record' />
         </label>
-        <input className='button' type='submit' value='Submit' />
+        <Button type='submit' isLoading={this.props.isUpdating}>Connect</Button>
       </form>
     )
 

@@ -5,9 +5,12 @@ export const aboutActions = {
   POST_ABOUT_FULFILLED: 'POST_ABOUT_FULFILLED',
   POST_ABOUT_PENDING: 'POST_ABOUT_PENDING',
 
-  postAboutFailed: error => ({
+  postAboutFailed: (logId, error) => ({
     type: aboutActions.POST_ABOUT_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   postAboutFulfilled: (logId, data) => ({

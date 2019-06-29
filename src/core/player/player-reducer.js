@@ -5,6 +5,7 @@ import { playerActions } from './actions'
 
 export const PlayerState = new Record({
   isPlaying: false,
+  isLoading: true,
   isFullscreen: false,
   trackId: null,
   isShuffling: false,
@@ -19,7 +20,10 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
       return state.set('isPlaying', false)
 
     case playerActions.AUDIO_PLAYING:
-      return state.set('isPlaying', true)
+      return state.merge({
+        isPlaying: true,
+        isLoading: false
+      })
 
     case playerActions.AUDIO_VOLUME_CHANGED:
       return state.set('volume', payload.volume)
@@ -42,6 +46,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
 
     case playerActions.PLAY_SELECTED_TRACK:
       return state.merge({
+        isLoading: true,
         isShuffling: false,
         trackId: payload.trackId,
         tracklistId: payload.tracklistId || state.get('tracklistId')

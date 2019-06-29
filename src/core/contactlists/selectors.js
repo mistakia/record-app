@@ -4,11 +4,16 @@ import {
   PEER_CONTACTLIST_ID,
   ALL_CONTACTLIST_ID
 } from '@core/constants'
+import { getApp } from '@core/app'
 import { getContacts, getContactByAddress, Contact } from '@core/contacts'
 import { Contactlist } from './contactlist'
 
 export function getContactlists (state) {
   return state.get('contactlists')
+}
+
+export function getContactlistById (state, logId) {
+  return getContactlists(state).get(logId)
 }
 
 export function getCurrentContactlistId (state) {
@@ -37,6 +42,11 @@ export function getPeerContactlist (state) {
 export function getAllContactlist (state) {
   let contactlists = getContactlists(state)
   return contactlists.get(ALL_CONTACTLIST_ID) || new Contactlist()
+}
+
+export function getMyContactlistIsUpdating (state) {
+  const { address } = getApp(state)
+  return getContactlistById(state, address).isUpdating
 }
 
 export const getCurrentContactIds = createSelector(

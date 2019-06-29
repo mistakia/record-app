@@ -16,7 +16,8 @@ export {
   getAllContactlist,
   getContactsForCurrentContactlist,
   getContactsForPeerContactlist,
-  getContactsForAllContactlist
+  getContactsForAllContactlist,
+  getMyContactlistIsUpdating
 } from './selectors'
 
 export { contactlistsReducer } from './contactlists-reducer'

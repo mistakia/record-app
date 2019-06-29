@@ -13,6 +13,10 @@ export function getPlayerIsShuffling (state) {
   return getPlayer(state).isShuffling
 }
 
+export function getPlayerIsLoading (state) {
+  return getPlayer(state).isLoading
+}
+
 export function getPlayerTimes (state) {
   return state.get('playerTimes')
 }

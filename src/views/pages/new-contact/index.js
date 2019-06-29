@@ -2,13 +2,14 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { getApp } from '@core/app'
-import { contactlistActions } from '@core/contactlists'
+import { contactlistActions, getMyContactlistIsUpdating } from '@core/contactlists'
 
 import NewContactPage from './new-contact'
 
 const mapStateToProps = createSelector(
   getApp,
-  (app) => ({app})
+  getMyContactlistIsUpdating,
+  (app, isUpdating) => ({ app, isUpdating })
 )
 
 const mapDispatchToProps = {

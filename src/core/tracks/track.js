@@ -8,6 +8,7 @@ export const Track = new Record({
   url: null,
   tags: new List(),
   haveTrack: false,
+  isUpdating: false,
   webpage_url: null,
   contentCID: null
 })

@@ -58,6 +58,7 @@ export const Contact = new Record({
   bio: null,
   haveContact: false,
   isReplicating: false,
+  isUpdating: false,
   replicationStats: new ReplicationStats(),
   replicationStatus: new ReplicationStatus(),
   isMe: false

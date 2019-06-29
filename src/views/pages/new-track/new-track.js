@@ -15,6 +15,7 @@ export class NewTrackPage extends React.Component {
     super(props)
 
     this.handleSubmit = this.handleSubmit.bind(this)
+    this.address = props.app.address
   }
 
   showDialog (event) {
@@ -27,7 +28,7 @@ export class NewTrackPage extends React.Component {
 
       const file = filepaths[0]
       if (file) {
-        this.props.addTrack({ file })
+        this.props.addTrack(this.address, { file })
       }
     })
   }
@@ -36,7 +37,7 @@ export class NewTrackPage extends React.Component {
     const url = event.target.url.value
 
     if (url) {
-      this.props.addTrack({ url })
+      this.props.addTrack(this.address, { url })
     }
 
     event.preventDefault()
@@ -49,13 +50,17 @@ export class NewTrackPage extends React.Component {
 
     const body = (
       <div id='new-track'>
-        <Button onClick={this.showDialog.bind(this)} className='add-track-file'>Select From Computer</Button>
+        <Button
+          onClick={this.showDialog.bind(this)}
+          className='add-track-file'
+          isLoading={this.props.isUpdating}
+        >Select From Computer</Button>
         <Heading title='or' center />
         <form onSubmit={this.handleSubmit.bind(this)}>
           <label>
             <input type='text' name='url' placeholder='Paste URL' />
           </label>
-          <input className='button' type='submit' value='Submit' />
+          <Button type='submit' isLoading={this.props.isUpdating}>Submit</Button>
         </form>
       </div>
     )
