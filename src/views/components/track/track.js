@@ -8,7 +8,17 @@ import './track.styl'
 
 class Track extends React.Component {
   render () {
-    const { isPlaying, isSelected, pause, play, track, remove, add } = this.props
+    const {
+      track,
+      tracklistId,
+      isPlaying,
+      isSelected,
+      isLoading,
+      pause,
+      play,
+      removeTrack,
+      addTrack
+    } = this.props
 
     if (!track) {
       return null
@@ -22,6 +32,7 @@ class Track extends React.Component {
           <IconButton
             icon={isPlaying ? 'pause' : 'play'}
             label={isPlaying ? 'Pause' : 'Play'}
+            isLoading={isLoading}
             onClick={isPlaying ? pause : play}
           />
           <img src={track.thumbnail} />
@@ -36,7 +47,8 @@ class Track extends React.Component {
           <IconButton
             icon={haveTrack ? 'star-solid' : 'star-outline'}
             label={haveTrack ? 'Save' : 'Remove'}
-            onClick={haveTrack ? remove.bind(null, { trackId: track.id }) : add.bind(null, { cid: track.contentCID })}
+            isLoading={track.isUpdating}
+            onClick={haveTrack ? removeTrack.bind(null, tracklistId, { trackId: track.id }) : addTrack.bind(null, tracklistId, { cid: track.contentCID })}
           />
         </div>
         <Tags track={track} />

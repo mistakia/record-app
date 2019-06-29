@@ -63,6 +63,28 @@ export function contactsReducer (state = new Map(), {payload, type}) {
     case contactlistActions.DELETE_CONTACT_FULFILLED:
       return state.withMutations(contacts => {
         contacts.setIn([payload.data._id, 'haveContact'], false)
+        contacts.setIn([payload.data._id, 'isUpdating'], false)
+      })
+
+    case contactlistActions.ADD_CONTACT:
+      return state.withMutations(contacts => {
+        contacts.map(contact => {
+          if (contact.address === payload.logId) {
+            contacts.setIn([contact.id, 'isUpdating'], true)
+          }
+        })
+      })
+
+    case contactlistActions.REMOVE_CONTACT:
+      return state.withMutations(contacts => {
+        contacts.setIn([payload.data.contactId, 'isUpdating'], true)
+      })
+
+    case contactlistActions.POST_CONTACT_FAILED:
+    case contactlistActions.POST_CONTACT_FULFILLED:
+    case contactlistActions.DELETE_CONTACT_FAILED:
+      return state.withMutations(contacts => {
+        contacts.map(contact => contact.set('isUpdating', false))
       })
 
     default:

@@ -1,5 +1,6 @@
 import { Map } from 'immutable'
 
+import { appActions } from '@core/app'
 import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
 
@@ -12,6 +13,11 @@ export function tracklistsReducer (state = initialState, action) {
   const { payload } = action
 
   switch (action.type) {
+    case appActions.INIT_APP:
+      return state.merge({
+        [payload.address]: tracklistReducer(undefined, action)
+      })
+
     case tracklistActions.FETCH_TRACKS_FULFILLED:
     case tracklistActions.FETCH_TRACK_FULFILLED:
       return state.set(
@@ -24,7 +30,11 @@ export function tracklistsReducer (state = initialState, action) {
 
     case tracklistActions.POST_TRACK_FAILED:
     case tracklistActions.POST_TRACK_FULFILLED:
-      return state.set('pendingTrackCID', null)
+      state.set('pendingTrackCID', null)
+      return state.setIn([payload.logId, 'isUpdating'], false)
+
+    case tracklistActions.POST_TRACK_PENDING:
+      return state.setIn([payload.logId, 'isUpdating'], true)
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({

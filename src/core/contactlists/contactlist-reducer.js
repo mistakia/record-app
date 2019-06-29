@@ -4,11 +4,15 @@ import {
   PEER_CONTACTLIST_ID,
   ALL_CONTACTLIST_ID
 } from '@core/constants'
+import { appActions } from '@core/app'
 import { contactlistActions } from './actions'
 import { Contactlist } from './contactlist'
 
 export function contactlistReducer (state = new Contactlist(), {payload, type}) {
   switch (type) {
+    case appActions.INIT_APP:
+      return state.set('id', payload.address)
+
     case contactlistActions.FETCH_CONTACTS_FULFILLED:
     case contactlistActions.FETCH_PEER_CONTACTS_FULFILLED:
     case contactlistActions.FETCH_ALL_CONTACTS_FULFILLED:

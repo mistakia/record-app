@@ -9,6 +9,7 @@ export { goToTracks, tracklistSagas } from './sagas'
 
 export {
   getCurrentTracklist,
+  getCurrentTracklistIsUpdating,
   getCurrentTracklistContact,
   getPendingTrackCID,
   getTracklistById,

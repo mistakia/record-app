@@ -25,7 +25,7 @@ const Contact = ({
   )
 
   const disconnectAction = (
-    <Button className='button' onClick={disconnect}>Disconnect</Button>
+    <Button onClick={disconnect} isLoading={contact.isUpdating}>Disconnect</Button>
   )
 
   const selfAction = (

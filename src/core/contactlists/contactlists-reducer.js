@@ -4,6 +4,7 @@ import {
   PEER_CONTACTLIST_ID,
   ALL_CONTACTLIST_ID
 } from '@core/constants'
+import { appActions } from '@core/app'
 import { contactlistActions } from './actions'
 import { contactlistReducer } from './contactlist-reducer'
 
@@ -15,6 +16,11 @@ export function contactlistsReducer (state = initialState, action) {
   const { payload } = action
 
   switch (action.type) {
+    case appActions.INIT_APP:
+      return state.merge({
+        [payload.address]: contactlistReducer(undefined, action)
+      })
+
     case contactlistActions.FETCH_CONTACTS_FULFILLED:
     case contactlistActions.FETCH_CONTACTS_PENDING:
     case contactlistActions.FETCH_PEER_CONTACTS_PENDING:
@@ -25,6 +31,13 @@ export function contactlistsReducer (state = initialState, action) {
         payload.logId,
         contactlistReducer(state.get(payload.logId), action)
       )
+
+    case contactlistActions.POST_CONTACT_FAILED:
+    case contactlistActions.POST_CONTACT_FULFILLED:
+      return state.setIn([payload.logId, 'isUpdating'], false)
+
+    case contactlistActions.POST_CONTACT_PENDING:
+      return state.setIn([payload.logId, 'isUpdating'], true)
 
     case contactlistActions.LOAD_CONTACTS:
       return state.merge({

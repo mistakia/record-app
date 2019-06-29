@@ -14,9 +14,12 @@ export const contactActions = {
   PEER_LEFT: 'PEER_LEFT',
   PEER_JOINED: 'PEER_JOINED',
 
-  fetchContactFailed: error => ({
+  fetchContactFailed: (logId, error) => ({
     type: contactActions.FETCH_CONTACT_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   fetchContactFulfilled: (logId, data) => ({

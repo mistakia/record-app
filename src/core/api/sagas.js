@@ -37,7 +37,7 @@ function * fetchAPI (apiFunction, actions, opts = {}) {
     yield put(actions.fulfilled(opts.logId, data))
   } catch (err) {
     console.log(err)
-    yield put(actions.failed(err))
+    yield put(actions.failed(opts.logId, err))
   } finally {
     if (yield cancelled()) {
       abort()

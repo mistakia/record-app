@@ -1,5 +1,6 @@
 import React from 'react'
 
+import Button from '@components/button'
 import PageLayout from '@layouts/page'
 
 export default class EditAboutPage extends React.Component {
@@ -60,7 +61,7 @@ export default class EditAboutPage extends React.Component {
             defaultValue={contact.bio}
             placeholder='Bio' />
         </label>
-        <input className='button' type='submit' value='Submit' />
+        <Button type='submit' isLoading={this.props.isUpdating}>Save</Button>
       </form>
     )
 

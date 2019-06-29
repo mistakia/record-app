@@ -23,9 +23,12 @@ export const tracklistActions = {
   ADD_TRACK: 'ADD_TRACK',
   REMOVE_TRACK: 'REMOVE_TRACK',
 
-  fetchTracksFailed: error => ({
+  fetchTracksFailed: (logId, error) => ({
     type: tracklistActions.FETCH_TRACKS_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   fetchTracksFulfilled: (logId, data) => ({
@@ -43,9 +46,12 @@ export const tracklistActions = {
     }
   }),
 
-  fetchTrackFailed: error => ({
+  fetchTrackFailed: (logId, error) => ({
     type: tracklistActions.FETCH_TRACK_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   fetchTrackFulfilled: (logId, data) => ({
@@ -82,9 +88,12 @@ export const tracklistActions = {
     type: tracklistActions.LOAD_NEXT_TRACKS
   }),
 
-  postTrackFailed: error => ({
+  postTrackFailed: (logId, error) => ({
     type: tracklistActions.POST_TRACK_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   postTrackFulfilled: (logId, data) => ({
@@ -102,23 +111,28 @@ export const tracklistActions = {
     }
   }),
 
-  addTrack: (data) => ({
+  addTrack: (logId, data) => ({
     type: tracklistActions.ADD_TRACK,
     payload: {
+      logId,
       data
     }
   }),
 
-  removeTrack: (data) => ({
+  removeTrack: (logId, data) => ({
     type: tracklistActions.REMOVE_TRACK,
     payload: {
+      logId,
       data
     }
   }),
 
-  deleteTrackFailed: error => ({
+  deleteTrackFailed: (logId, error) => ({
     type: tracklistActions.DELETE_TRACK_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   deleteTrackPending: (logId, data) => ({

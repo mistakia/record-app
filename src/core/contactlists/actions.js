@@ -29,9 +29,12 @@ export const contactlistActions = {
   FETCH_PEER_CONTACTS_FULFILLED: 'FETCH_PEER_CONTACTS_FULFILLED',
   FETCH_PEER_CONTACTS_PENDING: 'FETCH_PEER_CONTACTS_PENDING',
 
-  fetchContactsFailed: error => ({
+  fetchContactsFailed: (logId, error) => ({
     type: contactlistActions.FETCH_CONTACTS_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   fetchContactsFulfilled: (logId, data) => ({
@@ -56,9 +59,12 @@ export const contactlistActions = {
     }
   }),
 
-  postContactFailed: error => ({
+  postContactFailed: (logId, error) => ({
     type: contactlistActions.POST_CONTACT_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   postContactFulfilled: (logId, data) => ({
@@ -91,9 +97,12 @@ export const contactlistActions = {
     }
   }),
 
-  deleteContactFailed: error => ({
+  deleteContactFailed: (logId, error) => ({
     type: contactlistActions.DELETE_CONTACT_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   deleteContactFulfilled: (logId, data) => ({
@@ -115,9 +124,12 @@ export const contactlistActions = {
     type: contactlistActions.LOAD_ALL_CONTACTS
   }),
 
-  fetchAllContactsFailed: error => ({
+  fetchAllContactsFailed: (logId, error) => ({
     type: contactlistActions.FETCH_ALL_CONTACTS_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   fetchAllContactsFulfilled: (logId, data) => ({
@@ -139,9 +151,12 @@ export const contactlistActions = {
     type: contactlistActions.LOAD_PEER_CONTACTS
   }),
 
-  fetchPeerContactsFailed: error => ({
+  fetchPeerContactsFailed: (logId, error) => ({
     type: contactlistActions.FETCH_PEER_CONTACTS_FAILED,
-    payload: error
+    payload: {
+      logId,
+      error
+    }
   }),
 
   fetchPeerContactsFulfilled: (logId, data) => ({

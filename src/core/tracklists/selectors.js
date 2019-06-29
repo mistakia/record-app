@@ -25,6 +25,11 @@ export function getCurrentTracklist (state) {
   return tracklists.get(tracklists.get('currentTracklistId'))
 }
 
+export function getCurrentTracklistIsUpdating (state) {
+  const tracklist = getCurrentTracklist(state)
+  return tracklist.isUpdating
+}
+
 export function getCurrentTracklistContact (state) {
   const logId = getCurrentTracklistId(state)
   return getContactByAddress(state, logId)

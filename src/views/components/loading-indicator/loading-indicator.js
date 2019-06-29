@@ -3,17 +3,15 @@ import React from 'react'
 import './loading-indicator.styl'
 
 const LoadingIndicator = ({ className }) => (
-  <div className={className}>
-    <div className='md-loading-indicator indeterminate'>
-      <div className='md-spinner-wrapper'>
-        <div className='md-inner'>
-          <div className='md-gap' />
-          <div className='md-left'>
-            <div className='md-half-circle' />
-          </div>
-          <div className='md-right'>
-            <div className='md-half-circle' />
-          </div>
+  <div className='loading-indicator indeterminate'>
+    <div className='spinner-wrapper'>
+      <div className='inner'>
+        <div className='gap' />
+        <div className='left'>
+          <div className='half-circle' />
+        </div>
+        <div className='right'>
+          <div className='half-circle' />
         </div>
       </div>
     </div>
