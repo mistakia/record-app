@@ -1,5 +1,6 @@
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
+import { withRouter } from 'react-router'
 
 import { getApp } from '@core/app'
 
@@ -10,6 +11,6 @@ const mapStateToProps = createSelector(
   (app) => ({app})
 )
 
-export default connect(
+export default withRouter(connect(
   mapStateToProps
-)(Menu)
+)(Menu))

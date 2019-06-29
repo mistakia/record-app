@@ -1,14 +1,14 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 
 import './menu.styl'
 
 const Menu = ({ app }) => (
   <div id='menu'>
-    <Link to='/feed'>Home</Link>
-    <Link to='/explore'>Explore</Link>
-    <Link to='/info'>Info</Link>
-    <Link to={`/tracks${app.address}`}>Tracks</Link>
+    <NavLink to='/feed'>Home</NavLink>
+    <NavLink to='/explore'>Explore</NavLink>
+    <NavLink to='/info'>Info</NavLink>
+    <NavLink to={`/tracks${app.address}`}>Tracks</NavLink>
   </div>
 )
 
