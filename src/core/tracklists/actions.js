@@ -1,4 +1,12 @@
 export const tracklistActions = {
+  SEARCH_TRACKS: 'SEARCH_TRACKS',
+
+  CLEAR_SEARCH: 'CLEAR_SEARCH',
+
+  SEARCH_TRACKS_FAILED: 'SEARCH_TRACKS_FAILED',
+  SEARCH_TRACKS_FULFILLED: 'SEARCH_TRACKS_FULFILLED',
+  SEARCH_TRACKS_PENDING: 'SEARCH_TRACKS_PENDING',
+
   FETCH_TRACKS_FAILED: 'FETCH_TRACKS_FAILED',
   FETCH_TRACKS_FULFILLED: 'FETCH_TRACKS_FULFILLED',
   FETCH_TRACKS_PENDING: 'FETCH_TRACKS_PENDING',
@@ -104,7 +112,7 @@ export const tracklistActions = {
     }
   }),
 
-  postTrackPending: (logId, data) => ({
+  postTrackPending: logId => ({
     type: tracklistActions.POST_TRACK_PENDING,
     payload: {
       logId
@@ -135,11 +143,10 @@ export const tracklistActions = {
     }
   }),
 
-  deleteTrackPending: (logId, data) => ({
+  deleteTrackPending: logId => ({
     type: tracklistActions.DELETE_TRACK_PENDING,
     payload: {
-      logId,
-      data
+      logId
     }
   }),
 
@@ -149,7 +156,50 @@ export const tracklistActions = {
       logId,
       data
     }
+  }),
+
+  clearSearch: (logId) => ({
+    type: tracklistActions.CLEAR_SEARCH,
+    payload: { logId }
+  }),
+
+  searchTracks: (logId, query, tags) => ({
+    type: tracklistActions.SEARCH_TRACKS,
+    payload: {
+      logId,
+      query,
+      tags
+    }
+  }),
+
+  searchTracksFailed: (logId, error) => ({
+    type: tracklistActions.SEARCH_TRACKS_FAILED,
+    payload: {
+      logId,
+      error
+    }
+  }),
+
+  searchTracksFulfilled: (logId, data) => ({
+    type: tracklistActions.SEARCH_TRACKS_FULFILLED,
+    payload: {
+      logId,
+      data
+    }
+  }),
+
+  searchTracksPending: logId => ({
+    type: tracklistActions.SEARCH_TRACKS_PENDING,
+    payload: {
+      logId
+    }
   })
+}
+
+export const tracklistSearchActions = {
+  failed: tracklistActions.searchTracksFailed,
+  fulfilled: tracklistActions.searchTracksFulfilled,
+  pending: tracklistActions.searchTracksPending
 }
 
 export const tracklistRequestActions = {

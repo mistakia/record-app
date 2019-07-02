@@ -25,11 +25,6 @@ export function getCurrentTracklist (state) {
   return tracklists.get(tracklists.get('currentTracklistId'))
 }
 
-export function getCurrentTracklistIsUpdating (state) {
-  const tracklist = getCurrentTracklist(state)
-  return tracklist.isUpdating
-}
-
 export function getCurrentTracklistContact (state) {
   const logId = getCurrentTracklistId(state)
   return getContactByAddress(state, logId)
@@ -58,9 +53,27 @@ export function getTracklistCursor (selectedTrackId, trackIds) {
 //  MEMOIZED SELECTORS
 // -------------------------------------
 
+export const getCurrentTracklistIsUpdating = createSelector(
+  getCurrentTracklist,
+  tracklist => tracklist.isUpdating
+)
+
+export const getCurrentSearchTrackIds = createSelector(
+  getCurrentTracklist,
+  tracklist => tracklist.searchTrackIds
+)
+
 export const getCurrentTrackIds = createSelector(
   getCurrentTracklist,
   tracklist => tracklist.trackIds
+)
+
+export const getSearchTracksForCurrentTracklist = createSelector(
+  getCurrentSearchTrackIds,
+  (state) => getTracks(state),
+  (trackIds, tracks) => {
+    return trackIds.map(id => tracks.get(id))
+  }
 )
 
 export const getTracksForCurrentTracklist = createSelector(

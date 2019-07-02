@@ -11797,7 +11797,9 @@ asn1.encoders = require('./asn1/encoders');
 },{"./asn1/api":79,"./asn1/base":81,"./asn1/constants":85,"./asn1/decoders":87,"./asn1/encoders":90,"bn.js":237}],79:[function(require,module,exports){
 'use strict';
 
-var asn1 = require('../asn1');
+var encoders = require('./encoders');
+
+var decoders = require('./decoders');
 
 var inherits = require('inherits');
 
@@ -11833,7 +11835,7 @@ Entity.prototype._createNamed = function createNamed(Base) {
 Entity.prototype._getDecoder = function _getDecoder(enc) {
   enc = enc || 'der'; // Lazily create decoder
 
-  if (!this.decoders.hasOwnProperty(enc)) this.decoders[enc] = this._createNamed(asn1.decoders[enc]);
+  if (!this.decoders.hasOwnProperty(enc)) this.decoders[enc] = this._createNamed(decoders[enc]);
   return this.decoders[enc];
 };
 
@@ -11844,7 +11846,7 @@ Entity.prototype.decode = function decode(data, enc, options) {
 Entity.prototype._getEncoder = function _getEncoder(enc) {
   enc = enc || 'der'; // Lazily create encoder
 
-  if (!this.encoders.hasOwnProperty(enc)) this.encoders[enc] = this._createNamed(asn1.encoders[enc]);
+  if (!this.encoders.hasOwnProperty(enc)) this.encoders[enc] = this._createNamed(encoders[enc]);
   return this.encoders[enc];
 };
 
@@ -11854,14 +11856,14 @@ reporter) {
   return this._getEncoder(enc).encode(data, reporter);
 };
 
-},{"../asn1":78,"inherits":974}],80:[function(require,module,exports){
+},{"./decoders":87,"./encoders":90,"inherits":974}],80:[function(require,module,exports){
 'use strict';
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 var inherits = require('inherits');
 
-var Reporter = require('../base').Reporter;
+var Reporter = require('../base/reporter').Reporter;
 
 var Buffer = require('buffer').Buffer;
 
@@ -11984,7 +11986,7 @@ EncoderBuffer.prototype.join = function join(out, offset) {
   return out;
 };
 
-},{"../base":81,"buffer":undefined,"inherits":974}],81:[function(require,module,exports){
+},{"../base/reporter":83,"buffer":undefined,"inherits":974}],81:[function(require,module,exports){
 'use strict';
 
 var base = exports;
@@ -11998,11 +12000,11 @@ base.Node = require('./node');
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-var Reporter = require('../base').Reporter;
+var Reporter = require('../base/reporter').Reporter;
 
-var EncoderBuffer = require('../base').EncoderBuffer;
+var EncoderBuffer = require('../base/buffer').EncoderBuffer;
 
-var DecoderBuffer = require('../base').DecoderBuffer;
+var DecoderBuffer = require('../base/buffer').DecoderBuffer;
 
 var assert = require('minimalistic-assert'); // Supported tags
 
@@ -12481,7 +12483,7 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
   return /^[A-Za-z0-9 '()+,-./:=?]*$/.test(str);
 };
 
-},{"../base":81,"minimalistic-assert":2303}],83:[function(require,module,exports){
+},{"../base/buffer":80,"../base/reporter":83,"minimalistic-assert":2303}],83:[function(require,module,exports){
 'use strict';
 
 var inherits = require('inherits');
@@ -12599,9 +12601,18 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 },{"inherits":974}],84:[function(require,module,exports){
-'use strict';
+'use strict'; // Helper
 
-var constants = require('../constants');
+function reverse(map) {
+  var res = {};
+  Object.keys(map).forEach(function (key) {
+    // Convert key to integer if it is stringified
+    if ((key | 0) == key) key = key | 0;
+    var value = map[key];
+    res[value] = key;
+  });
+  return res;
+}
 
 exports.tagClass = {
   0: 'universal',
@@ -12609,7 +12620,7 @@ exports.tagClass = {
   2: 'context',
   3: 'private'
 };
-exports.tagClassByName = constants._reverse(exports.tagClass);
+exports.tagClassByName = reverse(exports.tagClass);
 exports.tag = {
   0x00: 'end',
   0x01: 'bool',
@@ -12641,9 +12652,9 @@ exports.tag = {
   0x1d: 'charstr',
   0x1e: 'bmpstr'
 };
-exports.tagByName = constants._reverse(exports.tag);
+exports.tagByName = reverse(exports.tag);
 
-},{"../constants":85}],85:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 'use strict';
 
 var constants = exports; // Helper
@@ -12666,12 +12677,14 @@ constants.der = require('./der');
 
 var inherits = require('inherits');
 
-var asn1 = require('../../asn1');
+var bignum = require('bn.js');
 
-var base = asn1.base;
-var bignum = asn1.bignum; // Import DER constants
+var DecoderBuffer = require('../base/buffer').DecoderBuffer;
 
-var der = asn1.constants.der;
+var Node = require('../base/node'); // Import DER constants
+
+
+var der = require('../constants/der');
 
 function DERDecoder(entity) {
   this.enc = 'der';
@@ -12686,8 +12699,8 @@ function DERDecoder(entity) {
 module.exports = DERDecoder;
 
 DERDecoder.prototype.decode = function decode(data, options) {
-  if (!base.DecoderBuffer.isDecoderBuffer(data)) {
-    data = new base.DecoderBuffer(data, options);
+  if (!DecoderBuffer.isDecoderBuffer(data)) {
+    data = new DecoderBuffer(data, options);
   }
 
   return this.tree._decode(data, options);
@@ -12695,10 +12708,10 @@ DERDecoder.prototype.decode = function decode(data, options) {
 
 
 function DERNode(parent) {
-  base.Node.call(this, 'der', parent);
+  Node.call(this, 'der', parent);
 }
 
-inherits(DERNode, base.Node);
+inherits(DERNode, Node);
 
 DERNode.prototype._peekTag = function peekTag(buffer, tag, any) {
   if (buffer.isEmpty()) return false;
@@ -12946,7 +12959,7 @@ function derDecodeLen(buf, primitive, fail) {
   return len;
 }
 
-},{"../../asn1":78,"inherits":974}],87:[function(require,module,exports){
+},{"../base/buffer":80,"../base/node":82,"../constants/der":84,"bn.js":237,"inherits":974}],87:[function(require,module,exports){
 'use strict';
 
 var decoders = exports;
@@ -13007,11 +13020,10 @@ var inherits = require('inherits');
 
 var Buffer = require('buffer').Buffer;
 
-var asn1 = require('../../asn1');
+var Node = require('../base/node'); // Import DER constants
 
-var base = asn1.base; // Import DER constants
 
-var der = asn1.constants.der;
+var der = require('../constants/der');
 
 function DEREncoder(entity) {
   this.enc = 'der';
@@ -13031,10 +13043,10 @@ DEREncoder.prototype.encode = function encode(data, reporter) {
 
 
 function DERNode(parent) {
-  base.Node.call(this, 'der', parent);
+  Node.call(this, 'der', parent);
 }
 
-inherits(DERNode, base.Node);
+inherits(DERNode, Node);
 
 DERNode.prototype._encodeComposite = function encodeComposite(tag, primitive, cls, content) {
   var encodedTag = encodeTag(tag, primitive, cls, this.reporter); // Short form
@@ -13263,7 +13275,7 @@ function encodeTag(tag, primitive, cls, reporter) {
   return res;
 }
 
-},{"../../asn1":78,"buffer":undefined,"inherits":974}],90:[function(require,module,exports){
+},{"../base/node":82,"../constants/der":84,"buffer":undefined,"inherits":974}],90:[function(require,module,exports){
 'use strict';
 
 var encoders = exports;
@@ -74610,7 +74622,12 @@ DeferredIterator.prototype._operation = function (method, args) {
   DeferredIterator.prototype['_' + m] = function () {
     this._operation(m, arguments);
   };
-});
+}); // Must defer seek() rather than _seek() because it requires db._serializeKey to be available
+
+DeferredIterator.prototype.seek = function () {
+  this._operation('seek', arguments);
+};
+
 module.exports = DeferredIterator;
 
 },{"abstract-leveldown":32,"inherits":974}],695:[function(require,module,exports){
@@ -80836,9 +80853,8 @@ elliptic.eddsa = require('./elliptic/eddsa');
 
 var BN = require('bn.js');
 
-var elliptic = require('../../elliptic');
+var utils = require('../utils');
 
-var utils = elliptic.utils;
 var getNAF = utils.getNAF;
 var getJSF = utils.getJSF;
 var assert = utils.assert;
@@ -81193,19 +81209,18 @@ BasePoint.prototype.dblp = function dblp(k) {
   return r;
 };
 
-},{"../../elliptic":726,"bn.js":237}],728:[function(require,module,exports){
+},{"../utils":740,"bn.js":237}],728:[function(require,module,exports){
 'use strict';
 
-var curve = require('../curve');
-
-var elliptic = require('../../elliptic');
+var utils = require('../utils');
 
 var BN = require('bn.js');
 
 var inherits = require('inherits');
 
-var Base = curve.base;
-var assert = elliptic.utils.assert;
+var Base = require('./base');
+
+var assert = utils.assert;
 
 function EdwardsCurve(conf) {
   // NOTE: Important as we are creating point in Base.call()
@@ -81571,7 +81586,7 @@ Point.prototype.eqXToP = function eqXToP(x) {
 Point.prototype.toP = Point.prototype.normalize;
 Point.prototype.mixedAdd = Point.prototype.add;
 
-},{"../../elliptic":726,"../curve":729,"bn.js":237,"inherits":974}],729:[function(require,module,exports){
+},{"../utils":740,"./base":727,"bn.js":237,"inherits":974}],729:[function(require,module,exports){
 'use strict';
 
 var curve = exports;
@@ -81583,17 +81598,13 @@ curve.edwards = require('./edwards');
 },{"./base":727,"./edwards":728,"./mont":730,"./short":731}],730:[function(require,module,exports){
 'use strict';
 
-var curve = require('../curve');
-
 var BN = require('bn.js');
 
 var inherits = require('inherits');
 
-var Base = curve.base;
+var Base = require('./base');
 
-var elliptic = require('../../elliptic');
-
-var utils = elliptic.utils;
+var utils = require('../utils');
 
 function MontCurve(conf) {
   Base.call(this, 'mont', conf);
@@ -81763,19 +81774,18 @@ Point.prototype.getX = function getX() {
   return this.x.fromRed();
 };
 
-},{"../../elliptic":726,"../curve":729,"bn.js":237,"inherits":974}],731:[function(require,module,exports){
+},{"../utils":740,"./base":727,"bn.js":237,"inherits":974}],731:[function(require,module,exports){
 'use strict';
 
-var curve = require('../curve');
-
-var elliptic = require('../../elliptic');
+var utils = require('../utils');
 
 var BN = require('bn.js');
 
 var inherits = require('inherits');
 
-var Base = curve.base;
-var assert = elliptic.utils.assert;
+var Base = require('./base');
+
+var assert = utils.assert;
 
 function ShortCurve(conf) {
   Base.call(this, 'short', conf);
@@ -82602,19 +82612,21 @@ JPoint.prototype.isInfinity = function isInfinity() {
   return this.z.cmpn(0) === 0;
 };
 
-},{"../../elliptic":726,"../curve":729,"bn.js":237,"inherits":974}],732:[function(require,module,exports){
+},{"../utils":740,"./base":727,"bn.js":237,"inherits":974}],732:[function(require,module,exports){
 'use strict';
 
 var curves = exports;
 
 var hash = require('hash.js');
 
-var elliptic = require('../elliptic');
+var curve = require('./curve');
 
-var assert = elliptic.utils.assert;
+var utils = require('./utils');
+
+var assert = utils.assert;
 
 function PresetCurve(options) {
-  if (options.type === 'short') this.curve = new elliptic.curve["short"](options);else if (options.type === 'edwards') this.curve = new elliptic.curve.edwards(options);else this.curve = new elliptic.curve.mont(options);
+  if (options.type === 'short') this.curve = new curve["short"](options);else if (options.type === 'edwards') this.curve = new curve.edwards(options);else this.curve = new curve.mont(options);
   this.g = this.curve.g;
   this.n = this.curve.n;
   this.hash = options.hash;
@@ -82751,7 +82763,7 @@ defineCurve('secp256k1', {
   g: ['79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798', '483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8', pre]
 });
 
-},{"../elliptic":726,"./precomputed/secp256k1":739,"hash.js":896}],733:[function(require,module,exports){
+},{"./curve":729,"./precomputed/secp256k1":739,"./utils":740,"hash.js":896}],733:[function(require,module,exports){
 'use strict';
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -82760,9 +82772,12 @@ var BN = require('bn.js');
 
 var HmacDRBG = require('hmac-drbg');
 
-var elliptic = require('../../elliptic');
+var utils = require('../utils');
 
-var utils = elliptic.utils;
+var curves = require('../curves');
+
+var rand = require('brorand');
+
 var assert = utils.assert;
 
 var KeyPair = require('./key');
@@ -82773,12 +82788,12 @@ function EC(options) {
   if (!(this instanceof EC)) return new EC(options); // Shortcut `elliptic.ec(curve-name)`
 
   if (typeof options === 'string') {
-    assert(elliptic.curves.hasOwnProperty(options), 'Unknown curve ' + options);
-    options = elliptic.curves[options];
+    assert(curves.hasOwnProperty(options), 'Unknown curve ' + options);
+    options = curves[options];
   } // Shortcut for `elliptic.ec(elliptic.curves.curveName)`
 
 
-  if (options instanceof elliptic.curves.PresetCurve) options = {
+  if (options instanceof curves.PresetCurve) options = {
     curve: options
   };
   this.curve = options.curve.curve;
@@ -82813,7 +82828,7 @@ EC.prototype.genKeyPair = function genKeyPair(options) {
     hash: this.hash,
     pers: options.pers,
     persEnc: options.persEnc || 'utf8',
-    entropy: options.entropy || elliptic.rand(this.hash.hmacStrength),
+    entropy: options.entropy || rand(this.hash.hmacStrength),
     entropyEnc: options.entropy && options.entropyEnc || 'utf8',
     nonce: this.n.toArray()
   });
@@ -82956,14 +82971,13 @@ EC.prototype.getKeyRecoveryParam = function (e, signature, Q, enc) {
   throw new Error('Unable to find valid recovery factor');
 };
 
-},{"../../elliptic":726,"./key":734,"./signature":735,"bn.js":237,"hmac-drbg":914}],734:[function(require,module,exports){
+},{"../curves":732,"../utils":740,"./key":734,"./signature":735,"bn.js":237,"brorand":260,"hmac-drbg":914}],734:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
 
-var elliptic = require('../../elliptic');
+var utils = require('../utils');
 
-var utils = elliptic.utils;
 var assert = utils.assert;
 
 function KeyPair(ec, options) {
@@ -83072,14 +83086,13 @@ KeyPair.prototype.inspect = function inspect() {
   return '<Key priv: ' + (this.priv && this.priv.toString(16, 2)) + ' pub: ' + (this.pub && this.pub.inspect()) + ' >';
 };
 
-},{"../../elliptic":726,"bn.js":237}],735:[function(require,module,exports){
+},{"../utils":740,"bn.js":237}],735:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
 
-var elliptic = require('../../elliptic');
+var utils = require('../utils');
 
-var utils = elliptic.utils;
 var assert = utils.assert;
 
 function Signature(options, enc) {
@@ -83221,14 +83234,15 @@ Signature.prototype.toDER = function toDER(enc) {
   return utils.encode(res, enc);
 };
 
-},{"../../elliptic":726,"bn.js":237}],736:[function(require,module,exports){
+},{"../utils":740,"bn.js":237}],736:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
 
-var elliptic = require('../../elliptic');
+var curves = require('../curves');
 
-var utils = elliptic.utils;
+var utils = require('../utils');
+
 var assert = utils.assert;
 var parseBytes = utils.parseBytes;
 
@@ -83239,7 +83253,7 @@ var Signature = require('./signature');
 function EDDSA(curve) {
   assert(curve === 'ed25519', 'only tested with ed25519 so far');
   if (!(this instanceof EDDSA)) return new EDDSA(curve);
-  var curve = elliptic.curves[curve].curve;
+  var curve = curves[curve].curve;
   this.curve = curve;
   this.g = curve.g;
   this.g.precompute(curve.n.bitLength() + 1);
@@ -83346,12 +83360,11 @@ EDDSA.prototype.isPoint = function isPoint(val) {
   return val instanceof this.pointClass;
 };
 
-},{"../../elliptic":726,"./key":737,"./signature":738,"hash.js":896}],737:[function(require,module,exports){
+},{"../curves":732,"../utils":740,"./key":737,"./signature":738,"hash.js":896}],737:[function(require,module,exports){
 'use strict';
 
-var elliptic = require('../../elliptic');
+var utils = require('../utils');
 
-var utils = elliptic.utils;
 var assert = utils.assert;
 var parseBytes = utils.parseBytes;
 var cachedProperty = utils.cachedProperty;
@@ -83436,16 +83449,15 @@ KeyPair.prototype.getPublic = function getPublic(enc) {
 
 module.exports = KeyPair;
 
-},{"../../elliptic":726}],738:[function(require,module,exports){
+},{"../utils":740}],738:[function(require,module,exports){
 'use strict';
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 var BN = require('bn.js');
 
-var elliptic = require('../../elliptic');
+var utils = require('../utils');
 
-var utils = elliptic.utils;
 var assert = utils.assert;
 var cachedProperty = utils.cachedProperty;
 var parseBytes = utils.parseBytes;
@@ -83499,7 +83511,7 @@ Signature.prototype.toHex = function toHex() {
 
 module.exports = Signature;
 
-},{"../../elliptic":726,"bn.js":237}],739:[function(require,module,exports){
+},{"../utils":740,"bn.js":237}],739:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -83631,27 +83643,21 @@ utils.intFromLE = intFromLE;
 
 },{"bn.js":237,"minimalistic-assert":2303,"minimalistic-crypto-utils":2304}],741:[function(require,module,exports){
 module.exports={
-  "_args": [
-    [
-      "elliptic@6.4.1",
-      "/Volumes/Projects/record/app/nodejs-assets/nodejs-project"
-    ]
-  ],
-  "_from": "elliptic@6.4.1",
-  "_id": "elliptic@6.4.1",
+  "_from": "elliptic@^6.4.1",
+  "_id": "elliptic@6.5.0",
   "_inBundle": false,
-  "_integrity": "sha512-BsXLz5sqX8OHcsh7CqBMztyXARmGQ3LWPtGjJi6DiJHq5C/qvi9P3OqgswKSDftbu8+IoI/QDTAm2fFnQ9SZSQ==",
+  "_integrity": "sha512-eFOJTMyCYb7xtE/caJ6JJu+bhi67WCYNbkGSknu20pmM8Ke/bqOfdnZWxyoGN26JgfxTbXrsCkEw4KheCT/KGg==",
   "_location": "/elliptic",
   "_phantomChildren": {},
   "_requested": {
-    "type": "version",
+    "type": "range",
     "registry": true,
-    "raw": "elliptic@6.4.1",
+    "raw": "elliptic@^6.4.1",
     "name": "elliptic",
     "escapedName": "elliptic",
-    "rawSpec": "6.4.1",
+    "rawSpec": "^6.4.1",
     "saveSpec": null,
-    "fetchSpec": "6.4.1"
+    "fetchSpec": "^6.4.1"
   },
   "_requiredBy": [
     "/browserify-sign",
@@ -83660,9 +83666,10 @@ module.exports={
     "/secp256k1",
     "/tiny-secp256k1"
   ],
-  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.4.1.tgz",
-  "_spec": "6.4.1",
-  "_where": "/Volumes/Projects/record/app/nodejs-assets/nodejs-project",
+  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.5.0.tgz",
+  "_shasum": "2b8ed4c891b7de3200e14412a5b8248c7af505ca",
+  "_spec": "elliptic@^6.4.1",
+  "_where": "/Volumes/Projects/record/app/nodejs-assets/nodejs-project/node_modules/secp256k1",
   "author": {
     "name": "Fedor Indutny",
     "email": "fedor@indutny.com"
@@ -83670,6 +83677,7 @@ module.exports={
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
   },
+  "bundleDependencies": false,
   "dependencies": {
     "bn.js": "^4.4.0",
     "brorand": "^1.0.1",
@@ -83679,6 +83687,7 @@ module.exports={
     "minimalistic-assert": "^1.0.0",
     "minimalistic-crypto-utils": "^1.0.0"
   },
+  "deprecated": false,
   "description": "EC cryptography",
   "devDependencies": {
     "brfs": "^1.4.3",
@@ -83721,7 +83730,7 @@ module.exports={
     "unit": "istanbul test _mocha --reporter=spec test/index.js",
     "version": "grunt dist && git add dist/"
   },
-  "version": "6.4.1"
+  "version": "6.5.0"
 }
 
 },{}],742:[function(require,module,exports){
@@ -171546,13 +171555,22 @@ LevelUP.prototype.emit = EventEmitter.prototype.emit;
 LevelUP.prototype.once = EventEmitter.prototype.once;
 inherits(LevelUP, EventEmitter);
 
-LevelUP.prototype.open = function (callback) {
+LevelUP.prototype.open = function (opts, callback) {
   var self = this;
   var promise;
+
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = null;
+  }
 
   if (!callback) {
     callback = promisify();
     promise = callback.promise;
+  }
+
+  if (!opts) {
+    opts = this.options;
   }
 
   if (this.isOpen()) {
@@ -171568,7 +171586,7 @@ LevelUP.prototype.open = function (callback) {
   }
 
   this.emit('opening');
-  this.db.open(this.options, function (err) {
+  this.db.open(opts, function (err) {
     if (err) {
       return callback(new OpenError(err));
     }
@@ -308155,7 +308173,7 @@ module.exports = function about(self) {
                   content: {}
                 };
 
-                if (entryValue._id) {
+                if (entryValue.id) {
                   _context2.next = 12;
                   break;
                 }
@@ -308164,11 +308182,11 @@ module.exports = function about(self) {
                 return sha256(log.address.toString());
 
               case 11:
-                entryValue._id = _context2.sent;
+                entryValue.id = _context2.sent;
 
               case 12:
                 if (!entryValue.content.avatar) {
-                  entryValue.content.avatar = generateAvatar(entryValue._id);
+                  entryValue.content.avatar = generateAvatar(entryValue.id);
                 }
 
                 if (!entryValue.content.address) {
@@ -309636,7 +309654,7 @@ module.exports = function contacts(self) {
                   contact = _step.value;
                   _address = contact.content.address;
 
-                  this._connect(_address, contact._id);
+                  this._connect(_address, contact.id);
                 }
 
                 _context.next = 19;
@@ -309733,7 +309751,7 @@ module.exports = function contacts(self) {
                   contact = _step2.value;
                   _address2 = contact.content.address;
 
-                  this._disconnect(_address2, contact._id);
+                  this._disconnect(_address2, contact.id);
                 }
 
                 _context2.next = 22;
@@ -310179,7 +310197,7 @@ module.exports = function contacts(self) {
 
               case 3:
                 return _context10.abrupt("return", {
-                  _id: contactId
+                  id: contactId
                 });
 
               case 4:
@@ -310220,15 +310238,15 @@ module.exports = function contacts(self) {
                         switch (_context11.prev = _context11.next) {
                           case 0:
                             _context11.next = 2;
-                            return self.contacts.has(self.address, contact._id);
+                            return self.contacts.has(self.address, contact.id);
 
                           case 2:
                             haveContact = _context11.sent;
 
                             if (!haveContact) {
-                              suggestedContact = all.get(contact._id);
+                              suggestedContact = all.get(contact.id);
                               count = suggestedContact ? suggestedContact.count++ : 0;
-                              all.set(contact._id, extend(contact, {
+                              all.set(contact.id, extend(contact, {
                                 count: count
                               }));
                             }
@@ -310264,7 +310282,7 @@ module.exports = function contacts(self) {
                 }
 
                 contact = _step3.value;
-                all.set(contact._id, contact);
+                all.set(contact.id, contact);
                 _context12.next = 15;
                 return self.contacts.list(contact.content.address);
 
@@ -310406,7 +310424,7 @@ module.exports = function contacts(self) {
                 getContact = function getContact(e) {
                   return self.contacts.get({
                     logId: logId,
-                    contactId: e.payload.value._id,
+                    contactId: e.payload.value.id,
                     contactAddress: e.payload.value.content.address
                   });
                 };
@@ -311209,7 +311227,7 @@ module.exports = function peers(self) {
         return self.peers._index[peerId];
       });
       return peers.find(function (p) {
-        return p._id === contactId;
+        return p.id === contactId;
       });
     },
     list: function () {
@@ -311237,7 +311255,7 @@ module.exports = function peers(self) {
                 _context2.next = 8;
                 return self.contacts.get({
                   logId: self.address,
-                  contactId: about._id,
+                  contactId: about.id,
                   contactAddress: about.content.address
                 });
 
@@ -311300,6 +311318,10 @@ module.exports = function peers(self) {
       return _onJoin;
     }(),
     _onLeave: function _onLeave(peerId) {
+      if (!self.peers._index[peerId]) {
+        return;
+      }
+
       var address = self.peers._index[peerId].content.address;
       delete self.peers._index[peerId];
       var peerCount = Object.keys(self.peers._index).length;
@@ -311873,13 +311895,13 @@ module.exports = function tracks(self) {
 
               case 3:
                 track = _context6.sent;
+                track.payload.value.haveTrack = true;
                 self.emit('redux', {
                   type: 'TRACK_ADDED',
                   payload: {
                     track: track
                   }
                 });
-                track.payload.value.haveTrack = true;
                 return _context6.abrupt("return", track);
 
               case 7:
@@ -312441,7 +312463,7 @@ function () {
             switch (_context.prev = _context.next) {
               case 0:
                 this._entry = _objectSpread({
-                  _id: id,
+                  id: id,
                   timestamp: Date.now(),
                   v: 0,
                   type: this._type
@@ -312951,6 +312973,10 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -312958,6 +312984,8 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var Log = require('ipfs-log');
+
+var FlexSearch = require('flexsearch');
 
 var RecordIndex =
 /*#__PURE__*/
@@ -312969,8 +312997,17 @@ function () {
       tags: {},
       about: null,
       track: new Map(),
-      contact: new Map()
+      contact: new Map() // TODO: import from disk
+
     };
+    this._searchIndex = new FlexSearch('speed', {
+      async: true,
+      doc: {
+        id: 'key',
+        field: ['title', 'artist', 'album', 'resolver'],
+        tag: ['tags']
+      }
+    });
   }
 
   _createClass(RecordIndex, [{
@@ -313026,10 +313063,20 @@ function () {
           cache.resolver = resolver.map(function (r) {
             return "".concat(r.extractor, ":").concat(r.id);
           });
+
+          this._searchIndex.add(_objectSpread({
+            key: key,
+            resolver: resolver.map(function (r) {
+              return r.fulltitle;
+            }).join(' '),
+            tags: item.payload.value.tags
+          }, item.payload.value.content.tags));
         }
 
         this._index[type].set(key, cache);
       } else if (item.payload.op === 'DEL') {
+        this._searchIndex.remove(key);
+
         this._index[type]["delete"](key);
       }
     }
@@ -313221,7 +313268,7 @@ function () {
 
 module.exports = RecordIndex;
 
-},{"ipfs-log":1082}],2758:[function(require,module,exports){
+},{"flexsearch":undefined,"ipfs-log":1082}],2758:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -313468,7 +313515,7 @@ function (_Store) {
     _classCallCheck(this, RecordStore);
 
     if (!options.indexBy) Object.assign(options, {
-      indexBy: '_id'
+      indexBy: 'id'
     });
     if (!options.Index) Object.assign(options, {
       Index: RecordIndex
@@ -313881,7 +313928,7 @@ module.exports = function (self) {
               case 2:
                 entry = _context2.sent;
                 _context2.next = 5;
-                return self.get(entry._id, 'contact');
+                return self.get(entry.id, 'contact');
 
               case 5:
                 contact = _context2.sent;
@@ -313930,7 +313977,7 @@ module.exports = function (self) {
                 return self.put(entry);
 
               case 2:
-                return _context3.abrupt("return", self.contacts.getFromId(entry._id));
+                return _context3.abrupt("return", self.contacts.getFromId(entry.id));
 
               case 3:
               case "end":
@@ -314218,9 +314265,10 @@ module.exports = function (self) {
             start,
             end,
             random,
+            query,
             tags,
-            indexEntries,
             entryHashes,
+            results,
             promises,
             _args = arguments;
         return regeneratorRuntime.wrap(function _callee$(_context) {
@@ -314228,7 +314276,7 @@ module.exports = function (self) {
             switch (_context.prev = _context.next) {
               case 0:
                 opts = _args.length > 0 && _args[0] !== undefined ? _args[0] : {};
-                start = opts.start, end = opts.end, random = opts.random;
+                start = opts.start, end = opts.end, random = opts.random, query = opts.query;
                 tags = opts.tags && !Array.isArray(opts.tags) ? [opts.tags] : opts.tags || [];
 
                 if (!(tags.length && !tags.some(function (t) {
@@ -314246,35 +314294,80 @@ module.exports = function (self) {
                   end = start + 1;
                 }
 
-                indexEntries = Array.from(self._index._index.track.values()).reverse().slice(start, end);
                 entryHashes = [];
 
-                if (tags.length) {
-                  (function () {
-                    var i = 0;
-
-                    while (entryHashes.length < (end || Infinity) && indexEntries[i]) {
-                      if (tags.every(function (t) {
-                        return indexEntries[i].tags.includes(t);
-                      })) {
-                        entryHashes.push(indexEntries[i].hash);
-                      }
-
-                      i++;
-                    }
-                  })();
-                } else {
-                  entryHashes = indexEntries.map(function (e) {
-                    return e.hash;
-                  });
+                if (!query) {
+                  _context.next = 21;
+                  break;
                 }
 
+                results = [];
+
+                if (!tags.length) {
+                  _context.next = 15;
+                  break;
+                }
+
+                _context.next = 12;
+                return self._index._searchIndex.search(query, {
+                  where: function where(doc) {
+                    return tags.every(function (tag) {
+                      return doc.tags.indexOf(tag) !== -1;
+                    });
+                  }
+                });
+
+              case 12:
+                results = _context.sent;
+                _context.next = 18;
+                break;
+
+              case 15:
+                _context.next = 17;
+                return self._index._searchIndex.search(query);
+
+              case 17:
+                results = _context.sent;
+
+              case 18:
+                entryHashes = results.map(function (e) {
+                  return self._index._index.track.get(e.key).hash;
+                });
+                _context.next = 22;
+                break;
+
+              case 21:
+                (function () {
+                  var indexEntries = Array.from(self._index._index.track.values()).reverse().slice(start, end);
+
+                  if (tags.length) {
+                    (function () {
+                      var i = 0;
+
+                      while (entryHashes.length < (end || Infinity) && indexEntries[i]) {
+                        if (tags.every(function (t) {
+                          return indexEntries[i].tags.includes(t);
+                        })) {
+                          entryHashes.push(indexEntries[i].hash);
+                        }
+
+                        i++;
+                      }
+                    })();
+                  } else {
+                    entryHashes = indexEntries.map(function (e) {
+                      return e.hash;
+                    });
+                  }
+                })();
+
+              case 22:
                 promises = entryHashes.map(function (e) {
                   return self.tracks.getFromHash(e);
                 });
                 return _context.abrupt("return", Promise.all(promises));
 
-              case 11:
+              case 24:
               case "end":
                 return _context.stop();
             }
@@ -314306,7 +314399,7 @@ module.exports = function (self) {
               case 2:
                 entry = _context2.sent;
                 _context2.next = 5;
-                return self.get(entry._id, 'track');
+                return self.get(entry.id, 'track');
 
               case 5:
                 track = _context2.sent;
@@ -314355,7 +314448,7 @@ module.exports = function (self) {
                 return self.put(entry);
 
               case 2:
-                return _context3.abrupt("return", self.tracks.getFromId(entry._id));
+                return _context3.abrupt("return", self.tracks.getFromId(entry.id));
 
               case 3:
               case "end":
@@ -359120,7 +359213,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return isObject(input) && typeof input.length === 'number';
   }
   /**
-   * returns true if the typeof input is `'object'`, but not null!
+   * Returns true if the typeof input is `'object'` but not null.
    * @param {*} - the input to test
    * @returns {boolean}
    * @static
@@ -359131,7 +359224,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return _typeof(input) === 'object' && input !== null;
   }
   /**
-   * Returns true if the input value is defined
+   * Returns true if the input value is defined.
    * @param {*} - the input to test
    * @returns {boolean}
    * @static
@@ -359245,16 +359338,54 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       return typeof input[Symbol.iterator] === 'function' || typeof input[Symbol.asyncIterator] === 'function';
     }
   }
+  /**
+   * Returns true if the input value is a string. The equivalent of `typeof input === 'string'`` for use in funcitonal contexts.
+   * @param {*} - the input to test
+   * @returns {boolean}
+   * @static
+   */
 
+
+  function isString(input) {
+    return typeof input === 'string';
+  }
+  /**
+   * Returns true if the input value is a function. The equivalent of `typeof input === 'function'`` for use in funcitonal contexts.
+   * @param {*} - the input to test
+   * @returns {boolean}
+   * @static
+   */
+
+
+  function isFunction(input) {
+    return typeof input === 'function';
+  }
+
+  var index = {
+    isNumber: isNumber,
+    isPlainObject: isPlainObject,
+    isArrayLike: isArrayLike,
+    isObject: isObject,
+    isDefined: isDefined,
+    isClass: isClass,
+    isPrimitive: isPrimitive,
+    isPromise: isPromise,
+    isIterable: isIterable,
+    isString: isString,
+    isFunction: isFunction
+  };
+  exports["default"] = index;
   exports.isArrayLike = isArrayLike;
   exports.isClass = isClass;
   exports.isDefined = isDefined;
+  exports.isFunction = isFunction;
   exports.isIterable = isIterable;
   exports.isNumber = isNumber;
   exports.isObject = isObject;
   exports.isPlainObject = isPlainObject;
   exports.isPrimitive = isPrimitive;
   exports.isPromise = isPromise;
+  exports.isString = isString;
   Object.defineProperty(exports, '__esModule', {
     value: true
   });

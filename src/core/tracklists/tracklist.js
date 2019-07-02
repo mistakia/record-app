@@ -5,5 +5,7 @@ export const Tracklist = new Record({
   isPending: false,
   isUpdating: false,
   hasMore: true,
-  trackIds: new List()
+  query: null,
+  trackIds: new List(),
+  searchTrackIds: new List()
 })

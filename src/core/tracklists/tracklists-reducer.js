@@ -18,8 +18,14 @@ export function tracklistsReducer (state = initialState, action) {
         [payload.address]: tracklistReducer(undefined, action)
       })
 
+    case tracklistActions.CLEAR_SEARCH:
+    case tracklistActions.SEARCH_TRACKS:
+    case tracklistActions.SEARCH_TRACKS_FULFILLED:
     case tracklistActions.FETCH_TRACKS_FULFILLED:
     case tracklistActions.FETCH_TRACK_FULFILLED:
+    case tracklistActions.SEARCH_TRACKS_PENDING:
+    case tracklistActions.FETCH_TRACKS_PENDING:
+    case tracklistActions.FETCH_TRACK_PENDING:
       return state.set(
         payload.logId,
         tracklistReducer(state.get(payload.logId), action)

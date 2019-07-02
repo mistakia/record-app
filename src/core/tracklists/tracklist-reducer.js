@@ -10,6 +10,29 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
     case appActions.INIT_APP:
       return state.set('id', payload.address)
 
+    case tracklistActions.CLEAR_SEARCH:
+      return state.withMutations(tracklist => {
+        tracklist.merge({
+          query: null,
+          searchTrackIds: new List()
+        })
+      })
+
+    case tracklistActions.SEARCH_TRACKS:
+      return state.withMutations(tracklist => {
+        const { query } = payload
+        tracklist.merge({ query })
+      })
+
+    case tracklistActions.SEARCH_TRACKS_FULFILLED:
+      return state.withMutations(tracklist => {
+        tracklist.merge({
+          isPending: false,
+          hasMore: false,
+          searchTrackIds: new List(payload.data.map(t => t.id))
+        })
+      })
+
     case tracklistActions.FETCH_TRACKS_FULFILLED:
       return state.withMutations(tracklist => {
         tracklist.merge({
@@ -27,6 +50,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         })
       })
 
+    case tracklistActions.SEARCH_TRACKS_PENDING:
     case tracklistActions.FETCH_TRACKS_PENDING:
     case tracklistActions.FETCH_TRACK_PENDING:
       return state.set('isPending', true)
@@ -43,7 +67,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
 function mergeTrackIds (trackIds, collection) {
   let ids = trackIds.toJS()
   let newIds = collection.reduce((list, trackData) => {
-    if (ids.indexOf(trackData._id) === -1) list.push(trackData._id)
+    if (ids.indexOf(trackData.id) === -1) list.push(trackData.id)
     return list
   }, [])
 

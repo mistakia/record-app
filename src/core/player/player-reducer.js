@@ -39,7 +39,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         return state
       }
 
-      const trackId = payload.data[0]._id
+      const trackId = payload.data[0].id
       return state.merge({
         trackId
       })

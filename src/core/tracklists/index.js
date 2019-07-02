@@ -2,6 +2,7 @@ export {
   tracklistActions,
   trackRequestActions,
   tracklistRequestActions,
+  tracklistSearchActions,
   tracklistPostActions,
   tracklistDeleteActions
 } from './actions'
@@ -14,6 +15,7 @@ export {
   getPendingTrackCID,
   getTracklistById,
   getTracklistCursor,
+  getSearchTracksForCurrentTracklist,
   getTracksForCurrentTracklist
 } from './selectors'
 

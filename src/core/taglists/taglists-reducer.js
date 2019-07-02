@@ -26,6 +26,7 @@ export function taglistsReducer (state = initialState, action) {
         [payload.logId]: taglistReducer(undefined, action)
       })
 
+    case tracklistActions.SEARCH_TRACKS:
     case tracklistActions.LOAD_TRACKS:
       const { tags } = payload
       const t = tags && !Array.isArray(tags) ? [tags] : tags
