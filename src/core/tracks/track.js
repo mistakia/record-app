@@ -64,7 +64,7 @@ export function createTrack (data) {
 
   return new Track({
     duration: data.content.audio.duration,
-    id: data._id,
+    id: data.id,
     thumbnail: artwork,
     title: title,
     url: url,

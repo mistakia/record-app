@@ -12,7 +12,7 @@ export function contactsReducer (state = new Map(), {payload, type}) {
     case contactlistActions.FETCH_ALL_CONTACTS_FULFILLED:
       return state.withMutations(contacts => {
         payload.data.forEach(contactData => {
-          contacts.set(contactData._id, createContact(contactData))
+          contacts.set(contactData.id, createContact(contactData))
         })
       })
 
@@ -57,13 +57,13 @@ export function contactsReducer (state = new Map(), {payload, type}) {
 
     case contactActions.FETCH_CONTACT_FULFILLED:
       return state.withMutations(contacts => {
-        contacts.set(payload.data._id, createContact(payload.data))
+        contacts.set(payload.data.id, createContact(payload.data))
       })
 
     case contactlistActions.DELETE_CONTACT_FULFILLED:
       return state.withMutations(contacts => {
-        contacts.setIn([payload.data._id, 'haveContact'], false)
-        contacts.setIn([payload.data._id, 'isUpdating'], false)
+        contacts.setIn([payload.data.id, 'haveContact'], false)
+        contacts.setIn([payload.data.id, 'isUpdating'], false)
       })
 
     case contactlistActions.ADD_CONTACT:

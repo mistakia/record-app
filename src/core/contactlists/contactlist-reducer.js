@@ -46,7 +46,7 @@ export function contactlistReducer (state = new Contactlist(), {payload, type}) 
 function mergeContactIds (contactIds, collection) {
   let ids = contactIds.toJS()
   let newIds = collection.reduce((list, contactData) => {
-    if (ids.indexOf(contactData._id) === -1) list.push(contactData._id)
+    if (ids.indexOf(contactData.id) === -1) list.push(contactData.id)
     return list
   }, [])
 

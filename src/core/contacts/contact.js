@@ -70,7 +70,7 @@ export function createContact (data) {
   }
 
   return new Contact({
-    id: data._id,
+    id: data.id,
     address: data.content.address,
     alias: data.content.alias,
     avatar: data.content.avatar || data.avatar,

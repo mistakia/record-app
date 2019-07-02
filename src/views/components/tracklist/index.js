@@ -4,6 +4,7 @@ import { createSelector } from 'reselect'
 
 import {
   getCurrentTracklist,
+  getSearchTracksForCurrentTracklist,
   getTracksForCurrentTracklist,
   tracklistActions
 } from '@core/tracklists'
@@ -31,14 +32,22 @@ const Tracklist = ({
   selectedTrackId,
   selectTrack,
   tracklistId,
+  search,
+  searchTracks,
   tracks,
   hasMore,
   loadNextTracks,
+  searchQuery,
   showAdd,
   shuffle,
-  tags
+  tags,
+  clearSearch
 }) => {
-  const trackItems = tracks.map((track, index) => {
+  const renderTrack = (track, index) => {
+    if (!track) {
+      return null
+    }
+
     const isSelected = track.id === selectedTrackId
     return (
       <Track
@@ -51,7 +60,10 @@ const Tracklist = ({
         play={isSelected ? play : selectTrack.bind(null, track.id, tracklistId)}
       />
     )
-  })
+  }
+
+  const trackItems = tracks.map(renderTrack)
+  const searchItems = searchTracks.map(renderTrack)
 
   const loading = (
     <Loading
@@ -61,7 +73,26 @@ const Tracklist = ({
     />
   )
 
-  return render({ trackItems, loading, showAdd, shuffle, isShuffling, tracklistId })
+  const onSearch = (query) => {
+    search(tracklistId, query, tags)
+  }
+
+  const onClear = () => {
+    clearSearch(tracklistId)
+  }
+
+  return render({
+    trackItems,
+    searchItems,
+    onSearch,
+    loading,
+    showAdd,
+    shuffle,
+    isShuffling,
+    tracklistId,
+    searchQuery,
+    onClear
+  })
 }
 
 const mapStateToProps = createSelector(
@@ -71,8 +102,9 @@ const mapStateToProps = createSelector(
   getPlayerTrackId,
   getCurrentTracklist,
   getTracksForCurrentTracklist,
+  getSearchTracksForCurrentTracklist,
   getPlayerIsLoading,
-  (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks, isLoading) => ({
+  (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks, searchTracks, isLoading) => ({
     displayLoadingIndicator: tracklist.isPending,
     isPlaying,
     isShuffling: isShuffling && tracklist.id === playerTracklistId,
@@ -81,15 +113,19 @@ const mapStateToProps = createSelector(
     play: audio.play,
     selectedTrackId: playerTrackId,
     tracklistId: tracklist.id,
+    searchQuery: tracklist.query,
     hasMore: tracklist.hasMore,
-    tracks
+    tracks,
+    searchTracks
   })
 )
 
 const mapDispatchToProps = {
+  search: tracklistActions.searchTracks,
   selectTrack: playerActions.playSelectedTrack,
   loadNextTracks: tracklistActions.loadNextTracks,
-  shuffle: playerActions.shuffleTracklist
+  shuffle: playerActions.shuffleTracklist,
+  clearSearch: tracklistActions.clearSearch
 }
 
 export default connect(

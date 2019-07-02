@@ -11,7 +11,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
     case tracklistActions.FETCH_TRACK_FULFILLED:
       return state.withMutations(tracks => {
         payload.data.forEach(trackData => {
-          tracks.set(trackData._id, createTrack(trackData))
+          tracks.set(trackData.id, createTrack(trackData))
         })
       })
 
@@ -32,7 +32,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
     case taglistActions.POST_TAG_FULFILLED:
     case taglistActions.DELETE_TAG_FULFILLED:
       const track = payload.data
-      return state.withMutations(tracks => tracks.set(track._id, createTrack(track)))
+      return state.withMutations(tracks => tracks.set(track.id, createTrack(track)))
 
     case tracklistActions.DELETE_TRACK_FULFILLED:
       return state.withMutations(tracks => {
@@ -48,7 +48,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
 
     case tracklistActions.POST_TRACK_FULFILLED:
       const { contentCID } = payload.data.payload.value
-      const trackId = payload.data.payload.value._id
+      const trackId = payload.data.payload.value.id
       return state.withMutations(tracks => {
         tracks.setIn([trackId, 'isUpdating'], false)
         tracks.map(track => {
@@ -62,7 +62,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       return state.withMutations(tracks => {
         payload.data.forEach(feedData => {
           if (feedData.entryType === 'track') {
-            tracks.set(feedData.content._id, createTrack(feedData.content))
+            tracks.set(feedData.content.id, createTrack(feedData.content))
           }
         })
       })
