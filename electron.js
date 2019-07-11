@@ -8,6 +8,7 @@ const os = require('os')
 const fs = require('fs')
 const RecordNode = require('record-node')
 const debug = require('debug')
+const ipc = require('electron').ipcMain
 
 const config = require('./config/project.config')
 
@@ -35,24 +36,15 @@ logger.info(`Electron Node version: ${process.versions.node}`)
 let record
 const app = electron.app
 
-// const userDataPath = app.getPath('userData')
-// logger.info(`User Data: ${userDataPath}`)
-const recorddir = path.resolve(os.homedir(), './.record')
-if (!fs.existsSync(recorddir)) { fs.mkdirSync(recorddir) }
-
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
-
-const logToRenderer = (source, level, text) => {
-  if (mainWindow)
-    mainWindow.webContents.send('log', source, level, text)
-}
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
+let backgroundWindow
 
-function createWindow () {
+function createMainWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     minWidth: 600,
@@ -75,7 +67,6 @@ function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null
-
   })
 
   mainWindow.once('ready-to-show', () => {
@@ -102,60 +93,25 @@ app.on('ready', () => {
     .then((name) => logger.info(`Added Extension: ${name}`))
     .catch((err) => logger.error('An error occurred: ', err));
 
-  createWindow()
+  createMainWindow()
 
-  try {
-    const orbitAddressPath = path.resolve(recorddir, 'address.txt')
-    const orbitAddress = fs.existsSync(orbitAddressPath) ?
-      fs.readFileSync(orbitAddressPath, 'utf8') : 'record'
+  backgroundWindow = new BrowserWindow({ show: false })
+  backgroundWindow.loadFile(require('path').join(__dirname, 'background.html'))
 
-    logger.info(`Orbit Address: ${orbitAddress}`)
-    let opts = {
-      orbitdb: {
-        directory: path.resolve(recorddir, './orbitdb')
-      },
-      store: {
-        replicationConcurrency: 128
-      },
-      address: orbitAddress,
-      ipfs: {
-        repo: path.resolve(recorddir, './ipfs')
-      },
-      api: true
+  ipc.on('ipfs:state', (event, data) => {
+    if (mainWindow) mainWindow.webContents.send('ipfs:state', data)
+  })
+  ipc.on('ready', (event, data) => {
+    const sendReady = () => mainWindow.webContents.send('ready', data)
+    sendReady()
+    mainWindow.webContents.on('did-finish-load', sendReady)
+  })
+  ipc.on('redux', (event, data) => {
+    if (data.type === 'TRACK_ADDED') {
+      mainWindow.show()
     }
-
-    record = new RecordNode(opts)
-    record.on('ipfs:state', (state) => mainWindow.webContents.send('ipfs:state', state))
-    record.on('ready', async () => {
-      try {
-        sendReady()
-        record.on('redux', (data) => {
-          if (data.type === 'TRACK_ADDED') {
-            mainWindow.show()
-          }
-          mainWindow.webContents.send('redux', data)
-        })
-        mainWindow.webContents.on('did-finish-load', sendReady)
-
-        const log = await record.log.get()
-        fs.writeFileSync(orbitAddressPath, record.address)
-
-        setTimeout(() => {
-          record.contacts.connect()
-        }, 5000)
-
-      } catch (e) {
-        console.log(e)
-      }
-    })
-  } catch (err) {
-    logger.error(`Error starting node: ${err.toString()}`)
-    console.log(err)
-  }
-
-  // Pass log messages to the renderer process
-  Logger.events.on('data', logToRenderer)
-
+    if (mainWindow) mainWindow.webContents.send('redux', data)
+  })
 })
 
 // Quit when all windows are closed.
@@ -167,16 +123,10 @@ app.on('window-all-closed', function () {
   }
 })
 
-app.on('before-quit', async (event) => {
-  event.preventDefault()
-  await record.stop()
-  app.exit()
-})
-
 app.on('activate', function () {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    createWindow()
+    createMainWindow()
   }
 })
