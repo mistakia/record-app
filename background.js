@@ -29,7 +29,7 @@ try {
       directory: path.resolve(recorddir, './orbitdb')
     },
     store: {
-      replicationConcurrency: 10
+      replicationConcurrency: 240
     },
     address: orbitAddress,
     ipfs: {
