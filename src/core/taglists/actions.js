@@ -63,7 +63,7 @@ export const taglistActions = {
     }
   }),
 
-  postTagPending: (logId, data) => ({
+  postTagPending: logId => ({
     type: taglistActions.POST_TAG_PENDING,
     payload: {
       logId
