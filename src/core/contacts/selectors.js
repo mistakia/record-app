@@ -1,5 +1,3 @@
-import { ReplicationStats } from './contact'
-
 export function getContacts (state) {
   return state.get('contacts')
 }
@@ -18,34 +16,18 @@ export function getContactMe (state) {
   return getContactByAddress(state, address)
 }
 
-export function getReplicationStats (state) {
-  const contacts = getContacts(state)
-
-  let result = new ReplicationStats().toJSON()
-
-  for (const contact of contacts.values()) {
-    const stats = contact.get('replicationStats')
-    for (const key in result) {
-      result[key] += stats[key]
-    }
-  }
-
-  return result
-}
-
 export function getReplicationProgress (state) {
   const contacts = getContacts(state)
   let result = {
     progress: 0,
     total: 0
+
   }
-
   for (const contact of contacts.values()) {
-    const contactStats = contact.get('replicationStats')
-    const contactStatus = contact.get('replicationStatus')
-
-    result.progress += Math.max(contactStats.tasksProcessed, contactStatus.progress)
-    result.total += contactStatus.max
+    const length = contact.get('length')
+    const max = contact.get('max')
+    result.progress += length
+    result.total += Math.max(max, length)
   }
 
   return result

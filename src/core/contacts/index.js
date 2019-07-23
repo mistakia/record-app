@@ -3,8 +3,7 @@ export {
   getContactById,
   getContactByAddress,
   getContactMe,
-  getReplicationProgress,
-  getReplicationStats
+  getReplicationProgress
 } from './selectors'
 export { contactActions, contactRequestActions } from './actions'
 export { contactSagas } from './sagas'

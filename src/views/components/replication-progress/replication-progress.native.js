@@ -1,9 +1,9 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
-const ReplicationProgress = ({ progress }) => (
+const ReplicationProgress = ({ progressPercent }) => (
   <View style={styles.container}>
-    <View style={{ width: progress + '%', ...styles.progress }} />
+    <View style={{ width: progressPercent + '%', ...styles.progress }} />
   </View>
 )
 

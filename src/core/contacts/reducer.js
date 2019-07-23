@@ -29,14 +29,14 @@ export function contactsReducer (state = new Map(), {payload, type}) {
 
     case contactActions.CONTACT_REPLICATED:
       return state.withMutations(contacts => {
-        contacts.setIn([payload.contactId, 'replicationStats'], payload.replicationStats)
-        contacts.setIn([payload.contactId, 'replicationStatus'], payload.replicationStatus)
+        contacts.setIn([payload.contactId, 'length'], payload.length)
+        contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
       })
 
     case contactActions.CONTACT_REPLICATE_PROGRESS:
       return state.withMutations(contacts => {
-        contacts.setIn([payload.contactId, 'replicationStats'], payload.replicationStats)
-        contacts.setIn([payload.contactId, 'replicationStatus'], payload.replicationStatus)
+        contacts.setIn([payload.contactId, 'length'], payload.length)
+        contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
       })
 
     case contactActions.CONTACT_CONNECTED:

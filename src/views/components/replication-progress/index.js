@@ -1,25 +1,23 @@
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { getReplicationProgress, getReplicationStats } from '@core/contacts'
+import { getReplicationProgress } from '@core/contacts'
 
 import render from './replication-progress'
 
-const ReplicationProgress = ({ replicationProgress, replicationStats }) => {
+const ReplicationProgress = ({ replicationProgress }) => {
   const { progress, total } = replicationProgress
-  const { tasksRequested } = replicationStats
   const progressPercent = Math.floor(progress / total * 100)
-  if (tasksRequested === 0 || progressPercent === 100) {
+  if (!progressPercent || progressPercent === 100) {
     return null
   }
 
-  return render({ progress })
+  return render({ progressPercent })
 }
 
 const mapStateToProps = createSelector(
   getReplicationProgress,
-  getReplicationStats,
-  (replicationProgress, replicationStats) => ({ replicationProgress, replicationStats })
+  (replicationProgress) => ({ replicationProgress })
 )
 
 export default connect(
