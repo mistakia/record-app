@@ -9,6 +9,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
   switch (type) {
     case tracklistActions.FETCH_TRACKS_FULFILLED:
     case tracklistActions.FETCH_TRACK_FULFILLED:
+    case tracklistActions.SEARCH_TRACKS_FULFILLED:
       return state.withMutations(tracks => {
         payload.data.forEach(trackData => {
           tracks.set(trackData.id, createTrack(trackData))
