@@ -1,13 +1,29 @@
+.page
+  absolute left right top bottom 75px
+  height 100%
+  overflow hidden
+  display flex
+  flex-direction column
+  padding-top 35px
+  &.player-open
+    padding-bottom 75px
+
 .page__container
   position relative
-  margin 0 auto
-  max-width 600px
+  margin-left 45px
+
+.page__title
+  line-height 39px
 
 .page__head
-  padding-top 15px
-  margin-bottom 15px
-  background #f9f9f9
-  border-bottom 1px solid $borderColor
+  flex 0 0 40px
+  border-bottom 1px solid $borderColorDark
+  background #fcfcfc
   button.button__arrow-back
-    absolute left -45px top -5px
+    absolute left -45px top 0
     border none
+    padding 0
+
+.page__body
+  flex 1
+  position relative

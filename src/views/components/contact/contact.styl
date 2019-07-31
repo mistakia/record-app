@@ -1,51 +1,48 @@
 .contact
   padding 0
+  display flex
+  align-items center
+  color #000
   &:not(.contact__profile)
     cursor pointer
   + .contact
     margin-top -1px
 
 .contact__avatar
-  absolute top left
+  flex 0 0 45px
+  width 45px
+  height 45px
+
+.contact__body
+  flex 1 0 auto
+  display flex
+  > div
+    flex 0 0 auto
 
 .contact__title
-  display block
+  vertical-align middle
+  padding 0 15px
 
-.contact__action
-  absolute top 5px right 5px
+.contact__actions
+  flex 0 0 auto
+  margin-right 10px
+  display inline-block
   .button
-    padding 10px
     background #f5f5f5
-    display block
 
 .contact__menu
-  margin-bottom -1px
+  flex 1 0 auto !important
+  border-left 1px solid $borderColorDark
+  margin-left 15px
+  padding-left 15px
   a
-    padding 15px
-    margin-top 4px
-    display inline-block
-    + a
-      margin-left 4px
-    &:hover
-      background #f0f0f0
-      color #444
-    &.active
-      background $backgroundColor
-      border-top 2px solid $accentColor
-      border-left 1px solid $borderColor
-      border-right 1px solid $borderColor
-
-.contact.contact__profile
-  .contact__body
-    display inline-block
-    min-height 120px
-    margin-left 115px
-  .contact__bio
-    margin 5px 0px
-  .contact__title
-    font-weight 300
-    line-height 1.1
-    font-size 38px
+    text-align right
+  a:hover
+    background #f0f0f0 !important
+    color #444
+  a.active
+    background rgba(20,20,20,0.9) !important
+    color white
 
 .contact__heading.contact
   margin-left -45px
@@ -69,16 +66,20 @@
 .contact__item.contact
   border 1px solid $borderColor
   border-radius $borderRadius
+  display flex
   &:hover
     background #fbfbfb
   .contact__avatar
     width 45px
     height 45px
     padding 5px
-    background #f9f9f9
   .contact__body
-    display flex
-    flex-direction column
-    justify-content center
-    margin-left 55px
-    min-height 45px
+    flex 0 0 calc(100% - 145px)
+    > div
+      flex 1
+  .contact__actions
+    flex 0 0 100px
+
+.contact__profile.contact
+  .contact__body > div
+    padding 0 10px

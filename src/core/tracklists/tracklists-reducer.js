@@ -3,6 +3,7 @@ import { Map } from 'immutable'
 import { appActions } from '@core/app'
 import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
+import { taglistActions } from '@core/taglists'
 
 export const initialState = new Map({
   currentTracklistId: null,
@@ -15,7 +16,7 @@ export function tracklistsReducer (state = initialState, action) {
   switch (action.type) {
     case appActions.INIT_APP:
       return state.merge({
-        [payload.address]: tracklistReducer(undefined, action)
+        [payload.orbitdb.address]: tracklistReducer(undefined, action)
       })
 
     case tracklistActions.CLEAR_SEARCH:
@@ -32,10 +33,13 @@ export function tracklistsReducer (state = initialState, action) {
       )
 
     case tracklistActions.ADD_TRACK:
+    case taglistActions.ADD_TAG:
       return state.set('pendingTrackCID', action.payload.data.cid)
 
     case tracklistActions.POST_TRACK_FAILED:
     case tracklistActions.POST_TRACK_FULFILLED:
+    case taglistActions.POST_TAG_FAILED:
+    case taglistActions.POST_TAG_FULFILLED:
       state.set('pendingTrackCID', null)
       return state.setIn([payload.logId, 'isUpdating'], false)
 

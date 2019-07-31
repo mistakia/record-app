@@ -5,6 +5,11 @@ export const Track = new Record({
   id: null,
   thumbnail: null,
   title: null,
+  name: null,
+  artist: null,
+  remixer: null,
+  encoder: null,
+  bitrate: null,
   url: null,
   tags: new List(),
   haveTrack: false,
@@ -13,17 +18,21 @@ export const Track = new Record({
   contentCID: null
 })
 
+const getFromResolver = (resolver, attribute) => {
+  if (!resolver.length) {
+    return null
+  }
+
+  const item = resolver.find(r => r[attribute])
+  return item && item[attribute]
+}
+
 const getArtwork = (content) => {
   if (content.artwork.length) {
     return `http://localhost:3000/file/${content.artwork[0]}`
   }
 
-  if (content.resolver.length) {
-    const data = content.resolver.find(r => r.thumbnail)
-    return data && data.thumbnail
-  }
-
-  return null
+  return getFromResolver(content.resolver, 'thumbnail')
 }
 
 const getTitle = (content) => {
@@ -33,12 +42,7 @@ const getTitle = (content) => {
     return content.tags.artist || content.tags.title
   }
 
-  if (content.resolver.length) {
-    const data = content.resolver.find(r => r.fulltitle)
-    return data && data.fulltitle
-  }
-
-  return null
+  return getFromResolver(content.resolver, 'fulltitle')
 }
 
 const getUrl = (content) => {
@@ -46,11 +50,19 @@ const getUrl = (content) => {
     return `http://localhost:3000/file/${content.hash}`
   }
 
-  if (content.resolver.length) {
-    const data = content.resolver.find(r => r.url)
-    return data && data.url
+  return getFromResolver(content.resolver, 'url')
+}
+
+const getInfo = (content) => {
+  let artist = content.tags.artist
+  let name = content.tags.title
+  let remixer = null
+
+  if (!name) {
+    name = getFromResolver(content.resolver, 'fulltitle')
   }
-  return null
+
+  return { artist, name, remixer }
 }
 
 export function createTrack (data) {
@@ -59,15 +71,24 @@ export function createTrack (data) {
   }
 
   const artwork = getArtwork(data.content)
+  if (artwork && typeof artwork !== 'string') {
+    console.log(artwork)
+  }
   const title = getTitle(data.content)
+  const { name, artist, remixer } = getInfo(data.content)
   const url = getUrl(data.content)
 
   return new Track({
     duration: data.content.audio.duration,
     id: data.id,
     thumbnail: artwork,
-    title: title,
-    url: url,
+    encoder: data.content.audio.encoder,
+    bitrate: data.content.audio.bitrate,
+    title,
+    artist,
+    name,
+    remixer,
+    url,
     contentCID: data.contentCID,
     haveTrack: !!data.haveTrack,
     tags: new List(data.tags)

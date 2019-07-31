@@ -4,11 +4,10 @@ import { createSelector } from 'reselect'
 
 import {
   contactlistActions,
-  getPeerContactlist,
-  getAllContactlist,
-  getContactsForPeerContactlist,
-  getContactsForAllContactlist
+  getAllContactlist
 } from '@core/contactlists'
+
+import { getAllContacts } from '@core/contacts'
 
 import render from './explore'
 
@@ -28,16 +27,9 @@ class ExplorePage extends React.Component {
 }
 
 const mapStateToProps = createSelector(
-  getPeerContactlist,
+  getAllContacts,
   getAllContactlist,
-  getContactsForPeerContactlist,
-  getContactsForAllContactlist,
-  (peerContactlist, allContactlist, peerContacts, allContacts) => ({
-    peerContactlist,
-    allContactlist,
-    peerContacts,
-    allContacts
-  })
+  (contacts, allContactlist) => ({ contacts, allContactlist })
 )
 
 const mapDispatchToProps = {

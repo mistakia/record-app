@@ -6,6 +6,8 @@ import { contactlistActions } from '@core/contactlists'
 import PageLayout from '@layouts/page'
 import Button from '@components/button'
 
+import './new-contact.styl'
+
 export class NewContactPage extends React.Component {
   constructor (props) {
     super(props)
@@ -31,13 +33,8 @@ export class NewContactPage extends React.Component {
   render () {
     const { logId } = this.props.match.params
     const { alias } = parseQueryString(this.props.location.search)
-
-    const head = (
-      <h1>Add Contact</h1>
-    )
-
     const body = (
-      <form onSubmit={this.handleSubmit}>
+      <form id='new-contact' onSubmit={this.handleSubmit}>
         <label>
           Alias
           <input type='text' name='alias' defaultValue={alias} placeholder='Contact Nickname' />
@@ -51,7 +48,7 @@ export class NewContactPage extends React.Component {
     )
 
     return (
-      <PageLayout head={head} body={body} />
+      <PageLayout title='New Contact' body={body} />
     )
   }
 }

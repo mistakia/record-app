@@ -12,7 +12,8 @@ const Contact = ({
   contactBio,
   contact,
   type,
-  disconnect
+  disconnect,
+  style
 }) => {
   const noPropagation = e => e.stopPropagation()
   const connectAction = (
@@ -29,7 +30,10 @@ const Contact = ({
   )
 
   const selfAction = (
-    <Link className='button' to='/edit-about'>Edit</Link>
+    <Link
+      className='button' to='/edit-about'
+      onClick={noPropagation}>
+      Edit</Link>
   )
 
   const contactAction = (contact.isMe
@@ -44,27 +48,30 @@ const Contact = ({
     history.push(`/tracks${contact.address}`)
   }
 
+  const peers = contact.peers.size
+
   return (
     <article
       className={`contact contact__${type}`}
+      style={style}
       onClick={type !== 'profile' ? viewUser : null}>
-      <img className='contact__avatar' src={contact.avatar} />
+      <div className='contact__avatar'>
+        <img src={contact.avatar} />
+      </div>
       <div className='contact__body'>
         <div className='contact__title'>
           {contactName}
         </div>
-        {contactLocation && <small>{contactLocation}</small>}
-        {(type === 'profile' && contactBio) && <div className='contact__bio'>
-          {contactBio}
+        { type === 'profile' && <div className='contact__menu menu'>
+          <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
+          <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Contacts</NavLink>
         </div> }
-        <div className='contact__action'>
-          {type !== 'heading' && contactAction}
-        </div>
+        <div>{peers} peer{peers !== 1 && 's'}</div>
+        <div>{Math.max(contact.max, contact.length)}/{contact.length}</div>
       </div>
-      { type === 'profile' && <div className='contact__menu'>
-        <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
-        <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Contacts</NavLink>
-      </div> }
+      <div className='contact__actions'>
+        {type !== 'heading' && contactAction}
+      </div>
     </article>
   )
 }

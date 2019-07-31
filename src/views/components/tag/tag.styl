@@ -1,20 +1,23 @@
+
 .tag
   position relative
-  color rgba(0,0,0,0.44)
-  background #fafafa
+  color rgba(0,0,0,0.6)
+  background rgba($accentColorRGB,0.1)
   font-size 13px
   font-weight 400
-  margin 0 8px 8px 0
+  margin 4px 8px 0 0
   display inline-block
-  border 1px solid #ddd
-  border-bottom-color #ccc
-  border-radius 1px
-  box-shadow inset 0 1px 0 #fff, 0 1px 5px #f1f1f1
+  border 1px solid rgba($accentColorRGB,0.1)
+  &.text-only
+    border 0
+    background transparent
+    font-size 9px
+    box-shadow none
   &:hover
   &.active
-    color #666
-    border-color rgba(211,228,120,.9)
-    background rgba(211,228,120,.1)
+    color rgba(255,255,255,1)
+    border-color rgba($accentColorRGB,1)
+    background rgba($accentColorRGB,.7)
   a
   .tag--remove
   span
@@ -32,4 +35,4 @@
   .tag--remove
     border 0
     border-radius 0
-    border-left 1px solid #f0f0f0
+    border-left 1px solid rgba($accentColorRGB,0.1)

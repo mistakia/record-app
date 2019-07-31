@@ -22,37 +22,29 @@ const Feedlist = ({
   selectTrack,
   loadNextFeed
 }) => {
-  let lastContactId
-  let groupCount = 0
-  const groupLimit = 5
-  let feedItems = []
+  const isItemLoaded = index => items.get(index)
+  const itemCount = hasMore ? items.size + 1 : items.size
+  const load = async () => loadNextFeed()
+  const loadMoreItems = displayLoadingIndicator ? () => {} : load
 
-  const contactItem = (contact, type) => {
-    feedItems.push(
-      <Contact type={type} contact={contact} key={feedItems.length} />
-    )
-  }
+  const Row = ({ style, index }) => {
+    if (displayLoadingIndicator && (index + 1) === itemCount) {
+      return <div style={style}><Loading loading /></div>
+    }
 
-  items.forEach((item, index) => {
-    // group items by contact and limit to groupLimit
-    if (lastContactId !== item.contact.id) {
-      contactItem(item.contact, 'heading')
-      lastContactId = item.contact.id
-    } else {
-      groupCount++
-      if (groupCount >= groupLimit) {
-        contactItem(item.contact, 'heading')
-        groupCount = 0
-      }
+    const item = items.get(index)
+    if (!item) {
+      return null
     }
 
     switch (item.type) {
       case 'track':
         const track = item.content
         const isSelected = track.id === selectedTrackId
-        feedItems.push(
+        return (
           <Track
-            key={feedItems.length}
+            key={items.size}
+            style={style}
             track={track}
             isPlaying={isSelected && isPlaying}
             isSelected={isSelected}
@@ -61,26 +53,24 @@ const Feedlist = ({
             play={isSelected ? play : selectTrack.bind(null, track.id)}
           />
         )
-        break
 
       case 'contact':
-        contactItem(item.content, 'item')
-        break
+        return (
+          <Contact type='item' contact={item} key={items.size} style={style} />
+        )
 
       default:
         console.log(`invalid item type: ${item.type}`)
+        return null
     }
+  }
+
+  return render({
+    Row,
+    itemCount,
+    isItemLoaded,
+    loadMoreItems
   })
-
-  const loading = (
-    <Loading
-      loading={displayLoadingIndicator}
-      onClick={loadNextFeed}
-      hasMore={hasMore}
-    />
-  )
-
-  return render(feedItems, loading)
 }
 
 const mapStateToProps = createSelector(

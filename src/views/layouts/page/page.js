@@ -5,8 +5,8 @@ import history from '@core/history'
 
 import './page.styl'
 
-export const PageLayout = ({ head, body, title }) => (
-  <section className='page'>
+export const PageLayout = ({ head, body, title, playerOpen }) => (
+  <section className={'page' + (playerOpen ? ' player-open' : '')}>
     <div className='page__head'>
       <div className='page__container'>
         <IconButton
@@ -15,10 +15,10 @@ export const PageLayout = ({ head, body, title }) => (
           onClick={history.goBack}
           disabled={history.length < 2}
         />
-        { title ? <h1>{title}</h1> : head }
+        { title ? <div className='page__title'>{title}</div> : head }
       </div>
     </div>
-    <div className='page__container'>
+    <div className='page__body'>
       { body }
     </div>
   </section>

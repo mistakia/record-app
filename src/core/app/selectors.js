@@ -1,3 +1,3 @@
 export function getApp (state) {
-  return state.get('app')
+  return state.get('app').toJS()
 }

@@ -119,13 +119,15 @@ export const tracklistActions = {
     }
   }),
 
-  addTrack: (logId, data) => ({
-    type: tracklistActions.ADD_TRACK,
-    payload: {
-      logId,
-      data
+  addTrack: (logId, data) => {
+    return {
+      type: tracklistActions.ADD_TRACK,
+      payload: {
+        logId,
+        data
+      }
     }
-  }),
+  },
 
   removeTrack: (logId, data) => ({
     type: tracklistActions.REMOVE_TRACK,

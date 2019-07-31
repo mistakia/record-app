@@ -3,6 +3,8 @@ import React from 'react'
 import Button from '@components/button'
 import PageLayout from '@layouts/page'
 
+import './edit-about.styl'
+
 export default class EditAboutPage extends React.Component {
   constructor (props) {
     super(props)
@@ -30,14 +32,10 @@ export default class EditAboutPage extends React.Component {
   }
 
   render () {
-    const head = (
-      <h1>Edit Profile</h1>
-    )
-
     const { contact } = this.props
 
     const body = (
-      <form onSubmit={this.handleSubmit}>
+      <form id='edit-about' onSubmit={this.handleSubmit}>
         <label>
           Name
           <input
@@ -66,7 +64,7 @@ export default class EditAboutPage extends React.Component {
     )
 
     return (
-      <PageLayout head={head} body={body} />
+      <PageLayout title='Edit Profile' body={body} />
     )
   }
 }

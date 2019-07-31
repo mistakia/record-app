@@ -1,50 +1,84 @@
-$playerHeight = 45px
+$playerHeight = 75px
 $textColor = rgba(255,255,255,0.6)
 
 @keyframes show-player
   0%
-      bottom -80px
+    bottom -$playerHeight
   100%
-      bottom -10px
-
+    bottom 0
 
 .player
-  fixed bottom right
-  z-index 10002
-  display block
-  transform translateZ(0)
+  fixed bottom 0 right
+  z-index 10001
+  display flex
   width 100%
   height $playerHeight
   color $textColor
-
-  max-width 60%
   background #2d2e2f
-  transition all 0.35s ease
+  align-items center
 
+  transform translateZ(0)
+  transition all 0.35s ease
   animation-name show-player
   animation-iteration-count 1
   animation-timing-function ease-in-out
   animation-duration 300ms
-  &.player__fullscreen
-    height 100vh
+
+.player__body
+  position relative
+  padding 5px
+  flex 1 1 calc(50% - 5px)
+  margin-left 5px
+  flex-direction column
+  background rgba(255,255,255,0.05)
+  max-width 100%
+  height calc($playerHeight - 5px)
+
+.player__body-info
+  flex 1
+  display flex
+  flex-direction column
+  margin-bottom 10px
+  div
+    flex 1
+    text-align center
+    padding-top 5px
+
+.player__current-time
+.player__track-duration
+  font-family monospace
+  font-size 10px
+  color white
+
+.player__current-time
+  absolute bottom 7px left 5px
+
+.player__track-duration
+  absolute bottom 7px right 5px
+
+.player__track-bitrate
+  absolute top 2px left 5px
+
+.player__track-encoder
+  absolute top 2px right 5px
 
 .player__artwork
-  height 180px
-  margin-bottom 110px
-
+  flex 0 0 $playerHeight - 10px
+  padding-left 5px
   img
+    float right
     max-height 100%
 
 .player__controls
+  flex 1 1 25%
   display flex
   align-items center
   margin 0 auto
-  max-width 970px
   font-size rem(13px)
-  height $playerHeight
 
   .button
     border 0
+    flex 1
 
   .button__icon
     fill $textColor

@@ -1,12 +1,16 @@
-import { Map } from 'immutable'
+import { Map, List } from 'immutable'
 
 import { tracklistActions } from '@core/tracklists'
 import { taglistActions } from '@core/taglists'
 import { feedActions } from '@core/feed'
 import { createTrack } from './track'
+import { trackActions } from './actions'
 
 export function tracksReducer (state = new Map(), {payload, type}) {
   switch (type) {
+    case trackActions.CLEAR:
+      return state.filter((value, key) => key === payload.trackId)
+
     case tracklistActions.FETCH_TRACKS_FULFILLED:
     case tracklistActions.FETCH_TRACK_FULFILLED:
     case tracklistActions.SEARCH_TRACKS_FULFILLED:
@@ -31,11 +35,19 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       })
 
     case taglistActions.POST_TAG_FULFILLED:
-    case taglistActions.DELETE_TAG_FULFILLED:
-      const track = payload.data
-      return state.withMutations(tracks => tracks.set(track.id, createTrack(track)))
+    case taglistActions.DELETE_TAG_FULFILLED: {
+      const { id, tags } = payload.data
+      return state.withMutations(tracks => {
+        tracks.map(track => {
+          tracks.setIn([id, 'tags'], new List(tags))
+          if (type === taglistActions.POST_TAG_FULFILLED) {
+            tracks.setIn([id, 'haveTrack'], true)
+          }
+        })
+      })
+    }
 
-    case tracklistActions.DELETE_TRACK_FULFILLED:
+    case tracklistActions.DELETE_TRACK_FULFILLED: {
       return state.withMutations(tracks => {
         const track = tracks.get(payload.data.trackId)
         const contentCID = track.get('contentCID')
@@ -46,8 +58,9 @@ export function tracksReducer (state = new Map(), {payload, type}) {
           }
         })
       })
+    }
 
-    case tracklistActions.POST_TRACK_FULFILLED:
+    case tracklistActions.POST_TRACK_FULFILLED: {
       const { contentCID } = payload.data.payload.value
       const trackId = payload.data.payload.value.id
       return state.withMutations(tracks => {
@@ -58,6 +71,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
           }
         })
       })
+    }
 
     case feedActions.FETCH_FEED_FULFILLED:
       return state.withMutations(tracks => {

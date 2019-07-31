@@ -8,12 +8,8 @@ const { app } = require('electron').remote
 
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
+logger.info(`process id: ${process.pid}`)
 let record
-
-const sendReady = () => {
-  const { address, isReplicating } = record
-  ipc.send('ready', { address, isReplicating })
-}
 
 try {
   const recorddir = path.resolve(os.homedir(), './.record')
@@ -40,9 +36,9 @@ try {
 
   record = new RecordNode(opts)
   record.on('ipfs:state', (state) => ipc.send('ipfs:state', state))
-  record.on('ready', async () => {
+  record.on('ready', async (data) => {
     try {
-      sendReady()
+      ipc.send('ready', data)
       record.on('redux', (data) => {
         ipc.send('redux', data)
       })

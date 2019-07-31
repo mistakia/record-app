@@ -1,7 +1,9 @@
 import React from 'react'
 
+import './taglist.styl'
+
 const render = (tagItems, loading) => (
-  <div>
+  <div className='taglist'>
     {tagItems}
     {loading}
   </div>

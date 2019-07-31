@@ -18,7 +18,7 @@ export function contactlistsReducer (state = initialState, action) {
   switch (action.type) {
     case appActions.INIT_APP:
       return state.merge({
-        [payload.address]: contactlistReducer(undefined, action)
+        [payload.orbitdb.address]: contactlistReducer(undefined, action)
       })
 
     case contactlistActions.FETCH_CONTACTS_FULFILLED:

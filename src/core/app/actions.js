@@ -4,8 +4,8 @@ export const appActions = {
   CONTACTS_CONNECTED: 'CONTACTS_CONNECTED',
   CONTACTS_DISCONNECTED: 'CONTACTS_DISCONNECTED',
 
-  initApp: ({ address, isReplicating }) => ({
+  initApp: (data) => ({
     type: appActions.INIT_APP,
-    payload: { address, isReplicating }
+    payload: data
   })
 }

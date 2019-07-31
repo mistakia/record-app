@@ -44,10 +44,6 @@ export class NewTrackPage extends React.Component {
   }
 
   render () {
-    const head = (
-      <h1>Add Track</h1>
-    )
-
     const body = (
       <div id='new-track'>
         <Button
@@ -66,7 +62,7 @@ export class NewTrackPage extends React.Component {
     )
 
     return (
-      <PageLayout head={head} body={body} />
+      <PageLayout title='New Track' body={body} />
     )
   }
 }

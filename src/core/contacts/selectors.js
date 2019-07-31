@@ -2,6 +2,16 @@ export function getContacts (state) {
   return state.get('contacts')
 }
 
+export function getAllContacts (state) {
+  const contacts = getContacts(state)
+  let res = []
+  for (const contact of contacts.keys()) {
+    res.push(contacts.get(contact))
+  }
+
+  return res
+}
+
 export function getContactById (state, contactId) {
   return getContacts(state).get(contactId)
 }

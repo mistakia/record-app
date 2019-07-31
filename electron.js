@@ -35,6 +35,7 @@ logger.info(`Electron Node version: ${process.versions.node}`)
 // Module to control application life.
 let record
 const app = electron.app
+app.disableHardwareAcceleration()
 
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
@@ -47,9 +48,11 @@ let backgroundWindow
 function createMainWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    minWidth: 600,
+    width: 900,
+    height: 600,
+    minWidth: 900,
     minHeight: 475,
-    maxWidth: 1000,
+    maxWidth: 1300,
     maxHeight: 800,
     show: false,
     titleBarStyle: 'hiddenInset'
@@ -79,11 +82,6 @@ function clearData () {
   ses.clearStorageData((err) => {
     if (err) logger.error(err)
   })
-}
-
-const sendReady = () => {
-  const { address, isReplicating } = record
-  mainWindow.webContents.send('ready', { address, isReplicating })
 }
 
 // This method will be called when Electron has finished
