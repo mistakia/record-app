@@ -31,9 +31,20 @@ class TagsBase extends React.Component {
   }
 
   getTagItems (tags, onClick, remove) {
-    return tags.map((tag, idx) =>
-      tag && <Tag key={idx} tag={tag} onClick={onClick.bind(this, tag)} remove={remove && remove.bind(this, tag)} />
-    )
+    return tags.map((tag, idx) => {
+      if (!tag) {
+        return null
+      }
+      return (
+        <Tag
+          key={idx}
+          tag={tag}
+          textOnly={this.props.textOnly}
+          onClick={onClick.bind(this, tag)}
+          remove={remove && remove.bind(this, tag)}
+        />
+      )
+    })
   }
 
   getCurrentTagItems () {

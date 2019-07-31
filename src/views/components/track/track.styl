@@ -1,13 +1,19 @@
 .track
+  display flex
   border 1px solid $borderColor
   padding 0
-  min-height $trackHeight
+  overflow hidden
+  color black
   + .track
     margin-top -1px
+  &.card
+    flex 1 1 100px
+    flex-direction vertical
   .track__play
-    absolute top left
-    width $trackHeight
-    height $trackHeight
+    flex 0 0 4%
+    position relative
+    background-size cover
+    background-position center
     button
       position absolute
       width 100%
@@ -17,28 +23,68 @@
       border-radius 0
       .icon
         fill white
+        height 100%
+        width 100%
+  .track__tags
+    flex 0 0 30%
+    font-size 9px
+    input
+      padding 0
+      width auto
+      min-width 66px
+      background transparent
+      border 0
+      &:not(:focus)
+        opacity 0
+      &::placeholder
+        color $accentColor
+    .current
+    .new
+      display flex
+      flex-wrap wrap
+      font-size 10px
+      .tag
+        border 0
+        font-size 9px
+        box-shadow none
+        button
+        a
+          padding 1px 4px
   &:hover
     background #fbfbfb
     .track__play button
       display block
+    .track__tags input
+      opacity 1
   .track__actions
-    absolute bottom right
+    flex 0 0 4%
     button
       border none
+      &.button__star-solid
+        fill $accentColor
   .track__body
-    display flex
-    flex-wrap nowrap
-    padding 10px
-    margin-left $trackHeight
+    flex 1 0 45%
+    min-width 0px
   .track__title
-    flex-grow 1
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+    line-height 20px
+  .track__artist
+    flex 1 0 25%
   .track__duration
-    flex-grow 0
-    font-weight 500
-    letter-spacing -.02em
-    color #999
+  .track__bitrate
+  .track__encoder
+    flex 0 0 45px
   img
     padding 5px
     width 100%
     height 100%
     background $borderColor
+
+  .track__duration
+  .track__bitrate
+  .track__encoder
+  .track__body
+  .track__artist
+    padding 4px

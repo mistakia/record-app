@@ -3,13 +3,18 @@ import { appActions } from './actions'
 
 const initialState = new Record({
   address: null,
+  orbitdb: new Map(),
+  ipfs: new Map(),
   isReplicating: false
 })
 
 export function appReducer (state = initialState(), { payload, type }) {
   switch (type) {
     case appActions.INIT_APP:
-      return state.merge(payload)
+      return state.merge({
+        address: payload.orbitdb.address,
+        ...payload
+      })
 
     case appActions.CONTACTS_CONNECTED:
       return state.set('isReplicating', true)

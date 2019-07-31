@@ -1,10 +1,48 @@
-.list__action
-  text-align right
-  margin-bottom 15px
+.list
+  absolute left top right bottom
   display flex
-  flex-direction: row-reverse
-  justify-content: flex-start
+  flex-direction column
+
+.list__head
+  flex 0 0 auto
+
+.list__body
+  flex 1
+
+.list__header-row
+  display flex
+  align-items center
+  border-bottom 1px solid $borderColorDark
+
+.list__header
+  font-size 10px
+  border 0
+  background #f0f0f0
+  div
+    height auto !important
+  > div
+    margin 2px 0
+    padding 4px !important
+    border-left 1px solid #ccc
+
+.list__search
+  flex 3
+  input
+    padding 10px
+    border none
+    background transparent
+
+.list__action
+  flex 1
+  text-align right
+  display flex
+  flex-direction row-reverse
+  justify-content flex-start
+  padding 0 5px
   .action
     flex 0 1 auto
   .action + .action
     margin-right 1%
+  button
+  .button
+    background #f5f5f5

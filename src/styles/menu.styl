@@ -1,0 +1,19 @@
+.menu
+  a
+    text-transform lowercase
+    text-decoration none
+    min-width 45px
+    padding 5px 10px
+    vertical-align top
+    position relative
+    font-size 14px
+    text-transform capitalize
+    color rgba(50,50,50,0.9)
+    border-radius $borderRadius
+    display inline
+    &:not(:first-child)
+      margin-left 5px
+    &:hover
+      background rgba(255,255,255,0.15)
+    &.active
+      background rgba(255,255,255,0.5)

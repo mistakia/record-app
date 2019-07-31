@@ -1,4 +1,4 @@
-import { Record } from 'immutable'
+import { Record, List } from 'immutable'
 
 const shortAddress = (address) => {
   const parts = address.toString()
@@ -20,6 +20,7 @@ export const Contact = new Record({
   bio: null,
   haveContact: false,
   isReplicating: false,
+  peers: new List(),
   isUpdating: false,
   max: 0,
   length: 0,
@@ -39,6 +40,7 @@ export function createContact (data) {
     name: data.content.name || shortAddress(data.content.address),
     location: data.content.location,
     bio: data.content.bio,
+    peers: new List(data.peers),
     haveContact: !!data.haveContact,
     isMe: !!data.isMe,
     isReplicating: !!data.isReplicating,

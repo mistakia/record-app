@@ -1,7 +1,9 @@
-import { fork, takeLatest, select, call } from 'redux-saga/effects'
+import { fork, takeLatest, select, call, put } from 'redux-saga/effects'
 
 import { trackActions } from './actions'
-import { goToTracks, getPendingTrackCID } from '@core/tracklists'
+import { goToTracks, getPendingTrackCID, tracklistActions } from '@core/tracklists'
+import { feedActions } from '@core/feed'
+import { getPlayerTrack } from '@core/player'
 
 export function * trackAdded ({ payload }) {
   const contentCID = yield select(getPendingTrackCID)
@@ -10,10 +12,26 @@ export function * trackAdded ({ payload }) {
   }
 }
 
+export function * clearTracks () {
+  const track = yield select(getPlayerTrack)
+  const action = trackActions.clearTracks(track ? track.id : null)
+  yield put(action)
+}
+
 export function * watchTrackAdded () {
   yield takeLatest(trackActions.TRACK_ADDED, trackAdded)
 }
 
+export function * watchLoadTracks () {
+  yield takeLatest(tracklistActions.LOAD_TRACKS, clearTracks)
+}
+
+export function * watchLoadFeed () {
+  yield takeLatest(feedActions.LOAD_FEED, clearTracks)
+}
+
 export const trackSagas = [
-  fork(watchTrackAdded)
+  fork(watchTrackAdded),
+  fork(watchLoadTracks),
+  fork(watchLoadFeed)
 ]

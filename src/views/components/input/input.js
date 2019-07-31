@@ -8,7 +8,8 @@ const input = ({
   onSubmit,
   showClear,
   onClear,
-  label
+  label,
+  className
 }) => {
   let formInput = React.createRef()
 
@@ -26,8 +27,10 @@ const input = ({
     onClear()
   }
 
+  const classNames = ['form-input', className]
+
   return (
-    <form onSubmit={handleSubmit} ref={formInput} className='form-input'>
+    <form onSubmit={handleSubmit} ref={formInput} className={classNames.join(' ')}>
       <input type='text' name='text' placeholder={label} />
       { showClear &&
         <IconButton

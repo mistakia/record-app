@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom'
 import './menu.styl'
 
 const Menu = ({ app }) => (
-  <div id='menu'>
+  <div id='menu' className='menu'>
     <NavLink to='/feed'>Home</NavLink>
     <NavLink to='/explore'>Explore</NavLink>
     <NavLink to='/info'>Info</NavLink>

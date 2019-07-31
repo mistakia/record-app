@@ -10,6 +10,9 @@ import Root from '@views/root'
 
 const rootElement = document.getElementById('root')
 
+const processId = window.require('electron').remote.getCurrentWebContents().getOSProcessId()
+console.log(`process id: ${processId}`)
+
 let render = () => {
   const App = hot(module)(Root)
   ReactDOM.render(<App />, rootElement)

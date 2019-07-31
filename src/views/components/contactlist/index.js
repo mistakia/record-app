@@ -1,6 +1,6 @@
 import React from 'react'
 
-import LoadingIndicator from '@components/loading-indicator'
+import Loading from '@components/loading'
 import Contact from '@components/contact'
 
 import render from './contactlist'
@@ -14,7 +14,7 @@ const Contactlist = ({
     <Contact type='item' contact={contact} key={index} />
   ))
 
-  const loading = (displayLoadingIndicator && <LoadingIndicator />)
+  const loading = (displayLoadingIndicator && <Loading loading />)
 
   return render({ contactItems, loading, showAdd })
 }

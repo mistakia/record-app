@@ -19,6 +19,8 @@ const Taglist = ({
   toggleTag,
   tags
 }) => {
+  if (!tags.size) return null
+
   const tagItems = tags.map((tag, index) => {
     const isSelected = selectedTags.includes(tag.tag)
     return (

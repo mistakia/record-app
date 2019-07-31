@@ -1,29 +1,60 @@
 import React from 'react'
 
 import IconButton from '@components/icon-button'
+import PlayerTimeline from '@components/player-timeline'
+import AudioCurrentTime from '@components/audio-current-time'
+import FormattedTime from '@components/formatted-time'
 
 import './player.styl'
 
 export default function Player ({
   isPlaying,
-  isFullscreen,
   nextTrack,
   pause,
   play,
   previousTrack,
-  toggleFullscreen,
-  track
+  track,
+  add,
+  isLoading,
+  remove,
+  app
 }) {
   if (!track) return null
 
-  let classNames = ['player']
-  if (isFullscreen) {
-    classNames.push('player__fullscreen')
-  }
+  const { haveTrack } = track
 
   return (
-    <div className={classNames.join(' ')}>
+    <div className='player'>
+      <div className='player__artwork'>
+        <img src={track.thumbnail} />
+      </div>
+      <div className='player__body'>
+        <div className='player__body-info'>
+          <div>{track.name}</div>
+          <div>{track.artist}</div>
+        </div>
+        <div className='player__current-time'>
+          <AudioCurrentTime />
+        </div>
+        <div className='player__track-duration'>
+          <FormattedTime value={track.duration} unit={'ms'} />
+        </div>
+        <div className='player__track-bitrate'>
+          <small>{Math.round(track.bitrate / 1000)} kbps</small>
+        </div>
+        <div className='player__track-encoder'>
+          <small>{track.encoder}</small>
+        </div>
+        <PlayerTimeline />
+      </div>
       <div className='player__controls'>
+        <IconButton
+          icon={haveTrack ? 'star-solid' : 'star-outline'}
+          label={haveTrack ? 'Save' : 'Remove'}
+          isLoading={track.isUpdating}
+          onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}
+        />
+
         <IconButton
           icon='skip-previous'
           label='Skip to previous track'
@@ -34,6 +65,7 @@ export default function Player ({
         <IconButton
           icon={isPlaying ? 'pause' : 'play'}
           label={isPlaying ? 'Pause' : 'Play'}
+          isLoading={isLoading}
           onClick={isPlaying ? pause : play}
         />
 
@@ -43,11 +75,6 @@ export default function Player ({
           onClick={nextTrack}
           disabled={!nextTrack}
         />
-        <div className='player-controls__title'>{track.title}</div>
-
-        <div className='player__artwork'>
-          <img src={track.thumbnail} />
-        </div>
       </div>
     </div>
   )

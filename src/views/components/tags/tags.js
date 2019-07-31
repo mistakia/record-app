@@ -1,7 +1,6 @@
 import React from 'react'
 
 import TagsBase from './tags-base'
-import './tags.styl'
 
 class Tags extends TagsBase {
   constructor (props) {

@@ -17,8 +17,8 @@ import {
   playerActions
 } from '@core/player'
 import { audio } from '@core/audio'
-import Loading from '@components/loading'
 import Track from '@components/track'
+import Loading from '@components/loading'
 
 import render from './tracklist'
 
@@ -43,7 +43,19 @@ const Tracklist = ({
   tags,
   clearSearch
 }) => {
-  const renderTrack = (track, index) => {
+  const isItemLoaded = index => tracks.has(index)
+  const itemCount = searchQuery
+    ? searchTracks.size
+    : (hasMore ? tracks.size + 1 : tracks.size)
+  const load = async () => loadNextTracks()
+  const loadMoreItems = displayLoadingIndicator ? () => {} : load
+
+  const Row = ({ style, index }) => {
+    if (displayLoadingIndicator && (index + 1) === itemCount) {
+      return <div style={style}><Loading loading /></div>
+    }
+
+    const track = searchQuery ? searchTracks.get(index) : tracks.get(index)
     if (!track) {
       return null
     }
@@ -51,6 +63,7 @@ const Tracklist = ({
     const isSelected = track.id === selectedTrackId
     return (
       <Track
+        style={style}
         key={index}
         track={track}
         isPlaying={isSelected && isPlaying}
@@ -62,17 +75,6 @@ const Tracklist = ({
     )
   }
 
-  const trackItems = tracks.map(renderTrack)
-  const searchItems = searchTracks.map(renderTrack)
-
-  const loading = (
-    <Loading
-      loading={displayLoadingIndicator}
-      onClick={loadNextTracks}
-      hasMore={hasMore}
-    />
-  )
-
   const onSearch = (query) => {
     search(tracklistId, query, tags)
   }
@@ -82,16 +84,17 @@ const Tracklist = ({
   }
 
   return render({
-    trackItems,
-    searchItems,
     onSearch,
-    loading,
     showAdd,
     shuffle,
+    isItemLoaded,
     isShuffling,
     tracklistId,
     searchQuery,
-    onClear
+    onClear,
+    itemCount,
+    loadMoreItems,
+    Row
   })
 }
 

@@ -1,21 +1,14 @@
 #menu
-  fixed left bottom right
+  fixed left top right
   z-index 10001
-  height 45px
   background #2d2e2f
-  padding 10px
+  height 35px
   display flex
+  justify-content center
+  align-items center
+  -webkit-app-region drag
   a
-    text-transform lowercase
-    text-decoration none
-    min-width 45px
-    padding 5px 10px
-    vertical-align top
-    position relative
-    font-size 14px
-    text-transform capitalize
     color rgba(255,255,255,0.9)
-    border-radius $borderRadius
     &:hover
       background rgba(255,255,255,0.15)
     &.active

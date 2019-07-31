@@ -1,14 +1,20 @@
 import { connect } from 'react-redux'
+import { createSelector } from 'reselect'
 import { tracklistActions } from '@core/tracklists'
-
+import { getApp } from '@core/app'
 import Track from './track'
 
+const mapStateToProps = createSelector(
+  getApp,
+  (app) => ({ app })
+)
+
 const mapDispatchToProps = {
-  addTrack: tracklistActions.addTrack,
-  removeTrack: tracklistActions.removeTrack
+  add: tracklistActions.addTrack,
+  remove: tracklistActions.removeTrack
 }
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(Track)

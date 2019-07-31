@@ -1,5 +1,6 @@
 export {
   getContacts,
+  getAllContacts,
   getContactById,
   getContactByAddress,
   getContactMe,

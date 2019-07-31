@@ -1,4 +1,4 @@
-import { Map } from 'immutable'
+import { Map, List } from 'immutable'
 
 import { contactlistActions } from '@core/contactlists'
 import { contactActions } from './actions'
@@ -23,7 +23,7 @@ export function contactsReducer (state = new Map(), {payload, type}) {
             contacts.set(feedData.entryId, createContact(feedData.content))
           }
 
-          contacts.set(feedData.contactId, createContact(feedData.contact))
+          contacts.set(feedData.contact.id, createContact(feedData.contact))
         })
       })
 
@@ -87,7 +87,35 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         contacts.map(contact => contact.set('isUpdating', false))
       })
 
+    case contactActions.RECORD_PEER_JOINED:
+    case contactActions.CONTACT_PEER_JOINED:
+      return state.withMutations(contacts => {
+        contacts.map((contact) => {
+          if (contact.address === payload.logId) {
+            contacts.setIn([contact.id, 'peers'], mergePeers(contact.peers, [payload.peerId]))
+          }
+        })
+      })
+
+    case contactActions.RECORD_PEER_LEFT:
+      return state.withMutations(contacts => {
+        contacts.map((contact) => {
+          const idx = contact.peers.indexOf(payload.peerId)
+          if (idx > 0) contact.peers.delete(idx)
+        })
+      })
+
     default:
       return state
   }
+}
+
+function mergePeers (peerList, collection) {
+  let peers = peerList.toJS()
+  let newPeers = collection.reduce((list, peer) => {
+    if (peers.indexOf(peer) === -1) list.push(peer)
+    return list
+  }, [])
+
+  return newPeers.length ? new List(peers.concat(newPeers)) : peerList
 }

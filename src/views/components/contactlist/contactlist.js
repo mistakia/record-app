@@ -3,11 +3,24 @@ import { Link } from 'react-router-dom'
 
 const render = ({ contactItems, loading, showAdd }) => (
   <div className='list'>
-    {showAdd && <div className='list__action'>
-      <Link className='button' to='/new-contact'>Add Contact</Link>
-    </div>}
-    {contactItems}
-    {loading}
+    <div className='list__head'>
+      {showAdd && <div className='list__action'>
+        <Link className='button' to='/new-contact'>Add Contact</Link>
+      </div>}
+    </div>
+    <div className='list__header contact contact__item'>
+      <div className='contact__avatar' />
+      <div className='contact__body'>
+        <div className='contact__title'>Name</div>
+        <div>Peers</div>
+        <div>Entries</div>
+      </div>
+      <div className='contact__actions' />
+    </div>
+    <div className='list__body'>
+      {contactItems}
+      {loading}
+    </div>
   </div>
 )
 
