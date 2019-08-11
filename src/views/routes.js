@@ -9,6 +9,7 @@ import InfoPage from '@pages/info'
 import NewContactPage from '@pages/new-contact'
 import NewTrackPage from '@pages/new-track'
 import TracksPage from '@pages/tracks'
+import SetIdentityPage from '@pages/set-identity'
 
 const Routes = () => (
   <Switch>
@@ -19,6 +20,7 @@ const Routes = () => (
     <Route exact path='/explore' component={ExplorePage} />
     <Route exact path='/info' component={InfoPage} />
     <Route exact path='/new-track' component={NewTrackPage} />
+    <Route exact path='/set-identity' component={SetIdentityPage} />
     <Route path='/tracks:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
     <Route exact path='/' component={() => <Redirect to='/info' />} />
   </Switch>

@@ -6,7 +6,6 @@ const Logger  = require('logplease')
 const path = require('path')
 const os = require('os')
 const fs = require('fs')
-const RecordNode = require('record-node')
 const debug = require('debug')
 const ipc = require('electron').ipcMain
 
@@ -33,7 +32,6 @@ process.on('unhandledRejection', error => {
 logger.info(`Electron Node version: ${process.versions.node}`)
 
 // Module to control application life.
-let record
 const app = electron.app
 app.disableHardwareAcceleration()
 
@@ -110,6 +108,8 @@ app.on('ready', () => {
     }
     if (mainWindow) mainWindow.webContents.send('redux', data)
   })
+
+  // TODO : on loadPrivateKey from mainWindow - recreate background node
 })
 
 // Quit when all windows are closed.

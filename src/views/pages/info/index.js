@@ -2,7 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { getApp } from '@core/app'
+import { getApp, appActions } from '@core/app'
 import { getInfo, infoActions } from '@core/info'
 
 import render from './info'
@@ -24,7 +24,8 @@ const mapStateToProps = createSelector(
 )
 
 const mapDispatchToProps = {
-  init: infoActions.init
+  init: infoActions.init,
+  getPrivateKey: appActions.getPrivateKey
 }
 
 export default connect(

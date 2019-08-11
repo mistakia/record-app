@@ -31,6 +31,10 @@ export const api = {
     const url = 'http://localhost:3000/peers'
     return { url }
   },
+  fetchPrivateKey () {
+    const url = 'http://localhost:3000/export'
+    return { url }
+  },
   fetchContact ({ logId }) {
     const url = `http://localhost:3000/contact${logId}`
     return { url }
@@ -82,6 +86,11 @@ export const api = {
   deleteTrack ({ data }) {
     const url = `http://localhost:3000/tracks?${toQueryString(data)}`
     return { url, ...DELETE }
+  },
+  postIdentity (pk) {
+    const url = 'http://localhost:3000/import'
+    const post = POST({ privateKey: pk })
+    return { url, ...post }
   }
 }
 

@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 import PageLayout from '@layouts/page'
 import CopyText from '@components/copy-text'
@@ -6,7 +7,7 @@ import CopyText from '@components/copy-text'
 import './info.styl'
 
 export default function () {
-  const { app, info } = this.props
+  const { app, info, getPrivateKey } = this.props
 
   const peers = info.peers.map((peer, index) => {
     return (
@@ -17,9 +18,18 @@ export default function () {
     )
   })
 
+  const showPrivateKey = (event) => {
+    event && event.stopPropagation && event.stopPropagation()
+    getPrivateKey()
+  }
+
   const body = (
     <div id='info-container'>
       <div>
+        <CopyText text={app.id}>
+          <label>ID</label>
+          <pre>{app.id}</pre>
+        </CopyText>
         <CopyText text={app.orbitdb.address}>
           <label>Address</label>
           <pre>{app.orbitdb.address}</pre>
@@ -28,10 +38,22 @@ export default function () {
           <label>Public Key</label>
           <pre>{app.orbitdb.publicKey}</pre>
         </CopyText>
+        <CopyText text={app.privateKey}>
+          <label>Secret Key</label>
+          <pre>
+            { app.privateKey ?
+              app.privateKey :
+              <button onClick={showPrivateKey}>Reveal Secret Key</button>
+            }
+          </pre>
+        </CopyText>
         <CopyText text={app.ipfs.id}>
           <label>PeerID</label>
           <pre>{app.ipfs.id}</pre>
         </CopyText>
+        <div>
+          <Link className='button' to='/set-identity'>Load Existing Account</Link>
+        </div>
       </div>
       <div>
         <table>
@@ -74,17 +96,17 @@ export default function () {
             </tr>
           </tbody>
         </table>
-        <table>
-          <thead>
+        {/* <table>
+            <thead>
             <tr>
-              <th />
-              <th>IPFS Peer</th>
+            <th />
+            <th>IPFS Peer</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             {peers}
-          </tbody>
-        </table>
+            </tbody>
+            </table> */}
       </div>
     </div>
   )
