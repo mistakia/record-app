@@ -3,6 +3,11 @@ import { api, apiRequest } from '@core/api/service'
 import { LOCATION_CHANGE } from 'react-router-redux'
 
 import {
+  setIdentityActions,
+  getPrivateKeyActions
+} from '@core/app'
+
+import {
   contactlistRequestActions,
   contactlistPostActions,
   contactlistDeleteActions,
@@ -75,3 +80,6 @@ export const deleteTrack = fetch.bind(null, api.deleteTrack, tracklistDeleteActi
 
 export const fetchContact = fetch.bind(null, api.fetchContact, contactRequestActions)
 export const postAbout = fetch.bind(null, api.postAbout, aboutPostActions)
+
+export const postIdentity = fetch.bind(null, api.postIdentity, setIdentityActions)
+export const fetchPrivateKey = fetch.bind(null, api.fetchPrivateKey, getPrivateKeyActions)
