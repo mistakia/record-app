@@ -27,9 +27,15 @@ const getFromResolver = (resolver, attribute) => {
   return item && item[attribute]
 }
 
-const getArtwork = (content) => {
+const getArtwork = (content, haveTrack) => {
   if (content.artwork.length) {
-    return `http://localhost:3000/file/${content.artwork[0]}`
+    let url = `http://localhost:3000/file/${content.artwork[0]}`
+
+    if (!haveTrack) {
+      url += '?localOnly=true'
+    }
+
+    return url
   }
 
   return getFromResolver(content.resolver, 'thumbnail')
@@ -70,7 +76,7 @@ export function createTrack (data) {
     return
   }
 
-  const artwork = getArtwork(data.content)
+  const artwork = getArtwork(data.content, !!data.haveTrack)
   if (artwork && typeof artwork !== 'string') {
     console.log(artwork)
   }
