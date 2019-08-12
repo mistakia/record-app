@@ -45,9 +45,9 @@ export default function () {
           <label>Secret Key</label>
           <img src={keyIcon && keyIcon.toDataURL()} />
           <small>
-            { app.privateKey ?
-              app.privateKey :
-              <button onClick={showPrivateKey}>Reveal Secret Key</button>
+            { app.privateKey
+              ? app.privateKey
+              : <button onClick={showPrivateKey}>Reveal Secret Key</button>
             }
           </small>
         </CopyText>
@@ -93,6 +93,35 @@ export default function () {
             <tr>
               <th><label>Repo Version</label></th>
               <td>{info.repo.version}</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Keyboard Shortcuts</h3>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>spacebar</strong></td>
+              <td>play/puase</td>
+            </tr>
+            <tr>
+              <td><strong>←</strong></td>
+              <td>play previous</td>
+            </tr>
+            <tr>
+              <td>→</td>
+              <td>play next</td>
+            </tr>
+            <tr>
+              <td>e</td>
+              <td>go to explore page</td>
+            </tr>
+            <tr>
+              <td>i</td>
+              <td>go to info page</td>
+            </tr>
+            <tr>
+              <td>t</td>
+              <td>go to my tracks page</td>
             </tr>
           </tbody>
         </table>

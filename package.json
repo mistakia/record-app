@@ -48,6 +48,7 @@
     "debug": "^3.1.0",
     "hashicon": "^0.2.0",
     "history": "^4.6.1",
+    "hotkeys-js": "^3.6.14",
     "immutable": "^3.8.2",
     "jsonfile": "^5.0.0",
     "logplease": "^1.2.13",

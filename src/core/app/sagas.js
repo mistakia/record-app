@@ -21,7 +21,7 @@ export function * getPrivateKey () {
   yield call(fetchPrivateKey)
 }
 
-export function * setIdentity ({ payload } ) {
+export function * setIdentity ({ payload }) {
   yield call(postIdentity, payload)
 }
 
