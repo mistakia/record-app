@@ -41,6 +41,7 @@ const render = ({
       </div>
       <Taglist />
       <div className='list__header track'>
+        <div className='track__index' />
         <div className='track__actions' />
         <div className='track__play' />
         <div className='track__body'>Name</div>
