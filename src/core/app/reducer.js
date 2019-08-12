@@ -7,6 +7,7 @@ const initialState = new Record({
   orbitdb: new Map(),
   ipfs: new Map(),
   isReplicating: false,
+  isPending: true,
   privateKey: null
 })
 
@@ -16,7 +17,18 @@ export function appReducer (state = initialState(), { payload, type }) {
     case appActions.INIT_APP:
       return state.merge({
         address: payload.orbitdb.address,
+        isPending: false,
         ...payload
+      })
+
+    case appActions.SET_IDENTITY_PENDING:
+      return state.merge({
+        isPending: true
+      })
+
+    case appActions.SET_IDENTITY_FAILED:
+      return state.merge({
+        isPending: false
       })
 
     case appActions.CONTACTS_CONNECTED:
