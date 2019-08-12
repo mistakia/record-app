@@ -29,14 +29,20 @@ export function contactsReducer (state = new Map(), {payload, type}) {
 
     case contactActions.CONTACT_REPLICATED:
       return state.withMutations(contacts => {
-        contacts.setIn([payload.contactId, 'length'], payload.length)
-        contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
+        const contact = contacts.get(payload.contactId)
+        if (contact) {
+          contacts.setIn([payload.contactId, 'length'], payload.length)
+          contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
+        }
       })
 
     case contactActions.CONTACT_REPLICATE_PROGRESS:
       return state.withMutations(contacts => {
-        contacts.setIn([payload.contactId, 'length'], payload.length)
-        contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
+        const contact = contacts.get(payload.contactId)
+        if (contact) {
+          contacts.setIn([payload.contactId, 'length'], payload.length)
+          contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
+        }
       })
 
     case contactActions.CONTACT_CONNECTED:
