@@ -15,6 +15,8 @@ export const contactActions = {
   RECORD_PEER_JOINED: 'RECORD_PEER_JOINED',
   CONTACT_PEER_JOINED: 'CONTACT_PEER_JOINED',
 
+  CONTACT_INDEX_UPDATED: 'CONTACT_INDEX_UPDATED',
+
   fetchContactFailed: (logId, error) => ({
     type: contactActions.FETCH_CONTACT_FAILED,
     payload: {

@@ -27,6 +27,11 @@ class Track extends React.Component {
 
     const { haveTrack } = track
 
+    let artwork = track.thumbnail
+    if (artwork && !haveTrack) {
+      artwork += '?localOnly=true'
+    }
+
     return (
       <article className='track' style={style}>
         <div className='track__actions'>
@@ -37,7 +42,7 @@ class Track extends React.Component {
             onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}
           />
         </div>
-        <div className='track__play' style={track.thumbnail && {backgroundImage: `url("${track.thumbnail}")`}}>
+        <div className='track__play' style={artwork && {backgroundImage: `url("${artwork}")`}}>
           <IconButton
             icon={isPlaying ? 'pause' : 'play'}
             label={isPlaying ? 'Pause' : 'Play'}

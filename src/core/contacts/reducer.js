@@ -32,7 +32,9 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         const contact = contacts.get(payload.contactId)
         if (contact) {
           contacts.setIn([payload.contactId, 'length'], payload.length)
-          contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
+          if (payload.replicationStatus.max > contact.max) {
+            contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
+          }
         }
       })
 
@@ -41,7 +43,9 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         const contact = contacts.get(payload.contactId)
         if (contact) {
           contacts.setIn([payload.contactId, 'length'], payload.length)
-          contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
+          if (payload.replicationStatus.max > contact.max) {
+            contacts.setIn([payload.contactId, 'max'], payload.replicationStatus.max)
+          }
         }
       })
 
@@ -108,6 +112,17 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         contacts.map((contact) => {
           const idx = contact.peers.indexOf(payload.peerId)
           if (idx > 0) contact.peers.delete(idx)
+        })
+      })
+
+    case contactActions.CONTACT_INDEX_UPDATED:
+      return state.withMutations(contacts => {
+        contacts.map((contact) => {
+          if (contact.address === payload.logId) {
+            const data = JSON.parse(JSON.stringify(payload))
+            delete data.logId
+            contacts.mergeIn([contact.id], { ...data })
+          }
         })
       })
 

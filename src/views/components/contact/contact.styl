@@ -16,8 +16,10 @@
 .contact__body
   flex 1 0 auto
   display flex
+  align-items center
   > div
     flex 0 0 auto
+    padding 0 4px
 
 .contact__title
   vertical-align middle
@@ -83,3 +85,6 @@
 .contact__profile.contact
   .contact__body > div
     padding 0 10px
+   .contact__body div:after
+    content attr(data-label)
+    font-size 10px

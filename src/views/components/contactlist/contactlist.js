@@ -14,6 +14,8 @@ const render = ({ contactItems, loading, showAdd }) => (
         <div className='contact__title'>Name</div>
         <div>Peers</div>
         <div>Entries</div>
+        <div>Tracks</div>
+        <div>Contacts</div>
       </div>
       <div className='contact__actions' />
     </div>

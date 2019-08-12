@@ -20,8 +20,13 @@ export const Contact = new Record({
   bio: null,
   haveContact: false,
   isReplicating: false,
+  isBuildingIndex: false,
+  isProcessingIndex: false,
+  processingCount: 0,
   peers: new List(),
   isUpdating: false,
+  trackCount: 0,
+  contactCount: 0,
   max: 0,
   length: 0,
   isMe: false
@@ -44,7 +49,11 @@ export function createContact (data) {
     haveContact: !!data.haveContact,
     isMe: !!data.isMe,
     isReplicating: !!data.isReplicating,
-    max: data.replicationStatus.max || 0,
+    isBuildingIndex: !!data.isBuildingIndex,
+    isProcessingIndex: !!data.isProcessingIndex,
+    trackCount: data.trackCount,
+    contactCount: data.contactCount,
+    max: Math.max(data.heads.length && data.heads[0].clock.time, data.replicationStatus.max, 0),
     length: data.length
   })
 }
