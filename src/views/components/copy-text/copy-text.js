@@ -44,10 +44,21 @@ export class CopyText extends React.Component {
   }
 
   render () {
+    const { disabled } = this.props
+
+    if (disabled) {
+      return (
+        <div className='copyTextContainer'>
+          {this.props.children}
+        </div>
+      )
+    }
+
     return (
       <div className='copyTextContainer cursor' onClick={this.copyToClipboard}>
         {(this.state.copied
-          ? <div className='copyTextOverlay'>Copied</div> : null)}
+          ? <div className='copyTextOverlay' style={{ opacity: 1 }}>Copied</div>
+          : <div className='copyTextOverlay'>Click to Copy</div>)}
         {this.props.children}
       </div>
     )

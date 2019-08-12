@@ -1,11 +1,32 @@
 .copyTextContainer
     position relative
+    background #fcfcfc
+    border 1px solid $borderColorDark
+    margin-bottom 20px
+
+    label
+      padding 10px
+
+    img
+      margin 0 auto
+
+    small
+      font-family "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace
+      line-height 1.45
+      font-size 1.1vw
+      display block
+      padding 10px
+      text-align center
+
+    &:hover .copyTextOverlay
+      opacity 1
 
 .copyTextOverlay
     absolute top left right bottom
-    background-color #ddd
+    background-color rgba(50,50,50,0.5)
     color white
     font-weight bold
     display flex
     align-items center
     justify-content center
+    opacity 0

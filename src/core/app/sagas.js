@@ -1,4 +1,5 @@
-import { call, take, fork, takeLatest } from 'redux-saga/effects'
+import { call, take, fork, put, takeLatest } from 'redux-saga/effects'
+import { push } from 'react-router-redux'
 import { appActions } from './actions'
 
 import { postIdentity, fetchPrivateKey } from '@core/api'
@@ -10,6 +11,10 @@ export function * watchInitApp () {
     const { payload } = yield take(appActions.INIT_APP)
     // TODO: handle error on ipfs initialization
   }
+}
+
+export function * goToInfo () {
+  yield put(push('/info'))
 }
 
 export function * getPrivateKey () {
@@ -32,8 +37,13 @@ export function * watchSetIdentity () {
   yield takeLatest(appActions.SET_IDENTITY, setIdentity)
 }
 
+export function * watchSetIdentityFulfilled () {
+  yield takeLatest(appActions.SET_IDENTITY_FULFILLED, goToInfo)
+}
+
 export const appSagas = [
   fork(watchInitApp),
   fork(watchGetPrivateKey),
-  fork(watchSetIdentity)
+  fork(watchSetIdentity),
+  fork(watchSetIdentityFulfilled)
 ]

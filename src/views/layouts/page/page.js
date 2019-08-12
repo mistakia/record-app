@@ -5,7 +5,7 @@ import history from '@core/history'
 
 import './page.styl'
 
-export const PageLayout = ({ head, body, title, playerOpen }) => (
+export const PageLayout = ({ head, body, title, playerOpen, scroll }) => (
   <section className={'page' + (playerOpen ? ' player-open' : '')}>
     <div className='page__head'>
       <div className='page__container'>
@@ -18,7 +18,7 @@ export const PageLayout = ({ head, body, title, playerOpen }) => (
         { title ? <div className='page__title'>{title}</div> : head }
       </div>
     </div>
-    <div className='page__body'>
+    <div className={'page__body' + (scroll ? ' scroll' : '')}>
       { body }
     </div>
   </section>
