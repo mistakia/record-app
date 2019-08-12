@@ -8,7 +8,6 @@ import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
 import { getApp } from '@core/app'
-import ReplicationProgress from '@components/replication-progress'
 
 import 'normalize.css'
 import '@styles/normalize.css'
@@ -49,7 +48,6 @@ class App extends React.Component {
         <Menu />
         <Routes />
         <Player />
-        <ReplicationProgress />
       </main>
     )
   }
