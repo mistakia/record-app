@@ -18,7 +18,8 @@ class Track extends React.Component {
       remove,
       add,
       app,
-      style
+      style,
+      index
     } = this.props
 
     if (!track) {
@@ -34,6 +35,7 @@ class Track extends React.Component {
 
     return (
       <article className='track' style={style}>
+        <div className='track__index'>{index}</div>
         <div className='track__actions'>
           <IconButton
             icon={haveTrack ? 'star-solid' : 'star-outline'}

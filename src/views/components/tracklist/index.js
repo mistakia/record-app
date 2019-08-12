@@ -63,14 +63,11 @@ const Tracklist = ({
     const isSelected = track.id === selectedTrackId
     return (
       <Track
-        style={style}
         key={index}
-        track={track}
         isPlaying={isSelected && isPlaying}
         isLoading={isSelected && isLoading}
-        isSelected={isSelected}
-        pause={pause}
         play={isSelected ? play : selectTrack.bind(null, track.id, tracklistId)}
+        {...{style, track, index, isSelected, pause}}
       />
     )
   }
