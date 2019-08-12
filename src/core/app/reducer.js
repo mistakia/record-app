@@ -17,6 +17,7 @@ export function appReducer (state = initialState(), { payload, type }) {
     case appActions.INIT_APP:
       return state.merge({
         address: payload.orbitdb.address,
+        privateKey: null,
         isPending: false,
         ...payload
       })
