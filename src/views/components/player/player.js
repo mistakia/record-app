@@ -63,8 +63,8 @@ export default class Player extends React.Component {
           <div className='player__track-bitrate'>
             <small>{Math.round(track.bitrate / 1000)} kbps</small>
           </div>
-          <div className='player__track-encoder'>
-            <small>{track.encoder}</small>
+          <div className='player__track-format'>
+            <small>{track.format}</small>
           </div>
           <PlayerTimeline />
         </div>
