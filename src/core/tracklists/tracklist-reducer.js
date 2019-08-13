@@ -1,15 +1,11 @@
 import { List } from 'immutable'
 
-import { appActions } from '@core/app'
 import { ITEMS_PER_LOAD } from '@core/constants'
 import { tracklistActions } from './actions'
 import { Tracklist } from './tracklist'
 
 export function tracklistReducer (state = new Tracklist(), {payload, type}) {
   switch (type) {
-    case appActions.INIT_APP:
-      return state.set('id', payload.address)
-
     case tracklistActions.CLEAR_SEARCH:
       return state.withMutations(tracklist => {
         tracklist.merge({

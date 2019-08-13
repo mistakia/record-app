@@ -22,12 +22,12 @@ const Contact = ({
       className='button'
       onClick={noPropagation}
       to={`/new-contact${contact.address}?alias=${contact.name || contact.alias}`}>
-      Connect
+      Follow
     </Link>
   )
 
   const disconnectAction = (
-    <Button onClick={disconnect} isLoading={contact.isUpdating}>Disconnect</Button>
+    <Button onClick={disconnect} isLoading={contact.isUpdating}>Unfollow</Button>
   )
 
   const selfAction = (
@@ -67,9 +67,9 @@ const Contact = ({
         </div>
         { type === 'profile' && <div className='contact__menu menu'>
           <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
-          <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Contacts</NavLink>
+          <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Following</NavLink>
         </div> }
-        <div data-label='peers'>{peers}</div>
+        <div data-label='followers'>{peers}</div>
         <div data-label='entries'>{contact.length === contact.max
           ? contact.max
           : (

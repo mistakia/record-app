@@ -46,12 +46,12 @@ let backgroundWindow
 function createMainWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 600,
+    width: 1200,
+    height: 800,
     minWidth: 900,
-    minHeight: 475,
-    maxWidth: 1300,
-    maxHeight: 800,
+    minHeight: 600,
+    maxWidth: 1800,
+    maxHeight: 1000,
     show: false,
     titleBarStyle: 'hiddenInset'
   })
