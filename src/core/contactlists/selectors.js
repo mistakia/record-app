@@ -46,7 +46,8 @@ export function getAllContactlist (state) {
 
 export function getMyContactlistIsUpdating (state) {
   const { address } = getApp(state)
-  return getContactlistById(state, address).isUpdating
+  const myContactList = getContactlistById(state, address)
+  return myContactList ? myContactList.isUpdating : null
 }
 
 export const getCurrentContactIds = createSelector(

@@ -30,6 +30,13 @@ const Contact = ({
     <Button onClick={disconnect} isLoading={contact.isUpdating}>Unfollow</Button>
   )
 
+  const editAction = (
+    <Link
+      className='button'
+      to={`/new-contact${contact.address}?haveContact=true&alias=${contact.alias || contact.name}`}
+      onClick={noPropagation}>Edit</Link>
+  )
+
   const selfAction = (
     <Link
       className='button' to='/edit-about'
@@ -37,10 +44,12 @@ const Contact = ({
       Edit</Link>
   )
 
+  const connectedContactActions = (<div>{disconnectAction}{editAction}</div>)
+
   const contactAction = (contact.isMe
     ? selfAction
     : (contact.haveContact
-      ? disconnectAction
+      ? connectedContactActions
       : connectAction
     )
   )
