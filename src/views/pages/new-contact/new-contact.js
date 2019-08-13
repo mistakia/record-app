@@ -32,7 +32,8 @@ export class NewContactPage extends React.Component {
 
   render () {
     const { logId } = this.props.match.params
-    const { alias } = parseQueryString(this.props.location.search)
+    const { alias, haveContact } = parseQueryString(this.props.location.search)
+
     const body = (
       <form id='new-contact' onSubmit={this.handleSubmit}>
         <label>
@@ -41,14 +42,14 @@ export class NewContactPage extends React.Component {
         </label>
         <label>
           Address
-          <input type='text' name='address' defaultValue={logId} placeholder='/orbitdb/Qm.../record' />
+          <input type='text' name='address' defaultValue={logId} placeholder='/orbitdb/Qm.../record' disabled={!!haveContact} />
         </label>
-        <Button type='submit' isLoading={this.props.isUpdating}>Connect</Button>
+        <Button type='submit' isLoading={this.props.isUpdating}>{haveContact ? 'Save' : 'Connect'}</Button>
       </form>
     )
 
     return (
-      <PageLayout title='New Contact' body={body} />
+      <PageLayout title={haveContact ? 'Edit Contact' : 'New Contact'} body={body} />
     )
   }
 }
