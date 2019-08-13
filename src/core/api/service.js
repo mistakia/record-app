@@ -87,9 +87,9 @@ export const api = {
     const url = `http://localhost:3000/tracks?${toQueryString(data)}`
     return { url, ...DELETE }
   },
-  postIdentity (pk) {
+  postIdentity ({ privateKey }) {
     const url = 'http://localhost:3000/import'
-    const post = POST({ privateKey: pk })
+    const post = POST({ privateKey })
     return { url, ...post }
   }
 }

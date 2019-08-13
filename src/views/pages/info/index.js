@@ -25,7 +25,8 @@ const mapStateToProps = createSelector(
 
 const mapDispatchToProps = {
   init: infoActions.init,
-  getPrivateKey: appActions.getPrivateKey
+  getPrivateKey: appActions.getPrivateKey,
+  setIdentity: appActions.setIdentity
 }
 
 export default connect(

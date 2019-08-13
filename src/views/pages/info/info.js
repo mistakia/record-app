@@ -3,12 +3,13 @@ import hashicon from 'hashicon'
 import { Link } from 'react-router-dom'
 
 import PageLayout from '@layouts/page'
+import Button from '@components/button'
 import CopyText from '@components/copy-text'
 
 import './info.styl'
 
 export default function () {
-  const { app, info, getPrivateKey } = this.props
+  const { app, info, getPrivateKey, setIdentity } = this.props
 
   const peers = info.peers.map((peer, index) => {
     return (
@@ -22,6 +23,11 @@ export default function () {
   const showPrivateKey = (event) => {
     event && event.stopPropagation && event.stopPropagation()
     getPrivateKey()
+  }
+
+  const generateIdentity = (event) => {
+    event && event.stopPropagation && event.stopPropagation()
+    setIdentity()
   }
 
   const appIcon = app.id ? hashicon(app.id, 40) : null
@@ -53,6 +59,7 @@ export default function () {
         </CopyText>
         <div>
           <Link className='button' to='/set-identity'>Load Existing Account</Link>
+          <Button onClick={generateIdentity} isLoading={app.isPending}>Generate new Account</Button>
         </div>
       </div>
       <div>
