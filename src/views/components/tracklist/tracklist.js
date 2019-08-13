@@ -48,7 +48,7 @@ const render = ({
         <div className='track__artist'>Artist</div>
         <div className='track__bitrate'>Bitrate</div>
         <div className='track__duration'>Time</div>
-        <div className='track__encoder'>Type</div>
+        <div className='track__format'>Format</div>
       </div>
     </div>
     <div className='list__body'>
