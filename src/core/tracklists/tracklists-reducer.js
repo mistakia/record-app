@@ -1,6 +1,5 @@
 import { Map } from 'immutable'
 
-import { appActions } from '@core/app'
 import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
 import { taglistActions } from '@core/taglists'
@@ -14,11 +13,6 @@ export function tracklistsReducer (state = initialState, action) {
   const { payload } = action
 
   switch (action.type) {
-    case appActions.INIT_APP:
-      return state.merge({
-        [payload.orbitdb.address]: tracklistReducer(undefined, action)
-      })
-
     case tracklistActions.CLEAR_SEARCH:
     case tracklistActions.SEARCH_TRACKS:
     case tracklistActions.SEARCH_TRACKS_FULFILLED:

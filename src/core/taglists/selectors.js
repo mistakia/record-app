@@ -26,7 +26,7 @@ export function getCurrentSelectedTags (state) {
 
 export const getTagsForUser = createSelector(
   getUserTaglist,
-  taglist => taglist.tags.map(t => t.tag)
+  taglist => taglist ? taglist.tags.map(t => t.tag) : []
 )
 
 export const getTagsForCurrentTaglist = createSelector(

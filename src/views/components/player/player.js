@@ -10,18 +10,18 @@ import './player.styl'
 
 export default class Player extends React.Component {
   componentDidMount () {
-    hotkeys('space', () => {
+    hotkeys('space', { keydown: false, keyup: true }, () => {
       if (!this.props.track) return
       if (this.props.isLoading) return
 
       this.props.isPlaying ? this.props.pause() : this.props.play()
     })
 
-    hotkeys('left', () => {
+    hotkeys('left', { keydown: false, keyup: true }, () => {
       this.props.previousTrack && this.props.previousTrack()
     })
 
-    hotkeys('right', () => {
+    hotkeys('right', { keydown: false, keyup: true }, () => {
       this.props.nextTrack && this.props.nextTrack()
     })
   }

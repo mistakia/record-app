@@ -4,7 +4,6 @@ import {
   PEER_CONTACTLIST_ID,
   ALL_CONTACTLIST_ID
 } from '@core/constants'
-import { appActions } from '@core/app'
 import { contactlistActions } from './actions'
 import { contactlistReducer } from './contactlist-reducer'
 
@@ -16,11 +15,6 @@ export function contactlistsReducer (state = initialState, action) {
   const { payload } = action
 
   switch (action.type) {
-    case appActions.INIT_APP:
-      return state.merge({
-        [payload.orbitdb.address]: contactlistReducer(undefined, action)
-      })
-
     case contactlistActions.FETCH_CONTACTS_FULFILLED:
     case contactlistActions.FETCH_CONTACTS_PENDING:
     case contactlistActions.FETCH_PEER_CONTACTS_PENDING:
