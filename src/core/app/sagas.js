@@ -22,7 +22,7 @@ export function * getPrivateKey () {
 }
 
 export function * setIdentity ({ payload }) {
-  yield call(postIdentity, payload)
+  yield call(postIdentity, { privateKey: payload })
 }
 
 export function * goBack () {
