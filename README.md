@@ -22,6 +22,17 @@ npm run rebuild:electron // rebuild node bindings for electron
 npm run start:electron
 ```
 
+Note: fpcalc ([chromaprint](https://github.com/acoustid/chromaprint)) must be installed to be able to import audio files.
+##### OSX using Homebrew
+```
+brew install chromaprint
+```
+
+##### Ubuntu
+```
+sudo apt-get install libchromaprint-tools
+```
+
 ### Mobile (React Native)
 First, install packages needed by nodejs-mobile:
 ```
