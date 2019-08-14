@@ -29,6 +29,7 @@
         width 100%
   .track__tags
     flex 0 0 30%
+    margin-bottom 5px
     input:not(:focus)
       opacity 0
   &:hover
@@ -78,3 +79,7 @@
     font-size 8px
     padding 0 2px
     font-family "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace
+
+.track:not(.list__header)
+  .track__play
+    min-height 45px
