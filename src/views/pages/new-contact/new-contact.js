@@ -16,14 +16,13 @@ export class NewContactPage extends React.Component {
   }
 
   handleSubmit (event) {
-    // TODO: validation
     const data = {
       alias: event.target.alias.value,
       address: event.target.address.value
     }
     const { app } = this.props
 
-    if (data.address && data.alias) {
+    if (data.address) {
       this.props.addContact(app.address, data)
     }
 
@@ -42,7 +41,7 @@ export class NewContactPage extends React.Component {
         </label>
         <label>
           Address
-          <input type='text' name='address' defaultValue={logId} placeholder='/orbitdb/Qm.../record' disabled={!!haveContact} />
+          <input type='text' name='address' defaultValue={logId} placeholder='/orbitdb/Qm.../record' disabled={!!haveContact} required />
         </label>
         <Button type='submit' isLoading={this.props.isUpdating}>{haveContact ? 'Save' : 'Connect'}</Button>
       </form>

@@ -27,7 +27,7 @@ export default class SetIdentityPage extends React.Component {
       <form id='set-identity' onSubmit={this.handleSubmit}>
         <label>
           Secret Key
-          <input type='area' name='privateKey' placeholder='Existing account secret key' />
+          <input type='area' name='privateKey' placeholder='Existing account secret key' required />
         </label>
         <Button type='submit' isLoading={this.props.app.isPending}>Load</Button>
       </form>
