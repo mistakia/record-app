@@ -39,7 +39,6 @@ class TagsBase extends React.Component {
         <Tag
           key={idx}
           tag={tag}
-          textOnly={this.props.textOnly}
           onClick={onClick.bind(this, tag)}
           remove={remove && remove.bind(this, tag)}
         />

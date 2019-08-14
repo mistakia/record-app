@@ -24,61 +24,9 @@ $textColor = rgba(255,255,255,0.6)
   animation-timing-function ease-in-out
   animation-duration 300ms
 
-.player__body
-  position relative
-  padding 5px
-  flex 1 1 calc(50% - 5px)
-  margin-left 5px
-  flex-direction column
-  background rgba(255,255,255,0.05)
-  max-width 100%
-  height calc($playerHeight - 5px)
-
-.player__body-info
-  flex 1
-  display flex
-  flex-direction column
-  margin-bottom 10px
-  div
-    flex 1
-    text-align center
-    padding-top 5px
-
-.player__current-time
-.player__track-duration
-  font-family monospace
-  font-size 10px
-  color white
-
-.player__current-time
-  absolute bottom 7px left 5px
-
-.player__track-duration
-  absolute bottom 7px right 5px
-
-.player__track-bitrate
-  absolute top 2px left 5px
-
-.player__track-format
-  absolute top 2px right 5px
-
-.player__artwork
-  flex 0 0 $playerHeight - 10px
-  padding-left 5px
-  img
-    float right
-    max-height 100%
-
-.player__controls
-  flex 1 1 25%
-  display flex
-  align-items center
-  margin 0 auto
-  font-size rem(13px)
-
-  .button
-    border 0
-    flex 1
+  .tag
+    color $textColor
+    background rgba($accentColorRGB,0.3)
 
   .button__icon
     fill $textColor
@@ -90,10 +38,62 @@ $textColor = rgba(255,255,255,0.6)
     &:active
       background rgba(255, 255, 255, 0.15)
 
-.player-controls__title
-  flex 1
-  padding 0 10px
+.player__track
+  flex 0 0 35%
+  display flex
+  font-size 13px
+  align-items center
+
+.player__track-artwork
+  flex 0 0 $playerHeight - 10px
+  padding-right 5px
   overflow hidden
-  text-overflow ellipsis
-  white-space nowrap
-  word-wrap normal
+
+.player__track-info
+  flex 1
+  display flex
+  flex-direction column
+
+.player__track-actions
+  flex 0 0 40px
+
+.player__controls
+  flex 0 0 30%
+  display flex
+  flex-direction column
+
+.player__controls-actions
+  flex 1
+  display flex
+  align-items center
+  justify-content center
+  font-size rem(13px)
+  margin-bottom 5px
+
+  .button
+    border 0
+    flex 0 0 40px
+
+  .button__play
+  .button__pause
+    border 1px solid $textColor
+
+.player__timeline
+  flex 1
+  font-family monospace
+  font-size 10px
+  color white
+  display flex
+  align-items baseline
+
+.player__timeline-time
+  flex 0
+
+.player__timeline-duration
+  flex 0
+
+.player__actions
+  flex 0 0 35%
+
+.player__track-title
+  color white
