@@ -3,7 +3,7 @@ import React from 'react'
 import IconButton from '@components/icon-button'
 import './tag.styl'
 
-const Tag = ({ tag, onClick, remove, count, isSelected, textOnly }) => {
+const Tag = ({ tag, onClick, remove, count, isSelected }) => {
   return (
     <span className={`tag ${isSelected ? 'active' : ''}`}>
       <a onClick={onClick}>{tag}</a>

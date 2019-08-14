@@ -54,7 +54,7 @@ class Track extends React.Component {
         </div>
         <div className='track__body'>
           <div className='track__title'>{track.name}</div>
-          <Tags track={track} textOnly />
+          <Tags track={track} />
         </div>
         <div className='track__artist'>{track.artist}</div>
         <small className='track__bitrate'>{Math.round(track.bitrate / 1000)}</small>
