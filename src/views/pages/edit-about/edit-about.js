@@ -24,15 +24,15 @@ export default class EditAboutPage extends React.Component {
       bio: event.target.bio.value
     }
 
-    if (data.name && data.location && data.bio) {
-      this.props.setAbout(data)
-    }
+    this.props.setAbout(data)
 
     event.preventDefault()
   }
 
   render () {
     const { contact } = this.props
+
+    if (!contact) return null
 
     const body = (
       <form id='edit-about' onSubmit={this.handleSubmit}>
