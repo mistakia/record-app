@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { FixedSizeList as List } from 'react-window'
+import { DynamicSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import InfiniteLoader from 'react-window-infinite-loader'
 
@@ -63,7 +63,6 @@ const render = ({
                 height={height}
                 itemCount={itemCount}
                 overscanCount={20}
-                itemSize={50}
                 onItemsRendered={onItemsRendered}
                 ref={ref}
                 width={width}>
