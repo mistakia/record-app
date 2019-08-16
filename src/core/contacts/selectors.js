@@ -4,12 +4,7 @@ export function getContacts (state) {
 
 export function getAllContacts (state) {
   const contacts = getContacts(state)
-  let res = []
-  for (const contact of contacts.keys()) {
-    res.push(contacts.get(contact))
-  }
-
-  return res
+  return contacts.map(v => v).toList()
 }
 
 export function getContactById (state, contactId) {

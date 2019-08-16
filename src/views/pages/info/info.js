@@ -2,6 +2,7 @@ import React from 'react'
 import hashicon from 'hashicon'
 import { Link } from 'react-router-dom'
 
+import Confirm from '@components/confirm'
 import PageLayout from '@layouts/page'
 import Button from '@components/button'
 import CopyText from '@components/copy-text'
@@ -27,7 +28,12 @@ export default function () {
 
   const generateIdentity = (event) => {
     event && event.stopPropagation && event.stopPropagation()
-    setIdentity()
+    Confirm({
+      title: 'Generate New Account',
+      message: 'Are you sure you want to generate a new account',
+      detail: 'You will not be able to recover your current account if you do not have the secret key',
+      onConfirm: () => setIdentity()
+    })
   }
 
   const appIcon = app.id ? hashicon(app.id, 40) : null

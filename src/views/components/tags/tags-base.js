@@ -3,6 +3,7 @@ import React from 'react'
 import Tag from '@components/tag'
 import { fuzzyFilter } from '@core/utils'
 import history from '@core/history'
+import Confirm from '@components/confirm'
 
 class TagsBase extends React.Component {
   constructor (props) {
@@ -22,7 +23,11 @@ class TagsBase extends React.Component {
     const { track, app } = this.props
     const trackId = track.id
     tag = tag || track.tags[track.tags.length - 1]
-    this.props.removeTag(app.address, { trackId, tag })
+    Confirm({
+      title: 'Delete Tag',
+      message: `Are you sure you want to delete the tag: ${tag}`,
+      onConfirm: () => this.props.removeTag(app.address, { trackId, tag })
+    })
   }
 
   onClick (tag) {
