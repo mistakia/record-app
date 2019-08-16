@@ -1,5 +1,7 @@
 import { connect } from 'react-redux'
+
 import { contactlistActions } from '@core/contactlists'
+import Confirm from '@components/confirm'
 
 import Contact from './contact'
 
@@ -22,7 +24,12 @@ const ContactBase = ({ removeContact, contact, ...props }) => {
 
   const disconnect = (event) => {
     event && event.stopPropagation && event.stopPropagation()
-    removeContact({ contactId: contact.id })
+    Confirm({
+      title: 'Unfollow',
+      message: `Are you sure you want to unfollow ${contactName}`,
+      detail: 'Unfollowing this library will eventually remove its data from your device',
+      onConfirm: () => removeContact({ contactId: contact.id })
+    })
   }
 
   return Contact({
