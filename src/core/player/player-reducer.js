@@ -30,6 +30,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
     case playerActions.SHUFFLE_TRACKLIST:
       return state.merge({
         isShuffling: true,
+        isLoading: true,
         tracklistId: payload.tracklistId
       })
 
