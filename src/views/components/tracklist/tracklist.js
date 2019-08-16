@@ -20,7 +20,8 @@ const render = ({
   Row,
   onSearch,
   onClear,
-  searchQuery
+  searchQuery,
+  listRef
 }) => (
   <div className='list'>
     <div className='list__head'>
@@ -58,7 +59,7 @@ const render = ({
         isItemLoaded={isItemLoaded}
         itemCount={itemCount}
         loadMoreItems={loadMoreItems}>
-        {({ onItemsRendered, ref }) => (
+        {({ onItemsRendered }) => (
           <AutoSizer>
             {({ height, width }) => (
               <List
@@ -66,7 +67,7 @@ const render = ({
                 itemCount={itemCount}
                 overscanCount={20}
                 onItemsRendered={onItemsRendered}
-                ref={ref}
+                ref={listRef}
                 width={width}>
                 {Row}
               </List>
