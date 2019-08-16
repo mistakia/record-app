@@ -81,6 +81,7 @@ const Tracklist = ({
   }
 
   return render({
+    loading: displayLoadingIndicator,
     onSearch,
     showAdd,
     shuffle,

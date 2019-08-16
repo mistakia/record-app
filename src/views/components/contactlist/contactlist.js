@@ -22,6 +22,7 @@ const render = ({ contactItems, loading, showAdd }) => (
     <div className='list__body'>
       {contactItems}
       {loading}
+      {(!loading && !contactItems.length) && <div className='list__body-empty'>Empty</div>}
     </div>
   </div>
 )

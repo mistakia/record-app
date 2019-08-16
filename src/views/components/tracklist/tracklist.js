@@ -9,6 +9,7 @@ import Taglist from '@components/taglist'
 import Input from '@components/input'
 
 const render = ({
+  loading,
   tracklistId,
   isItemLoaded,
   itemCount,
@@ -52,6 +53,7 @@ const render = ({
       </div>
     </div>
     <div className='list__body'>
+      {(!loading && !itemCount) && <div className='list__body-empty'>Empty</div>}
       <InfiniteLoader
         isItemLoaded={isItemLoaded}
         itemCount={itemCount}
