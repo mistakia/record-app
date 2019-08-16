@@ -6,21 +6,22 @@
   font-weight 400
   margin 4px 8px 0 0
   display inline-block
-  border 1px solid rgba($accentColorRGB,0.1)
+  border-radius 16px
   &.text-only
     border 0
     background transparent
     font-size 9px
     box-shadow none
   &:hover
+    color rgba(255,255,255,1)
+    background rgba($accentColorRGB,.3)
   &.active
     color rgba(255,255,255,1)
-    border-color rgba($accentColorRGB,1)
     background rgba($accentColorRGB,.7)
   a
   .tag--remove
   span
-    padding 4px 5px
+    padding 4px 8px
     vertical-align middle
     display inline-block
     height auto
@@ -33,5 +34,8 @@
   .tag--count
   .tag--remove
     border 0
-    border-radius 0
-    border-left 1px solid rgba($accentColorRGB,0.1)
+    border-radius 0 16px 16px 0
+    border-left 1px solid white
+
+  .tag--remove:hover
+    background red

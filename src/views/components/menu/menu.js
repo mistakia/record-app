@@ -5,10 +5,9 @@ import './menu.styl'
 
 const Menu = ({ app }) => (
   <div id='menu' className='menu'>
-    <NavLink to='/feed'>Home</NavLink>
     <NavLink to='/explore'>Explore</NavLink>
+    <NavLink to={`/tracks${app.address}`}>Library</NavLink>
     <NavLink to='/info'>Info</NavLink>
-    <NavLink to={`/tracks${app.address}`}>Tracks</NavLink>
   </div>
 )
 

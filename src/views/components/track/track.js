@@ -1,5 +1,6 @@
 import React from 'react'
 
+import Artwork from '@components/artwork'
 import IconButton from '@components/icon-button'
 import FormattedTime from '@components/formatted-time'
 import Tags from '@components/tags'
@@ -34,7 +35,7 @@ class Track extends React.Component {
     }
 
     return (
-      <article className='track' style={style}>
+      <article className={'track' + (isSelected ? ' selected' : '')} style={style}>
         <div className='track__index'>{index}</div>
         <div className='track__actions'>
           <IconButton
@@ -44,14 +45,14 @@ class Track extends React.Component {
             onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}
           />
         </div>
-        <div className='track__play' style={artwork && {backgroundImage: `url("${artwork}")`}}>
+        <Artwork className='track__play' url={artwork} background>
           <IconButton
             icon={isPlaying ? 'pause' : 'play'}
             label={isPlaying ? 'Pause' : 'Play'}
             isLoading={isLoading}
             onClick={isPlaying ? pause : play}
           />
-        </div>
+        </Artwork>
         <div className='track__body'>
           <div className='track__title'>{track.name}</div>
           <Tags track={track} />

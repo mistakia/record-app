@@ -5,10 +5,12 @@ import LoadingIndicator from '@components/loading-indicator'
 
 import './button.styl'
 
-function Button ({ children, className, label, onClick, type = 'button', disabled = false, isLoading }) {
+function Button ({ children, className, label, onClick, count, type = 'button', disabled = false, isLoading }) {
   const classNames = ['button', className]
+  const haveCount = typeof count === 'number'
 
   if (isLoading) disabled = true
+  if (haveCount) classNames.push('button__count')
 
   return (
     <button
@@ -18,6 +20,7 @@ function Button ({ children, className, label, onClick, type = 'button', disable
       disabled={disabled}
       type={type}>
       {isLoading ? <LoadingIndicator /> : children }
+      {haveCount && <span className='count'>{count}</span>}
     </button>
   )
 }

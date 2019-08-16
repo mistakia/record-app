@@ -16,19 +16,19 @@
 
 .list__header
   font-size 10px
-  border 0
-  background #f0f0f0
+  border 0 !important
+  border-top 1px solid $borderColorDark !important
+  border-bottom 1px solid $borderColorDark !important
   div
     height auto !important
   > div
-    margin 2px 0
-    padding 4px !important
+    margin 4px 0
     border-left 1px solid #ccc
 
 .list__search
   flex 3
   input
-    padding 10px
+    padding 15px 25px
     border none
     background transparent
 
@@ -42,7 +42,4 @@
   .action
     flex 0 1 auto
   .action + .action
-    margin-right 1%
-  button
-  .button
-    background #f5f5f5
+    margin-right 8px
