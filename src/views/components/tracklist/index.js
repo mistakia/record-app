@@ -49,6 +49,7 @@ const Tracklist = ({
     : (hasMore ? tracks.size + 1 : tracks.size)
   const load = async () => loadNextTracks()
   const loadMoreItems = displayLoadingIndicator ? () => {} : load
+  const listRef = React.createRef()
 
   const Row = ({ style, index }) => {
     if (displayLoadingIndicator && (index + 1) === itemCount) {
@@ -74,6 +75,7 @@ const Tracklist = ({
 
   const onSearch = (query) => {
     search(tracklistId, query, tags)
+    listRef.current.scrollToItem(0)
   }
 
   const onClear = () => {
@@ -92,7 +94,8 @@ const Tracklist = ({
     onClear,
     itemCount,
     loadMoreItems,
-    Row
+    Row,
+    listRef
   })
 }
 
