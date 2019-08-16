@@ -20,10 +20,6 @@ export default class PlayerTimeline extends React.Component {
   render () {
     let { bufferedTime, percentBuffered, percentCompleted } = this.props.times
 
-    if (!bufferedTime) {
-      return null
-    }
-
     return (
       <div id='player-timeline' onClick={this.handleClick}>
         <div className={'bar bar--buffered' + (bufferedTime > 0 && ' bar--animated')} style={{width: percentBuffered}} />

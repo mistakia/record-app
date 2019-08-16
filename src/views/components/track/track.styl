@@ -13,8 +13,6 @@
   .track__play
     flex 0 0 4%
     position relative
-    background-size cover
-    background-position center
     height 100%
     button
       position absolute
@@ -76,9 +74,15 @@
     overflow hidden
 
   .track__index
+    flex 0 0 40px
     font-size 8px
     padding 0 2px
     font-family "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace
+
+  &.selected
+    background-color rgba($accentColorRGB, 0.07)
+    .track__play button
+      display block
 
 .track:not(.list__header)
   .track__play

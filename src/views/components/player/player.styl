@@ -1,5 +1,6 @@
 $playerHeight = 75px
 $textColor = rgba(255,255,255,0.6)
+$backgroundColor = #2d2e2f
 
 @keyframes show-player
   0%
@@ -14,7 +15,7 @@ $textColor = rgba(255,255,255,0.6)
   width 100%
   height $playerHeight
   color $textColor
-  background #2d2e2f
+  background $backgroundColor
   align-items center
 
   transform translateZ(0)
@@ -24,16 +25,22 @@ $textColor = rgba(255,255,255,0.6)
   animation-timing-function ease-in-out
   animation-duration 300ms
 
+  small
+    color $textColor
+
   .tag
     color $textColor
     background rgba($accentColorRGB,0.3)
+    .tag--count
+    .tag--remove
+      border-color $backgroundColor
 
   .button__icon
     fill $textColor
 
     &:hover
       fill rgba(255,255,255,0.9)
-      background transparent
+      // background transparent
 
     &:active
       background rgba(255, 255, 255, 0.15)
@@ -43,10 +50,12 @@ $textColor = rgba(255,255,255,0.6)
   display flex
   font-size 13px
   align-items center
+  height 100%
+  padding 8px 0
 
 .player__track-artwork
   flex 0 0 $playerHeight - 10px
-  padding-right 5px
+  margin-right 5px
   overflow hidden
 
 .player__track-info

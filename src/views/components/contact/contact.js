@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 
 import history from '@core/history'
 import Button from '@components/button'
+import Icon from '@components/icon'
 import Progress from '@components/progress'
 
 import './contact.styl'
@@ -16,51 +17,46 @@ const Contact = ({
   disconnect,
   style
 }) => {
+  const peers = contact.peers.size
+  const loading = contact.isBuildingIndex || contact.isProcessingIndex
+  const showEdit = contact.isMe || contact.haveContact
   const noPropagation = e => e.stopPropagation()
   const connectAction = (
     <Link
-      className='button'
+      className='button button__count'
       onClick={noPropagation}
       to={`/new-contact${contact.address}?alias=${contact.name || contact.alias}`}>
       Follow
+      <span className='count'>{peers}</span>
     </Link>
   )
 
   const disconnectAction = (
-    <Button onClick={disconnect} isLoading={contact.isUpdating}>Unfollow</Button>
+    <Button onClick={disconnect} isLoading={contact.isUpdating} count={peers}>Unfollow</Button>
   )
 
-  const editAction = (
+  const editContact = (
     <Link
-      className='button'
+      className='button__icon button'
       to={`/new-contact${contact.address}?haveContact=true&alias=${contact.alias || contact.name}`}
-      onClick={noPropagation}>Edit</Link>
+      onClick={noPropagation}><Icon name='edit' /></Link>
   )
 
-  const selfAction = (
+  const editSelf = (
     <Link
-      className='button' to='/edit-about'
+      className='button__icon button' to='/edit-about'
       onClick={noPropagation}>
-      Edit</Link>
+      <Icon name='edit' /></Link>
   )
 
-  const connectedContactActions = (<div>{disconnectAction}{editAction}</div>)
-
-  const contactAction = (contact.isMe
-    ? selfAction
-    : (contact.haveContact
-      ? connectedContactActions
-      : connectAction
-    )
+  const contactAction = (contact.haveContact
+    ? disconnectAction
+    : connectAction
   )
 
   const viewUser = () => {
     history.push(`/tracks${contact.address}`)
   }
-
-  const peers = contact.peers.size
-
-  const loading = contact.isBuildingIndex || contact.isProcessingIndex
 
   return (
     <article
@@ -73,22 +69,25 @@ const Contact = ({
       <div className='contact__body'>
         <div className='contact__title'>
           {contactName}
+          { showEdit && (contact.isMe ? editSelf : editContact) }
+        </div>
+        <div className='contact__actions'>
+          {(type !== 'heading' && !contact.isMe) && contactAction}
         </div>
         { type === 'profile' && <div className='contact__menu menu'>
           <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
           <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Following</NavLink>
         </div> }
-        <div data-label='followers'>{peers}</div>
-        <div data-label='entries'>{contact.length === contact.max
-          ? contact.max
-          : (
-            `${contact.length}/${contact.max}`
-          )}{contact.length !== contact.max && <Progress progress={(contact.length / contact.max) * 100} />}</div>
+        <div data-label='entries'>
+          {contact.length !== contact.max && <Progress progress={(contact.length / contact.max) * 100} />}
+          {contact.length === contact.max
+            ? contact.max
+            : (
+              `${contact.length}/${contact.max}`
+            )}
+        </div>
         <div className={loading ? 'blink' : ''} data-label='tracks'>{contact.trackCount}</div>
         <div className={loading ? 'blink' : ''} data-label='contacts'>{contact.contactCount}</div>
-      </div>
-      <div className='contact__actions'>
-        {type !== 'heading' && contactAction}
       </div>
     </article>
   )
