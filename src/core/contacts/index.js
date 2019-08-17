@@ -6,7 +6,12 @@ export {
   getContactMe,
   getReplicationProgress
 } from './selectors'
-export { contactActions, contactRequestActions } from './actions'
+export {
+  contactActions,
+  contactConnectActions,
+  contactDisconnectActions,
+  contactRequestActions
+} from './actions'
 export { contactSagas } from './sagas'
 export { contactsReducer } from './reducer'
 export { Contact, createContact } from './contact'

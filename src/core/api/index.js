@@ -17,5 +17,7 @@ export {
   postAbout,
   postTrack,
   deleteTrack,
-  postIdentity
+  postIdentity,
+  requestConnectContact,
+  requestDisconnectContact
 } from './sagas'
