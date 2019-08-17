@@ -12,7 +12,7 @@ const Contact = ({
   contactBio,
   contact,
   type,
-  disconnect
+  remove
 }) => {
   const style = styles[type]
 
@@ -28,7 +28,7 @@ const Contact = ({
     <Button
       text='Disconnect'
       style={style.action}
-      onClick={disconnect} />
+      onClick={remove} />
   )
 
   const selfAction = (

@@ -1,4 +1,4 @@
-@keyframes blinker
+@keyframes blink
   0%
     opacity 1
   100%
@@ -8,3 +8,17 @@
   text-decoration blink
   animation blink 1s ease-in-out infinite
   animation-direction alternate
+
+@keyframes rotate
+  0%
+    transform rotate(0deg)
+  100%
+    transfrom rotate(360deg)
+
+.spin
+  transform rotate(360deg)
+  // animation spin 1s linear infinite
+  animation-name rotate
+  animation-duration 4000ms
+  animation-iteration-count infinite
+  animation-timing-function linear

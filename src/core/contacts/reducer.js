@@ -76,6 +76,8 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         contacts.setIn([payload.data.id, 'isUpdating'], false)
       })
 
+    case contactActions.CONNECT_CONTACT_PENDING:
+    case contactActions.DISCONNECT_CONTACT_PENDING:
     case contactlistActions.ADD_CONTACT:
       return state.withMutations(contacts => {
         contacts.map(contact => {
@@ -90,11 +92,19 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         contacts.setIn([payload.data.contactId, 'isUpdating'], true)
       })
 
+    case contactActions.DISCONNECT_CONTACT_FAILED:
+    case contactActions.DISCONNECT_CONTACT_FULFILLED:
+    case contactActions.CONNECT_CONTACT_FULFILLED:
+    case contactActions.CONNECT_CONTACT_FAILED:
     case contactlistActions.POST_CONTACT_FAILED:
     case contactlistActions.POST_CONTACT_FULFILLED:
     case contactlistActions.DELETE_CONTACT_FAILED:
       return state.withMutations(contacts => {
-        contacts.map(contact => contact.set('isUpdating', false))
+        contacts.map(contact => {
+          if (contact.address === payload.logId) {
+            contacts.setIn([contact.id, 'isUpdating'], false)
+          }
+        })
       })
 
     case contactActions.RECORD_PEER_JOINED:

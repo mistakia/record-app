@@ -29,7 +29,9 @@ import {
   tracklistDeleteActions
 } from '@core/tracklists'
 import {
-  contactRequestActions
+  contactRequestActions,
+  contactConnectActions,
+  contactDisconnectActions
 } from '@core/contacts'
 import {
   aboutPostActions
@@ -60,6 +62,8 @@ function * fetch (...args) {
 export const fetchContacts = fetch.bind(null, api.fetchContacts, contactlistRequestActions)
 export const postContact = fetch.bind(null, api.postContact, contactlistPostActions)
 export const deleteContact = fetch.bind(null, api.deleteContact, contactlistDeleteActions)
+export const requestConnectContact = fetch.bind(null, api.connectContact, contactConnectActions)
+export const requestDisconnectContact = fetch.bind(null, api.disconnectContact, contactDisconnectActions)
 
 export const fetchAllContacts = fetch.bind(null, api.fetchAllContacts, allContactlistRequestActions)
 export const fetchPeers = fetch.bind(null, api.fetchPeers, peerContactlistRequestActions)

@@ -4,24 +4,35 @@ import { Link, NavLink } from 'react-router-dom'
 import history from '@core/history'
 import Button from '@components/button'
 import Icon from '@components/icon'
+import IconButton from '@components/icon-button'
 import Progress from '@components/progress'
 
 import './contact.styl'
 
 const Contact = ({
+  connect,
+  disconnect,
   contactName,
   contactLocation,
   contactBio,
   contact,
   type,
-  disconnect,
+  remove,
   style
 }) => {
   const peers = contact.peers.size
   const loading = contact.isBuildingIndex || contact.isProcessingIndex
   const showEdit = contact.isMe || contact.haveContact
   const noPropagation = e => e.stopPropagation()
-  const connectAction = (
+
+  const handleSyncClick = (e) => {
+    e.stopPropagation()
+    contact.isReplicating
+      ? disconnect(contact.address, contact.id)
+      : connect(contact.address, contact.id)
+  }
+
+  const addAction = (
     <Link
       className='button button__count'
       onClick={noPropagation}
@@ -31,8 +42,8 @@ const Contact = ({
     </Link>
   )
 
-  const disconnectAction = (
-    <Button onClick={disconnect} isLoading={contact.isUpdating} count={peers}>Unfollow</Button>
+  const removeAction = (
+    <Button onClick={remove} isLoading={contact.isUpdating} count={peers}>Unfollow</Button>
   )
 
   const editContact = (
@@ -50,8 +61,8 @@ const Contact = ({
   )
 
   const contactAction = (contact.haveContact
-    ? disconnectAction
-    : connectAction
+    ? removeAction
+    : addAction
   )
 
   const viewUser = () => {
@@ -69,15 +80,24 @@ const Contact = ({
       <div className='contact__body'>
         <div className='contact__title'>
           {contactName}
-          { showEdit && (contact.isMe ? editSelf : editContact) }
+          {showEdit && (contact.isMe ? editSelf : editContact)}
         </div>
         <div className='contact__actions'>
           {(type !== 'heading' && !contact.isMe) && contactAction}
         </div>
-        { type === 'profile' && <div className='contact__menu menu'>
+        {type === 'profile' && <div className='contact__menu menu'>
           <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
           <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Following</NavLink>
-        </div> }
+        </div>}
+        <div>
+          {!contact.isMe &&
+            <IconButton
+              label='status'
+              isLoading={contact.isUpdating}
+              className={contact.isReplicating ? 'spin' : ''}
+              onClick={handleSyncClick}
+              icon={contact.isReplicating ? 'sync' : 'sync-disabled'} />}
+        </div>
         <div data-label='entries'>
           {contact.length !== contact.max && <Progress progress={(contact.length / contact.max) * 100} />}
           {contact.length === contact.max

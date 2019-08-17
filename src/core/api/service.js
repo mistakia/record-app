@@ -91,6 +91,16 @@ export const api = {
     const url = 'http://localhost:3000/import'
     const post = POST({ privateKey })
     return { url, ...post }
+  },
+  connectContact ({ logId, contactId }) {
+    const params = { contactId }
+    const url = `http://localhost:3000/connect${logId}?${toQueryString(params)}`
+    return { url }
+  },
+  disconnectContact ({ logId, contactId }) {
+    const params = { contactId }
+    const url = `http://localhost:3000/disconnect${logId}?${toQueryString(params)}`
+    return { url }
   }
 }
 

@@ -2,6 +2,7 @@ import { connect } from 'react-redux'
 
 import { contactlistActions } from '@core/contactlists'
 import Confirm from '@components/confirm'
+import { contactActions } from '@core/contacts'
 
 import Contact from './contact'
 
@@ -22,7 +23,7 @@ const ContactBase = ({ removeContact, contact, ...props }) => {
     ? (contact.bio || 'Bio')
     : contact.bio
 
-  const disconnect = (event) => {
+  const remove = (event) => {
     event && event.stopPropagation && event.stopPropagation()
     Confirm({
       title: 'Unfollow',
@@ -34,7 +35,7 @@ const ContactBase = ({ removeContact, contact, ...props }) => {
 
   return Contact({
     contact,
-    disconnect,
+    remove,
     contactName,
     contactLocation,
     contactBio,
@@ -43,7 +44,9 @@ const ContactBase = ({ removeContact, contact, ...props }) => {
 }
 
 const mapDispatchToProps = {
-  removeContact: contactlistActions.removeContact
+  removeContact: contactlistActions.removeContact,
+  connect: contactActions.connectContact,
+  disconnect: contactActions.disconnectContact
 }
 
 export default connect(

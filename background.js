@@ -25,6 +25,7 @@ try {
   logger.info(`Orbit Address: ${orbitAddress}`)
   let opts = {
     keystore: path.resolve(recorddir, './keystore'),
+    cache: path.resolve(recorddir, './cache'),
     orbitdb: {
       directory: path.resolve(recorddir, './orbitdb')
     },
