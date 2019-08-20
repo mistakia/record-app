@@ -10,16 +10,18 @@ import NewTrackPage from '@pages/new-track'
 import TracksPage from '@pages/tracks'
 import SetIdentityPage from '@pages/set-identity'
 
+const logIdRe = '[0-9a-zA-Z\/-]*'
+
 const Routes = () => (
   <Switch>
-    <Route exact path='/new-contact:logId([0-9a-zA-Z\/]*)' component={NewContactPage} />
-    <Route path='/contacts:logId([0-9a-zA-Z\/]*)' component={ContactsPage} />
+    <Route exact path={`/new-contact:${logIdRe})`} component={NewContactPage} />
+    <Route path={`/contacts:logId(${logIdRe})`} component={ContactsPage} />
     <Route exact path='/edit-about' component={EditAboutPage} />
     <Route exact path='/explore' component={ExplorePage} />
     <Route exact path='/info' component={InfoPage} />
     <Route exact path='/new-track' component={NewTrackPage} />
     <Route exact path='/set-identity' component={SetIdentityPage} />
-    <Route path='/tracks:logId([0-9a-zA-Z\/]*)' component={TracksPage} />
+    <Route path={`/tracks:logId(${logIdRe})`} component={TracksPage} />
     <Route exact path='/' component={() => <Redirect to='/info' />} />
   </Switch>
 )
