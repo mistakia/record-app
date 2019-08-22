@@ -14,7 +14,7 @@ const logIdRe = '[0-9a-zA-Z\/-]*'
 
 const Routes = () => (
   <Switch>
-    <Route exact path={`/new-contact:${logIdRe})`} component={NewContactPage} />
+    <Route exact path={`/new-contact:logId(${logIdRe})`} component={NewContactPage} />
     <Route path={`/contacts:logId(${logIdRe})`} component={ContactsPage} />
     <Route exact path='/edit-about' component={EditAboutPage} />
     <Route exact path='/explore' component={ExplorePage} />
