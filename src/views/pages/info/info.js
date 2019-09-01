@@ -89,11 +89,11 @@ export default function () {
             </tr>
             <tr>
               <th><label>Data Sent</label></th>
-              <td>{info.bitswap.dataSent}</td>
+              <td>{parseFloat(info.bw.totalOut / 1048576).toFixed(2)} Mb</td>
             </tr>
             <tr>
               <th><label>Data Received</label></th>
-              <td>{info.bitswap.dataReceived}</td>
+              <td>{parseFloat(info.bw.totalIn / 1048576).toFixed(2)} Mb</td>
             </tr>
             <tr>
               <th><label>Repo Objects</label></th>
@@ -101,7 +101,7 @@ export default function () {
             </tr>
             <tr>
               <th><label>Repo Size</label></th>
-              <td>{parseFloat(info.repo.repoSize).toFixed(2)} Mb</td>
+              <td>{parseFloat(info.repo.repoSize / 1048576).toFixed(2)} Mb</td>
             </tr>
             <tr>
               <th><label>Repo Version</label></th>
