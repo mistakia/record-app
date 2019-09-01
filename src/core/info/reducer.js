@@ -5,7 +5,7 @@ export const initialState = new Map({
   state: null,
   peers: new List(),
   subs: new Map(),
-  bitswap: new Map(),
+  bw: new Map(),
   repo: new Map()
 })
 
@@ -15,7 +15,7 @@ export function infoReducer (state = initialState, { payload, type }) {
       return state.withMutations(state => {
         state.merge({
           subs: new Map(payload.subs),
-          bitswap: new Map(payload.bitswap),
+          bw: new Map(payload.bw),
           repo: new Map(payload.repo)
         })
       })
