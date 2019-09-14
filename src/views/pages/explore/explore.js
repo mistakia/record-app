@@ -8,6 +8,7 @@ export default function () {
 
   const body = (
     <Contactlist
+      showAdd
       contacts={contacts}
       displayLoadingIndicator={allContactlist.isPending} />
   )
