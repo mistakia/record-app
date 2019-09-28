@@ -5,7 +5,7 @@ import './artwork.styl'
 export default function Artwork ({ className, children, background, url }) {
   const classNames = ['artwork', className]
 
-  const style = background && {
+  const style = (background && url) && {
     backgroundImage: `url("${url}")`
   }
 

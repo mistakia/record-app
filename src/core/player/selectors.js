@@ -1,5 +1,6 @@
 import { getTracklistById, getTracklistCursor } from '@core/tracklists'
 import { getTrackById } from '@core/tracks'
+import { getContactByAddress } from '@core/contacts'
 
 export function getPlayer (state) {
   return state.get('player')
@@ -47,4 +48,9 @@ export function getPlayerTracklistCursor (state) {
   }
 
   return {}
+}
+
+export function getPlayerTracklistContact (state) {
+  const tracklistId = getPlayerTracklistId(state)
+  return getContactByAddress(state, tracklistId)
 }

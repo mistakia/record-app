@@ -1,5 +1,6 @@
 import React from 'react'
 import hotkeys from 'hotkeys-js'
+import { Link } from 'react-router-dom'
 
 import Artwork from '@components/artwork'
 import IconButton from '@components/icon-button'
@@ -39,12 +40,15 @@ export default class Player extends React.Component {
       add,
       isLoading,
       remove,
-      app
+      app,
+      tracklistContact
     } = this.props
 
     if (!track) return null
 
     const { haveTrack } = track
+
+    console.log(tracklistContact)
 
     return (
       <div className='player'>
@@ -58,7 +62,7 @@ export default class Player extends React.Component {
             />
           </div>
 
-          <Artwork className='player__track-artwork' url={track.thumbnail} />
+          <Artwork className='player__track-artwork' url={track.thumbnail} background />
 
           <div className='player__track-info'>
             <div className='player__track-title'>{track.name}</div>
@@ -105,7 +109,12 @@ export default class Player extends React.Component {
           </div>
         </div>
 
-        <div className='player__actions' />
+        <div className='player__tracklist'>
+          <div className='player__tracklist-info'>
+            Playing from <Link to={`/tracks${tracklistContact.address}`}>{tracklistContact.name}</Link>
+          </div>
+          <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />
+        </div>
       </div>
     )
   }
