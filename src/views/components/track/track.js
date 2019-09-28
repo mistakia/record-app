@@ -58,7 +58,7 @@ class Track extends React.Component {
           <Tags track={track} />
         </div>
         <div className='track__artist'>{track.artist}</div>
-        <small className='track__bitrate'>{Math.round(track.bitrate / 1000)}</small>
+        <small className='track__bitrate'>{track.bitrate ? Math.round(parseInt(track.bitrate) / 1000) : 'Nan'}</small>
         <small className='track__duration'>
           <FormattedTime value={track.duration} unit={'ms'} />
         </small>

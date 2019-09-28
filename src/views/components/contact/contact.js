@@ -83,7 +83,11 @@ const Contact = ({
           {showEdit && (contact.isMe ? editSelf : editContact)}
         </div>
         <div className='contact__actions'>
-          {(type !== 'heading' && !contact.isMe) && contactAction}
+          {type !== 'heading' && (
+             contact.isMe ?
+               <Button isLoading={contact.isUpdating} count={peers} disabled={true}>Me</Button>
+               : contactAction
+          )}
         </div>
         {type === 'profile' && <div className='contact__menu menu'>
           <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>

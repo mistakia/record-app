@@ -4,20 +4,19 @@
 
 'use strict';
 const path = require('path')
+const { spawn } = require('child_process')
 const nib = require('nib')
 const webpack = require('webpack')
-const project = require('./project.config')
 
 module.exports = {
   mode: 'development',
   output: {
-    filename: 'main.js',
+    filename: 'app.js',
     publicPath: '/assets/'
   },
   cache: false,
   devtool: false,
   entry: [
-    'webpack-dev-server/client?http://localhost:8000',
     '@babel/polyfill',
     './src/index.js'
   ],
@@ -26,10 +25,35 @@ module.exports = {
     reasons: true
   },
   plugins: [
-    new webpack.DefinePlugin(project.globals),
+    new webpack.DefinePlugin({ __DEV__ : true }),
     new webpack.LoaderOptionsPlugin({ debug: true }),
     new webpack.HotModuleReplacementPlugin()
   ],
+  target: 'electron-renderer',
+  devServer: {
+    contentBase: path.resolve(__dirname, '../'),
+    compress: true,
+    hot: true,
+    port: 8000,
+    publicPath: '/assets/',
+	historyApiFallback: {
+	  index: 'index.web.html'
+	},
+    stats: {
+      colors: true,
+      chunks: false,
+      children: false
+    },
+    before() {
+      spawn(
+        'electron',
+        ['. --inspect'],
+        { shell: true, env: { NODE_ENV: 'development', ...process.env }, stdio: 'inherit' }
+      )
+        .on('close', code => process.exit(0))
+        .on('error', spawnError => console.error(spawnError))
+    }
+  },
   node: {
     fs: 'empty',
     net: 'empty',

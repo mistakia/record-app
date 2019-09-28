@@ -1,19 +1,14 @@
 'use strict'
 
-const { default: installExtension, REDUX_DEVTOOLS } = require('electron-devtools-installer');
-const electron = require('electron')
+const { BrowserWindow, app, ipcMain: ipc } = require('electron')
 const Logger  = require('logplease')
 const path = require('path')
 const os = require('os')
-const fs = require('fs')
 const debug = require('debug')
-const ipc = require('electron').ipcMain
 
-const config = require('./config/project.config')
+const isDev = process.env.NODE_ENV === 'development'
 
-if (config.globals.__DEV__) {
-  require('electron-debug')()
-}
+isDev && require('electron-debug')()
 
 debug.enable('ipfs,record:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
@@ -21,22 +16,19 @@ let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 
 process.on('uncaughtException', error => {
   logger.error(error)
-  process.exit()
+  process.exit(1)
 })
 
 process.on('unhandledRejection', error => {
   logger.error(error)
-  process.exit()
+  process.exit(1)
 });
 
 logger.info(`Electron Node version: ${process.versions.node}`)
+logger.info(`Development Mode: ${isDev}`)
 
 // Module to control application life.
-const app = electron.app
 app.disableHardwareAcceleration()
-
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -53,10 +45,14 @@ function createMainWindow () {
     maxWidth: 1800,
     maxHeight: 1000,
     show: false,
-    titleBarStyle: 'hiddenInset'
+    titleBarStyle: 'hiddenInset',
+    webPreferences: {
+      nodeIntegration: true,
+      devTools: true
+    }
   })
 
-  const indexUrl = config.globals.__DEV__
+  const indexUrl = isDev
 		 ? 'http://localhost:8000/'
 		 : 'file://' + __dirname + '/index.desktop.html'
 
@@ -84,14 +80,24 @@ function clearData () {
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
-app.on('ready', () => {
-  installExtension(REDUX_DEVTOOLS.id)
-    .then((name) => logger.info(`Added Extension: ${name}`))
-    .catch((err) => logger.error('An error occurred: ', err));
+app.whenReady().then(() => {
+  if (isDev) {
+    const { default: installExtension, REDUX_DEVTOOLS } = require('electron-devtools-installer')
+    installExtension(REDUX_DEVTOOLS.id)
+      .then((name) => logger.info(`Added Extension: ${name}`))
+      .catch((err) => logger.error('An error occurred: ', err));
+  }
 
   createMainWindow()
 
-  backgroundWindow = new BrowserWindow({ show: false })
+  backgroundWindow = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      devTools: true
+    }
+  })
+
   backgroundWindow.loadFile(require('path').join(__dirname, 'background.html'))
 
   ipc.on('ipfs:state', (event, data) => {

@@ -2,6 +2,7 @@ import { Map } from 'immutable'
 
 import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
+import { trackActions } from '@core/tracks'
 import { taglistActions } from '@core/taglists'
 
 export const initialState = new Map({
@@ -24,6 +25,12 @@ export function tracklistsReducer (state = initialState, action) {
       return state.set(
         payload.logId,
         tracklistReducer(state.get(payload.logId), action)
+      )
+
+    case trackActions.TRACK_ADDED:
+      return state.set(
+        payload.track.id,
+        tracklistReducer(state.get(payload.track.id), action)
       )
 
     case tracklistActions.ADD_TRACK:

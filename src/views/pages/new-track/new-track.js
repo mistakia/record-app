@@ -8,7 +8,7 @@ import Heading from '@components/heading'
 
 import './new-track.styl'
 
-const { dialog } = window.require('electron').remote
+const { dialog } = require('electron').remote
 
 export class NewTrackPage extends React.Component {
   constructor (props) {

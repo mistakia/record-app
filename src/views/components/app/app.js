@@ -14,7 +14,7 @@ import '@styles/normalize.css'
 import '@styles/index.styl'
 import './app.styl'
 
-const { ipcRenderer } = window.require('electron')
+const { ipcRenderer } = require('electron')
 
 class App extends React.Component {
   constructor (props) {
