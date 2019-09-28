@@ -7,7 +7,6 @@
 'use strict';
 
 const webpack = require('webpack')
-const project = require('./project.config')
 const nib = require('nib')
 const path = require('path')
 
@@ -16,7 +15,7 @@ module.exports = {
   output: {
     publicPath: '/assets/',
     path: path.resolve(__dirname, '../dist/assets/'),
-    filename: 'main.js'
+    filename: 'app.js'
   },
   devtool: false,
   entry: [
@@ -28,9 +27,10 @@ module.exports = {
     reasons: false
   },
   plugins: [
-    new webpack.DefinePlugin(project.globals),
+    new webpack.DefinePlugin({ __DEV__ : true }),
     new webpack.optimize.AggressiveMergingPlugin()
   ],
+  target: 'electron-renderer',
   module: {
     rules: [{
       test: /\.m?js$/,

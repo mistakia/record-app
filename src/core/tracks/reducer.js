@@ -20,6 +20,11 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         })
       })
 
+    case trackActions.TRACK_ADDED:
+      return state.withMutations(tracks => {
+        tracks.set(payload.track.payload.key, createTrack(payload.track.payload.value))
+      })
+
     case tracklistActions.ADD_TRACK:
       return state.withMutations(tracks => {
         tracks.map(track => {

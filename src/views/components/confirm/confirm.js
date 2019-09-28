@@ -1,6 +1,6 @@
 import React from 'react'
 
-const { dialog } = window.require('electron').remote
+const { dialog } = require('electron').remote
 
 export default function Confirm ({
   title,

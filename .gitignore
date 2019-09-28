@@ -43,6 +43,6 @@ dist
 coverage/
 ios/main.jsbundle
 ios/main.jsbundle.meta
-orbitdb
 nodejs-assets/build-native-modules-MacOS-helper-script-*
 nodejs-assets/nodejs-project/bundle.js.tmp*
+builds/

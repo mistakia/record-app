@@ -3,17 +3,20 @@ const os = require('os')
 const path = require('path')
 const jsonfile = require('jsonfile')
 const Logger  = require('logplease')
+const debug = require('debug')
 const RecordNode = require('record-node')
-const ipc = require('electron').ipcRenderer
-const { app } = require('electron').remote
+const electron = require('electron')
+const ipc = electron.ipcRenderer
+const { app } = electron.remote
 
+debug.enable('record:*, ipfs:*')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 logger.info(`process id: ${process.pid}`)
 let record
 
-try {
-  const recorddir = path.resolve(os.homedir(), './.record')
+const main = async () => {
+  const recorddir = path.resolve(app.getPath('appData'), './record')
   if (!fs.existsSync(recorddir)) { fs.mkdirSync(recorddir) }
 
   const infoPath = path.resolve(recorddir, 'info.json')
@@ -24,18 +27,11 @@ try {
   logger.info(`ID: ${id}`)
   logger.info(`Orbit Address: ${orbitAddress}`)
   let opts = {
-    keystore: path.resolve(recorddir, './keystore'),
-    cache: path.resolve(recorddir, './cache'),
-    orbitdb: {
-      directory: path.resolve(recorddir, './orbitdb')
-    },
+    directory: recorddir,
     store: {
       replicationConcurrency: 240
     },
     address: orbitAddress,
-    ipfs: {
-      repo: path.resolve(recorddir, './ipfs')
-    },
     api: true
   }
 
@@ -75,6 +71,11 @@ try {
       console.log(e)
     }
   })
+  await record.init()
+}
+
+try {
+  main()
 } catch (err) {
   logger.error(`Error starting node: ${err.toString()}`)
   console.log(err)

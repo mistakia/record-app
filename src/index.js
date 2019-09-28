@@ -10,7 +10,8 @@ import Root from '@views/root'
 
 const rootElement = document.getElementById('root')
 
-const processId = window.require('electron').remote.getCurrentWebContents().getOSProcessId()
+const { remote } = require('electron')
+const processId = remote.getCurrentWebContents().getOSProcessId()
 console.log(`process id: ${processId}`)
 
 let render = () => {
@@ -37,6 +38,25 @@ if (__DEV__ && module.hot) {
       renderError(error)
     }
   }
+
+  const { Menu, MenuItem } = remote
+
+  let rightClickPosition = null
+
+  const menu = new Menu()
+  const menuItem = new MenuItem({
+    label: 'Inspect Element',
+    click: () => {
+      remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y)
+    }
+  })
+  menu.append(menuItem)
+
+  window.addEventListener('contextmenu', (e) => {
+    e.preventDefault()
+    rightClickPosition = {x: e.x, y: e.y}
+    menu.popup(remote.getCurrentWindow())
+  }, false)
 }
 
 // ========================================================
