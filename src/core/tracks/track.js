@@ -47,7 +47,7 @@ const getTitle = (content) => {
 
 const getUrl = (content) => {
   if (content.hash) {
-    return `http://localhost:3000/file/${content.hash}`
+    return `http://localhost:3000/file/${content.hash}?size=${content.size}`
   }
 
   return getFromResolver(content.resolver, 'url')
