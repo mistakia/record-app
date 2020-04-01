@@ -9,7 +9,7 @@ const electron = require('electron')
 const ipc = electron.ipcRenderer
 const { app } = electron.remote
 
-debug.enable('record:*, ipfs:*')
+debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,libp2p:connection-manager,ipfs:bitswap')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
 logger.info(`process id: ${process.pid}`)

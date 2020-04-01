@@ -130,8 +130,11 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         contacts.map((contact) => {
           if (contact.address === payload.logId) {
             const data = JSON.parse(JSON.stringify(payload))
-            delete data.logId
-            contacts.mergeIn([contact.id], { ...data })
+            const { isProcessingIndex, processingCount } = data
+            const item = { isProcessingIndex, processingCount }
+            if (data.trackCount) item.trackCount = data.trackCount
+            if (data.contactCount) item.contactCount = data.contactCount
+            contacts.mergeIn([contact.id], item)
           }
         })
       })
