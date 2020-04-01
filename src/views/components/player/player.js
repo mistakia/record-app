@@ -48,8 +48,6 @@ export default class Player extends React.Component {
 
     const { haveTrack } = track
 
-    console.log(tracklistContact)
-
     return (
       <div className='player'>
         <div className='player__track'>
