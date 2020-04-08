@@ -4,6 +4,7 @@ import { ITEMS_PER_LOAD } from '@core/constants'
 import { trackActions } from '@core/tracks'
 import { tracklistActions } from './actions'
 import { Tracklist } from './tracklist'
+import { contactActions } from '@core/contacts'
 
 export function tracklistReducer (state = new Tracklist(), {payload, type}) {
   switch (type) {
@@ -50,7 +51,14 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
     case trackActions.TRACK_ADDED:
       return state.withMutations(tracklist => {
         tracklist.merge({
-          trackIds: mergeTrackIds(tracklist.trackIds, [payload.track.payload.value])
+          trackIds: mergeTrackIds(tracklist.trackIds, [payload.track])
+        })
+      })
+
+    case contactActions.CONTACT_INDEX_UPDATED:
+      return state.withMutations(tracklist => {
+        tracklist.merge({
+          trackIds: mergeTrackIds(tracklist.trackIds, [payload.entry])
         })
       })
 

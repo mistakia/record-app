@@ -30,11 +30,10 @@ const getFromResolver = (resolver, attribute) => {
 }
 
 const getArtwork = (content) => {
-  if (content.artwork.length) {
-    return `http://localhost:3000/file/${content.artwork[0]}`
-  }
+  if (!content.artwork.length) return getFromResolver(content.resolver, 'thumbnail')
 
-  return getFromResolver(content.resolver, 'thumbnail')
+  const artwork = content.artwork[0]
+  return `http://localhost:3000/file/${artwork}`
 }
 
 const getTitle = (content) => {

@@ -5,6 +5,7 @@ import { taglistActions } from '@core/taglists'
 import { feedActions } from '@core/feed'
 import { createTrack } from './track'
 import { trackActions } from './actions'
+import { contactActions } from '@core/contacts'
 
 export function tracksReducer (state = new Map(), {payload, type}) {
   switch (type) {
@@ -22,7 +23,15 @@ export function tracksReducer (state = new Map(), {payload, type}) {
 
     case trackActions.TRACK_ADDED:
       return state.withMutations(tracks => {
-        tracks.set(payload.track.payload.key, createTrack(payload.track.payload.value))
+        tracks.set(payload.track.id, createTrack(payload.track))
+      })
+
+    case contactActions.CONTACT_INDEX_UPDATED:
+      if (!payload.entry)
+        return state
+
+      return state.withMutations(tracks => {
+        tracks.set(payload.entry.id, createTrack(payload.entry))
       })
 
     case tracklistActions.ADD_TRACK:
@@ -66,8 +75,8 @@ export function tracksReducer (state = new Map(), {payload, type}) {
     }
 
     case tracklistActions.POST_TRACK_FULFILLED: {
-      const { contentCID } = payload.data.payload.value
-      const trackId = payload.data.payload.value.id
+      const { contentCID } = payload.data
+      const trackId = payload.data.id
       return state.withMutations(tracks => {
         tracks.setIn([trackId, 'isUpdating'], false)
         tracks.map(track => {

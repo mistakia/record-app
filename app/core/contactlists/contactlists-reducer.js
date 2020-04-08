@@ -6,6 +6,7 @@ import {
 } from '@core/constants'
 import { contactlistActions } from './actions'
 import { contactlistReducer } from './contactlist-reducer'
+import { contactActions } from '@core/contacts'
 
 export const initialState = new Map({
   currentContactlistId: null
@@ -24,6 +25,12 @@ export function contactlistsReducer (state = initialState, action) {
       return state.set(
         payload.logId,
         contactlistReducer(state.get(payload.logId), action)
+      )
+
+    case contactActions.CONTACT_LOADED:
+      return state.set(
+        ALL_CONTACTLIST_ID,
+        contactlistReducer(state.get(ALL_CONTACTLIST_ID), action)
       )
 
     case contactlistActions.POST_CONTACT_FAILED:

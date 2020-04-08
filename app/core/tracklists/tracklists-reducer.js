@@ -4,6 +4,7 @@ import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
 import { trackActions } from '@core/tracks'
 import { taglistActions } from '@core/taglists'
+import { contactActions } from '@core/contacts'
 
 export const initialState = new Map({
   currentTracklistId: null,
@@ -29,8 +30,21 @@ export function tracklistsReducer (state = initialState, action) {
 
     case trackActions.TRACK_ADDED:
       return state.set(
-        payload.track.id,
-        tracklistReducer(state.get(payload.track.id), action)
+        payload.logId,
+        tracklistReducer(state.get(payload.logId), action)
+      )
+
+    case contactActions.CONTACT_INDEX_UPDATED:
+      if (!payload.entry)
+        return state
+
+      if (payload.entry.type !== 'track') {
+        return state
+      }
+
+      return state.set(
+        payload.logId,
+        tracklistReducer(state.get(payload.logId), action)
       )
 
     case tracklistActions.ADD_TRACK:
