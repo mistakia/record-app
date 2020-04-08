@@ -16,6 +16,11 @@ export function contactsReducer (state = new Map(), {payload, type}) {
         })
       })
 
+    case contactActions.CONTACT_LOADED:
+      return state.withMutations(contacts => {
+        contacts.set(payload.contact.id, createContact(payload.contact))
+      })
+
     case feedActions.FETCH_FEED_FULFILLED:
       return state.withMutations(contacts => {
         payload.data.forEach(feedData => {

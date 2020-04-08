@@ -5,6 +5,7 @@ import {
   ALL_CONTACTLIST_ID
 } from '@core/constants'
 import { contactlistActions } from './actions'
+import { contactActions } from '@core/contacts'
 import { Contactlist } from './contactlist'
 
 export function contactlistReducer (state = new Contactlist(), {payload, type}) {
@@ -16,6 +17,13 @@ export function contactlistReducer (state = new Contactlist(), {payload, type}) 
         contactlist.merge({
           isPending: false,
           contactIds: mergeContactIds(contactlist.contactIds, payload.data)
+        })
+      })
+
+    case contactActions.CONTACT_LOADED:
+      return state.withMutations(contactlist => {
+        contactlist.merge({
+          contactIds: mergeContactIds(contactlist.contactIds, [payload.contact])
         })
       })
 
