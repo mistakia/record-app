@@ -46,3 +46,14 @@ ios/main.jsbundle.meta
 nodejs-assets/build-native-modules-MacOS-helper-script-*
 nodejs-assets/nodejs-project/bundle.js.tmp*
 builds/
+
+# Electron packaged
+release
+app/background.prod.js
+app/background.prod.js.map
+app/main.prod.js
+app/main.prod.js.map
+app/renderer.prod.js
+app/renderer.prod.js.map
+dist
+dll
