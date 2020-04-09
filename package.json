@@ -173,6 +173,7 @@
     "stylus-loader": "^3.0.2",
     "terser-webpack-plugin": "^2.3.5",
     "url-loader": "^1.0.1",
+    "v8-compile-cache": "^2.1.0",
     "webpack": "^4.42.1",
     "webpack-bundle-analyzer": "^3.6.1",
     "webpack-cli": "^3.3.11",

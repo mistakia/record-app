@@ -1,5 +1,6 @@
 /* global process */
 
+import 'v8-compile-cache'
 import React, { Fragment } from 'react'
 import { render } from 'react-dom'
 import { AppContainer as ReactHotAppContainer } from 'react-hot-loader'

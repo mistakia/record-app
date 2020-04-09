@@ -1,3 +1,5 @@
+require('v8-compile-cache')
+
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
