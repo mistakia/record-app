@@ -23,9 +23,9 @@ export default merge.smart(baseConfig, {
   target: 'electron-renderer',
 
   /**
-   * Use `module` from `webpack.config.background.prod.babel`
+   * Use `module` from `webpack.config.renderer.dev.js`
    */
-  module: require('./webpack.config.background.prod.babel').default.module,
+  module: require('./webpack.config.renderer.dev.babel').default.module,
 
   entry: {
     renderer: Object.keys(dependencies || {})

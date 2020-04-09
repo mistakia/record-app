@@ -18,19 +18,18 @@ export class NewTrackPage extends React.Component {
     this.address = props.app.address
   }
 
-  showDialog (event) {
-    dialog.showOpenDialog({
+  async showDialog (event) {
+    const { canceled, filePaths, bookmarks } = await dialog.showOpenDialog({
       title: 'Add Track(s)',
       properties: ['openFile', 'openDirectory'],
       message: 'Select a file or folder'
-    }, (filepaths) => {
-      if (!filepaths || !filepaths.length) return
-
-      const file = filepaths[0]
-      if (file) {
-        this.props.addTrack(this.address, { file })
-      }
     })
+    if (!filePaths || !filePaths.length) return
+
+    const file = filePaths[0]
+    if (file) {
+      this.props.addTrack(this.address, { file })
+    }
   }
 
   handleSubmit (event) {
