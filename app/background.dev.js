@@ -2,17 +2,23 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const jsonfile = require('jsonfile')
-const Logger  = require('logplease')
-const debug = require('debug')
 const RecordNode = require('record-node')
 const electron = require('electron')
 const ipc = electron.ipcRenderer
 const { app } = electron.remote
 
-debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,libp2p:connection-manager,ipfs:bitswap')
-Logger.setLogLevel(Logger.LogLevels.DEBUG)
-let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
-logger.info(`process id: ${process.pid}`)
+console.log(`process id: ${process.pid}`)
+
+if (
+  process.env.NODE_ENV === 'development' ||
+  process.env.DEBUG_PROD === 'true'
+) {
+  const Logger  = require('logplease')
+  const debug = require('debug')
+  debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,libp2p:connection-manager,ipfs:bitswap')
+  Logger.setLogLevel(Logger.LogLevels.DEBUG)
+}
+
 let record
 
 const main = async () => {
@@ -24,8 +30,8 @@ const main = async () => {
   const orbitAddress = info.address || 'record'
   const id = info.id
 
-  logger.info(`ID: ${id}`)
-  logger.info(`Orbit Address: ${orbitAddress}`)
+  console.log(`ID: ${id}`)
+  console.log(`Orbit Address: ${orbitAddress}`)
   let opts = {
     directory: recorddir,
     store: {
@@ -48,7 +54,7 @@ const main = async () => {
     }, { spaces: 2 })
   })
   record.on('ready', async (data) => {
-    logger.info(data)
+    console.log(data)
 
     try {
       ipc.send('ready', data)
@@ -77,14 +83,14 @@ const main = async () => {
 try {
   main()
 } catch (err) {
-  logger.error(`Error starting node: ${err.toString()}`)
+  console.log(`Error starting node: ${err.toString()}`)
   console.log(err)
 }
 
 window.onbeforeunload = async (e) => {
   if (record) {
     await record.stop()
-    logger.info('record shutdown successfully')
+    console.log('record shutdown successfully')
     window.onbeforeunload = null
     app.exit()
   }

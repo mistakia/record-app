@@ -1,31 +1,46 @@
 'use strict'
 
-const { BrowserWindow, app, ipcMain: ipc } = require('electron')
-const Logger  = require('logplease')
-const path = require('path')
-const os = require('os')
-const debug = require('debug')
+import electron from 'electron'
+import path from 'path'
+import os from 'os'
 
-const isDev = process.env.NODE_ENV === 'development'
+const { BrowserWindow, app, ipcMain: ipc } = electron
 
-isDev && require('electron-debug')()
+if (process.env.NODE_ENV === 'production') {
+  const sourceMapSupport = require('source-map-support')
+  sourceMapSupport.install()
+}
 
-debug.enable('ipfs,record:*')
-Logger.setLogLevel(Logger.LogLevels.DEBUG)
-let logger = Logger.create('record-electron', { color: Logger.Colors.Yellow })
+if (
+  process.env.NODE_ENV === 'development' ||
+  process.env.DEBUG_PROD === 'true'
+) {
+  require('electron-debug')()
+}
+
+const installExtensions = async () => {
+  const installer = require('electron-devtools-installer');
+  const forceDownload = !!process.env.UPGRADE_EXTENSIONS
+  const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS']
+
+  return Promise.all(
+    extensions.map(name => installer.default(installer[name], forceDownload))
+  ).catch(console.log)
+}
+
 
 process.on('uncaughtException', error => {
-  logger.error(error)
+  console.log(error)
   process.exit(1)
 })
 
 process.on('unhandledRejection', error => {
-  logger.error(error)
+  console.log(error)
   process.exit(1)
 });
 
-logger.info(`Electron Node version: ${process.versions.node}`)
-logger.info(`Development Mode: ${isDev}`)
+console.log(`Electron Node version: ${process.versions.node}`)
+console.log(`Development Mode: ${process.env.NODE_ENV}`)
 
 // Module to control application life.
 app.disableHardwareAcceleration()
@@ -35,7 +50,7 @@ app.disableHardwareAcceleration()
 let mainWindow
 let backgroundWindow
 
-function createMainWindow () {
+const createMainWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -47,16 +62,18 @@ function createMainWindow () {
     show: false,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
-      nodeIntegration: true,
-      devTools: true
+      nodeIntegration: true
     }
+    /* process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
+     *   ? {
+     *     nodeIntegration: true
+     *   }
+     *   : {
+     *     preload: path.join(__dirname, 'dist/renderer.prod.js')
+     *   } */
   })
 
-  const indexUrl = isDev
-		 ? 'http://localhost:8000/'
-		 : 'file://' + __dirname + '/index.desktop.html'
-
-  mainWindow.loadURL(indexUrl)
+  mainWindow.loadURL(`file://${__dirname}/index.html`);
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
@@ -71,50 +88,52 @@ function createMainWindow () {
   })
 }
 
-function clearData () {
-  const ses = mainWindow.webContents.session
-  ses.clearStorageData((err) => {
-    if (err) logger.error(err)
-  })
-}
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-app.whenReady().then(() => {
-  if (isDev) {
-    const { default: installExtension, REDUX_DEVTOOLS } = require('electron-devtools-installer')
-    installExtension(REDUX_DEVTOOLS.id)
-      .then((name) => logger.info(`Added Extension: ${name}`))
-      .catch((err) => logger.error('An error occurred: ', err));
-  }
-
-  createMainWindow()
-
+const createBackgroundWindow = () => {
   backgroundWindow = new BrowserWindow({
     show: false,
     webPreferences: {
-      nodeIntegration: true,
-      devTools: true
+      nodeIntegration: true
     }
+        /* process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
+         *   ? {
+         *     nodeIntegration: true
+         *   }
+         *   : {
+         *     preload: path.join(__dirname, 'background.prod.js')
+         *   } */
   })
-
-  backgroundWindow.loadFile(require('path').join(__dirname, 'background.html'))
+  backgroundWindow.loadURL(`file://${__dirname}/background.html`)
 
   ipc.on('ipfs:state', (event, data) => {
     if (mainWindow) mainWindow.webContents.send('ipfs:state', data)
   })
+
   ipc.on('ready', (event, data) => {
     const sendReady = () => mainWindow.webContents.send('ready', data)
     sendReady()
     mainWindow.webContents.on('did-finish-load', sendReady)
   })
+
   ipc.on('redux', (event, data) => {
     if (data.type === 'TRACK_ADDED') {
       mainWindow.show()
     }
     if (mainWindow) mainWindow.webContents.send('redux', data)
   })
+}
 
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+app.whenReady().then(async () => {
+  if (
+    process.env.NODE_ENV === 'development' ||
+      process.env.DEBUG_PROD === 'true'
+  ) {
+    await installExtensions();
+  }
+
+  createMainWindow()
+  createBackgroundWindow()
   // TODO : on loadPrivateKey from mainWindow - recreate background node
 })
 
