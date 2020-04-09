@@ -1,5 +1,6 @@
 'use strict'
 
+import 'v8-compile-cache'
 import electron from 'electron'
 import path from 'path'
 import os from 'os'
