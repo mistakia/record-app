@@ -12,11 +12,14 @@ import './info.styl'
 export default function () {
   const { app, info, getPrivateKey, setIdentity } = this.props
 
-  const peers = info.peers.map((peer, index) => {
+  const subPeers = Object.values(info.subs).flat()
+  const dedupPeers = Array.from(new Set(subPeers))
+
+  const peers = dedupPeers.map((peer, index) => {
     return (
       <tr key={index}>
         <td>{index + 1}</td>
-        <td>{peer.address}</td>
+        <td>{peer}</td>
       </tr>
     )
   })
@@ -72,22 +75,6 @@ export default function () {
         <table>
           <tbody>
             <tr>
-              <th><label>IPFS State</label></th>
-              <td>{info.state}</td>
-            </tr>
-            <tr>
-              <th><label>OrbitDB State</label></th>
-              <td>{app.isReplicating ? 'Replicating' : 'Offline'}</td>
-            </tr>
-            <tr>
-              <th><label>IPFS Agent Version</label></th>
-              <td>{app.ipfs.agentVersion}</td>
-            </tr>
-            <tr>
-              <th><label>IPFS Protocol Version</label></th>
-              <td>{app.ipfs.protocolVersion}</td>
-            </tr>
-            <tr>
               <th><label>Data Sent</label></th>
               <td>{parseFloat(info.bw.totalOut / 1048576).toFixed(2)} Mb</td>
             </tr>
@@ -96,16 +83,12 @@ export default function () {
               <td>{parseFloat(info.bw.totalIn / 1048576).toFixed(2)} Mb</td>
             </tr>
             <tr>
-              <th><label>Repo Objects</label></th>
+              <th><label>IPFS Repo Objects</label></th>
               <td>{info.repo.numObjects}</td>
             </tr>
             <tr>
-              <th><label>Repo Size</label></th>
+              <th><label>IPFS Repo Size</label></th>
               <td>{parseFloat(info.repo.repoSize / 1048576).toFixed(2)} Mb</td>
-            </tr>
-            <tr>
-              <th><label>Repo Version</label></th>
-              <td>{info.repo.version}</td>
             </tr>
           </tbody>
         </table>
@@ -138,17 +121,17 @@ export default function () {
             </tr>
           </tbody>
         </table>
-        {/* <table>
-            <thead>
+        <table>
+          <thead>
             <tr>
-            <th />
-            <th>IPFS Peer</th>
+              <th />
+              <th>IPFS PubSub Peers</th>
             </tr>
-            </thead>
-            <tbody>
+          </thead>
+          <tbody>
             {peers}
-            </tbody>
-            </table> */}
+          </tbody>
+        </table>
       </div>
     </div>
   )
