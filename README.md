@@ -12,14 +12,13 @@ This repo is a react & react native UI for [Record Node](https://github.com/mist
 
 ## Install
 ```
-npm install
+yarn install
 ```
 
 ## Usage
 ### Desktop (Electron)
 ```
-npm run rebuild:electron // rebuild node bindings for electron
-npm run start:electron
+yarn start:electron
 ```
 
 Note: fpcalc ([chromaprint](https://github.com/acoustid/chromaprint)) must be installed to be able to import audio files.
@@ -36,24 +35,24 @@ sudo apt-get install libchromaprint-tools
 ### Mobile (React Native)
 First, install packages needed by nodejs-mobile:
 ```
-npm run install:nodejs-mobile
+yarn install:nodejs-mobile
 ```
 
 Then, start react native packager with:
 ```
-npm run start
+yarn start:rn
 ```
 
 #### iOS
 ```
-npm run build:ios // or `npm run build:ios:dev`
-npm run start:ios // or open & build with xcode `open ios/Record.xcodeproj/`
+yarn build:ios // or `yarn build:ios:dev`
+yarn start:ios // or open & build with xcode `open ios/Record.xcodeproj/`
 ```
 
 #### Android
 ```
-npm run build:android
-npm run start:android
+yarn build:android
+yarn start:android
 ```
 
 ## License
