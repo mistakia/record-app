@@ -47,14 +47,14 @@ const Contact = ({
 
   const editContact = (
     <Link
-      className='button__icon button'
+      className='button__icon button contact__edit-title'
       to={`/new-contact${contact.address}?haveContact=true&alias=${contact.alias || contact.name}`}
       onClick={noPropagation}><Icon name='edit' /></Link>
   )
 
   const editSelf = (
     <Link
-      className='button__icon button' to='/edit-about'
+      className='button__icon button contact__edit-title' to='/edit-about'
       onClick={noPropagation}>
       <Icon name='edit' /></Link>
   )
