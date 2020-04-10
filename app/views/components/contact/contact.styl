@@ -80,3 +80,20 @@
 .contact__profile.contact .contact__body div:after
   content attr(data-label)
   font-size 10px
+
+.contact__connected:before
+.contact__disconnected:before
+  content ' '
+  display inline-block
+  border-radius 99em
+  width 4px
+  height 4px
+  margin-right 8px
+  margin-left 3px
+  vertical-align middle
+
+.contact__connected:before
+  background-color $successColor
+
+.contact__disconnected:before
+  background-color $failureColor

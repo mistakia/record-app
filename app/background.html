@@ -10,12 +10,6 @@
        const scripts = [];
 
        if (process.env.NODE_ENV === 'development') {
-         // Dynamically insert the DLL script in development env in the
-         // renderer process
-         scripts.push('../dll/renderer.dev.dll.js');
-       }
-
-       if (process.env.NODE_ENV === 'development') {
          // Dynamically insert the bundled app script in the renderer process
          scripts.push('background.dev.js');
        } else {

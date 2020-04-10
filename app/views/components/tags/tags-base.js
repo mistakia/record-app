@@ -13,7 +13,7 @@ class TagsBase extends React.Component {
     }
   }
 
-  add (tag = this.state.tag) {
+  add ({ tag }) {
     const { track, app } = this.props
     this.props.addTag(app.address, { cid: track.contentCID, tag })
     this.setState({ tag: '' })
@@ -30,12 +30,11 @@ class TagsBase extends React.Component {
     })
   }
 
-  onClick (tag) {
-    const { app } = this.props
-    history.push(`/tracks${app.address}?tags=${tag}`)
+  onClick ({ tag, tracklistId }) {
+    history.push(`/tracks${tracklistId}?tags=${tag}`)
   }
 
-  getTagItems (tags, onClick, remove) {
+  getTagItems ({ tags, onClick, remove, tracklistId, isExternal }) {
     return tags.map((tag, idx) => {
       if (!tag) {
         return null
@@ -44,7 +43,8 @@ class TagsBase extends React.Component {
         <Tag
           key={idx}
           tag={tag}
-          onClick={onClick.bind(this, tag)}
+          isExternal={isExternal}
+          onClick={onClick.bind(this, { tag, tracklistId })}
           remove={remove && remove.bind(this, tag)}
         />
       )
@@ -52,7 +52,29 @@ class TagsBase extends React.Component {
   }
 
   getCurrentTagItems () {
-    return this.getTagItems(this.props.track.tags, this.onClick, this.remove)
+    if (this.state.tag) {
+      return
+    }
+
+    return this.getTagItems({
+      tags: this.props.track.tags,
+      onClick: this.onClick,
+      remove: this.remove,
+      tracklistId: this.props.app.address
+    })
+  }
+
+  getExternalTagItems () {
+    if (this.state.tag) {
+      return
+    }
+
+    return this.getTagItems({
+      tags: this.props.track.externalTags,
+      onClick: this.onClick,
+      tracklistId: this.props.tracklistId,
+      isExternal: true
+    })
   }
 
   getSuggestedTagItems () {
@@ -61,7 +83,10 @@ class TagsBase extends React.Component {
     }
 
     const suggestedTags = fuzzyFilter(this.props.tags, this.state.tag)
-    return this.getTagItems(suggestedTags, this.add)
+    return this.getTagItems({
+      tags: suggestedTags,
+      onClick: this.add
+    })
   }
 }
 

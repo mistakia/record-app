@@ -20,7 +20,8 @@ class Track extends React.Component {
       add,
       app,
       style,
-      index
+      index,
+      tracklistId
     } = this.props
 
     if (!track) {
@@ -54,10 +55,10 @@ class Track extends React.Component {
           />
         </Artwork>
         <div className='track__body'>
-          <div className='track__title'>{track.name}</div>
-          <Tags track={track} />
+          <div className={`track__title ${track.isLocal ? 'track__available' : ''}`}>{track.name}</div>
         </div>
         <div className='track__artist'>{track.artist}</div>
+        <Tags track={track} tracklistId={tracklistId} />
         <small className='track__bitrate'>{track.bitrate ? Math.round(parseInt(track.bitrate) / 1000) : 'Nan'}</small>
         <small className='track__duration'>
           <FormattedTime value={track.duration} unit={'ms'} />

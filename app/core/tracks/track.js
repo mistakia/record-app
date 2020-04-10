@@ -12,6 +12,8 @@ export const Track = new Record({
   bitrate: null,
   url: null,
   tags: new List(),
+  externalTags: new List(),
+  isLocal: false,
   haveTrack: false,
   isUpdating: false,
   webpage_url: null,
@@ -71,9 +73,6 @@ export function createTrack (data) {
   }
 
   const artwork = getArtwork(data.content)
-  if (artwork && typeof artwork !== 'string') {
-    console.log(artwork)
-  }
   const title = getTitle(data.content)
   const { name, artist, remixer } = getInfo(data.content)
   const url = getUrl(data.content)
@@ -89,8 +88,10 @@ export function createTrack (data) {
     name,
     remixer,
     url,
+    isLocal: !!data.isLocal,
     contentCID: data.contentCID,
     haveTrack: !!data.haveTrack,
-    tags: new List(data.tags)
+    tags: new List(data.tags),
+    externalTags: new List(data.externalTags)
   })
 }

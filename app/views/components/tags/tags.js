@@ -14,7 +14,7 @@ class Tags extends TagsBase {
   handleKeyPress (event) {
     if (event.key === 'Tab' || event.key === 'Enter') {
       event.preventDefault()
-      this.add()
+      this.add({ tag: this.state.tag })
     } else if (!this.state.tag && event.key === 'Backspace' && this.props.track.tags.length) {
       event.preventDefault()
       this.remove()
@@ -28,16 +28,17 @@ class Tags extends TagsBase {
   render () {
     return (
       <div className='track__tags'>
+        <input
+          type='text'
+          className='input cursor'
+          value={this.state.tag}
+          onChange={this.handleChange}
+          onKeyDown={this.handleKeyPress}
+          placeholder='+Tag'
+        />
         <div className='current'>
           {this.getCurrentTagItems()}
-          <input
-            type='text'
-            className='input cursor'
-            value={this.state.tag}
-            onChange={this.handleChange}
-            onKeyDown={this.handleKeyPress}
-            placeholder='+Tag'
-          />
+          {this.getExternalTagItems()}
         </div>
         <div className='new'>{this.getSuggestedTagItems()}</div>
       </div>

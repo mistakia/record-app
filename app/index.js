@@ -24,6 +24,13 @@ document.addEventListener('DOMContentLoaded', () =>
   )
 )
 
+if (process.env.NODE_ENV === 'development' ||
+  process.env.DEBUG_PROD === 'true'
+) {
+  const debugMenu = require('debug-menu')
+  debugMenu.install()
+}
+
 /* let render = () => {
  *   const App = hot(module)(Root)
  *   ReactDOM.render(<App />, rootElement)
