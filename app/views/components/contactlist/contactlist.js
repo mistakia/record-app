@@ -18,7 +18,6 @@ const render = ({ contactItems, loading, showAdd }) => (
         <div>Tracks</div>
         <div>Contacts</div>
       </div>
-      <div className='contact__actions' />
     </div>
     <div className='list__body'>
       {contactItems}
