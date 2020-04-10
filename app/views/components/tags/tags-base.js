@@ -14,6 +14,7 @@ class TagsBase extends React.Component {
   }
 
   add ({ tag }) {
+    if (!tag) return
     const { track, app } = this.props
     this.props.addTag(app.address, { cid: track.contentCID, tag })
     this.setState({ tag: '' })

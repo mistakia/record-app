@@ -12,6 +12,7 @@ export function * loadTags ({ payload }) {
 
 export function * addTag ({ payload }) {
   const { logId, data } = payload
+  if (!data.tag) return
   yield call(postTag, { logId, data })
 }
 
