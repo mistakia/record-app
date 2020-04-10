@@ -34,16 +34,15 @@ const Contact = ({
 
   const addAction = (
     <Link
-      className='button button__count'
+      className='button'
       onClick={noPropagation}
       to={`/new-contact${contact.address}?alias=${contact.name || contact.alias}`}>
       Follow
-      <span className='count'>{peers}</span>
     </Link>
   )
 
   const removeAction = (
-    <Button onClick={remove} isLoading={contact.isUpdating} count={peers}>Unfollow</Button>
+    <Button onClick={remove} isLoading={contact.isUpdating}>Unfollow</Button>
   )
 
   const editContact = (
@@ -65,6 +64,15 @@ const Contact = ({
     : addAction
   )
 
+  const connectionStatusAction = (
+    <IconButton
+      label='status'
+      isLoading={contact.isUpdating}
+      className={`${(peers ? 'button__success' : 'button__failure')} ${contact.isReplicating ? 'spin' : ''}`}
+      onClick={handleSyncClick}
+      icon={contact.isReplicating ? 'sync' : 'sync-disabled'} />
+  )
+
   const viewUser = () => {
     history.push(`/tracks${contact.address}`)
   }
@@ -78,14 +86,14 @@ const Contact = ({
         <img src={contact.avatar} />
       </div>
       <div className='contact__body'>
-        <div className='contact__title'>
+        <div className={`contact__title ${peers ? 'contact__connected' : 'contact__disconnected'}`}>
           {contactName}
           {showEdit && (contact.isMe ? editSelf : editContact)}
         </div>
         <div className='contact__actions'>
           {type !== 'heading' && (
              contact.isMe ?
-               <Button isLoading={contact.isUpdating} count={peers} disabled={true}>Me</Button>
+               <Button isLoading={contact.isUpdating} disabled={true}>Me</Button>
                : contactAction
           )}
         </div>
@@ -94,13 +102,7 @@ const Contact = ({
           <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Following</NavLink>
         </div>}
         <div>
-          {!contact.isMe &&
-            <IconButton
-              label='status'
-              isLoading={contact.isUpdating}
-              className={contact.isReplicating ? 'spin' : ''}
-              onClick={handleSyncClick}
-              icon={contact.isReplicating ? 'sync' : 'sync-disabled'} />}
+          {!contact.isMe && connectionStatusAction }
         </div>
         <div data-label='entries'>
           {contact.length !== contact.max && <Progress progress={(contact.length / contact.max) * 100} />}

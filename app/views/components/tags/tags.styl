@@ -1,22 +1,28 @@
 .track__tags
   font-size 9px
+  display flex
+  flex-wrap nowrap
+  align-items center
+  overflow hidden
   input
+    flex 0 0 auto
     padding 0
     width auto
-    min-width 66px
+    min-width 30px
     background transparent
     border 0
     &::placeholder
       color $accentColor
   .current
   .new
+    flex 0 0 auto
     display flex
-    flex-wrap wrap
+    flex-wrap nowrap
+    align-self center
     font-size 10px
     .tag
+      flex 0 0 auto
+      margin-top 0
       border 0
-      font-size 9px
+      font-size 10px
       box-shadow none
-      button
-      a
-        padding 1px 4px
