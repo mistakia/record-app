@@ -86,7 +86,7 @@ const Contact = ({
         <img src={contact.avatar} />
       </div>
       <div className='contact__body'>
-        <div className={`contact__title ${peers ? 'contact__connected' : 'contact__disconnected'}`}>
+        <div className={`contact__title ${(peers || contact.isMe) ? 'contact__connected' : 'contact__disconnected'}`}>
           {contactName}
           {showEdit && (contact.isMe ? editSelf : editContact)}
         </div>
