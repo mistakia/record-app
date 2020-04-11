@@ -62,6 +62,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         })
       })
 
+    case tracklistActions.POST_TRACK_PENDING:
     case tracklistActions.SEARCH_TRACKS_PENDING:
     case tracklistActions.FETCH_TRACKS_PENDING:
     case tracklistActions.FETCH_TRACK_PENDING:
