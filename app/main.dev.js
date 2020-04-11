@@ -53,7 +53,7 @@ app.disableHardwareAcceleration()
 let mainWindow
 let backgroundWindow
 
-const createMainWindow = () => {
+const createMainWindow = async () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -86,8 +86,30 @@ const createMainWindow = () => {
     mainWindow = null
   })
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show()
+  ipc.on('redux', (event, data) => {
+    if (data.type === 'TRACK_ADDED') {
+      mainWindow.show()
+    }
+    if (mainWindow) mainWindow.webContents.send('redux', data)
+  })
+
+  const windowReady = new Promise((resolve) => {
+    mainWindow.once('ready-to-show', resolve)
+  })
+
+  const nodeReady = new Promise((resolve) => {
+    ipc.on('ready', (event, data) => resolve(data))
+  })
+
+  const [ data ] = await Promise.all([
+    nodeReady,
+    windowReady
+  ])
+
+  mainWindow.show()
+  mainWindow.webContents.send('ready', data)
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('ready', data)
   })
 }
 
@@ -106,23 +128,6 @@ const createBackgroundWindow = () => {
          *   } */
   })
   backgroundWindow.loadURL(`file://${__dirname}/background.html`)
-
-  ipc.on('ipfs:state', (event, data) => {
-    if (mainWindow) mainWindow.webContents.send('ipfs:state', data)
-  })
-
-  ipc.on('ready', (event, data) => {
-    const sendReady = () => mainWindow.webContents.send('ready', data)
-    sendReady()
-    mainWindow.webContents.on('did-finish-load', sendReady)
-  })
-
-  ipc.on('redux', (event, data) => {
-    if (data.type === 'TRACK_ADDED') {
-      mainWindow.show()
-    }
-    if (mainWindow) mainWindow.webContents.send('redux', data)
-  })
 }
 
 // This method will be called when Electron has finished
