@@ -45,7 +45,7 @@ export class NewContactPage extends React.Component {
       <form id='new-contact' onSubmit={this.handleSubmit}>
         <label>
           Alias
-          <input type='text' name='alias' defaultValue={alias || ''} placeholder='Contact Nickname' />
+          <input type='text' name='alias' defaultValue={alias} placeholder='Contact Nickname' />
         </label>
         { logId
           ? <CopyText text={logId}>
@@ -59,6 +59,7 @@ export class NewContactPage extends React.Component {
           </label>
         }
         <Button type='submit' isLoading={this.props.isUpdating}>{haveContact ? 'Save' : 'Connect'}</Button>
+        {<label>Note: saving a contact adds them to your library and persists the data.</label>}
       </form>
     )
 

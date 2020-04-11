@@ -26,9 +26,9 @@ const ContactBase = ({ removeContact, contact, ...props }) => {
   const remove = (event) => {
     event && event.stopPropagation && event.stopPropagation()
     Confirm({
-      title: 'Unfollow',
-      message: `Are you sure you want to unfollow ${contactName}`,
-      detail: 'Unfollowing this library will eventually remove its data from your device',
+      title: 'Unsave',
+      message: `Are you sure you want to unsave ${contactName}`,
+      detail: 'Unsaving this library will eventually remove its data from your device',
       onConfirm: () => removeContact({ contactId: contact.id })
     })
   }
