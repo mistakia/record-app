@@ -45,7 +45,7 @@ export class NewContactPage extends React.Component {
       <form id='new-contact' onSubmit={this.handleSubmit}>
         <label>
           Alias
-          <input type='text' name='alias' defaultValue={alias} placeholder='Contact Nickname' />
+          <input type='text' name='alias' defaultValue={alias || ''} placeholder='Contact Nickname' />
         </label>
         { logId
           ? <CopyText text={logId}>
