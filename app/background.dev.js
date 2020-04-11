@@ -48,7 +48,6 @@ const main = async () => {
   }
 
   record = new RecordNode(opts)
-  record.on('ipfs:state', (state) => ipc.send('ipfs:state', state))
   record.on('id', (data) => {
     jsonfile.writeFileSync(infoPath, {
       id: data.id,
@@ -60,9 +59,7 @@ const main = async () => {
 
     try {
       ipc.send('ready', data)
-      record.on('redux', (data) => {
-        ipc.send('redux', data)
-      })
+      record.on('redux', data => ipc.send('redux', data))
 
       const log = await record.log.get()
 
