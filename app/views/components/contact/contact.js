@@ -36,19 +36,19 @@ const Contact = ({
     <Link
       className='button'
       onClick={noPropagation}
-      to={`/new-contact${contact.address}?alias=${contact.name || contact.alias}`}>
-      Follow
+      to={`/new-contact${contact.address}?alias=${contact.name || contact.alias || ''}`}>
+      save
     </Link>
   )
 
   const removeAction = (
-    <Button onClick={remove} isLoading={contact.isUpdating}>Unfollow</Button>
+    <Button onClick={remove} isLoading={contact.isUpdating}>unsave</Button>
   )
 
   const editContact = (
     <Link
       className='button__icon button contact__edit-title'
-      to={`/new-contact${contact.address}?haveContact=true&alias=${contact.alias || contact.name}`}
+      to={`/new-contact${contact.address}?haveContact=true&alias=${contact.alias || contact.name || ''}`}
       onClick={noPropagation}><Icon name='edit' /></Link>
   )
 
@@ -99,7 +99,7 @@ const Contact = ({
         </div>
         {type === 'profile' && <div className='contact__menu menu'>
           <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
-          <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Following</NavLink>
+          <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Lists</NavLink>
         </div>}
         <div>
           {!contact.isMe && connectionStatusAction }
