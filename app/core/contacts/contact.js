@@ -1,6 +1,6 @@
 import { Record, List } from 'immutable'
 
-const shortAddress = (address) => {
+const getShortAddress = (address) => {
   const parts = address.toString()
     .split('/')
     .filter((e, i) => !((i === 0 || i === 1) && address.toString().indexOf('/orbit') === 0 && e === 'orbitdb'))
@@ -16,6 +16,7 @@ export const Contact = new Record({
   alias: null,
   avatar: null,
   name: null,
+  displayName: null,
   shortAddress: null,
   location: null,
   bio: null,
@@ -38,13 +39,17 @@ export function createContact (data) {
     return
   }
 
+  const shortAddress = getShortAddress(data.content.address)
+  const displayName = data.content.alias || data.content.name || shortAddress
+
   return new Contact({
+    shortAddress,
+    displayName,
     id: data.id,
     address: data.content.address,
     alias: data.content.alias,
     avatar: data.content.avatar || data.avatar,
     name: data.content.name,
-    shortAddress: shortAddress(data.content.address),
     location: data.content.location,
     bio: data.content.bio,
     peers: new List(data.peers),

@@ -13,7 +13,7 @@ const ContactBase = ({ removeContact, contact, ...props }) => {
 
   const contactName = contact.isMe
     ? (contact.name || contact.shortAddress)
-    : (contact.alias || contact.name || contact.shortAddress)
+    : (contact.displayName)
 
   const contactLocation = contact.isMe
     ? (contact.location || 'Location')

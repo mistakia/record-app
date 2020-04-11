@@ -109,7 +109,7 @@ export default class Player extends React.Component {
 
         <div className='player__tracklist'>
           <div className='player__tracklist-info'>
-            Playing from <Link to={`/tracks${tracklistContact.address}`}>{tracklistContact.name}</Link>
+            Playing from <Link to={`/tracks${tracklistContact.address}`}>{tracklistContact.displayName}</Link>
           </div>
           <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />
         </div>
