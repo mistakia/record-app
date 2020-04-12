@@ -63,6 +63,7 @@ $backgroundColor = #2d2e2f
   flex 1
   display flex
   flex-direction column
+  min-width 0
 
 .player__track-actions
   flex 0 0 40px
@@ -105,6 +106,12 @@ $backgroundColor = #2d2e2f
 .player__track-title
   color white
 
+.player__track-title
+.player__track-artist
+  text-overflow ellipsis
+  white-space nowrap
+  overflow hidden
+
 .player__tracklist
   flex 0 0 35%
   text-align right
@@ -124,3 +131,16 @@ $backgroundColor = #2d2e2f
   flex 0 0 $playerHeight - 10px
   margin 0 8px
   overflow hidden
+
+.player__track-tags
+  position relative
+  &:after
+    content ""
+    position absolute
+    z-index 1
+    top 0
+    right 0
+    bottom 0
+    pointer-events none
+    background-image linear-gradient(to right, rgba($backgroundColor,0), rgba($backgroundColor,1))
+    width 45%

@@ -39,8 +39,14 @@ export default class Player extends React.Component {
       track,
       add,
       isLoading,
+      shuffle,
+      tracklistId,
+      isShuffling,
+      stopShuffle,
       remove,
+      queue,
       app,
+      isPlayingFromQueue,
       tracklistContact
     } = this.props
 
@@ -68,12 +74,22 @@ export default class Player extends React.Component {
             <div className='player__track-meta'>
               <small>{track.format}</small> · <small>{Math.round(track.bitrate / 1000)} kbps</small>
             </div>
-            <Tags track={track} />
+            <div className='player__track-tags'>
+              <Tags track={track} />
+            </div>
           </div>
         </div>
 
         <div className='player__controls'>
           <div className='player__controls-actions'>
+            <IconButton
+              icon='shuffle'
+              label='Shuffle'
+              isActive={isShuffling}
+              onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistId)}
+              disabled={!isShuffling && !tracklistId}
+            />
+
             <IconButton
               icon='skip-previous'
               label='Skip to previous track'
@@ -94,6 +110,12 @@ export default class Player extends React.Component {
               onClick={nextTrack}
               disabled={!nextTrack}
             />
+
+            <IconButton
+              icon='play-queue'
+              count={queue.size ? queue.size : undefined}
+              disabled={!queue.size}
+              label='play-queue'/>
           </div>
 
           <div className='player__timeline'>
@@ -108,10 +130,10 @@ export default class Player extends React.Component {
         </div>
 
         <div className='player__tracklist'>
-          <div className='player__tracklist-info'>
-            Playing from <Link to={`/tracks${tracklistContact.address}`}>{tracklistContact.displayName}</Link>
-          </div>
-          <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />
+            <div className='player__tracklist-info'>
+              Playing {isPlayingFromQueue && 'Queue, then'} <Link to={`/tracks${tracklistContact.address}`}>{tracklistContact.displayName}</Link>
+            </div>
+            <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />
         </div>
       </div>
     )

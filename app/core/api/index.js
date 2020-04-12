@@ -1,6 +1,5 @@
 export {
   fetchContacts,
-  fetchFeed,
   fetchInfo,
   fetchPeers,
   fetchPrivateKey,

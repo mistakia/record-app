@@ -1,7 +1,6 @@
 button
 .button
   outline none
-  overflow hidden
   transform translate(0, 0)
   position relative
   border 1px solid rgba(0, 0, 0, 0.23)
@@ -30,14 +29,19 @@ button
   + .button
     margin-left 5px
 
-  &.button__count
-    padding 5px 0 5px 16px
-
   .count
+    position absolute
+    top 3px
+    right 5px
+    font-size 8px
+    border-radius 99em
+    padding 3px
+    line-height 5px
+    margin 0
+    font-family monospace
     border-left 1px solid rgba(0, 0, 0, 0.23)
-    background white
-    padding 5px 16px
-    margin-left 16px
+    background rgba(255,255,255,0.6)
+    border 0
 
   &.button__success
     border-color $successColor
@@ -46,3 +50,6 @@ button
   &.button__failure
     border-color $failureColor
     background-color $failureColor
+
+  &.button__active
+    color $accentColor

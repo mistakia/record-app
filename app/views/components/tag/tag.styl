@@ -1,18 +1,17 @@
-$tagBorderRadius = 3px
+$height = 18px
 
 .tag
-  height 25px
+  height $height
   vertical-align middle
   position relative
   color rgba(0,0,0,0.9)
-  background rgba($accentColorRGB,0.1)
   font-size 12px
-  line-height 25px
   font-weight 400
   margin 4px 8px 0 0
-  padding 0 6px
+  padding 0
   display inline-block
-  border-radius $tagBorderRadius
+  border-radius 3px
+  flex 0 0 auto
   &.text-only
     border 0
     background transparent
@@ -20,6 +19,8 @@ $tagBorderRadius = 3px
     box-shadow none
   &:hover
     background rgba($accentColorRGB,.3)
+    .tag__remove
+      display inline-block
   &.active
     color rgba(255,255,255,1)
     background rgba($accentColorRGB,.7)
@@ -27,29 +28,39 @@ $tagBorderRadius = 3px
     background rgba(0,0,0,0.08)
     &:hover
       background rgba(0,0,0,0.25)
+
   a
   .tag__remove
   .tag__count
-    height 15px
-    width 15px
+    width auto
+    display inline-block
+    height $height
     min-width 0
     padding 0
-    line-height 10px
     .icon
       width 13px
       height 13px
 
+  a
+    padding 0 6px
+    background rgba($accentColorRGB,0.1)
+
+  a
+  .tag__count
+    line-height $height
+
+  .tag__count
+    color rgba(0,0,0,0.3)
+    padding 0 4px
+    font-family monospace
+
+  .tag__count
   .tag__remove
-  .tag__count
-    margin-left 4px
+    border-radius 0 3px 3px 0
+    background rgba($accentColorRGB,0.06)
 
-  .tag__count
-    color rgba(0,0,0,0.9)
-    background white
-    border-radius 99em
-    width 20px
-    height 20px
-    padding 0 5px
-
-  .tag__remove:hover
-    background $failureColor
+  .tag__remove
+    display none
+    width $height
+    &:hover
+      background $failureColor

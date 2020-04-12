@@ -1,19 +1,19 @@
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { taglistActions, getTagsForUser } from '@core/taglists'
+import { contextMenuActions } from '@core/context-menu'
+import { taglistActions } from '@core/taglists'
 import { getApp } from '@core/app'
 import Tags from './tags'
 
 const mapStateToProps = createSelector(
-  getTagsForUser,
   getApp,
-  (tags, app) => ({ tags, app })
+  (app) => ({ app })
 )
 
 const mapDispatchToProps = {
-  addTag: taglistActions.addTag,
-  removeTag: taglistActions.removeTag
+  removeTag: taglistActions.removeTag,
+  showContext: contextMenuActions.show
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Tags)

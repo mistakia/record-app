@@ -1,9 +1,14 @@
-.track__tags
+.tags
   font-size 9px
   display flex
   flex-wrap nowrap
   align-items center
   overflow hidden
+  overflow-x scroll
+  -webkit-overflow-scrolling auto
+  &::-webkit-scrollbar
+    display none
+
   input
     flex 0 0 auto
     padding 0
@@ -13,16 +18,3 @@
     border 0
     &::placeholder
       color $accentColor
-  .current
-  .new
-    flex 0 0 auto
-    display flex
-    flex-wrap nowrap
-    align-self center
-    font-size 10px
-    .tag
-      flex 0 0 auto
-      margin-top 0
-      border 0
-      font-size 10px
-      box-shadow none

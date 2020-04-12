@@ -7,6 +7,7 @@ import { push } from 'react-router-redux'
 import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
+import ContextMenu from '@components/context-menu'
 import { getApp } from '@core/app'
 
 import 'normalize.css'
@@ -48,6 +49,7 @@ class App extends React.Component {
         <Menu />
         <Routes />
         <Player />
+        <ContextMenu />
       </main>
     )
   }

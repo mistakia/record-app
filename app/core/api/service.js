@@ -19,10 +19,6 @@ export const api = {
     const url = `http://localhost:3000/contacts${logId}`
     return { url }
   },
-  fetchFeed ({ logId, params }) {
-    const url = `http://localhost:3000/feed?${toQueryString(params)}`
-    return { url }
-  },
   fetchInfo () {
     const url = 'http://localhost:3000/info'
     return { url }

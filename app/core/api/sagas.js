@@ -14,7 +14,6 @@ import {
   allContactlistRequestActions,
   peerContactlistRequestActions
 } from '@core/contactlists'
-import { feedRequestActions } from '@core/feed'
 import { infoRequestActions } from '@core/info'
 import {
   taglistRequestActions,
@@ -67,8 +66,6 @@ export const requestDisconnectContact = fetch.bind(null, api.disconnectContact, 
 
 export const fetchAllContacts = fetch.bind(null, api.fetchAllContacts, allContactlistRequestActions)
 export const fetchPeers = fetch.bind(null, api.fetchPeers, peerContactlistRequestActions)
-
-export const fetchFeed = fetch.bind(null, api.fetchFeed, feedRequestActions)
 
 export const fetchInfo = fetch.bind(null, api.fetchInfo, infoRequestActions)
 

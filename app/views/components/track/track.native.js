@@ -11,9 +11,9 @@ import Tags from '@components/tags'
 
 class Track extends React.Component {
   render () {
-    const { isPlaying, isSelected, isFeed, pause, play, track } = this.props
+    const { isPlaying, isSelected pause, play, track } = this.props
 
-    const trackStyles = isFeed ? [styles.track, styles.feed] : [styles.track]
+    const trackStyles = [styles.track]
 
     if (!track) {
       return null
@@ -42,11 +42,6 @@ class Track extends React.Component {
 const styles = StyleSheet.create({
   title: {
     padding: 4
-  },
-  feed: {
-    borderRightWidth: 1,
-    marginLeft: 15,
-    marginRight: 10
   },
   track: {
     minHeight: 60,
