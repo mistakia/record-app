@@ -44,10 +44,11 @@ const render = ({
       <Taglist />
       <div className='list__header track'>
         <div className='track__index' />
-        <div className='track__actions' />
+        <div className='track__save' />
         <div className='track__play' />
         <div className='track__body'>Name</div>
         <div className='track__artist'>Artist</div>
+        <div className='track__tags-add'></div>
         <div className='track__tags'>Tags</div>
         <div className='track__bitrate'>Bitrate</div>
         <div className='track__duration'>Time</div>

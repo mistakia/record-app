@@ -2,7 +2,6 @@ import { Map, List } from 'immutable'
 
 import { contactlistActions } from '@core/contactlists'
 import { contactActions } from './actions'
-import { feedActions } from '@core/feed'
 import { createContact } from './contact'
 
 export function contactsReducer (state = new Map(), {payload, type}) {
@@ -19,17 +18,6 @@ export function contactsReducer (state = new Map(), {payload, type}) {
     case contactActions.CONTACT_LOADED:
       return state.withMutations(contacts => {
         contacts.set(payload.contact.id, createContact(payload.contact))
-      })
-
-    case feedActions.FETCH_FEED_FULFILLED:
-      return state.withMutations(contacts => {
-        payload.data.forEach(feedData => {
-          if (feedData.entryType === 'contact') {
-            contacts.set(feedData.entryId, createContact(feedData.content))
-          }
-
-          contacts.set(feedData.contact.id, createContact(feedData.contact))
-        })
       })
 
     case contactActions.CONTACT_REPLICATED:

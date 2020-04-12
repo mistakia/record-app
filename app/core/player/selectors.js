@@ -14,6 +14,10 @@ export function getPlayerIsShuffling (state) {
   return getPlayer(state).isShuffling
 }
 
+export function getPlayerIsPlayingFromQueue (state) {
+  return getPlayer(state).isPlayingFromQueue
+}
+
 export function getPlayerIsLoading (state) {
   return getPlayer(state).isLoading
 }
@@ -24,6 +28,14 @@ export function getPlayerTimes (state) {
 
 export function getPlayerTrackId (state) {
   return getPlayer(state).trackId
+}
+
+export function getPlayerTracklistCursorId (state) {
+  return getPlayer(state).tracklistCursorId
+}
+
+export function getPlayerQueue (state) {
+  return getPlayer(state).queue
 }
 
 export function getPlayerTracklistId (state) {
@@ -41,13 +53,18 @@ export function getPlayerTracklist (state) {
 }
 
 export function getPlayerTracklistCursor (state) {
+  const queue = getPlayerQueue(state)
+  const tracklistCursorId = getPlayerTracklistCursorId(state)
   const trackId = getPlayerTrackId(state)
   const tracklist = getPlayerTracklist(state)
-  if (tracklist) {
-    return getTracklistCursor(trackId, tracklist.trackIds)
-  }
+  const cursor = tracklist ? getTracklistCursor(tracklistCursorId, tracklist.trackIds) : {}
+  const isPlayingFromQueue = getPlayerIsPlayingFromQueue(state)
 
-  return {}
+  return {
+    selectedTrackId: trackId,
+    nextTrackId: queue.size ? queue.first() : cursor.nextTrackId,
+    previousTrackId: !(isPlayingFromQueue && queue.size) && cursor.previousTrackId
+  }
 }
 
 export function getPlayerTracklistContact (state) {

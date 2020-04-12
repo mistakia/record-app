@@ -8,6 +8,34 @@ import Tags from '@components/tags'
 import './track.styl'
 
 class Track extends React.Component {
+  constructor () {
+    super ()
+    this._handleContextMenu = this._handleContextMenu.bind(this)
+    this._handleClick = this._handleClick.bind(this)
+  }
+
+  _handleContextMenu (event) {
+    const { track, showContext } = this.props
+    showContext({
+      id: 'track',
+      trackId: track.id,
+      clickX: event.clientX,
+      clickY: event.clientY
+    })
+  }
+
+  _handleClick (event) {
+    event.stopPropagation()
+    event.preventDefault()
+    const { track, showContext } = this.props
+    showContext({
+      id: 'tag',
+      clickX: event.clientX,
+      clickY: event.clientY,
+      trackId: track.id
+    })
+  }
+
   render () {
     const {
       track,
@@ -21,7 +49,8 @@ class Track extends React.Component {
       app,
       style,
       index,
-      tracklistId
+      tracklistId,
+      contextMenuTrackId
     } = this.props
 
     if (!track) {
@@ -35,10 +64,17 @@ class Track extends React.Component {
       artwork += '?localOnly=true'
     }
 
+    const classNames = ['track']
+    if (isSelected) classNames.push('selected')
+    if (contextMenuTrackId === track.id) classNames.push('context-menu-visible')
+
     return (
-      <article className={'track' + (isSelected ? ' selected' : '')} style={style}>
+      <article
+        className={classNames.join(' ')}
+        onContextMenu={this._handleContextMenu}
+        style={style}>
         <div className='track__index'>{index}</div>
-        <div className='track__actions'>
+        <div className='track__save'>
           <IconButton
             icon={haveTrack ? 'star-solid' : 'star-outline'}
             label={haveTrack ? 'Save' : 'Remove'}
@@ -58,7 +94,10 @@ class Track extends React.Component {
           <div className={`track__title ${track.isLocal ? 'track__available' : ''}`}>{track.name}</div>
         </div>
         <div className='track__artist'>{track.artist}</div>
-        <Tags track={track} tracklistId={tracklistId} />
+        <div className='track__tags-add cursor' onClick={this._handleClick}>+Tag</div>
+        <div className='track__tags'>
+          <Tags track={track} tracklistId={tracklistId} />
+        </div>
         <small className='track__bitrate'>{track.bitrate ? Math.round(parseInt(track.bitrate) / 1000) : 'Nan'}</small>
         <small className='track__duration'>
           <FormattedTime value={track.duration} unit={'ms'} />

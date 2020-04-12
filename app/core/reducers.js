@@ -4,7 +4,7 @@ import { aboutReducer } from './about'
 import { appReducer } from './app'
 import { contactsReducer } from './contacts'
 import { contactlistsReducer } from './contactlists'
-import { feedReducer } from './feed'
+import { contextMenuReducer } from './context-menu'
 import { infoReducer } from './info'
 import { playerReducer, playerTimesReducer } from './player'
 import { taglistsReducer } from './taglists'
@@ -17,7 +17,7 @@ const rootReducer = asyncReducers => {
     app: appReducer,
     contacts: contactsReducer,
     contactlists: contactlistsReducer,
-    feed: feedReducer,
+    contextMenu: contextMenuReducer,
     info: infoReducer,
     player: playerReducer,
     playerTimes: playerTimesReducer,

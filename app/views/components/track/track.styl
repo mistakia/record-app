@@ -1,6 +1,9 @@
+$accentColorLight = lighten($accentColor, 92%)
+
 .track
   display flex
-  border 1px solid $borderColor
+  border-top 1px solid $borderColor
+  border-bottom 1px solid $borderColor
   padding 0
   overflow hidden
   color black
@@ -25,17 +28,23 @@
         fill white
         height 100%
         width 100%
-  .track__tags
-    flex 0 0 25%
-    input:not(:focus)
-      opacity 0
+  .track__tags-add
+    color $accentColor
+    flex 0 0 40px
+    font-size 10px
+    width 100%
+    line-height 25px
+    opacity 0
   &:hover
     background #fbfbfb
     .track__play button
       display block
-    .track__tags input
+    .track__tags-add
       opacity 1
-  .track__actions
+    .track__tags:after
+      background-image linear-gradient(to right, rgba(#fbfbfb,0), rgba(#fbfbfb,1))
+
+  .track__save
     flex 0 0 4%
     button
       border none
@@ -83,9 +92,17 @@
     font-family "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace
 
   &.selected
-    background-color rgba($accentColorRGB, 0.07)
+    background-color $accentColorLight
     .track__play button
       display block
+    .track__tags:after
+      background-image linear-gradient(to right, rgba($accentColorLight,0), rgba($accentColorLight,1))
+
+  &.context-menu-visible
+    background rgb(240,240,240)
+    border-color rgb(200,200,200)
+    .track__tags:after
+      background-image linear-gradient(to right, rgba(240,240,240,0), rgba(240,240,240,1))
 
 .track:not(.list__header)
   .track__play
@@ -104,3 +121,22 @@
 
 .track__available:before
   background-color $successColor
+
+.track__tags
+  flex 0 0 25%
+  position relative
+  &:after
+    content ""
+    position absolute
+    z-index 1
+    top 0
+    right 0
+    bottom 0
+    pointer-events none
+    background-image linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1))
+    width 45%
+  .tag
+    margin-top 0
+    border 0
+    font-size 10px
+    box-shadow none

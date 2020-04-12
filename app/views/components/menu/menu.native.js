@@ -4,9 +4,6 @@ import { StyleSheet, View, Text } from 'react-native'
 
 const Menu = ({ app }) => (
   <View style={styles.menu}>
-    <Link style={styles.menuItem} to='/feed'>
-      <Text style={styles.menuItemText}>Feed</Text>
-    </Link>
     <Link style={styles.menuItem} to='/explore'>
       <Text style={styles.menuItemText}>Explore</Text>
     </Link>

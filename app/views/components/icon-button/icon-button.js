@@ -6,16 +6,18 @@ import Icon from '@components/icon'
 
 import './icon-button.styl'
 
-function IconButton ({ className, icon, label, onClick, type = 'button', disabled, isLoading }) {
+function IconButton ({ className, icon, label, onClick, type = 'button', disabled, isLoading, isActive, count }) {
   const classNames = ['button__icon', `button__${icon}`, className]
 
   return (
     <Button
       className={classNames.join(' ')}
       disabled={disabled}
+      isActive={isActive}
       isLoading={isLoading}
       label={label}
       onClick={onClick}
+      count={count}
       type={type}>
       <Icon name={icon} />
     </Button>

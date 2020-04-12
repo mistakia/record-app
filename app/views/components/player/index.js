@@ -42,6 +42,8 @@ const mapStateToProps = createShallowEqualSelector(
     increaseVolume: audio.increaseVolume,
     isPlaying: player.isPlaying,
     isShuffling: player.isShuffling,
+    queue: player.queue,
+    isPlayingFromQueue: player.isPlayingFromQueue,
     nextTrackId: cursor.nextTrackId,
     pause: audio.pause,
     play: audio.play,
@@ -56,23 +58,25 @@ const mapStateToProps = createShallowEqualSelector(
 
 const mapDispatchToProps = {
   select: playerActions.playSelectedTrack,
+  next: playerActions.playNextTrack,
   shuffle: playerActions.shuffleTracklist,
   add: tracklistActions.addTrack,
-  remove: tracklistActions.removeTrack
+  remove: tracklistActions.removeTrack,
+  stopShuffle: playerActions.stopShuffle
 }
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
-  const { nextTrackId, previousTrackId, tracklistId, isShuffling } = stateProps
+  const { nextTrackId, previousTrackId, tracklistId, isShuffling, queue } = stateProps
 
   if (isShuffling) {
     return Object.assign({}, ownProps, stateProps, dispatchProps, {
-      nextTrack: dispatchProps.shuffle.bind(null, tracklistId),
+      nextTrack: queue.size ? dispatchProps.next.bind(null, nextTrackId) : dispatchProps.shuffle.bind(null, tracklistId),
       previousTrack: null
     })
   }
 
   return Object.assign({}, ownProps, stateProps, dispatchProps, {
-    nextTrack: nextTrackId ? dispatchProps.select.bind(null, nextTrackId, tracklistId) : null,
+    nextTrack: nextTrackId ? dispatchProps.next.bind(null, nextTrackId) : null,
     previousTrack: previousTrackId ? dispatchProps.select.bind(null, previousTrackId, tracklistId) : null
   })
 }

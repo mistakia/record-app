@@ -10,15 +10,10 @@ export const PLAYER_INITIAL_VOLUME = 90
 export const PLAYER_MAX_VOLUME = 100
 export const PLAYER_VOLUME_INCREMENT = 5
 
-export const PLAYER_STORAGE_KEY = 'player'
+export const PLAYER_STORAGE_KEY = 'PLAYER_STORAGE_KEY'
 
 //= ====================================
 //  TRACKLISTS
 // -------------------------------------
-export const SESSION_TRACKLIST_ID = 'session'
-
-//= ====================================
-//  TRACKLISTS
-// -------------------------------------
-export const PEER_CONTACTLIST_ID = '/peers'
-export const ALL_CONTACTLIST_ID = '/all'
+export const PEER_CONTACTLIST_ID = 'PEER_CONTACTLIST_ID'
+export const ALL_CONTACTLIST_ID = 'ALL_CONTACTLIST_ID'

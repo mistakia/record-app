@@ -2,7 +2,6 @@ import { Map, List } from 'immutable'
 
 import { tracklistActions } from '@core/tracklists'
 import { taglistActions } from '@core/taglists'
-import { feedActions } from '@core/feed'
 import { createTrack } from './track'
 import { trackActions } from './actions'
 import { contactActions } from '@core/contacts'
@@ -10,7 +9,7 @@ import { contactActions } from '@core/contacts'
 export function tracksReducer (state = new Map(), {payload, type}) {
   switch (type) {
     case trackActions.CLEAR:
-      return state.filter((value, key) => key === payload.trackId)
+      return state.filter((value, key) => payload.trackIds ? payload.trackIds.contains(key) : false)
 
     case tracklistActions.FETCH_TRACKS_FULFILLED:
     case tracklistActions.FETCH_TRACK_FULFILLED:
@@ -86,15 +85,6 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         })
       })
     }
-
-    case feedActions.FETCH_FEED_FULFILLED:
-      return state.withMutations(tracks => {
-        payload.data.forEach(feedData => {
-          if (feedData.entryType === 'track') {
-            tracks.set(feedData.content.id, createTrack(feedData.content))
-          }
-        })
-      })
 
     default:
       return state

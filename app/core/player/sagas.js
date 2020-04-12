@@ -13,7 +13,7 @@ import { playerStorage } from './storage'
 export function * playNextTrack () {
   const cursor = yield select(getPlayerTracklistCursor)
   if (cursor.nextTrackId) {
-    yield put(playerActions.playSelectedTrack(cursor.nextTrackId))
+    yield put(playerActions.playNextTrack(cursor.nextTrackId))
   } else {
     const tracklist = yield select(getPlayerTracklist)
     const start = tracklist.trackIds.size
@@ -21,7 +21,7 @@ export function * playNextTrack () {
     yield call(fetchTracks, { logId: tracklist.id, params })
     const newCursor = yield select(getPlayerTracklistCursor)
     if (newCursor.nextTrackid) {
-      yield put(playerActions.playSelectedTrack(newCursor.nextTrackId))
+      yield put(playerActions.playNextTrack(newCursor.nextTrackId))
     }
   }
 }
@@ -62,8 +62,8 @@ export function * subscribeToAudio () {
 export function * watchAudioEnded () {
   while (true) {
     yield take(playerActions.AUDIO_ENDED)
-    const { isShuffling, tracklistId } = yield select(getPlayer)
-    if (isShuffling) {
+    const { isShuffling, tracklistId, queue } = yield select(getPlayer)
+    if (isShuffling && !queue.size) {
       yield fork(shuffleTracklist, { tracklistId })
     } else {
       yield fork(playNextTrack)
@@ -83,6 +83,13 @@ export function * watchInitApp () {
     yield take(appActions.INIT_APP)
     yield fork(subscribeToAudio)
     yield fork(setVolumeFromStorage)
+  }
+}
+
+export function * watchPlayNextTrack () {
+  while (true) {
+    yield take(playerActions.PLAY_NEXT_TRACK)
+    yield fork(playSelectedTrack)
   }
 }
 
@@ -115,6 +122,7 @@ export const playerSagas = [
   fork(watchAudioEnded),
   fork(watchAudioVolumeChanged),
   fork(watchInitApp),
+  fork(watchPlayNextTrack),
   fork(watchPlaySelectedTrack),
   fork(watchShuffleTracklist),
   fork(watchTrackFulfilled)
