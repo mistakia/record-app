@@ -1,8 +1,8 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
+import queryString from 'query-string'
 
-import { parseQueryString } from '@core/utils'
 import { tracklistActions, getCurrentTracklistContact } from '@core/tracklists'
 import { contactActions } from '@core/contacts'
 import { taglistActions } from '@core/taglists'
@@ -26,8 +26,12 @@ export class TracksPage extends React.Component {
 
   _load () {
     const { logId } = this.props.match.params
-    const { tags } = parseQueryString(this.props.location.search)
-    this.props.loadTracks(logId, tags || '')
+    const { tags, query } = queryString.parse(this.props.location.search)
+    this.props.loadTracks({
+      logId,
+      tags: (tags && !Array.isArray(tags)) ? [tags] : (tags || []),
+      query
+    })
     this.props.loadTags(logId)
     this.props.loadContact(logId)
   }

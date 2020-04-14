@@ -47,6 +47,8 @@ const mapStateToProps = createShallowEqualSelector(
     nextTrackId: cursor.nextTrackId,
     pause: audio.pause,
     play: audio.play,
+    tags: player.tracklistTags.toJS(),
+    query: player.tracklistQuery,
     previousTrackId: cursor.previousTrackId,
     track,
     isLoading,
@@ -58,9 +60,10 @@ const mapStateToProps = createShallowEqualSelector(
 
 const mapDispatchToProps = {
   playTrack: playerActions.playTrack,
-  shuffle: playerActions.shuffleTracklist,
+  shuffle: playerActions.shuffleSelectedTracklist,
   add: tracklistActions.addTrack,
   remove: tracklistActions.removeTrack,
+  loadTracks: tracklistActions.loadTracks,
   stopShuffle: playerActions.stopShuffle
 }
 

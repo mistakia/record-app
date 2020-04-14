@@ -4,8 +4,8 @@ import {
   TextInput,
   View
 } from 'react-native'
+import queryString from 'query-string'
 
-import { parseQueryString } from '@core/utils'
 import Button from '@components/button'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
@@ -15,7 +15,7 @@ export default class NewContactPage extends React.Component {
     super(props)
 
     const { logId } = this.props.match.params
-    const { alias } = parseQueryString(this.props.location.search)
+    const { alias } = ueryString.parse(this.props.location.search)
 
     this.state = {
       alias: alias || '',

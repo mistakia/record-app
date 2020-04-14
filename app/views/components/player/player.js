@@ -1,6 +1,5 @@
 import React from 'react'
 import hotkeys from 'hotkeys-js'
-import { Link } from 'react-router-dom'
 
 import Artwork from '@components/artwork'
 import IconButton from '@components/icon-button'
@@ -42,9 +41,12 @@ export default class Player extends React.Component {
       shuffle,
       tracklistId,
       isShuffling,
+      tags,
+      query,
       stopShuffle,
       remove,
       queue,
+      loadTracks,
       app,
       isPlayingFromQueue,
       tracklistContact
@@ -130,8 +132,8 @@ export default class Player extends React.Component {
         </div>
 
         <div className='player__tracklist'>
-          <div className='player__tracklist-info'>
-            Playing {isPlayingFromQueue && 'Queue, then'} <Link to={`/tracks${tracklistContact.address}`}>{tracklistContact.displayName}</Link>
+          <div className='player__tracklist-info' onClick={loadTracks.bind(null, {logId: tracklistContact.address, query, tags })}>
+            {tracklistContact.displayName}
           </div>
           <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />
         </div>
