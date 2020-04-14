@@ -57,8 +57,7 @@ const mapStateToProps = createShallowEqualSelector(
 )
 
 const mapDispatchToProps = {
-  select: playerActions.playSelectedTrack,
-  next: playerActions.playNextTrack,
+  playTrack: playerActions.playTrack,
   shuffle: playerActions.shuffleTracklist,
   add: tracklistActions.addTrack,
   remove: tracklistActions.removeTrack,
@@ -66,18 +65,11 @@ const mapDispatchToProps = {
 }
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
-  const { nextTrackId, previousTrackId, tracklistId, isShuffling, queue } = stateProps
-
-  if (isShuffling) {
-    return Object.assign({}, ownProps, stateProps, dispatchProps, {
-      nextTrack: queue.size ? dispatchProps.next.bind(null, nextTrackId) : dispatchProps.shuffle.bind(null, tracklistId),
-      previousTrack: null
-    })
-  }
+  const { nextTrackId, previousTrackId } = stateProps
 
   return Object.assign({}, ownProps, stateProps, dispatchProps, {
-    nextTrack: nextTrackId ? dispatchProps.next.bind(null, nextTrackId) : null,
-    previousTrack: previousTrackId ? dispatchProps.select.bind(null, previousTrackId, tracklistId) : null
+    nextTrack: nextTrackId ? dispatchProps.playTrack.bind(null, nextTrackId) : null,
+    previousTrack: previousTrackId ? dispatchProps.playTrack.bind(null, previousTrackId) : null
   })
 }
 

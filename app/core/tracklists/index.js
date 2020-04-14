@@ -1,8 +1,6 @@
 export {
   tracklistActions,
-  trackRequestActions,
   tracklistRequestActions,
-  tracklistSearchActions,
   tracklistPostActions,
   tracklistDeleteActions
 } from './actions'
@@ -10,12 +8,12 @@ export { goToTracks, tracklistSagas } from './sagas'
 
 export {
   getCurrentTracklist,
+  getCurrentTracklistId,
   getCurrentTracklistIsUpdating,
   getCurrentTracklistContact,
+  getCurrentSelectedTags,
   getPendingTrackCID,
   getTracklistById,
-  getTracklistCursor,
-  getSearchTracksForCurrentTracklist,
   getTracksForCurrentTracklist
 } from './selectors'
 

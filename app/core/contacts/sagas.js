@@ -12,12 +12,12 @@ export function * loadContact ({ payload = {} }) {
   yield call(fetchContact, { logId })
 }
 
-export function * connectContact({ payload }) {
+export function * connectContact ({ payload }) {
   const { logId, contactId } = payload
   yield call(requestConnectContact, { logId, contactId })
 }
 
-export function * disconnectContact({ payload }) {
+export function * disconnectContact ({ payload }) {
   const { logId, contactId } = payload
   yield call(requestDisconnectContact, { logId, contactId })
 }

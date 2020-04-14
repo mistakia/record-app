@@ -30,21 +30,9 @@ export function getCurrentTracklistContact (state) {
   return getContactByAddress(state, logId)
 }
 
-export function getTracklistCursor (selectedTrackId, trackIds) {
-  let index = trackIds.indexOf(selectedTrackId)
-  let nextTrackId = null
-  let previousTrackId = null
-
-  if (index !== -1) {
-    if (index < trackIds.size - 1) nextTrackId = trackIds.get(index + 1)
-    if (index > 0) previousTrackId = trackIds.get(index - 1)
-  }
-
-  return {
-    nextTrackId,
-    previousTrackId,
-    selectedTrackId
-  }
+export function getCurrentSelectedTags (state) {
+  const logId = getCurrentTracklistId(state)
+  return getTracklistById(state, logId).tags.toJS()
 }
 
 //= ====================================
@@ -56,22 +44,9 @@ export const getCurrentTracklistIsUpdating = createSelector(
   tracklist => tracklist.isUpdating
 )
 
-export const getCurrentSearchTrackIds = createSelector(
-  getCurrentTracklist,
-  tracklist => tracklist.searchTrackIds
-)
-
 export const getCurrentTrackIds = createSelector(
   getCurrentTracklist,
   tracklist => tracklist.trackIds
-)
-
-export const getSearchTracksForCurrentTracklist = createSelector(
-  getCurrentSearchTrackIds,
-  (state) => getTracks(state),
-  (trackIds, tracks) => {
-    return trackIds.map(id => tracks.get(id))
-  }
 )
 
 export const getTracksForCurrentTracklist = createSelector(

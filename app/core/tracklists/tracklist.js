@@ -6,6 +6,6 @@ export const Tracklist = new Record({
   isUpdating: false,
   hasMore: true,
   query: null,
-  trackIds: new List(),
-  searchTrackIds: new List()
+  tags: new List(),
+  trackIds: new List()
 })

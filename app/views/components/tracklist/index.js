@@ -4,7 +4,6 @@ import { createSelector } from 'reselect'
 
 import {
   getCurrentTracklist,
-  getSearchTracksForCurrentTracklist,
   getTracksForCurrentTracklist,
   tracklistActions
 } from '@core/tracklists'
@@ -33,19 +32,17 @@ const Tracklist = ({
   selectTrack,
   tracklistId,
   search,
-  searchTracks,
   tracks,
   hasMore,
   loadNextTracks,
   searchQuery,
   showAdd,
   shuffle,
-  tags,
   clearSearch
 }) => {
   const isItemLoaded = index => tracks.has(index)
   const itemCount = searchQuery
-    ? searchTracks.size
+    ? tracks.size
     : (hasMore ? tracks.size + 1 : tracks.size)
   const load = async () => loadNextTracks()
   const loadMoreItems = displayLoadingIndicator ? () => {} : load
@@ -56,7 +53,7 @@ const Tracklist = ({
       return <div style={style}><Loading loading /></div>
     }
 
-    const track = searchQuery ? searchTracks.get(index) : tracks.get(index)
+    const track = tracks.get(index)
     if (!track) {
       return null
     }
@@ -74,7 +71,7 @@ const Tracklist = ({
   }
 
   const onSearch = (query) => {
-    search(tracklistId, query, tags)
+    search(query)
     listRef.current.scrollToItem(0)
   }
 
@@ -106,9 +103,8 @@ const mapStateToProps = createSelector(
   getPlayerTrackId,
   getCurrentTracklist,
   getTracksForCurrentTracklist,
-  getSearchTracksForCurrentTracklist,
   getPlayerIsLoading,
-  (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks, searchTracks, isLoading) => ({
+  (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks, isLoading) => ({
     displayLoadingIndicator: tracklist.isPending,
     isPlaying,
     isShuffling: isShuffling && tracklist.id === playerTracklistId,
@@ -119,8 +115,7 @@ const mapStateToProps = createSelector(
     tracklistId: tracklist.id,
     searchQuery: tracklist.query,
     hasMore: tracklist.hasMore,
-    tracks,
-    searchTracks
+    tracks
   })
 )
 
@@ -128,7 +123,7 @@ const mapDispatchToProps = {
   search: tracklistActions.searchTracks,
   selectTrack: playerActions.playSelectedTrack,
   loadNextTracks: tracklistActions.loadNextTracks,
-  shuffle: playerActions.shuffleTracklist,
+  shuffle: playerActions.shuffleSelectedTracklist,
   clearSearch: tracklistActions.clearSearch
 }
 

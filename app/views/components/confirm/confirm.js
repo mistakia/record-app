@@ -1,5 +1,3 @@
-import React from 'react'
-
 const { dialog } = require('electron').remote
 
 export default async function Confirm ({

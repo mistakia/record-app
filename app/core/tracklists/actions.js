@@ -1,24 +1,17 @@
 export const tracklistActions = {
+  LOAD_TRACKS: 'LOAD_TRACKS',
+  LOAD_NEXT_TRACKS: 'LOAD_NEXT_TRACKS',
+
+  ADD_TRACK: 'ADD_TRACK',
+  REMOVE_TRACK: 'REMOVE_TRACK',
+
+  TOGGLE_TAG: 'TOGGLE_TAG',
   SEARCH_TRACKS: 'SEARCH_TRACKS',
-
   CLEAR_SEARCH: 'CLEAR_SEARCH',
-
-  SEARCH_TRACKS_FAILED: 'SEARCH_TRACKS_FAILED',
-  SEARCH_TRACKS_FULFILLED: 'SEARCH_TRACKS_FULFILLED',
-  SEARCH_TRACKS_PENDING: 'SEARCH_TRACKS_PENDING',
 
   FETCH_TRACKS_FAILED: 'FETCH_TRACKS_FAILED',
   FETCH_TRACKS_FULFILLED: 'FETCH_TRACKS_FULFILLED',
   FETCH_TRACKS_PENDING: 'FETCH_TRACKS_PENDING',
-
-  FETCH_TRACK_FAILED: 'FETCH_TRACK_FAILED',
-  FETCH_TRACK_FULFILLED: 'FETCH_TRACK_FULFILLED',
-  FETCH_TRACK_PENDING: 'FETCH_TRACK_PENDING',
-
-  LOAD_TRACKS: 'LOAD_TRACKS',
-  LOAD_NEXT_TRACKS: 'LOAD_NEXT_TRACKS',
-
-  TOGGLE_TAG: 'TOGGLE_TAG',
 
   POST_TRACK_FAILED: 'POST_TRACK_FAILED',
   POST_TRACK_FULFILLED: 'POST_TRACK_FULFILLED',
@@ -27,9 +20,6 @@ export const tracklistActions = {
   DELETE_TRACK_FAILED: 'DELETE_TRACK_FAILED',
   DELETE_TRACK_FULFILLED: 'DELETE_TRACK_FULFILLED',
   DELETE_TRACK_PENDING: 'DELETE_TRACK_PENDING',
-
-  ADD_TRACK: 'ADD_TRACK',
-  REMOVE_TRACK: 'REMOVE_TRACK',
 
   fetchTracksFailed: (logId, error) => ({
     type: tracklistActions.FETCH_TRACKS_FAILED,
@@ -49,29 +39,6 @@ export const tracklistActions = {
 
   fetchTracksPending: logId => ({
     type: tracklistActions.FETCH_TRACKS_PENDING,
-    payload: {
-      logId
-    }
-  }),
-
-  fetchTrackFailed: (logId, error) => ({
-    type: tracklistActions.FETCH_TRACK_FAILED,
-    payload: {
-      logId,
-      error
-    }
-  }),
-
-  fetchTrackFulfilled: (logId, data) => ({
-    type: tracklistActions.FETCH_TRACK_FULFILLED,
-    payload: {
-      data,
-      logId
-    }
-  }),
-
-  fetchTrackPending: logId => ({
-    type: tracklistActions.FETCH_TRACK_PENDING,
     payload: {
       logId
     }
@@ -119,15 +86,13 @@ export const tracklistActions = {
     }
   }),
 
-  addTrack: (logId, data) => {
-    return {
-      type: tracklistActions.ADD_TRACK,
-      payload: {
-        logId,
-        data
-      }
+  addTrack: (logId, data) => ({
+    type: tracklistActions.ADD_TRACK,
+    payload: {
+      logId,
+      data
     }
-  },
+  }),
 
   removeTrack: (logId, data) => ({
     type: tracklistActions.REMOVE_TRACK,
@@ -165,55 +130,18 @@ export const tracklistActions = {
     payload: { logId }
   }),
 
-  searchTracks: (logId, query, tags) => ({
+  searchTracks: (query) => ({
     type: tracklistActions.SEARCH_TRACKS,
     payload: {
-      logId,
-      query,
-      tags
-    }
-  }),
-
-  searchTracksFailed: (logId, error) => ({
-    type: tracklistActions.SEARCH_TRACKS_FAILED,
-    payload: {
-      logId,
-      error
-    }
-  }),
-
-  searchTracksFulfilled: (logId, data) => ({
-    type: tracklistActions.SEARCH_TRACKS_FULFILLED,
-    payload: {
-      logId,
-      data
-    }
-  }),
-
-  searchTracksPending: logId => ({
-    type: tracklistActions.SEARCH_TRACKS_PENDING,
-    payload: {
-      logId
+      query
     }
   })
-}
-
-export const tracklistSearchActions = {
-  failed: tracklistActions.searchTracksFailed,
-  fulfilled: tracklistActions.searchTracksFulfilled,
-  pending: tracklistActions.searchTracksPending
 }
 
 export const tracklistRequestActions = {
   failed: tracklistActions.fetchTracksFailed,
   fulfilled: tracklistActions.fetchTracksFulfilled,
   pending: tracklistActions.fetchTracksPending
-}
-
-export const trackRequestActions = {
-  failed: tracklistActions.fetchTrackFailed,
-  fulfilled: tracklistActions.fetchTrackFulfilled,
-  pending: tracklistActions.fetchTrackPending
 }
 
 export const tracklistPostActions = {

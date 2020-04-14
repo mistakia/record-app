@@ -19,7 +19,7 @@ export class NewTrackPage extends React.Component {
   }
 
   async showDialog (event) {
-    const { canceled, filePaths, bookmarks } = await dialog.showOpenDialog({
+    const { filePaths } = await dialog.showOpenDialog({
       title: 'Add Track(s)',
       properties: ['openFile', 'openDirectory'],
       message: 'Select a file or folder'

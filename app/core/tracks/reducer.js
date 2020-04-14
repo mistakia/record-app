@@ -5,14 +5,16 @@ import { taglistActions } from '@core/taglists'
 import { createTrack } from './track'
 import { trackActions } from './actions'
 import { contactActions } from '@core/contacts'
+import { playerActions } from '@core/player'
 
 export function tracksReducer (state = new Map(), {payload, type}) {
   switch (type) {
     case trackActions.CLEAR:
       return state.filter((value, key) => payload.trackIds ? payload.trackIds.contains(key) : false)
 
+    case playerActions.FETCH_PLAYER_TRACKS_FULFILLED:
+    case playerActions.FETCH_PLAYER_SHUFFLE_FULFILLED:
     case tracklistActions.FETCH_TRACKS_FULFILLED:
-    case tracklistActions.FETCH_TRACK_FULFILLED:
     case tracklistActions.SEARCH_TRACKS_FULFILLED:
       return state.withMutations(tracks => {
         payload.data.forEach(trackData => {
@@ -26,8 +28,9 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       })
 
     case contactActions.CONTACT_INDEX_UPDATED:
-      if (!payload.entry)
+      if (!payload.entry) {
         return state
+      }
 
       return state.withMutations(tracks => {
         tracks.set(payload.entry.id, createTrack(payload.entry))

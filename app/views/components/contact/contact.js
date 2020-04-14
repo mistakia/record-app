@@ -92,8 +92,8 @@ const Contact = ({
         </div>
         <div className='contact__actions'>
           {type !== 'heading' && (
-             contact.isMe ?
-               <Button isLoading={contact.isUpdating} disabled={true}>Me</Button>
+             contact.isMe
+               ? <Button isLoading={contact.isUpdating} disabled={true}>Me</Button>
                : contactAction
           )}
         </div>
