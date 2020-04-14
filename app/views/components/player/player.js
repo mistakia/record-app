@@ -11,6 +11,11 @@ import Tags from '@components/tags'
 import './player.styl'
 
 export default class Player extends React.Component {
+  constructor () {
+    super ()
+    this._handleContextMenu = this._handleContextMenu.bind(this)
+  }
+
   componentDidMount () {
     hotkeys('space', { keydown: false, keyup: true }, () => {
       if (!this.props.track) return
@@ -25,6 +30,16 @@ export default class Player extends React.Component {
 
     hotkeys('right', { keydown: false, keyup: true }, () => {
       this.props.nextTrack && this.props.nextTrack()
+    })
+  }
+
+  _handleContextMenu (event) {
+    const { track, showContext } = this.props
+    showContext({
+      id: 'track',
+      trackId: track.id,
+      clickX: event.clientX,
+      clickY: event.clientY
     })
   }
 
@@ -70,7 +85,7 @@ export default class Player extends React.Component {
 
           <Artwork className='player__track-artwork' url={track.thumbnail} background />
 
-          <div className='player__track-info'>
+          <div className='player__track-info' onContextMenu={this._handleContextMenu}>
             <div className='player__track-title'>{track.name}</div>
             <div className='player__track-artist'>{track.artist}</div>
             <div className='player__track-meta'>

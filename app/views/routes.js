@@ -22,7 +22,7 @@ const Routes = () => (
     <Route exact path='/new-track' component={NewTrackPage} />
     <Route exact path='/set-identity' component={SetIdentityPage} />
     <Route path={`/tracks:logId(${logIdRe})`} component={TracksPage} />
-    <Route exact path='/' component={() => <Redirect to='/info' />} />
+    <Route exact path='/' component={() => <Redirect to='/explore' />} />
   </Switch>
 )
 

@@ -6,7 +6,7 @@ import { getPlayerTrackIds } from '@core/player'
 
 export function * trackAdded ({ payload }) {
   const contentCID = yield select(getPendingTrackCID)
-  if (payload.track.contentCID !== contentCID) {
+  if (payload.data.contentCID !== contentCID) {
     yield call(goToTracks)
   }
 }

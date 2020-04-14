@@ -15,7 +15,6 @@ export function tracksReducer (state = new Map(), {payload, type}) {
     case playerActions.FETCH_PLAYER_TRACKS_FULFILLED:
     case playerActions.FETCH_PLAYER_SHUFFLE_FULFILLED:
     case tracklistActions.FETCH_TRACKS_FULFILLED:
-    case tracklistActions.SEARCH_TRACKS_FULFILLED:
       return state.withMutations(tracks => {
         payload.data.forEach(trackData => {
           tracks.set(trackData.id, createTrack(trackData))
@@ -24,7 +23,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
 
     case trackActions.TRACK_ADDED:
       return state.withMutations(tracks => {
-        tracks.set(payload.track.id, createTrack(payload.track))
+        tracks.set(payload.data.id, createTrack(payload.data))
       })
 
     case contactActions.CONTACT_INDEX_UPDATED:

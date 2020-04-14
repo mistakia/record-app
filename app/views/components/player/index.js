@@ -14,6 +14,7 @@ import { Track } from '@core/tracks'
 import { getApp } from '@core/app'
 import { createShallowEqualSelector } from '@core/utils'
 import { tracklistActions } from '@core/tracklists'
+import { contextMenuActions } from '@core/context-menu'
 
 import Player from './player'
 
@@ -64,7 +65,8 @@ const mapDispatchToProps = {
   add: tracklistActions.addTrack,
   remove: tracklistActions.removeTrack,
   loadTracks: tracklistActions.loadTracks,
-  stopShuffle: playerActions.stopShuffle
+  stopShuffle: playerActions.stopShuffle,
+  showContext: contextMenuActions.show
 }
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
