@@ -67,6 +67,8 @@ $backgroundColor = #2d2e2f
 
 .player__track-actions
   flex 0 0 40px
+  .button__star-solid
+    fill $accentColor
 
 .player__controls
   flex 0 0 30%
@@ -96,6 +98,7 @@ $backgroundColor = #2d2e2f
   color white
   display flex
   align-items baseline
+  color #888
 
 .player__timeline-time
   flex 0
@@ -123,14 +126,15 @@ $backgroundColor = #2d2e2f
 
 .player__tracklist-info
   flex 1
-  a
-    font-weight 500
-    border-bottom 3px solid $textColor
+  a:hover
+    color white
 
 .player__tracklist-artwork
   flex 0 0 $playerHeight - 10px
   margin 0 8px
   overflow hidden
+  height $playerHeight - 10px
+  background transparent
 
 .player__track-tags
   position relative

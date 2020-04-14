@@ -1,8 +1,8 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import hashicon from 'hashicon'
+import queryString from 'query-string'
 
-import { parseQueryString } from '@core/utils'
 import { contactlistActions } from '@core/contactlists'
 import PageLayout from '@layouts/page'
 import Button from '@components/button'
@@ -37,7 +37,7 @@ export class NewContactPage extends React.Component {
 
   render () {
     const { logId } = this.props.match.params
-    const { alias, haveContact } = parseQueryString(this.props.location.search)
+    const { alias, haveContact } = queryString.parse(this.props.location.search)
 
     const addressIcon = logId ? hashicon(logId, 40) : null
 

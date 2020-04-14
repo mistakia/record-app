@@ -23,7 +23,8 @@ export function * removeTag ({ payload }) {
   yield call(deleteTag, { logId, data })
 }
 
-export function * checkFilteredTags ({ payload }) {
+// make sure selected tags all exist - otherwise clear
+export function * checkSelectedTags ({ payload }) {
   const { logId } = payload
   const existingTags = payload.data.map(t => t.tag)
 
@@ -39,7 +40,7 @@ export function * checkFilteredTags ({ payload }) {
   }
 
   if (shouldClear) {
-    const action = tracklistActions.loadTracks(logId)
+    const action = tracklistActions.loadTracks({ logId, tags: [], query: null })
     yield put(action)
   }
 }
@@ -69,7 +70,7 @@ export function * watchDeleteTagFulfilled () {
 }
 
 export function * watchFetchTagsFulfilled () {
-  yield takeLatest(taglistActions.FETCH_TAGS_FULFILLED, checkFilteredTags)
+  yield takeLatest(taglistActions.FETCH_TAGS_FULFILLED, checkSelectedTags)
 }
 
 export const taglistSagas = [

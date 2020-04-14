@@ -1,5 +1,6 @@
 import { call, fork, put, select, takeLatest } from 'redux-saga/effects'
 import { push } from 'react-router-redux'
+import queryString from 'query-string'
 
 import { getApp } from '@core/app'
 import { fetchTracks, postTrack, deleteTrack } from '@core/api'
@@ -7,6 +8,7 @@ import { ITEMS_PER_LOAD } from '@core/constants'
 import { tracklistActions } from './actions'
 import { getCurrentTracklist } from './selectors'
 import { getCurrentSelectedTags } from '@core/tracklists'
+import history from '@core/history'
 
 export function * addTrack ({ payload }) {
   const { logId, data } = payload
@@ -29,6 +31,12 @@ export function * loadNextTracks () {
 export function * loadTracks () {
   const { id, query } = yield select(getCurrentTracklist)
   const tags = yield select(getCurrentSelectedTags)
+
+  const tracksPath = `/tracks${id}`
+  if (history.location.pathname !== tracksPath) {
+    return yield put(push(tracksPath + '?' + queryString.stringify({ tags, query })))
+  }
+
   const params = { start: 0, end: ITEMS_PER_LOAD, tags, query }
   yield call(fetchTracks, { logId: id, params })
 }

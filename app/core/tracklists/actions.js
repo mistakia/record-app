@@ -44,11 +44,12 @@ export const tracklistActions = {
     }
   }),
 
-  loadTracks: (logId, tags) => ({
+  loadTracks: ({ logId, tags, query }) => ({
     type: tracklistActions.LOAD_TRACKS,
     payload: {
       logId,
-      tags
+      tags,
+      query
     }
   }),
 
