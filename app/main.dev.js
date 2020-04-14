@@ -4,7 +4,7 @@ import 'v8-compile-cache'
 import electron from 'electron'
 // import path from 'path'
 
-const { BrowserWindow, app, ipcMain: ipc } = electron
+const { BrowserWindow, app, ipcMain: ipc, globalShortcut } = electron
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support')
@@ -128,6 +128,23 @@ const createBackgroundWindow = () => {
   backgroundWindow.loadURL(`file://${__dirname}/background.html`)
 }
 
+const registerGlobalShortcuts = () => {
+  globalShortcut.register('MediaPlayPause', () => {
+    if (mainWindow) mainWindow.webContents.send('redux', { type: 'MEDIA_PLAY_PAUSE' })
+    console.log('Media Play/Pause')
+  })
+
+  globalShortcut.register('MediaNextTrack', () => {
+    if (mainWindow) mainWindow.webContents.send('redux', { type: 'MEDIA_NEXT' })
+    console.log('Media Next Track')
+  })
+
+  globalShortcut.register('MediaPreviousTrack', () => {
+    if (mainWindow) mainWindow.webContents.send('redux', { type: 'MEDIA_PREVIOUS' })
+    console.log('Media Previous Track')
+  })
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.whenReady().then(async () => {
@@ -140,7 +157,13 @@ app.whenReady().then(async () => {
 
   createMainWindow()
   createBackgroundWindow()
+  registerGlobalShortcuts()
   // TODO : on loadPrivateKey from mainWindow - recreate background node
+})
+
+app.on('will-quit', () => {
+  // Unregister all shortcuts.
+  globalShortcut.unregisterAll()
 })
 
 // Quit when all windows are closed.

@@ -37,17 +37,25 @@ export class ContextMenu extends React.Component {
     this._removeListeners()
   }
 
-  componentDidUpdate (prevProps) {
-    const { visible, clickX, clickY } = this.props.contextMenuInfo
+  componentDidUpdate () {
+    const { id, visible, clickX, clickY, trackId } = this.props.contextMenuInfo
 
-    if (!visible || prevProps.contextMenuInfo.visible || !this.root) {
+    if (!visible || !this.root) {
       return
     }
 
-    const screenW = window.innerWidth
-    const screenH = window.innerHeight
+    this._addListeners()
+
     const rootW = this.root.offsetWidth
     const rootH = this.root.offsetHeight
+    const screenW = window.innerWidth
+    const screenH = window.innerHeight
+
+    if (id === 'tag') {
+      this.root.style.top = `${(screenH / 2) - (rootH / 2)}px`
+      this.root.style.left = `${(screenW / 2) - (rootW / 2)}px`
+      return
+    }
 
     const right = (screenW - clickX) > rootW
     const left = !right
@@ -69,8 +77,6 @@ export class ContextMenu extends React.Component {
     if (bottom) {
       this.root.style.top = `${clickY - rootH - 5}px`
     }
-
-    this._addListeners()
   }
 
   render () {
