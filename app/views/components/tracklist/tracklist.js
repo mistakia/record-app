@@ -20,15 +20,17 @@ const render = ({
   Row,
   onSearch,
   onClear,
-  searchQuery,
+  query,
   listRef
 }) => (
   <div className='list'>
     <div className='list__head'>
       <div className='list__header-row'>
         <Input
+          type='text'
           onSubmit={onSearch}
-          showClear={!!searchQuery}
+          showClear={!!query}
+          defaultValue={query}
           onClear={onClear}
           label='Click here to search'
           className='list__search'

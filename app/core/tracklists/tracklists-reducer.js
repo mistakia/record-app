@@ -16,9 +16,7 @@ export function tracklistsReducer (state = initialState, action) {
 
   switch (action.type) {
     case tracklistActions.CLEAR_SEARCH:
-    case tracklistActions.SEARCH_TRACKS_FULFILLED:
     case tracklistActions.FETCH_TRACKS_FULFILLED:
-    case tracklistActions.SEARCH_TRACKS_PENDING:
     case tracklistActions.FETCH_TRACKS_PENDING:
     case tracklistActions.POST_TRACK_PENDING:
       return state.set(
@@ -62,7 +60,7 @@ export function tracklistsReducer (state = initialState, action) {
     case taglistActions.POST_TAG_FAILED:
     case taglistActions.POST_TAG_FULFILLED:
       state.set('pendingTrackCID', null)
-      return state.setIn([payload.logId, 'isUpdating'], false)
+      return state.setIn([payload.logId, 'isPending'], false)
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({

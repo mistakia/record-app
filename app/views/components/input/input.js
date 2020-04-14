@@ -9,6 +9,7 @@ const input = ({
   showClear,
   onClear,
   label,
+  defaultValue,
   className
 }) => {
   let formInput = React.createRef()
@@ -31,7 +32,7 @@ const input = ({
 
   return (
     <form onSubmit={handleSubmit} ref={formInput} className={classNames.join(' ')}>
-      <input type='text' name='text' placeholder={label} />
+      <input type='text' name='text' placeholder={label} defaultValue={defaultValue} />
       { showClear &&
         <IconButton
           icon='remove'

@@ -8,6 +8,7 @@ import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
 import ContextMenu from '@components/context-menu'
+import { contextMenuActions } from '@core/context-menu'
 import { getApp } from '@core/app'
 
 import 'normalize.css'
@@ -35,6 +36,7 @@ class App extends React.Component {
       this.props.dispatch(message)
     })
 
+    hotkeys('esc', () => this.props.dispatch(contextMenuActions.hide()))
     hotkeys('e', () => this.props.dispatch(push('/explore')))
     hotkeys('i', () => this.props.dispatch(push('/info')))
     hotkeys('l', () => {

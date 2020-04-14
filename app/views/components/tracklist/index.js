@@ -35,13 +35,13 @@ const Tracklist = ({
   tracks,
   hasMore,
   loadNextTracks,
-  searchQuery,
+  query,
   showAdd,
   shuffle,
   clearSearch
 }) => {
   const isItemLoaded = index => tracks.has(index)
-  const itemCount = searchQuery
+  const itemCount = query
     ? tracks.size
     : (hasMore ? tracks.size + 1 : tracks.size)
   const load = async () => loadNextTracks()
@@ -87,7 +87,7 @@ const Tracklist = ({
     isItemLoaded,
     isShuffling,
     tracklistId,
-    searchQuery,
+    query,
     onClear,
     itemCount,
     loadMoreItems,
@@ -113,7 +113,7 @@ const mapStateToProps = createSelector(
     play: audio.play,
     selectedTrackId: playerTrackId,
     tracklistId: tracklist.id,
-    searchQuery: tracklist.query,
+    query: tracklist.query,
     hasMore: tracklist.hasMore,
     tracks
   })

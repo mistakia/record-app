@@ -23,15 +23,6 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         tracklist.merge({ query, trackIds: new List() })
       })
 
-    case tracklistActions.SEARCH_TRACKS_FULFILLED:
-      return state.withMutations(tracklist => {
-        tracklist.merge({
-          isPending: false,
-          hasMore: false,
-          trackIds: new List(payload.data.map(t => t.id))
-        })
-      })
-
     case tracklistActions.FETCH_TRACKS_FULFILLED:
       const hasQuery = !!state.get('query')
       return state.withMutations(tracklist => {
@@ -53,10 +44,11 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         })
       })
 
+    case tracklistActions.POST_TRACK_FULFILLED:
     case trackActions.TRACK_ADDED:
       return state.withMutations(tracklist => {
         tracklist.merge({
-          trackIds: mergeIds(tracklist.trackIds, [payload.track])
+          trackIds: mergeIds(tracklist.trackIds, [payload.data])
         })
       })
 
@@ -68,13 +60,13 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
       })
 
     case tracklistActions.POST_TRACK_PENDING:
-    case tracklistActions.SEARCH_TRACKS_PENDING:
     case tracklistActions.FETCH_TRACKS_PENDING:
       return state.set('isPending', true)
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({
         id: payload.logId,
+        query: payload.query,
         tags: payload.tags ? new List(payload.tags) : new List()
       })
 
