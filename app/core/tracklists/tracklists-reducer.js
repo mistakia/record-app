@@ -16,13 +16,10 @@ export function tracklistsReducer (state = initialState, action) {
 
   switch (action.type) {
     case tracklistActions.CLEAR_SEARCH:
-    case tracklistActions.SEARCH_TRACKS:
     case tracklistActions.SEARCH_TRACKS_FULFILLED:
     case tracklistActions.FETCH_TRACKS_FULFILLED:
-    case tracklistActions.FETCH_TRACK_FULFILLED:
     case tracklistActions.SEARCH_TRACKS_PENDING:
     case tracklistActions.FETCH_TRACKS_PENDING:
-    case tracklistActions.FETCH_TRACK_PENDING:
     case tracklistActions.POST_TRACK_PENDING:
       return state.set(
         payload.logId,
@@ -36,8 +33,9 @@ export function tracklistsReducer (state = initialState, action) {
       )
 
     case contactActions.CONTACT_INDEX_UPDATED:
-      if (!payload.entry)
+      if (!payload.entry) {
         return state
+      }
 
       if (payload.entry.type !== 'track') {
         return state
@@ -47,6 +45,13 @@ export function tracklistsReducer (state = initialState, action) {
         payload.logId,
         tracklistReducer(state.get(payload.logId), action)
       )
+
+    case tracklistActions.SEARCH_TRACKS:
+    case tracklistActions.TOGGLE_TAG:
+      const logId = state.get('currentTracklistId')
+      return state.merge({
+        [logId]: tracklistReducer(state.get(logId), action)
+      })
 
     case tracklistActions.ADD_TRACK:
     case taglistActions.ADD_TAG:

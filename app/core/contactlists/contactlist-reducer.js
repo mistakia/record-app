@@ -1,5 +1,3 @@
-import { List } from 'immutable'
-
 import {
   PEER_CONTACTLIST_ID,
   ALL_CONTACTLIST_ID
@@ -7,6 +5,7 @@ import {
 import { contactlistActions } from './actions'
 import { contactActions } from '@core/contacts'
 import { Contactlist } from './contactlist'
+import { mergeIds } from '@core/utils'
 
 export function contactlistReducer (state = new Contactlist(), {payload, type}) {
   switch (type) {
@@ -16,14 +15,14 @@ export function contactlistReducer (state = new Contactlist(), {payload, type}) 
       return state.withMutations(contactlist => {
         contactlist.merge({
           isPending: false,
-          contactIds: mergeContactIds(contactlist.contactIds, payload.data)
+          contactIds: mergeIds(contactlist.contactIds, payload.data)
         })
       })
 
     case contactActions.CONTACT_LOADED:
       return state.withMutations(contactlist => {
         contactlist.merge({
-          contactIds: mergeContactIds(contactlist.contactIds, [payload.contact])
+          contactIds: mergeIds(contactlist.contactIds, [payload.contact])
         })
       })
 
@@ -44,15 +43,4 @@ export function contactlistReducer (state = new Contactlist(), {payload, type}) 
     default:
       return state
   }
-}
-
-// TODO: merge with mergeTrackIds
-function mergeContactIds (contactIds, collection) {
-  let ids = contactIds.toJS()
-  let newIds = collection.reduce((list, contactData) => {
-    if (ids.indexOf(contactData.id) === -1) list.push(contactData.id)
-    return list
-  }, [])
-
-  return newIds.length ? new List(ids.concat(newIds)) : contactIds
 }

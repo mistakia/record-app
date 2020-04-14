@@ -4,10 +4,9 @@ import { createSelector } from 'reselect'
 
 import {
   getCurrentTaglist,
-  getCurrentSelectedTags,
   getTagsForCurrentTaglist
 } from '@core/taglists'
-import { tracklistActions } from '@core/tracklists'
+import { tracklistActions, getCurrentSelectedTags } from '@core/tracklists'
 import LoadingIndicator from '@components/loading-indicator'
 import Tag from '@components/tag'
 

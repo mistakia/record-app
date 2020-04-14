@@ -1,9 +1,7 @@
 import React from 'react'
 
 export class TrackContextMenu extends React.Component {
-  constructor (props) {
-    super(props)
-  }
+  // TODO
 }
 
 export default TrackContextMenu

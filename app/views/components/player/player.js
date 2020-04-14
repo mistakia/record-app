@@ -115,7 +115,7 @@ export default class Player extends React.Component {
               icon='play-queue'
               count={queue.size ? queue.size : undefined}
               disabled={!queue.size}
-              label='play-queue'/>
+              label='play-queue' />
           </div>
 
           <div className='player__timeline'>
@@ -130,10 +130,10 @@ export default class Player extends React.Component {
         </div>
 
         <div className='player__tracklist'>
-            <div className='player__tracklist-info'>
-              Playing {isPlayingFromQueue && 'Queue, then'} <Link to={`/tracks${tracklistContact.address}`}>{tracklistContact.displayName}</Link>
-            </div>
-            <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />
+          <div className='player__tracklist-info'>
+            Playing {isPlayingFromQueue && 'Queue, then'} <Link to={`/tracks${tracklistContact.address}`}>{tracklistContact.displayName}</Link>
+          </div>
+          <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />
         </div>
       </div>
     )

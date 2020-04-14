@@ -13,7 +13,7 @@ export class TagContextMenu extends React.Component {
     this.handleKeyPress = this.handleKeyPress.bind(this)
   }
 
-  componentDidMount(){
+  componentDidMount () {
     this.input.focus()
   }
 

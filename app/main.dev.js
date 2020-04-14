@@ -2,8 +2,7 @@
 
 import 'v8-compile-cache'
 import electron from 'electron'
-import path from 'path'
-import os from 'os'
+// import path from 'path'
 
 const { BrowserWindow, app, ipcMain: ipc } = electron
 
@@ -22,7 +21,7 @@ if (
 }
 
 const installExtensions = async () => {
-  const installer = require('electron-devtools-installer');
+  const installer = require('electron-devtools-installer')
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS
   const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS']
 
@@ -30,7 +29,6 @@ const installExtensions = async () => {
     extensions.map(name => installer.default(installer[name], forceDownload))
   ).catch(console.log)
 }
-
 
 process.on('uncaughtException', error => {
   console.log(error)
@@ -40,7 +38,7 @@ process.on('uncaughtException', error => {
 process.on('unhandledRejection', error => {
   console.log(error)
   process.exit(1)
-});
+})
 
 console.log(`Electron Node version: ${process.versions.node}`)
 console.log(`Development Mode: ${process.env.NODE_ENV}`)
@@ -76,7 +74,7 @@ const createMainWindow = async () => {
      *   } */
   })
 
-  mainWindow.loadURL(`file://${__dirname}/index.html`);
+  mainWindow.loadURL(`file://${__dirname}/index.html`)
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
@@ -119,13 +117,13 @@ const createBackgroundWindow = () => {
     webPreferences: {
       nodeIntegration: true
     }
-        /* process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
-         *   ? {
-         *     nodeIntegration: true
-         *   }
-         *   : {
-         *     preload: path.join(__dirname, 'background.prod.js')
-         *   } */
+    /* process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
+     *   ? {
+     *     nodeIntegration: true
+     *   }
+     *   : {
+     *     preload: path.join(__dirname, 'background.prod.js')
+     *   } */
   })
   backgroundWindow.loadURL(`file://${__dirname}/background.html`)
 }
@@ -137,7 +135,7 @@ app.whenReady().then(async () => {
     process.env.NODE_ENV === 'development' ||
       process.env.DEBUG_PROD === 'true'
   ) {
-    await installExtensions();
+    await installExtensions()
   }
 
   createMainWindow()

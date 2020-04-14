@@ -33,7 +33,7 @@ export class ContextMenu extends React.Component {
     document.addEventListener('click', this._handleClick)
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     this._removeListeners()
   }
 
@@ -73,11 +73,12 @@ export class ContextMenu extends React.Component {
     this._addListeners()
   }
 
-  render() {
+  render () {
     const { visible, id, data } = this.props.contextMenuInfo
 
-    if (!visible)
+    if (!visible) {
       return null
+    }
 
     const getContextMenuComponent = (id) => {
       switch (id) {
@@ -89,7 +90,7 @@ export class ContextMenu extends React.Component {
     const ContextMenuComponent = getContextMenuComponent(id)
 
     return (
-      <div ref={ref => {this.root = ref}} className='context-menu'>
+      <div ref={ref => { this.root = ref }} className='context-menu'>
         <ContextMenuComponent data={data} />
       </div>
     )

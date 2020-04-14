@@ -1,6 +1,6 @@
 /* global fetch, AbortController */
 
-import { toQueryString } from '@core/utils'
+import queryString from 'query-string'
 
 const POST = (data) => ({
   method: 'POST',
@@ -43,12 +43,16 @@ export const api = {
     const url = `http://localhost:3000/tags${logId}`
     return { url }
   },
-  fetchTrack ({ logId, params }) {
-    const url = `http://localhost:3000/tracks${logId}?${toQueryString(params)}`
+  fetchPlayerTracks ({ logId, params }) {
+    const url = `http://localhost:3000/tracks${logId}?${queryString.stringify(params)}`
+    return { url }
+  },
+  fetchShuffleTracks ({ logId, params }) {
+    const url = `http://localhost:3000/tracks${logId}?${queryString.stringify(params)}`
     return { url }
   },
   fetchTracks ({ logId, params }) {
-    const url = `http://localhost:3000/tracks${logId}?${toQueryString(params)}`
+    const url = `http://localhost:3000/tracks${logId}?${queryString.stringify(params)}`
     return { url }
   },
   postTag ({ logId, data }) {
@@ -57,7 +61,7 @@ export const api = {
     return { url, ...post }
   },
   deleteTag ({ logId, data }) {
-    const url = `http://localhost:3000/tags?${toQueryString(data)}`
+    const url = `http://localhost:3000/tags?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
   postContact ({ logId, data }) {
@@ -66,7 +70,7 @@ export const api = {
     return { url, ...post }
   },
   deleteContact ({ logId, data }) {
-    const url = `http://localhost:3000/contacts?${toQueryString(data)}`
+    const url = `http://localhost:3000/contacts?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
   postAbout ({ data }) {
@@ -80,7 +84,7 @@ export const api = {
     return { url, ...post }
   },
   deleteTrack ({ data }) {
-    const url = `http://localhost:3000/tracks?${toQueryString(data)}`
+    const url = `http://localhost:3000/tracks?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
   postIdentity ({ privateKey }) {
@@ -90,12 +94,12 @@ export const api = {
   },
   connectContact ({ logId, contactId }) {
     const params = { contactId }
-    const url = `http://localhost:3000/connect${logId}?${toQueryString(params)}`
+    const url = `http://localhost:3000/connect${logId}?${queryString.stringify(params)}`
     return { url }
   },
   disconnectContact ({ logId, contactId }) {
     const params = { contactId }
-    const url = `http://localhost:3000/disconnect${logId}?${toQueryString(params)}`
+    const url = `http://localhost:3000/disconnect${logId}?${queryString.stringify(params)}`
     return { url }
   }
 }

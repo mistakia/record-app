@@ -21,8 +21,6 @@ import {
   taglistDeleteActions
 } from '@core/taglists'
 import {
-  trackRequestActions,
-  tracklistSearchActions,
   tracklistRequestActions,
   tracklistPostActions,
   tracklistDeleteActions
@@ -35,6 +33,10 @@ import {
 import {
   aboutPostActions
 } from '@core/about'
+import {
+  playerShuffleRequestActions,
+  playerTracksRequestActions
+} from '@core/player'
 
 function * fetchAPI (apiFunction, actions, opts = {}) {
   const { abort, request } = apiRequest(apiFunction, opts)
@@ -73,9 +75,9 @@ export const fetchTags = fetch.bind(null, api.fetchTags, taglistRequestActions)
 export const postTag = fetch.bind(null, api.postTag, taglistPostActions)
 export const deleteTag = fetch.bind(null, api.deleteTag, taglistDeleteActions)
 
-export const fetchTrack = fetch.bind(null, api.fetchTrack, trackRequestActions)
+export const fetchShuffleTracks = fetch.bind(null, api.fetchShuffleTracks, playerShuffleRequestActions)
+export const fetchPlayerTracks = fetch.bind(null, api.fetchPlayerTracks, playerTracksRequestActions)
 export const fetchTracks = fetch.bind(null, api.fetchTracks, tracklistRequestActions)
-export const queryTracks = fetch.bind(null, api.fetchTracks, tracklistSearchActions)
 export const postTrack = fetch.bind(null, api.postTrack, tracklistPostActions)
 export const deleteTrack = fetch.bind(null, api.deleteTrack, tracklistDeleteActions)
 

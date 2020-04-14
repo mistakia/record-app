@@ -9,7 +9,7 @@ import './track.styl'
 
 class Track extends React.Component {
   constructor () {
-    super ()
+    super()
     this._handleContextMenu = this._handleContextMenu.bind(this)
     this._handleClick = this._handleClick.bind(this)
   }

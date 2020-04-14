@@ -3,9 +3,8 @@ import { call, fork, takeLatest, takeLeading, select, put } from 'redux-saga/eff
 import history from '@core/history'
 import { fetchTags, postTag, deleteTag } from '@core/api'
 import { appActions, getApp } from '@core/app'
-import { tracklistActions } from '@core/tracklists'
+import { tracklistActions, getCurrentSelectedTags } from '@core/tracklists'
 import { taglistActions } from './actions'
-import { getCurrentSelectedTags } from './selectors'
 
 export function * loadTags ({ payload }) {
   const app = yield select(getApp)
