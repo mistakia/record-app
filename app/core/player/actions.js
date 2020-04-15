@@ -6,6 +6,7 @@ export const playerActions = {
   AUDIO_VOLUME_CHANGED: 'AUDIO_VOLUME_CHANGED',
 
   PLAY_TRACK: 'PLAY_TRACK',
+  PLAY_QUEUE_TRACK: 'PLAY_QUEUE_TRACK',
   PLAY_TRACKLIST: 'PLAY_TRACKLIST',
   PLAY_SELECTED_TRACK: 'PLAY_SELECTED_TRACK',
 
@@ -15,6 +16,9 @@ export const playerActions = {
 
   QUEUE_TRACK: 'QUEUE_TRACK',
   UNQUEUE_TRACK: 'UNQUEUE_TRACK',
+  REORDER_QUEUE: 'REORDER_QUEUE',
+  CLEAR_QUEUE: 'CLEAR_QUEUE',
+  TOGGLE_QUEUE: 'TOGGLE_QUEUE',
 
   FETCH_PLAYER_SHUFFLE_PENDING: 'FETCH_PLAYER_SHUFFLE_PENDING',
   FETCH_PLAYER_SHUFFLE_FAILED: 'FETCH_PLAYER_SHUFFLE_FAILED',
@@ -23,6 +27,10 @@ export const playerActions = {
   FETCH_PLAYER_TRACKS_PENDING: 'FETCH_PLAYER_TRACKS_PENDING',
   FETCH_PLAYER_TRACKS_FAILED: 'FETCH_PLAYER_TRACKS_FAILED',
   FETCH_PLAYER_TRACKS_FULFILLED: 'FETCH_PLAYER_TRACKS_FULFILLED',
+
+  toggleQueue: () => ({
+    type: playerActions.TOGGLE_QUEUE
+  }),
 
   fetchPlayerShuffleRequestPending: (logId) => ({
     type: playerActions.FETCH_PLAYER_SHUFFLE_PENDING,
@@ -86,6 +94,18 @@ export const playerActions = {
     }
   }),
 
+  reorderQueue: ({ oldIndex, newIndex }) => ({
+    type: playerActions.REORDER_QUEUE,
+    payload: {
+      oldIndex,
+      newIndex
+    }
+  }),
+
+  clearQueue: () => ({
+    type: playerActions.CLEAR_QUEUE
+  }),
+
   audioEnded: () => ({
     type: playerActions.AUDIO_ENDED
   }),
@@ -107,6 +127,14 @@ export const playerActions = {
     type: playerActions.AUDIO_VOLUME_CHANGED,
     payload: {
       volume
+    }
+  }),
+
+  // play from queue
+  playQueueTrack: (queueIndex) => ({
+    type: playerActions.PLAY_QUEUE_TRACK,
+    payload: {
+      queueIndex
     }
   }),
 

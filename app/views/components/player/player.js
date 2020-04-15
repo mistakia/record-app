@@ -64,7 +64,9 @@ export default class Player extends React.Component {
       loadTracks,
       app,
       isPlayingFromQueue,
-      tracklistContact
+      isQueueVisible,
+      tracklistContact,
+      toggleQueue
     } = this.props
 
     if (!track) return null
@@ -131,7 +133,9 @@ export default class Player extends React.Component {
             <IconButton
               icon='play-queue'
               count={queue.size ? queue.size : undefined}
-              disabled={!queue.size}
+              isActive={isQueueVisible}
+              disabled={!queue.size && !isQueueVisible}
+              onClick={toggleQueue}
               label='play-queue' />
           </div>
 
@@ -147,7 +151,7 @@ export default class Player extends React.Component {
         </div>
 
         <div className='player__tracklist'>
-          <div className='player__tracklist-info' onClick={loadTracks.bind(null, {logId: tracklistContact.address, query, tags })}>
+          <div className='player__tracklist-info cursor' onClick={loadTracks.bind(null, {logId: tracklistContact.address, query, tags })}>
             {tracklistContact.displayName}
           </div>
           <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />

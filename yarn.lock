@@ -927,7 +927,7 @@
     core-js-pure "^3.0.0"
     regenerator-runtime "^0.13.4"
 
-"@babel/runtime@^7.0.0", "@babel/runtime@^7.1.2", "@babel/runtime@^7.6.3", "@babel/runtime@^7.8.4":
+"@babel/runtime@^7.0.0", "@babel/runtime@^7.1.2", "@babel/runtime@^7.2.0", "@babel/runtime@^7.6.3", "@babel/runtime@^7.8.4":
   version "7.9.2"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.9.2.tgz#d90df0583a3a252f09aaa619665367bae518db06"
   integrity sha512-NE2DtOdufG7R5vnfQUTehdTfNycfUANEtCa9PssN9O/xmTzP4E08UI797ixaei6hBEVL9BI/PsdJS5x7mWoB9Q==
@@ -12913,7 +12913,7 @@ promisify-es6@^1.0.3:
   resolved "https://registry.yarnpkg.com/promisify-es6/-/promisify-es6-1.0.3.tgz#b012668c4df3c965ce13daac2b3a4d1726a96346"
   integrity sha512-N9iVG+CGJsI4b4ZGazjwLnxErD2d9Pe4DPvvXSxYA9tFNu8ymXME4Qs5HIQ0LMJpNM7zj+m0NlNnNeqFpKzqnA==
 
-prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.5.7, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -13376,6 +13376,15 @@ react-router@^4.1.1, react-router@^4.2.0, react-router@^4.3.0, react-router@^4.3
     prop-types "^15.6.1"
     warning "^4.0.1"
 
+react-sortable-hoc@^1.11.0:
+  version "1.11.0"
+  resolved "https://registry.yarnpkg.com/react-sortable-hoc/-/react-sortable-hoc-1.11.0.tgz#fe4022362bbafc4b836f5104b9676608a40a278f"
+  integrity sha512-v1CDCvdfoR3zLGNp6qsBa4J1BWMEVH25+UKxF/RvQRh+mrB+emqtVHMgZ+WreUiKJoEaiwYoScaueIKhMVBHUg==
+  dependencies:
+    "@babel/runtime" "^7.2.0"
+    invariant "^2.2.4"
+    prop-types "^15.5.7"
+
 react-transform-hmr@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/react-transform-hmr/-/react-transform-hmr-1.0.4.tgz#e1a40bd0aaefc72e8dfd7a7cda09af85066397bb"
@@ -13512,9 +13521,9 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
-record-node@mistakia/record-node#5a1d2a2:
+record-node@mistakia/record-node#892739c:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/5a1d2a21bbcaaa1cc83d911b5d158fa44afaba97"
+  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/892739c7dc12df0780b5cc82d28ea2c8dbf2affd"
   dependencies:
     bitboot "^0.1.0"
     body-parser "^1.18.3"
@@ -13550,12 +13559,12 @@ record-node@mistakia/record-node#5a1d2a2:
     orbit-db-storage-adapter "^0.5.3"
     orbit-db-store "github:mistakia/orbit-db-store#proto/record"
     p-queue "^6.3.0"
-    record-resolver "github:mistakia/record-resolver#78b7367"
+    record-resolver "github:mistakia/record-resolver#75b5b76"
     secp256k1 "^3.8.0"
 
-"record-resolver@github:mistakia/record-resolver#78b7367":
+"record-resolver@github:mistakia/record-resolver#75b5b76":
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-resolver/tar.gz/78b73679778fba3d6c58482cbd4ffbfd3d107c04"
+  resolved "https://codeload.github.com/mistakia/record-resolver/tar.gz/75b5b76d182a5a2bcbe717b22c9ab2f9b699848b"
   dependencies:
     promisify-es6 "^1.0.3"
     requestretry "^1.13.0"

@@ -144,6 +144,13 @@ export function * watchPlayTrack () {
   }
 }
 
+export function * watchPlayQueueTrack () {
+  while (true) {
+    yield take(playerActions.PLAY_QUEUE_TRACK)
+    yield fork(playAudio)
+  }
+}
+
 export function * watchPlayTracklist () {
   while (true) {
     yield take(playerActions.PLAY_TRACKLIST)
@@ -181,6 +188,7 @@ export const playerSagas = [
   fork(watchAudioVolumeChanged),
   fork(watchInitApp),
   fork(watchPlayTrack),
+  fork(watchPlayQueueTrack),
   fork(watchPlayTracklist),
   fork(watchPlaySelectedTrack),
   fork(watchShuffleTracklist),

@@ -1,0 +1,113 @@
+.player__queue
+  position absolute
+  left 0
+  right 0
+  top 60px
+  bottom 75px
+  z-index 1
+  background #101010
+  transition transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+  transform translate3d(0, 100vh, 0)
+  &.visible
+    transform translate3d(0, 0, 0)
+
+.player__queue-content
+  padding 40px
+  display flex
+  height 100%
+
+.player__queue-main
+  flex 1
+  display flex
+  align-items center
+
+.player__queue-side
+  flex 0 0 450px
+  display flex
+  flex-direction column
+  margin-left 40px
+  color rgb(170,170,170)
+
+.player__queue-header
+  flex 0 0 auto
+  padding 8px
+  border-bottom 1px solid rgb(170,170,170)
+  font-weight 500
+  display flex
+  align-items center
+
+.player__queue-header-title
+  flex 1
+
+.player__queue-clear
+  flex 0 0 auto
+  fill rgb(170,170,170)
+  cursor pointer
+  &:not([disabled]):hover
+    fill white
+
+.player__queue-tracks
+  flex 1
+  overflow hidden
+  overflow-y scroll
+
+.queue__track
+  cursor move
+  background #101010
+  padding 0 8px
+  height 56px
+  border-bottom 1px solid rgba(255,255,255,0.12)
+  display flex
+  align-items center
+  .button__icon
+    opacity 0
+  &:hover .button__icon
+    opacity 1
+
+.queue__track-play
+  flex 0 0 40px
+  height 40px
+  margin-right 16px
+
+.queue__track-body
+  display flex
+  flex-direction column
+  flex 1
+  align-self center
+  min-width 1px
+
+.queue__track-title
+.queue__track-artist
+  display block
+  text-overflow ellipsis
+  overflow hidden
+  white-space nowrap
+
+.queue__track-title
+  margin 0 0 4px 0
+  color rgb(255,255,255)
+  &:before
+    content ' '
+    display inline-block
+    border-radius 99em
+    width 4px
+    height 4px
+    margin-right 8px
+    margin-left 3px
+    vertical-align middle
+    background-color rgba(0,0,0,0.2)
+  &.available:before
+    background-color $successColor
+
+.queue__track-more
+  flex 0 0 auto
+  fill rgb(255,255,255)
+
+.queue__track-duration
+  flex 0 0 40px
+  color rgb(170,170,170)
+  text-align right
+
+.sortable__helper
+  background
+  z-index 9999

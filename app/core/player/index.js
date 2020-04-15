@@ -20,5 +20,6 @@ export {
   getPlayerTracklistId,
   getPlayerTracklistCursor,
   getPlayerTracklistContact,
-  getPlayerQueue
+  getPlayerQueue,
+  getTracksForQueue
 } from './selectors'
