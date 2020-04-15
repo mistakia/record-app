@@ -43,6 +43,7 @@ const mapStateToProps = createShallowEqualSelector(
     increaseVolume: audio.increaseVolume,
     isPlaying: player.isPlaying,
     isShuffling: player.isShuffling,
+    isQueueVisible: player.isQueueVisible,
     queue: player.queue,
     isPlayingFromQueue: player.isPlayingFromQueue,
     nextTrackId: cursor.nextTrackId,
@@ -66,7 +67,8 @@ const mapDispatchToProps = {
   remove: tracklistActions.removeTrack,
   loadTracks: tracklistActions.loadTracks,
   stopShuffle: playerActions.stopShuffle,
-  showContext: contextMenuActions.show
+  showContext: contextMenuActions.show,
+  toggleQueue: playerActions.toggleQueue
 }
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

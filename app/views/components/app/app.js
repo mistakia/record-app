@@ -7,6 +7,7 @@ import { push } from 'react-router-redux'
 import Menu from '@components/menu'
 import Routes from '@views/routes'
 import Player from '@components/player'
+import Queue from '@components/queue'
 import ContextMenu from '@components/context-menu'
 import { contextMenuActions } from '@core/context-menu'
 import { getApp } from '@core/app'
@@ -57,6 +58,7 @@ class App extends React.Component {
         <Menu />
         <Routes />
         <Player />
+        <Queue />
         <ContextMenu />
       </main>
     )

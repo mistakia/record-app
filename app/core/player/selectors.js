@@ -1,5 +1,7 @@
+import { createSelector } from 'reselect'
+
 import { getTracklistById } from '@core/tracklists'
-import { getTrackById } from '@core/tracks'
+import { getTracks, getTrackById } from '@core/tracks'
 import { getContactByAddress } from '@core/contacts'
 
 export function getPlayer (state) {
@@ -27,8 +29,8 @@ export function getPlayerTrackId (state) {
 }
 
 export function getPlayerTrackIds (state) {
-  const { trackId, tracklistTrackIds, shuffleTrackIds } = getPlayer(state)
-  return tracklistTrackIds.merge(shuffleTrackIds).push(trackId)
+  const { trackId, tracklistTrackIds, shuffleTrackIds, queue } = getPlayer(state)
+  return tracklistTrackIds.merge(shuffleTrackIds, queue).push(trackId)
 }
 
 export function getPlayerQueue (state) {
@@ -66,6 +68,10 @@ export function getPlayerTracklistCursor (state) {
     tracklistTrackIds
   } = getPlayer(state)
 
+  if (!trackId) {
+    return {}
+  }
+
   if (isShuffling && !queue.size) {
     return {
       selectedTrackId: trackId,
@@ -94,3 +100,15 @@ export function getPlayerTracklistContact (state) {
   const tracklistId = getPlayerTracklistId(state)
   return getContactByAddress(state, tracklistId)
 }
+
+//= ====================================
+//  MEMOIZED SELECTORS
+// -------------------------------------
+
+export const getTracksForQueue = createSelector(
+  getPlayerQueue,
+  (state) => getTracks(state),
+  (trackIds, tracks) => {
+    return trackIds.map(id => tracks.get(id))
+  }
+)
