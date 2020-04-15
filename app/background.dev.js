@@ -6,7 +6,7 @@ const jsonfile = require('jsonfile')
 const RecordNode = require('record-node')
 const electron = require('electron')
 const ipc = electron.ipcRenderer
-const { app } = electron.remote
+const { app, dialog } = electron.remote
 
 console.log(`process id: ${process.pid}`)
 
@@ -70,13 +70,24 @@ const main = async () => {
       console.log(e)
     }
   })
-  await record.init()
+
+  try {
+    await record.init()
+  } catch (err) {
+    await dialog.showMessageBox({
+      type: 'error',
+      message: 'Startup error, please restart.',
+      detail: err.toString()
+    })
+    console.log(`Error starting node: ${err.toString()}`)
+    console.log(err)
+    ipc.send('error')
+  }
 }
 
 try {
   main()
 } catch (err) {
-  console.log(`Error starting node: ${err.toString()}`)
   console.log(err)
 }
 

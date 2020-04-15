@@ -40,6 +40,8 @@ process.on('unhandledRejection', error => {
   process.exit(1)
 })
 
+ipc.on('error', () => process.exit(1))
+
 console.log(`Electron Node version: ${process.versions.node}`)
 console.log(`Development Mode: ${process.env.NODE_ENV}`)
 

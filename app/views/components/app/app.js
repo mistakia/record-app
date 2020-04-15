@@ -10,6 +10,7 @@ import Player from '@components/player'
 import ContextMenu from '@components/context-menu'
 import { contextMenuActions } from '@core/context-menu'
 import { getApp } from '@core/app'
+import Loading from '@components/loading'
 
 import 'normalize.css'
 import '@styles/normalize.css'
@@ -46,6 +47,11 @@ class App extends React.Component {
   }
 
   render () {
+    const { isPending } = this.props.app
+    if (isPending) {
+      return <Loading loading={isPending} />
+    }
+
     return (
       <main>
         <Menu />
