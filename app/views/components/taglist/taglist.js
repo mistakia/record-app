@@ -4,7 +4,9 @@ import './taglist.styl'
 
 const render = (tagItems, loading) => (
   <div className='taglist'>
-    {tagItems}
+    <div className='tags'>
+      {tagItems}
+    </div>
     {loading}
   </div>
 )

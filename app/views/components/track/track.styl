@@ -50,7 +50,7 @@ $accentColorLight = lighten($accentColor, 92%)
       &.button__star-solid
         fill $accentColor
   .track__body
-    flex 1 0 35%
+    flex 3 0 10%
     min-width 0px
   .track__title
   .track__artist
@@ -59,7 +59,7 @@ $accentColorLight = lighten($accentColor, 92%)
     white-space nowrap
     line-height 20px
   .track__artist
-    flex 1 0 15%
+    flex 1 0 10%
   .track__duration
   .track__bitrate
   .track__format
@@ -119,7 +119,8 @@ $accentColorLight = lighten($accentColor, 92%)
   background-color $successColor
 
 .track__tags
-  flex 0 0 25%
+  flex 1 0 10%
+  overflow hidden
   position relative
   &:after
     content ""

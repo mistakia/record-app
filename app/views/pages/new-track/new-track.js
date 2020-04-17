@@ -61,7 +61,7 @@ export class NewTrackPage extends React.Component {
     )
 
     return (
-      <PageLayout title='New Track' body={body} />
+      <PageLayout title='Add Track(s)' body={body} />
     )
   }
 }
