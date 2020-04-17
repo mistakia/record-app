@@ -32,12 +32,12 @@ const input = ({
 
   return (
     <form onSubmit={handleSubmit} ref={formInput} className={classNames.join(' ')}>
-      <input type='text' name='text' placeholder={label} defaultValue={defaultValue} />
       { showClear &&
         <IconButton
           icon='remove'
           onClick={handleClear}
           label='Clear Search' /> }
+      <input type='text' name='text' placeholder={label} defaultValue={defaultValue} />
     </form>
   )
 }

@@ -68,7 +68,7 @@ const Contact = ({
     <IconButton
       label='status'
       isLoading={contact.isUpdating}
-      className={`${(peers ? 'button__success' : 'button__failure')} ${contact.isReplicating ? 'spin' : ''}`}
+      className={`${contact.isReplicating ? 'spin' : ''}`}
       onClick={handleSyncClick}
       icon={contact.isReplicating ? 'sync' : 'sync-disabled'} />
   )
@@ -82,28 +82,29 @@ const Contact = ({
       className={`contact contact__${type}`}
       style={style}
       onClick={type !== 'profile' ? viewUser : null}>
-      <div className='contact__avatar'>
-        <img src={contact.avatar} />
-      </div>
-      <div className='contact__body'>
+      <div className='contact__main'>
+        <div className='contact__avatar'>
+          <img src={contact.avatar} />
+        </div>
         <div className={`contact__title ${(peers || contact.isMe) ? 'contact__connected' : 'contact__disconnected'}`}>
           {contactName}
-          {showEdit && (contact.isMe ? editSelf : editContact)}
+          {contact.isMe && <small>Owner</small>}
         </div>
         <div className='contact__actions'>
-          {type !== 'heading' && (
-             contact.isMe
-               ? <Button isLoading={contact.isUpdating} disabled={true}>Me</Button>
-               : contactAction
-          )}
+          <div>
+            {showEdit && (contact.isMe ? editSelf : editContact)}
+          </div>
+          <div>
+            {!contact.isMe && connectionStatusAction}
+          </div>
+          {(!contact.isMe && type === 'profile') && <div>{contactAction}</div>}
         </div>
-        {type === 'profile' && <div className='contact__menu menu'>
-          <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
-          <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Lists</NavLink>
-        </div>}
-        <div>
-          {!contact.isMe && connectionStatusAction }
-        </div>
+      </div>
+      {type === 'profile' && <div className='contact__menu menu'>
+        <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
+        <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Lists</NavLink>
+      </div>}
+      <div className='contact__side'>
         <div data-label='entries'>
           {contact.length !== contact.max && <Progress progress={(contact.length / contact.max) * 100} />}
           {contact.length === contact.max
@@ -112,8 +113,8 @@ const Contact = ({
               `${contact.length}/${contact.max}`
             )}
         </div>
-        <div className={loading ? 'blink' : ''} data-label='tracks'>{contact.trackCount}</div>
-        <div className={loading ? 'blink' : ''} data-label='contacts'>{contact.contactCount}</div>
+        {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='tracks'>{contact.trackCount}</div>}
+        {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='contacts'>{contact.contactCount}</div>}
       </div>
     </article>
   )

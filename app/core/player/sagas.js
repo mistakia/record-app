@@ -1,5 +1,6 @@
 import { eventChannel } from 'redux-saga'
 import { call, fork, put, select, take } from 'redux-saga/effects'
+import { LOCATION_CHANGE } from 'react-router-redux'
 
 import { appActions } from '@core/app'
 import { fetchPlayerTracks, fetchShuffleTracks } from '@core/api'
@@ -110,6 +111,11 @@ export function * subscribeToAudio () {
   }
 }
 
+export function * hideQueue () {
+  const { isQueueVisible } = yield select(getPlayer)
+  if (isQueueVisible) yield put(playerActions.toggleQueue())
+}
+
 //= ====================================
 //  WATCHERS
 // -------------------------------------
@@ -179,6 +185,13 @@ export function * watchShuffleTracksFulfilled () {
   }
 }
 
+export function * watchLocationChange () {
+  while (true) {
+    yield take(LOCATION_CHANGE)
+    yield fork(hideQueue)
+  }
+}
+
 //= ====================================
 //  ROOT
 // -------------------------------------
@@ -192,5 +205,6 @@ export const playerSagas = [
   fork(watchPlayTracklist),
   fork(watchPlaySelectedTrack),
   fork(watchShuffleTracklist),
-  fork(watchShuffleTracksFulfilled)
+  fork(watchShuffleTracksFulfilled),
+  fork(watchLocationChange)
 ]

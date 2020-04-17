@@ -9,14 +9,12 @@ const render = ({ contactItems, loading, showAdd }) => (
       </div>}
     </div>
     <div className='list__header contact contact__item'>
-      <div className='contact__avatar' />
-      <div className='contact__body'>
+      <div className='contact__main'>
+        <div className='contact__avatar' />
         <div className='contact__title'>Name</div>
-        <div />
-        <div />
+      </div>
+      <div className='contact__side'>
         <div>Entries</div>
-        <div>Tracks</div>
-        <div>Contacts</div>
       </div>
     </div>
     <div className='list__body'>

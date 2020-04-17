@@ -2,7 +2,6 @@ $accentColorLight = lighten($accentColor, 92%)
 
 .track
   display flex
-  border-top 1px solid $borderColor
   border-bottom 1px solid $borderColor
   padding 0
   overflow hidden
@@ -14,7 +13,7 @@ $accentColorLight = lighten($accentColor, 92%)
     flex 1 1 100px
     flex-direction vertical
   .track__play
-    flex 0 0 4%
+    flex 0 0 58px
     position relative
     height 100%
     button
@@ -103,8 +102,7 @@ $accentColorLight = lighten($accentColor, 92%)
       background-image linear-gradient(to right, rgba(240,240,240,0), rgba(240,240,240,1))
 
 .track:not(.list__header)
-  .track__play
-    min-height 45px
+  height 36px
 
 .track__title:before
   content ' '

@@ -1,3 +1,7 @@
+$backgroundColor = white
+$textColor = rgb(120,120,120)
+$textColorDark = rgb(0,0,0)
+
 .player__queue
   position absolute
   left 0
@@ -5,7 +9,7 @@
   top 60px
   bottom 75px
   z-index 1
-  background #101010
+  background $backgroundColor
   transition transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
   transform translate3d(0, 100vh, 0)
   &.visible
@@ -26,25 +30,26 @@
   display flex
   flex-direction column
   margin-left 40px
-  color rgb(170,170,170)
+  color $textColor
 
 .player__queue-header
   flex 0 0 auto
   padding 8px
-  border-bottom 1px solid rgb(170,170,170)
+  border-bottom 1px solid $textColor
   font-weight 500
   display flex
   align-items center
 
 .player__queue-header-title
   flex 1
+  color $textColorDark
 
 .player__queue-clear
   flex 0 0 auto
-  fill rgb(170,170,170)
+  fill $textColor
   cursor pointer
   &:not([disabled]):hover
-    fill white
+    fill $textColorDark
 
 .player__queue-tracks
   flex 1
@@ -53,21 +58,23 @@
 
 .queue__track
   cursor move
-  background #101010
+  background $backgroudColor
   padding 0 8px
   height 56px
-  border-bottom 1px solid rgba(255,255,255,0.12)
+  border-bottom 1px solid rgba(0,0,0,0.12)
   display flex
   align-items center
   .button__icon
     opacity 0
-  &:hover .button__icon
-    opacity 1
+  &:hover
+    .button__icon
+      opacity 1
 
 .queue__track-play
   flex 0 0 40px
   height 40px
   margin-right 16px
+  fill white
 
 .queue__track-body
   display flex
@@ -85,7 +92,7 @@
 
 .queue__track-title
   margin 0 0 4px 0
-  color rgb(255,255,255)
+  color $textColorDark
   &:before
     content ' '
     display inline-block
@@ -99,15 +106,18 @@
   &.available:before
     background-color $successColor
 
+.queue__track-artist
+  padding-left 16px
+
 .queue__track-more
   flex 0 0 auto
-  fill rgb(255,255,255)
+  fill $textColorDark
 
 .queue__track-duration
   flex 0 0 40px
-  color rgb(170,170,170)
+  color $textColor
   text-align right
 
 .sortable__helper
-  background
+  background $backgroundColor
   z-index 9999

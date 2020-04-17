@@ -11,27 +11,50 @@
     .contact__edit-title
       opacity 1
 
-.contact__avatar
-  flex 0 0 45px
-  width 45px
-  height 45px
-
-.contact__body
-  flex 1 0 auto
+.contact__main
+  flex 0 0 35%
   display flex
   align-items center
-  padding-right 10px
+
+.contact__side
+  display flex
+  align-items center
   > div
     flex 0 0 auto
     padding-left 10px
 
+.contact__menu
+  flex 0 0 30%
+  text-align center
+
+.contact__actions
+  flex 0 0 auto
+  display flex
+  align-items center
+  > div
+    flex 0 0 auto
+    min-width 40px
+
+.contact__avatar
+  flex 0 0 45px
+  width 45px
+  height 45px
+  padding 8px
+
 .contact__title
+  flex 1
   vertical-align middle
+  padding 0 8px
+  overflow hidden
+  text-overflow ellipsis
+  white-space nowrap
+  small
+    padding 2px 4px
+    background #f0f0f0
+    margin-left 4px
+    border-radius 3px
 
 .contact__menu
-  flex 1 0 auto !important
-  a
-    text-align right
   a:hover
     background #f0f0f0 !important
     color #444
@@ -42,43 +65,28 @@
 .contact__edit-title
   opacity 0
 
-.contact__heading.contact
-  margin-left -45px
-  background $backgroundColor
-  &:not(:first-child)
-    border-top 1px solid $borderColor
-    padding-top 15px
-    margin-top 45px
-    .contact__avatar
-      top 15px
-  .contact__avatar
-    background white
-    width 35px
-    height 35px
-    border-radius 999em
-    border 1px solid $borderColor
-  .contact__body
-    margin-left 45px
-    min-height 45px
-
 .contact__item.contact
   border 1px solid $borderColor
   border-radius $borderRadius
   display flex
   &:hover
     background #fbfbfb
-  .contact__avatar
-    width 45px
-    height 45px
-    padding 5px
-  .contact__body
-    flex 0 0 calc(100% - 45px)
-    > div
-      flex 1
+  .contact__main
+    flex 1
+    max-width 450px
+  .contact__side
+    flex 0 0 100px
 
-.contact__profile.contact .contact__body div:after
-  content attr(data-label)
-  font-size 10px
+.contact__profile.contact
+  padding 0 16px
+  .contact__title
+    flex 0 0 auto
+  .contact__side
+    flex 0 0 35%
+    justify-content flex-end
+    div:after
+      content attr(data-label)
+      font-size 10px
 
 .contact__connected:before
 .contact__disconnected:before
