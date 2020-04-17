@@ -39,14 +39,14 @@ export function * playTrack () {
       yield call(fetchPlayerTracks, { logId: tracklistId, params })
     }
   } else if (shuffleTrackIds.size < 3) {
-    // TODO
-    /* const params = {
-     *   shuffle: true,
-     *   tags: tracklistTags,
-     *   query: tracklistQuery,
-     *   limit: 18
-     * }
-     * yield call(fetchShuffleTracks, { logId: tracklistId, params }) */
+    // TODO: reload shuffle without replacement
+    const params = {
+      shuffle: true,
+      tags: tracklistTags.toJS(),
+      query: tracklistQuery,
+      limit: 18
+    }
+    yield call(fetchShuffleTracks, { logId: tracklistId, params })
   }
 }
 
@@ -68,6 +68,8 @@ export function * shuffleTracklist ({ tracklistId }) {
     tags
   }))
   yield call(fetchShuffleTracks, { logId: tracklistId, params })
+  const { shuffleTrackIds } = yield select(getPlayer)
+  if (shuffleTrackIds.size) yield call(playAudio)
 }
 
 export function * playTracklist ({ trackId, tracklistId }) {
@@ -178,13 +180,6 @@ export function * watchShuffleTracklist () {
   }
 }
 
-export function * watchShuffleTracksFulfilled () {
-  while (true) {
-    yield take(playerActions.FETCH_PLAYER_SHUFFLE_FULFILLED)
-    yield fork(playAudio)
-  }
-}
-
 export function * watchLocationChange () {
   while (true) {
     yield take(LOCATION_CHANGE)
@@ -205,6 +200,5 @@ export const playerSagas = [
   fork(watchPlayTracklist),
   fork(watchPlaySelectedTrack),
   fork(watchShuffleTracklist),
-  fork(watchShuffleTracksFulfilled),
   fork(watchLocationChange)
 ]
