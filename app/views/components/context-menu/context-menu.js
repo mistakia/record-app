@@ -21,7 +21,6 @@ export class ContextMenu extends React.Component {
     const wasOutside = !this.root.contains(event.target)
     if (wasOutside) {
       this.props.hide()
-      this._removeListeners()
     }
   }
 
@@ -41,7 +40,7 @@ export class ContextMenu extends React.Component {
     const { id, visible, clickX, clickY, trackId } = this.props.contextMenuInfo
 
     if (!visible || !this.root) {
-      return
+      return this._removeListeners()
     }
 
     this._addListeners()

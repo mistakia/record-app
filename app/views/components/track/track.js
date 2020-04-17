@@ -25,8 +25,6 @@ class Track extends React.Component {
   }
 
   _handleClick (event) {
-    event.stopPropagation()
-    event.preventDefault()
     const { track, showContext } = this.props
     showContext({
       id: 'tag',

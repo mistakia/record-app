@@ -53,7 +53,9 @@ class Queue extends React.Component {
       }
 
       return (
-        <article className={classNames.join(' ')}>
+        <article
+          className={classNames.join(' ')}
+          onContextMenu={(event) => this._handleClick(event, track.id)}>
           <Artwork className='queue__track-play' url={artwork} background>
             <IconButton
               icon={isTrackPlaying ? 'pause' : 'play'}
