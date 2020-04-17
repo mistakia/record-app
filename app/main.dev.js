@@ -3,17 +3,19 @@
 import 'v8-compile-cache'
 import electron from 'electron'
 // import path from 'path'
+import fixpath from 'fix-path'
 
 const { BrowserWindow, app, ipcMain: ipc, globalShortcut } = electron
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support')
   sourceMapSupport.install()
+  fixpath()
 }
 
 if (
   process.env.NODE_ENV === 'development' ||
-  process.env.DEBUG_PROD === 'true'
+    process.env.DEBUG_PROD === 'true'
 ) {
   require('electron-debug')({
     devToolsMode: 'detach'
