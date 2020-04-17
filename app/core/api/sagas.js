@@ -1,4 +1,4 @@
-import { call, put, fork, take, cancel, cancelled } from 'redux-saga/effects'
+import { race, call, put, fork, take, cancel, cancelled } from 'redux-saga/effects'
 import { api, apiRequest } from '@core/api/service'
 import { LOCATION_CHANGE } from 'react-router-redux'
 
@@ -55,9 +55,10 @@ function * fetchAPI (apiFunction, actions, opts = {}) {
 }
 
 function * fetch (...args) {
-  const task = yield fork(fetchAPI.bind(null, ...args))
-  yield take(LOCATION_CHANGE) // TODO: make optional, not all requests should be cancelled
-  yield cancel(task)
+  yield race([
+    call(fetchAPI.bind(null, ...args)),
+    take(LOCATION_CHANGE) // TODO: make optional, not all requests should be cancelled
+  ])
 }
 
 export const fetchContacts = fetch.bind(null, api.fetchContacts, contactlistRequestActions)

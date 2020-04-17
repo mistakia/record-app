@@ -56,7 +56,8 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
 
     case playerActions.STOP_SHUFFLE:
       return state.merge({
-        isShuffling: false
+        isShuffling: false,
+        shuffleTrackIds: new List()
       })
 
     case playerActions.SHUFFLE_TRACKLIST:
