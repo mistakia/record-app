@@ -66,7 +66,7 @@ export default function () {
             }
           </small>
         </CopyText>
-        <div>
+        <div className='account__actions'>
           <Link className='button' to='/set-identity'>Load Existing Account</Link>
           <Button onClick={generateIdentity} isLoading={app.isPending}>Generate new Account</Button>
         </div>
