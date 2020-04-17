@@ -1,12 +1,15 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+
+import IconButton from '@components/icon-button'
 
 const render = ({ contactItems, loading, showAdd }) => (
   <div className='list'>
     <div className='list__head'>
-      {showAdd && <div className='list__action'>
-        <Link className='button' to='/new-contact'>Add Contact</Link>
-      </div>}
+        {showAdd && <IconButton
+                      className='action button__floating'
+                      icon='add'
+                      label='add contact'
+                      link='/new-contact' /> }
     </div>
     <div className='list__header contact contact__item'>
       <div className='contact__main'>

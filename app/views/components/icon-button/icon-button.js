@@ -1,13 +1,36 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import { Link } from 'react-router-dom'
 
 import Button from '@components/button'
 import Icon from '@components/icon'
 
 import './icon-button.styl'
 
-function IconButton ({ className, icon, label, onClick, type = 'button', disabled, isLoading, isActive, count }) {
+function IconButton ({
+  className,
+  icon,
+  label,
+  onClick,
+  type = 'button',
+  disabled,
+  isLoading,
+  isActive,
+  link,
+  count
+}) {
   const classNames = ['button__icon', `button__${icon}`, className]
+
+  if (link) {
+    classNames.push('button')
+    return (
+      <Link
+        className={classNames.join(' ')}
+        to={link} >
+        <Icon name={icon} />
+      </Link>
+    )
+  }
 
   return (
     <Button

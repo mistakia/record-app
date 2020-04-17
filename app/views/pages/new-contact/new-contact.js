@@ -64,7 +64,7 @@ export class NewContactPage extends React.Component {
     )
 
     return (
-      <PageLayout title={haveContact ? 'Edit Contact' : 'New Contact'} body={body} />
+      <PageLayout title={haveContact ? 'Edit Contact' : 'Add Contact'} body={body} />
     )
   }
 }

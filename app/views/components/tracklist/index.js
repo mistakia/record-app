@@ -37,6 +37,7 @@ const Tracklist = ({
   loadNextTracks,
   query,
   showAdd,
+  stopShuffle,
   shuffle,
   clearSearch
 }) => {
@@ -86,6 +87,7 @@ const Tracklist = ({
     shuffle,
     isItemLoaded,
     isShuffling,
+    stopShuffle,
     tracklistId,
     query,
     onClear,
@@ -124,6 +126,7 @@ const mapDispatchToProps = {
   selectTrack: playerActions.playSelectedTrack,
   loadNextTracks: tracklistActions.loadNextTracks,
   shuffle: playerActions.shuffleSelectedTracklist,
+  stopShuffle: playerActions.stopShuffle,
   clearSearch: tracklistActions.clearSearch
 }
 

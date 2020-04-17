@@ -4,6 +4,7 @@ import { FixedSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import InfiniteLoader from 'react-window-infinite-loader'
 
+import IconButton from '@components/icon-button'
 import Button from '@components/button'
 import Taglist from '@components/taglist'
 import Input from '@components/input'
@@ -15,6 +16,7 @@ const render = ({
   itemCount,
   loadMoreItems,
   isShuffling,
+  stopShuffle,
   showAdd,
   shuffle,
   Row,
@@ -36,11 +38,17 @@ const render = ({
           className='list__search'
         />
         <div className='list__action'>
-          {showAdd && <Link className='button action' to='/new-track'>Add Track</Link>}
-          {!isShuffling
-            ? <Button className='action' onClick={shuffle.bind(null, tracklistId)}>Shuffle</Button>
-            : <Button className='action' disabled>Shuffling</Button>
-          }
+          {showAdd && <IconButton
+                        className='action button__floating'
+                        icon='add'
+                        label='add tracks'
+                        link='/new-track' />}
+          <IconButton
+            icon='shuffle'
+            label='Shuffle'
+            isActive={isShuffling}
+            onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistId)}
+          />
         </div>
       </div>
       <Taglist />

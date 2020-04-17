@@ -58,3 +58,17 @@ button
 
   &.button__active
     color $accentColor
+
+  &.button__floating
+    position absolute
+    right 16px
+    bottom 16px
+    background $accentColor
+    fill white
+    width 56px
+    height 56px
+    z-index 999999
+    box-shadow rgba(0, 0, 0, 0.2) 0px 3px 5px -1px, rgba(0, 0, 0, 0.14) 0px 6px 10px 0px, rgba(0, 0, 0, 0.12) 0px 1px 18px 0px
+    &:hover
+      background-color lighten($accentColor, 15%)
+      box-shadow rgba(0, 0, 0, 0.2) 0px 5px 5px -3px, rgba(0, 0, 0, 0.14) 0px 8px 10px 1px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px
