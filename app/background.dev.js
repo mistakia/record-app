@@ -7,6 +7,7 @@ const RecordNode = require('record-node')
 const electron = require('electron')
 const ipc = electron.ipcRenderer
 const { app, dialog } = electron.remote
+const { chromaprintPath } = require('./binaries')
 
 console.log(`process id: ${process.pid}`)
 
@@ -39,11 +40,16 @@ const main = async () => {
       replicationConcurrency: 240
     },
     address: orbitAddress,
-    api: true
+    api: true,
+    chromaprintPath
   }
 
   if (id) {
     opts.id = id
+  }
+
+  if (app.isPackaged && process.env.NODE_ENV === 'production') {
+    opts.youtubedlPath = path.join(path.dirname(app.getAppPath()), 'app.asar.unpacked/node_modules/youtube-dl/bin/youtube-dl')
   }
 
   record = new RecordNode(opts)

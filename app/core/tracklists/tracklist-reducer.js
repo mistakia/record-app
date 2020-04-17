@@ -60,6 +60,8 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
       })
 
     case tracklistActions.POST_TRACK_PENDING:
+      return state.set('isUpdating', true)
+
     case tracklistActions.FETCH_TRACKS_PENDING:
       return state.set('isPending', true)
 

@@ -73,18 +73,47 @@
       ]
     },
     "win": {
+      "extraFiles": [
+        {
+          "from": "resources/win/bin",
+          "to": "Resources/bin",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ],
       "target": [
         "nsis",
         "msi"
       ]
     },
     "linux": {
+      "extraFiles": [
+        {
+          "from": "resources/linux/bin",
+          "to": "Resources/bin",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ],
       "target": [
         "deb",
         "rpm",
         "AppImage"
       ],
       "category": "Development"
+    },
+    "mac": {
+      "extraFiles": [
+        {
+          "from": "resources/mac/bin",
+          "to": "Resources/bin",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
     },
     "directories": {
       "buildResources": "resources",
@@ -101,6 +130,7 @@
     "@hot-loader/react-dom": "^16.13.0",
     "abortcontroller-polyfill": "^1.4.0",
     "debug": "^3.1.0",
+    "fix-path": "^3.0.0",
     "hashicon": "^0.3.0",
     "history": "^4.10.1",
     "hotkeys-js": "^3.7.6",
@@ -120,7 +150,7 @@
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.5",
     "react-window-infinite-loader": "^1.0.3",
-    "record-node": "mistakia/record-node#892739c",
+    "record-node": "mistakia/record-node#749c2a7",
     "redux": "^4.0.0",
     "redux-immutable": "^4.0.0",
     "redux-saga": "^1.0.0-beta.1",
