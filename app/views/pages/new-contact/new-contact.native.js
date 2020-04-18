@@ -15,7 +15,7 @@ export default class NewContactPage extends React.Component {
     super(props)
 
     const { logId } = this.props.match.params
-    const { alias } = ueryString.parse(this.props.location.search)
+    const { alias } = queryString.parse(this.props.location.search)
 
     this.state = {
       alias: alias || '',

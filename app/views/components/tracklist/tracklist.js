@@ -1,11 +1,9 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import { FixedSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import InfiniteLoader from 'react-window-infinite-loader'
 
 import IconButton from '@components/icon-button'
-import Button from '@components/button'
 import Taglist from '@components/taglist'
 import Input from '@components/input'
 
@@ -38,11 +36,12 @@ const render = ({
           className='list__search'
         />
         <div className='list__action'>
-          {showAdd && <IconButton
-                        className='action button__floating'
-                        icon='add'
-                        label='add tracks'
-                        link='/new-track' />}
+          {showAdd &&
+            <IconButton
+              className='action button__floating'
+              icon='add'
+              label='add tracks'
+              link='/new-track' />}
           <IconButton
             icon='shuffle'
             label='Shuffle'

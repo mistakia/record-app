@@ -1,4 +1,4 @@
-import { race, call, put, fork, take, cancel, cancelled } from 'redux-saga/effects'
+import { race, call, put, take, cancelled } from 'redux-saga/effects'
 import { api, apiRequest } from '@core/api/service'
 import { LOCATION_CHANGE } from 'react-router-redux'
 
@@ -7,6 +7,7 @@ import {
   getPrivateKeyActions
 } from '@core/app'
 
+import { logDeleteActions } from '@core/log'
 import {
   contactlistRequestActions,
   contactlistPostActions,
@@ -87,3 +88,5 @@ export const postAbout = fetch.bind(null, api.postAbout, aboutPostActions)
 
 export const postIdentity = fetch.bind(null, api.postIdentity, setIdentityActions)
 export const fetchPrivateKey = fetch.bind(null, api.fetchPrivateKey, getPrivateKeyActions)
+
+export const deleteLog = fetch.bind(null, api.deleteLog, logDeleteActions)

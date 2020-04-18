@@ -8,6 +8,7 @@ export {
   fetchTags,
   postTag,
   deleteTag,
+  deleteLog,
   fetchShuffleTracks,
   fetchPlayerTracks,
   fetchTracks,
