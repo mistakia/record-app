@@ -20,7 +20,8 @@ const Taglist = ({
 }) => {
   if (!tags.size) return null
 
-  const tagItems = tags.map((tag, index) => {
+  const sortedTags = tags.sortBy(item => item.tag)
+  const tagItems = sortedTags.map((tag, index) => {
     const isSelected = selectedTags.includes(tag.tag)
     return (
       <Tag
