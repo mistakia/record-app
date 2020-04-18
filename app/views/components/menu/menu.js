@@ -22,8 +22,8 @@ const Menu = ({ app }) => (
         disabled={history.length < 2}
       />
     </div>
-    <NavLink to='/explore'>Explore</NavLink>
-    <NavLink to={`/tracks${app.address}`}>Library</NavLink>
+    <NavLink to='/explore'>Libraries</NavLink>
+    <NavLink to={`/tracks${app.address}`}>My Library</NavLink>
     <NavLink to='/info'>Info</NavLink>
   </div>
 )
