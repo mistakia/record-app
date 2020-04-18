@@ -13,7 +13,7 @@ At it's core, the application intends to be a media library management & playbac
 
 ## Features
 - Supported audio formats: mp3, mp4, m4a/aac, flac, wav, ogg, 3gpp, aiff
-- Metadata / Audio File Tag Support: album art, lyrics, genres, tempos, ReplayGain levels, or acoustic fingerprints (via [Music Metadata](https://github.com/Borewit/music-metadata))
+- Metadata / Audio File Tags Support via [Music Metadata](https://github.com/Borewit/music-metadata)
 - Audio fingerprinting via Chromaprint
 - Play / Shuffle search results & selected tags.
 - Organization using tags
