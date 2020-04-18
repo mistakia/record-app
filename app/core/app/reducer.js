@@ -39,7 +39,7 @@ export function appReducer (state = initialState(), { payload, type }) {
       return state.set('isReplicating', false)
 
     case appActions.GET_PRIVATE_KEY_FULFILLED:
-      return state.set('privateKey', payload.privateKey)
+      return state.set('privateKey', payload.privateKeyBytes)
 
     default:
       return state
