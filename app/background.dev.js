@@ -48,7 +48,7 @@ const main = async () => {
     opts.id = id
   }
 
-  if (app.isPackaged && process.env.NODE_ENV === 'production') {
+  if (app.isPackaged) {
     opts.youtubedlPath = path.join(path.dirname(app.getAppPath()), 'app.asar.unpacked/node_modules/youtube-dl/bin/youtube-dl')
   }
 
