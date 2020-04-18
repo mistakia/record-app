@@ -133,7 +133,6 @@ export default class Player extends React.Component {
               icon='play-queue'
               count={queue.size ? queue.size : undefined}
               isActive={isQueueVisible}
-              disabled={!queue.size && !isQueueVisible}
               onClick={toggleQueue}
               label='play-queue' />
           </div>
