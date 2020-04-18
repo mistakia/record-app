@@ -4,6 +4,7 @@ import { appSagas } from './app'
 import { contactSagas } from './contacts'
 import { contactlistSagas } from './contactlists'
 import { infoSagas } from './info'
+import { logSagas } from './log'
 import { playerSagas } from './player'
 import { aboutSagas } from './about'
 import { taglistSagas } from './taglists'
@@ -15,6 +16,7 @@ export default function * rootSaga () {
     ...appSagas,
     ...contactSagas,
     ...contactlistSagas,
+    ...logSagas,
     ...infoSagas,
     ...playerSagas,
     ...aboutSagas,

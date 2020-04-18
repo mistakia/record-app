@@ -45,7 +45,6 @@ const mapStateToProps = createShallowEqualSelector(
     isShuffling: player.isShuffling,
     isQueueVisible: player.isQueueVisible,
     queue: player.queue,
-    isPlayingFromQueue: player.isPlayingFromQueue,
     nextTrackId: cursor.nextTrackId,
     pause: audio.pause,
     play: audio.play,

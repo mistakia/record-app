@@ -5,11 +5,12 @@ import IconButton from '@components/icon-button'
 const render = ({ contactItems, loading, showAdd }) => (
   <div className='list'>
     <div className='list__head'>
-        {showAdd && <IconButton
-                      className='action button__floating'
-                      icon='add'
-                      label='add contact'
-                      link='/new-contact' /> }
+      {showAdd &&
+        <IconButton
+          className='action button__floating'
+          icon='add'
+          label='add contact'
+          link='/new-contact' /> }
     </div>
     <div className='list__header contact contact__item'>
       <div className='contact__main'>

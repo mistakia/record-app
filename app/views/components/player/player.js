@@ -12,7 +12,7 @@ import './player.styl'
 
 export default class Player extends React.Component {
   constructor () {
-    super ()
+    super()
     this._handleContextMenu = this._handleContextMenu.bind(this)
   }
 
@@ -63,7 +63,6 @@ export default class Player extends React.Component {
       queue,
       loadTracks,
       app,
-      isPlayingFromQueue,
       isQueueVisible,
       tracklistContact,
       toggleQueue
@@ -151,7 +150,7 @@ export default class Player extends React.Component {
         </div>
 
         <div className='player__tracklist'>
-          <div className='player__tracklist-info cursor' onClick={loadTracks.bind(null, {logId: tracklistContact.address, query, tags })}>
+          <div className='player__tracklist-info cursor' onClick={loadTracks.bind(null, { logId: tracklistContact.address, query, tags })}>
             {tracklistContact.displayName}
           </div>
           <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />

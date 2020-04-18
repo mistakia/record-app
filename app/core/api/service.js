@@ -101,6 +101,10 @@ export const api = {
     const params = { contactId }
     const url = `http://localhost:3000/disconnect${logId}?${queryString.stringify(params)}`
     return { url }
+  },
+  deleteLog ({ logId }) {
+    const url = `http://localhost:3000/contact${logId}`
+    return { url, ...DELETE }
   }
 }
 
