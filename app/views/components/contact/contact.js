@@ -102,7 +102,7 @@ const Contact = ({
       </div>
       {type === 'profile' && <div className='contact__menu menu'>
         <NavLink activeClassName='active' to={`/tracks${contact.address}`}>Tracks</NavLink>
-        <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Lists</NavLink>
+        <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Libraries</NavLink>
       </div>}
       <div className='contact__side'>
         <div data-label='entries'>

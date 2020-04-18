@@ -17,7 +17,12 @@ class TagsBase extends React.Component {
   }
 
   onClick ({ tag, tracklistId }) {
-    history.push(`/tracks${tracklistId}?tags=${tag}`)
+    const { currentTracklistId } = this.props
+    if (currentTracklistId === tracklistId) {
+      this.props.toggleTag(tag)
+    } else {
+      history.push(`/tracks${tracklistId}?tags=${tag}`)
+    }
   }
 
   getTagItems ({ tags, onClick, remove, tracklistId, isExternal }) {
