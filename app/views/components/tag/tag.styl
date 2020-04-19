@@ -24,11 +24,6 @@ $height = 18px
   &.active
     color rgba(255,255,255,1)
     background rgba($accentColorRGB,.7)
-  &.external
-    a
-      background rgba(0,0,0,0.08)
-    &:hover
-      background rgba(0,0,0,0.25)
 
   a
   .tag__remove
@@ -65,3 +60,11 @@ $height = 18px
     width $height
     &:hover
       background $failureColor
+
+  &.external
+    a
+      background rgba(0,0,0,0.08)
+    &:hover
+      background rgba(0,0,0,0.25)
+    .tag__count
+      background rgba(0,0,0,0.03)
