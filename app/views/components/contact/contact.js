@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import TimeAgo from 'timeago-react'
 
 import history from '@core/history'
 import Button from '@components/button'
@@ -105,6 +106,9 @@ const Contact = ({
         <NavLink activeClassName='active' to={`/contacts${contact.address}`}>Libraries</NavLink>
       </div>}
       <div className='contact__side'>
+        <div>
+          <TimeAgo datetime={contact.latestHeadTimestamp} />
+        </div>
         <div data-label='entries'>
           {contact.length !== contact.max && <Progress progress={(contact.length / contact.max) * 100} />}
           {contact.length === contact.max

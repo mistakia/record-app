@@ -18,6 +18,7 @@ const render = ({ contactItems, loading, showAdd }) => (
         <div className='contact__title'>Name</div>
       </div>
       <div className='contact__side'>
+        <div>Last Updated</div>
         <div>Entries</div>
       </div>
     </div>
