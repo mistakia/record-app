@@ -6,7 +6,7 @@ import history from '@core/history'
 
 import './menu.styl'
 
-const Menu = ({ app }) => (
+const Menu = ({ app, contact }) => (
   <div id='menu' className='menu'>
     <div className='menu__navigation'>
       <IconButton
@@ -22,9 +22,19 @@ const Menu = ({ app }) => (
         disabled={history.length < 2}
       />
     </div>
-    <NavLink to='/explore'>Libraries</NavLink>
+    <NavLink to='/explore'>Home</NavLink>
     <NavLink to={`/tracks${app.address}`}>My Library</NavLink>
-    <NavLink to='/info'>Info</NavLink>
+    <div className='menu__side'>
+      <IconButton
+        icon='settings'
+        label='settings'
+        navlink='/settings' />
+      { contact &&
+        <NavLink className='menu__account' to='/account'>
+          <img src={contact.avatar} />
+        </NavLink>
+      }
+    </div>
   </div>
 )
 

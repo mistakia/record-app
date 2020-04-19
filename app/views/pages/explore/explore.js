@@ -14,6 +14,6 @@ export default function () {
   )
 
   return (
-    <PageLayout title='Explore' body={body} />
+    <PageLayout title='Home' body={body} />
   )
 }

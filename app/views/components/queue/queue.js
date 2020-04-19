@@ -99,7 +99,7 @@ class Queue extends React.Component {
           label='close queue'
           onClick={toggleQueue}
           icon='down'
-          />
+        />
         <div className='player__queue-content'>
           <div className='player__queue-main'>
             <Artwork className='player__queue-artwork' url={track.thumbnail} background />

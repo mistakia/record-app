@@ -1,6 +1,7 @@
 import { call, take, fork, put, takeLatest } from 'redux-saga/effects'
 import { push } from 'react-router-redux'
 import { appActions } from './actions'
+import { contactActions } from '@core/contacts'
 
 import { postIdentity, fetchPrivateKey } from '@core/api'
 
@@ -10,6 +11,7 @@ export function * watchInitApp () {
   while (true) {
     const { payload } = yield take(appActions.INIT_APP)
     // TODO: handle error on ipfs initialization
+    if (payload.orbitdb.address) yield put(contactActions.loadContact(payload.orbitdb.address))
   }
 }
 
