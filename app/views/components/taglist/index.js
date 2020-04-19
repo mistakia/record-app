@@ -2,6 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
+import { getApp } from '@core/app'
 import {
   getCurrentTaglist,
   getTagsForCurrentTaglist
@@ -13,6 +14,7 @@ import Tag from '@components/tag'
 import render from './taglist'
 
 const Taglist = ({
+  isExternal,
   displayLoadingIndicator,
   selectedTags,
   toggleTag,
@@ -27,6 +29,7 @@ const Taglist = ({
       <Tag
         key={index}
         tag={tag.tag}
+        isExternal={isExternal}
         isSelected={isSelected}
         onClick={toggleTag.bind(null, tag.tag)}
         count={tag.count}
@@ -40,10 +43,12 @@ const Taglist = ({
 }
 
 const mapStateToProps = createSelector(
+  getApp,
   getCurrentTaglist,
   getCurrentSelectedTags,
   getTagsForCurrentTaglist,
-  (taglist, selectedTags, tags) => ({
+  (app, taglist, selectedTags, tags) => ({
+    isExternal: taglist.id !== app.address,
     displayLoadingIndicator: taglist.isPending,
     selectedTags,
     tags
