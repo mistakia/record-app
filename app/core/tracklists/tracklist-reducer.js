@@ -55,7 +55,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
     case contactActions.CONTACT_INDEX_UPDATED:
       return state.withMutations(tracklist => {
         tracklist.merge({
-          trackIds: mergeIds(tracklist.trackIds, [payload.entry])
+          trackIds: mergeIds(tracklist.trackIds, [payload.entry.payload.value])
         })
       })
 
