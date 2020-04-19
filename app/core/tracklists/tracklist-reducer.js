@@ -53,9 +53,16 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
       })
 
     case contactActions.CONTACT_INDEX_UPDATED:
+      const trackEntries = payload.data.filter(entry => entry.payload.value.type === 'track')
+      if (!trackEntries.length) {
+        return state
+      }
+
+      const tracks = trackEntries.map(entry => entry.payload.value)
+
       return state.withMutations(tracklist => {
         tracklist.merge({
-          trackIds: mergeIds(tracklist.trackIds, [payload.entry.payload.value])
+          trackIds: mergeIds(tracklist.trackIds, tracks)
         })
       })
 

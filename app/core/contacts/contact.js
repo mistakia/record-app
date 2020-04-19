@@ -24,6 +24,7 @@ export const Contact = new Record({
   isReplicating: false,
   isBuildingIndex: false,
   isProcessingIndex: false,
+  latestHeadTimestamp: null,
   processingCount: 0,
   peers: new List(),
   isUpdating: false,
@@ -41,11 +42,13 @@ export function createContact (data) {
 
   const shortAddress = getShortAddress(data.content.address)
   const displayName = data.content.alias || data.content.name || shortAddress
+  const latestHead = data.heads.sort((a, b) => b.timestamp - a.timestamp)[0]
 
   return new Contact({
     shortAddress,
     displayName,
     id: data.id,
+    latestHeadTimestamp: latestHead.payload.value.timestamp,
     address: data.content.address,
     alias: data.content.alias,
     avatar: data.content.avatar || data.avatar,

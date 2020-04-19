@@ -31,13 +31,15 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       })
 
     case contactActions.CONTACT_INDEX_UPDATED:
-      if (!payload.entry) {
+      if (!payload.data || !payload.data.length) {
         return state
       }
 
-      const track = payload.entry.payload.value
       return state.withMutations(tracks => {
-        tracks.set(track.id, createTrack(track))
+        payload.data.forEach(entry => {
+          const track = entry.payload.value
+          tracks.set(track.id, createTrack(track))
+        })
       })
 
     case tracklistActions.ADD_TRACK:

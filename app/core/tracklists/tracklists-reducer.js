@@ -31,12 +31,7 @@ export function tracklistsReducer (state = initialState, action) {
       )
 
     case contactActions.CONTACT_INDEX_UPDATED:
-      const { entry } = payload
-      if (!entry) {
-        return state
-      }
-
-      if (entry.payload.value.type !== 'track') {
+      if (!payload.data || !payload.data.length) {
         return state
       }
 
