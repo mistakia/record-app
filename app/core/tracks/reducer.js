@@ -35,8 +35,9 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         return state
       }
 
+      const track = payload.entry.payload.value
       return state.withMutations(tracks => {
-        tracks.set(payload.entry.id, createTrack(payload.entry))
+        tracks.set(track.id, createTrack(track))
       })
 
     case tracklistActions.ADD_TRACK:
