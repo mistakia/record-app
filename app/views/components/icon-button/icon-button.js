@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Link } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 
 import Button from '@components/button'
 import Icon from '@components/icon'
@@ -17,6 +17,7 @@ function IconButton ({
   isLoading,
   isActive,
   link,
+  navlink,
   count
 }) {
   const classNames = ['button__icon', `button__${icon}`, className]
@@ -29,6 +30,17 @@ function IconButton ({
         to={link} >
         <Icon name={icon} />
       </Link>
+    )
+  }
+
+  if (navlink) {
+    classNames.push('button')
+    return (
+      <NavLink
+        className={classNames.join(' ')}
+        to={navlink} >
+        <Icon name={icon} />
+      </NavLink>
     )
   }
 

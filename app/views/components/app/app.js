@@ -39,8 +39,9 @@ class App extends React.Component {
     })
 
     hotkeys('esc', () => this.props.dispatch(contextMenuActions.hide()))
-    hotkeys('e', () => this.props.dispatch(push('/explore')))
-    hotkeys('i', () => this.props.dispatch(push('/info')))
+    hotkeys('h', () => this.props.dispatch(push('/explore')))
+    hotkeys('a', () => this.props.dispatch(push('/account')))
+    hotkeys('s', () => this.props.dispatch(push('/settings')))
     hotkeys('l', () => {
       const { address } = this.props.app
       address && this.props.dispatch(push(`/tracks${address}`))

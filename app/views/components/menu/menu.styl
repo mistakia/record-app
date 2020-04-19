@@ -7,20 +7,45 @@
   justify-content center
   align-items center
   -webkit-app-region drag
+  fill rgba(255,255,255,0.9)
   a
     color rgba(255,255,255,0.9)
     -webkit-app-region no-drag
     cursor pointer
-    &:hover
-      background rgba(255,255,255,0.15)
     &.active
       background rgba(255,255,255,0.3)
+
+  a
+  button:not(disabled)
+    &:hover
+      background rgba(255,255,255,0.15)
+
+  .menu__side
+    position absolute
+    top 0px
+    right 8px
+    bottom 0px
+    display flex
+    justify-content center
+    align-items center
 
 .menu__navigation
   display flex
   position fixed
   top 10px
   left 100px
-  fill rgba(255,255,255,0.9)
-  &button:hover:not(disabled)
-    fill rgba(255,255,255,0.15)
+
+.menu__account
+  border  0
+  cursor pointer
+  height 36px
+  width 36px
+  min-width 0 !important
+  border-radius 100% !important
+  padding 0 !important
+  display flex !important
+  justify-content center
+  align-items center
+  img
+    width 24px
+    height 24px

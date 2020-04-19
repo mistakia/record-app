@@ -2,12 +2,11 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { getApp, appActions } from '@core/app'
 import { getInfo, infoActions } from '@core/info'
 
-import render from './info'
+import render from './settings'
 
-class InfoPage extends React.Component {
+class SettingsPage extends React.Component {
   componentWillMount () {
     this.props.init()
   }
@@ -19,17 +18,14 @@ class InfoPage extends React.Component {
 
 const mapStateToProps = createSelector(
   getInfo,
-  getApp,
-  (info, app) => ({info, app})
+  (info) => ({info})
 )
 
 const mapDispatchToProps = {
-  init: infoActions.init,
-  getPrivateKey: appActions.getPrivateKey,
-  setIdentity: appActions.setIdentity
+  init: infoActions.init
 }
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(InfoPage)
+)(SettingsPage)
