@@ -27,6 +27,7 @@ const mapDispatchToProps = {
   playQueueTrack: playerActions.playQueueTrack,
   reorderQueue: playerActions.reorderQueue,
   clearQueue: playerActions.clearQueue,
+  toggleQueue: playerActions.toggleQueue,
   showContext: contextMenuActions.show
 }
 

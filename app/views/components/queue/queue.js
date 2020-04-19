@@ -29,6 +29,7 @@ class Queue extends React.Component {
       playQueueTrack,
       pause,
       play,
+      toggleQueue,
       clearQueue,
       reorderQueue
     } = this.props
@@ -93,6 +94,12 @@ class Queue extends React.Component {
 
     return (
       <div className='player__queue visible'>
+        <IconButton
+          className='player__queue-close'
+          label='close queue'
+          onClick={toggleQueue}
+          icon='down'
+          />
         <div className='player__queue-content'>
           <div className='player__queue-main'>
             <Artwork className='player__queue-artwork' url={track.thumbnail} background />
