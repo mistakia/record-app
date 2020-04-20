@@ -45,7 +45,7 @@ export class NewContactPage extends React.Component {
       <form id='new-contact' onSubmit={this.handleSubmit}>
         <label>
           Alias
-          <input type='text' name='alias' defaultValue={alias} placeholder='Contact Nickname' />
+          <input type='text' name='alias' defaultValue={alias} placeholder='Library Nickname' />
         </label>
         { logId
           ? <CopyText text={logId}>
@@ -58,13 +58,13 @@ export class NewContactPage extends React.Component {
             <input type='text' name='address' defaultValue={logId} placeholder='/orbitdb/Qm.../record' disabled={!!haveContact} required />
           </label>
         }
-        <Button type='submit' isLoading={this.props.isUpdating}>{haveContact ? 'Save' : 'Connect'}</Button>
-        {<label>Note: saving a contact adds them to your library and persists the data.</label>}
+        <Button type='submit' isLoading={this.props.isUpdating}>{haveContact ? 'Save' : 'Link'}</Button>
+        {<label>Note: linking a library adds it to your library, synchronizes with it and saves the data.</label>}
       </form>
     )
 
     return (
-      <PageLayout title={haveContact ? 'Edit Contact' : 'Add Contact'} body={body} />
+      <PageLayout title={haveContact ? 'Edit Library' : 'Link Library'} body={body} />
     )
   }
 }

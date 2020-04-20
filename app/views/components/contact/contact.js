@@ -107,7 +107,7 @@ const Contact = ({
       </div>}
       <div className='contact__side'>
         <div>
-          <TimeAgo datetime={contact.latestHeadTimestamp} />
+          {contact.latestHeadTimestamp && <TimeAgo datetime={contact.latestHeadTimestamp} />}
         </div>
         <div data-label='entries'>
           {contact.length !== contact.max && <Progress progress={(contact.length / contact.max) * 100} />}

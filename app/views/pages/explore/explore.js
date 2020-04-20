@@ -1,10 +1,33 @@
 import React from 'react'
 
+import { shell } from 'electron'
+import Icon from '@components/icon'
 import Contactlist from '@components/contactlist'
 import PageLayout from '@layouts/page'
 
 export default function () {
-  const { contacts, allContactlist } = this.props
+  const { contacts, allContactlist, isHomeHelpVisible, toggleHomeHelp } = this.props
+
+  const help = (
+    <div>
+      <div className='page__help-row'>
+        <div className='page__help-lead'>Here you will see libraries that you discover on the network.</div>
+      </div>
+      <div className='page__help-row'>
+        <Icon name='sync' />
+        <div>To access a library you will first need to synchronize with it.</div>
+      </div>
+      <div className='page__help-row'>
+        <Icon name='link' />
+        <div>You should link to libraries you want to keep around.</div>
+      </div>
+      <div className='page__help-row'>
+        <Icon name='add' />
+        <div>If you have a library's address, you can add it directly.</div>
+      </div>
+      <a onClick={shell.openExternal.bind(null, 'https://github.com/mistakia/record-app/wiki')} className='button button__outline page__help-link'>Learn more</a>
+    </div>
+  )
 
   const body = (
     <Contactlist
@@ -14,6 +37,6 @@ export default function () {
   )
 
   return (
-    <PageLayout title='Home' body={body} />
+    <PageLayout title='Home' help={isHomeHelpVisible && help} body={body} onHelpClose={toggleHomeHelp} />
   )
 }

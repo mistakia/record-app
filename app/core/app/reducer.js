@@ -1,4 +1,5 @@
 import { Record } from 'immutable'
+
 import { appActions } from './actions'
 
 const initialState = new Record({

@@ -3,6 +3,7 @@ import { all } from 'redux-saga/effects'
 import { appSagas } from './app'
 import { contactSagas } from './contacts'
 import { contactlistSagas } from './contactlists'
+import { helpSagas } from './help'
 import { infoSagas } from './info'
 import { logSagas } from './log'
 import { playerSagas } from './player'
@@ -18,6 +19,7 @@ export default function * rootSaga () {
     ...contactlistSagas,
     ...logSagas,
     ...infoSagas,
+    ...helpSagas,
     ...playerSagas,
     ...aboutSagas,
     ...taglistSagas,
