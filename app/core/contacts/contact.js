@@ -48,7 +48,7 @@ export function createContact (data) {
     shortAddress,
     displayName,
     id: data.id,
-    latestHeadTimestamp: latestHead.payload.value.timestamp,
+    latestHeadTimestamp: latestHead ? latestHead.payload.value.timestamp : null,
     address: data.content.address,
     alias: data.content.alias,
     avatar: data.content.avatar || data.avatar,
