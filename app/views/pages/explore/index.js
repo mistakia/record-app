@@ -6,7 +6,7 @@ import {
   contactlistActions,
   getAllContactlist
 } from '@core/contactlists'
-
+import { getHelp, helpActions } from '@core/help'
 import { getAllContacts } from '@core/contacts'
 
 import render from './explore'
@@ -29,12 +29,18 @@ class ExplorePage extends React.Component {
 const mapStateToProps = createSelector(
   getAllContacts,
   getAllContactlist,
-  (contacts, allContactlist) => ({ contacts, allContactlist })
+  getHelp,
+  (contacts, allContactlist, help) => ({
+    contacts,
+    allContactlist,
+    isHomeHelpVisible: help.isHomeHelpVisible
+  })
 )
 
 const mapDispatchToProps = {
   loadAllContacts: contactlistActions.loadAllContacts,
-  loadPeerContacts: contactlistActions.loadPeerContacts
+  loadPeerContacts: contactlistActions.loadPeerContacts,
+  toggleHomeHelp: helpActions.toggleHomeHelp
 }
 
 export default connect(

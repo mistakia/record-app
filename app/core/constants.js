@@ -4,6 +4,14 @@
 export const ITEMS_PER_LOAD = 500
 
 //= ====================================
+//  HELP
+// -------------------------------------
+export const HELP_STORAGE_KEY = 'HELP_STOAGE_KEY'
+export const DEFAULT_HELP_SETTINGS = {
+  isHomeHelpVisible: true
+}
+
+//= ====================================
 //  PLAYER
 // -------------------------------------
 export const PLAYER_INITIAL_VOLUME = 90
