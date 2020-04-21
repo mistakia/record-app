@@ -51,9 +51,12 @@ button
   &.button__outline
     border 0
 
-  &.button__success
+  &.button__success:not(.button__icon)
     border-color $successColor
     background-color $successColor
+
+  &.button__success.button__icon
+    fill $successColor
 
   &.button__failure
     border-color $failureColor

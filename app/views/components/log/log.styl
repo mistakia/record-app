@@ -8,8 +8,13 @@
   + .log
     margin-top -1px
   &:hover
+    .button__icon:not(.button__success)
     .log__edit-title
       opacity 1
+
+  .log__edit-title
+  .button__icon:not(.button__success)
+    opacity 0
 
 .log__main
   flex 0 0 35%
@@ -49,6 +54,7 @@
   overflow hidden
   text-overflow ellipsis
   white-space nowrap
+  line-height 18px
   small
     padding 2px 4px
     background #f0f0f0
@@ -62,9 +68,6 @@
   a.active
     background rgba(20,20,20,0.9) !important
     color white !important
-
-.log__edit-title
-  opacity 0
 
 .log__item.log
   border 1px solid $borderColor

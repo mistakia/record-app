@@ -71,11 +71,11 @@ export class TracksPage extends React.Component {
     const body = <Tracklist showAdd={isMyTracklist} />
 
     return (
-    <PageLayout
-      help={isTrackHelpVisible && isMyTracklist && help}
-      onHelpClose={toggleTrackHelp}
-      head={head}
-      body={body} />
+      <PageLayout
+        help={isTrackHelpVisible && isMyTracklist && help}
+        onHelpClose={toggleTrackHelp}
+        head={head}
+        body={body} />
     )
   }
 }

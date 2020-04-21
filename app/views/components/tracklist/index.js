@@ -48,6 +48,7 @@ const Tracklist = ({
   const load = async () => loadNextTracks()
   const loadMoreItems = displayLoadingIndicator ? () => {} : load
   const listRef = React.createRef()
+  const isEmpty = !displayLoadingIndicator && !itemCount
 
   const Row = ({ style, index }) => {
     if (displayLoadingIndicator && (index + 1) === itemCount) {
@@ -92,6 +93,7 @@ const Tracklist = ({
     query,
     onClear,
     itemCount,
+    isEmpty,
     loadMoreItems,
     Row,
     listRef

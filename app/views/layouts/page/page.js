@@ -15,7 +15,7 @@ export const PageLayout = ({ help, head, body, title, playerOpen, scroll, onHelp
           onClick={onHelpClose}
           icon='remove'
           label='close'
-          />
+        />
       </div>
     }
     <div className='page__head'>

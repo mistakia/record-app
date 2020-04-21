@@ -20,6 +20,7 @@ const render = ({
   Row,
   onSearch,
   onClear,
+  isEmpty,
   query,
   listRef
 }) => (
@@ -65,28 +66,30 @@ const render = ({
       </div>
     </div>
     <div className='list__body'>
-      {(!loading && !itemCount) && <div className='list__body-empty'>Empty</div>}
-      <InfiniteLoader
-        isItemLoaded={isItemLoaded}
-        itemCount={itemCount}
-        loadMoreItems={loadMoreItems}>
-        {({ onItemsRendered, ref }) => (
-          <AutoSizer>
-            {({ height, width }) => (
-              <List
-                height={height}
-                itemCount={itemCount}
-                overscanCount={20}
-                onItemsRendered={onItemsRendered}
-                ref={listRef}
-                itemSize={36}
-                width={width}>
-                {Row}
-              </List>
-            )}
-          </AutoSizer>
-        )}
-      </InfiniteLoader>
+      { isEmpty
+        ? <div className='list__body-empty'>Empty</div>
+        : <InfiniteLoader
+            isItemLoaded={isItemLoaded}
+            itemCount={itemCount}
+            loadMoreItems={loadMoreItems}>
+          {({ onItemsRendered, ref }) => (
+            <AutoSizer>
+              {({ height, width }) => (
+                <List
+                  height={height}
+                  itemCount={itemCount}
+                  overscanCount={20}
+                  onItemsRendered={onItemsRendered}
+                  ref={listRef}
+                  itemSize={36}
+                  width={width}>
+                  {Row}
+                </List>
+              )}
+            </AutoSizer>
+          )}
+        </InfiniteLoader>
+      }
     </div>
   </div>
 )
