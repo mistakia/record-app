@@ -31,7 +31,7 @@ At it's core, the application intends to be a media library management & playbac
 - Trustless timestamping / distributed copyrighting & distribution (OpenTimestamps, UJO, Ethereum, Nano)
 
 ## More Info
-- Read the [overview](https://github.com/mistakia/record-app/wiki/Overview) for a primer.
+- Read the [wiki](https://github.com/mistakia/record-app/wiki) for a primer.
 - Check out [the roadmap](https://github.com/mistakia/record-app/projects/1) to view planned features.
 
 ## Install
