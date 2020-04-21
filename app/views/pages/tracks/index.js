@@ -2,11 +2,14 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 import queryString from 'query-string'
+import { shell } from 'electron'
 
 import { tracklistActions, getCurrentTracklistLog } from '@core/tracklists'
 import { logActions } from '@core/logs'
 import { taglistActions } from '@core/taglists'
 import { getApp } from '@core/app'
+import { getHelp, helpActions } from '@core/help'
+import Icon from '@components/icon'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
 import Log from '@components/log'
@@ -39,15 +42,40 @@ export class TracksPage extends React.Component {
 
   render () {
     const { logAddress } = this.props.match.params
-    const { app, log } = this.props
+    const { app, log, isTrackHelpVisible, toggleTrackHelp } = this.props
+
+    const help = (
+      <div>
+        <div className='page__help-row'>
+          <div className='page__help-lead'>Here you will see tracks that you've added to your library.</div>
+        </div>
+        <div className='page__help-row'>
+          <Icon name='star-solid' />
+          <div>You can add tracks from other libraries to your own.</div>
+        </div>
+        <div className='page__help-row'>
+          <Icon name='add' />
+          <div>You can add tracks from your computer and from the internet.</div>
+        </div>
+        <div className='page__help-row'>
+          <Icon name='website' />
+          <div>You can add tracks from other websites using the chrome extension.</div>
+        </div>
+        <a onClick={shell.openExternal.bind(null, 'https://github.com/mistakia/record-app/wiki')} className='button button__outline page__help-link'>Learn more</a>
+      </div>
+    )
 
     const head = <Log type='profile' log={log} />
 
-    const showAdd = logAddress === app.address
-    const body = <Tracklist showAdd={showAdd} />
+    const isMyTracklist = logAddress === app.address
+    const body = <Tracklist showAdd={isMyTracklist} />
 
     return (
-      <PageLayout head={head} body={body} />
+    <PageLayout
+      help={isTrackHelpVisible && isMyTracklist && help}
+      onHelpClose={toggleTrackHelp}
+      head={head}
+      body={body} />
     )
   }
 }
@@ -55,13 +83,19 @@ export class TracksPage extends React.Component {
 const mapStateToProps = createSelector(
   getApp,
   getCurrentTracklistLog,
-  (app, log) => ({ app, log })
+  getHelp,
+  (app, log, help) => ({
+    app,
+    log,
+    isTrackHelpVisible: help.isTrackHelpVisible
+  })
 )
 
 const mapDispatchToProps = {
   loadTracks: tracklistActions.loadTracks,
   loadLog: logActions.loadLog,
-  loadTags: taglistActions.loadTags
+  loadTags: taglistActions.loadTags,
+  toggleTrackHelp: helpActions.toggleTrackHelp
 }
 
 export default connect(

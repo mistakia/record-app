@@ -37,11 +37,21 @@ export function * watchToggleHomeHelp () {
   }
 }
 
+export function * watchToggleTrackHelp () {
+  while (true) {
+    yield take(helpActions.TOGGLE_TRACK_HELP)
+    let help = yield select(getHelp)
+    // persist only when set to not visible
+    if (!help.isHomeTrackVisible) yield fork(saveHelpToStorage)
+  }
+}
+
 //= ====================================
 //  ROOT
 // -------------------------------------
 
 export const helpSagas = [
   fork(watchInitApp),
-  fork(watchToggleHomeHelp)
+  fork(watchToggleHomeHelp),
+  fork(watchToggleTrackHelp)
 ]
