@@ -1,4 +1,4 @@
-import { call, fork, takeLatest } from 'redux-saga/effects'
+import { call, fork, takeLatest, takeEvery } from 'redux-saga/effects'
 
 import { logActions } from './actions'
 import {
@@ -37,7 +37,7 @@ export function * watchDeleteLog () {
 }
 
 export function * watchLoadLog () {
-  yield takeLatest(logActions.LOAD_LOG, loadLog)
+  yield takeEvery(logActions.LOAD_LOG, loadLog)
 }
 
 export function * watchConnectLog () {

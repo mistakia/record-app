@@ -3,7 +3,6 @@ import { Link, NavLink } from 'react-router-dom'
 import TimeAgo from 'timeago-react'
 
 import history from '@core/history'
-import Button from '@components/button'
 import Icon from '@components/icon'
 import IconButton from '@components/icon-button'
 import Progress from '@components/progress'
@@ -35,15 +34,15 @@ const Log = ({
 
   const linkAction = (
     <Link
-      className='button'
+      className='button button__icon'
       onClick={noPropagation}
       to={`/link-log${log.address}?alias=${log.name || log.alias || ''}`}>
-      save
+      <Icon name='link' />
     </Link>
   )
 
   const unlinkAction = (
-    <Button onClick={unlink} isLoading={log.isUpdating}>unsave</Button>
+    <IconButton className='button__success' onClick={unlink} isLoading={log.isUpdating} label='unlink' icon='link' />
   )
 
   const editLog = (
@@ -65,13 +64,21 @@ const Log = ({
     : linkAction
   )
 
+  const connectionStatusClassName = []
+  if (log.isReplicating) {
+    connectionStatusClassName.push('button__success')
+    if (log.length < log.max) {
+      connectionStatusClassName.push('spin')
+    }
+  }
+
   const connectionStatusAction = (
     <IconButton
       label='status'
       isLoading={log.isUpdating}
-      className={`${log.isReplicating ? 'spin' : ''}`}
+      className={connectionStatusClassName.join(' ')}
       onClick={handleSyncClick}
-      icon={log.isReplicating ? 'sync' : 'sync-disabled'} />
+      icon='sync' />
   )
 
   const viewUser = () => {
@@ -92,13 +99,9 @@ const Log = ({
           {log.isMe && <small>Owner</small>}
         </div>
         <div className='log__actions'>
-          <div>
-            {showEdit && (log.isMe ? editSelf : editLog)}
-          </div>
-          <div>
-            {!log.isMe && connectionStatusAction}
-          </div>
-          {(!log.isMe && type === 'profile') && <div>{logAction}</div>}
+          <div>{!log.isMe && logAction}</div>
+          <div>{!log.isMe && connectionStatusAction}</div>
+          <div>{showEdit && (log.isMe ? editSelf : editLog)}</div>
         </div>
       </div>
       {type === 'profile' && <div className='log__menu menu'>
@@ -110,9 +113,9 @@ const Log = ({
           {log.latestHeadTimestamp && <TimeAgo datetime={log.latestHeadTimestamp} />}
         </div>
         <div data-label='entries'>
-          {log.length !== log.max && <Progress progress={(log.length / log.max) * 100} />}
-          {log.length === log.max
-            ? log.max
+          {log.length < log.max && <Progress progress={(log.length / log.max) * 100} />}
+          {log.length >= log.max
+            ? (log.max > 0 && log.max)
             : (
               `${log.length}/${log.max}`
             )}

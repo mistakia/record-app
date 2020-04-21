@@ -8,7 +8,7 @@ const render = ({ logItems, loading, showAdd }) => (
       {showAdd &&
         <IconButton
           className='action button__floating'
-          icon='add'
+          icon='link'
           label='link log'
           link='/link-log' /> }
     </div>
