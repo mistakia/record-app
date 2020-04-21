@@ -3,19 +3,19 @@ import { createSelector } from 'reselect'
 
 import { getApp } from '@core/app'
 import { aboutActions, getAboutIsUpdating } from '@core/about'
-import { contactActions, getContactMe } from '@core/contacts'
+import { logActions, getMyLog } from '@core/logs'
 
 import EditAboutPage from './edit-about'
 
 const mapStateToProps = createSelector(
-  getContactMe,
+  getMyLog,
   getApp,
   getAboutIsUpdating,
-  (contact, app, isUpdating) => ({ contact, app, isUpdating })
+  (log, app, isUpdating) => ({ log, app, isUpdating })
 )
 
 const mapDispatchToProps = {
-  loadContact: contactActions.loadContact,
+  loadLog: logActions.loadLog,
   setAbout: aboutActions.setAbout
 }
 

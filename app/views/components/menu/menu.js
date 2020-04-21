@@ -6,7 +6,7 @@ import history from '@core/history'
 
 import './menu.styl'
 
-const Menu = ({ app, contact }) => (
+const Menu = ({ app, log }) => (
   <div id='menu' className='menu'>
     <div className='menu__navigation'>
       <IconButton
@@ -29,9 +29,9 @@ const Menu = ({ app, contact }) => (
         icon='settings'
         label='settings'
         navlink='/settings' />
-      { contact &&
+      { log &&
         <NavLink className='menu__account' to='/account'>
-          <img src={contact.avatar} />
+          <img src={log.avatar} />
         </NavLink>
       }
     </div>

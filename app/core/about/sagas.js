@@ -7,7 +7,7 @@ import { getApp, goBack } from '@core/app'
 export function * setAbout ({ payload }) {
   const app = yield select(getApp)
   const { data } = payload
-  yield call(postAbout, { logId: app.address, data })
+  yield call(postAbout, { logAddress: app.address, data })
 }
 
 export function * watchSetAbout () {

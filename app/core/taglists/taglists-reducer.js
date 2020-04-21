@@ -12,13 +12,13 @@ export function taglistsReducer (state = initialState, action) {
     case taglistActions.FETCH_TAGS_FULFILLED:
     case taglistActions.FETCH_TAGS_PENDING:
       return state.set(
-        payload.logId,
-        taglistReducer(state.get(payload.logId), action)
+        payload.logAddress,
+        taglistReducer(state.get(payload.logAddress), action)
       )
 
     case taglistActions.LOAD_TAGS:
       return state.merge({
-        [payload.logId]: taglistReducer(undefined, action)
+        [payload.logAddress]: taglistReducer(undefined, action)
       })
 
     default:

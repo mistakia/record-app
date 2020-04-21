@@ -1,25 +1,25 @@
 import { createSelector } from 'reselect'
 
-import { getCurrentTracklistId } from '@core/tracklists'
+import { getCurrentTracklistAddress } from '@core/tracklists'
 import { getApp } from '@core/app'
 
 export function getTaglists (state) {
   return state.get('taglists')
 }
 
-export function getTaglistById (state, logId) {
-  return getTaglists(state).get(logId)
+export function getTaglistByAddress (state, logAddress) {
+  return getTaglists(state).get(logAddress)
 }
 
 export function getCurrentTaglist (state) {
-  const logId = getCurrentTracklistId(state)
+  const logAddress = getCurrentTracklistAddress(state)
   const taglists = getTaglists(state)
-  return taglists.get(logId)
+  return taglists.get(logAddress)
 }
 
 export function getUserTaglist (state) {
   const app = getApp(state)
-  return getTaglistById(state, app.address)
+  return getTaglistByAddress(state, app.address)
 }
 
 export const getTagsForUser = createSelector(

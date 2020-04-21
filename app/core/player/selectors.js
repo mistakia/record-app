@@ -1,8 +1,8 @@
 import { createSelector } from 'reselect'
 
-import { getTracklistById } from '@core/tracklists'
+import { getTracklistByAddress } from '@core/tracklists'
 import { getTracks, getTrackById } from '@core/tracks'
-import { getContactByAddress } from '@core/contacts'
+import { getLogByAddress } from '@core/logs'
 
 export function getPlayer (state) {
   return state.get('player')
@@ -37,8 +37,8 @@ export function getPlayerQueue (state) {
   return getPlayer(state).queue
 }
 
-export function getPlayerTracklistId (state) {
-  return getPlayer(state).tracklistId
+export function getPlayerTracklistAddress (state) {
+  return getPlayer(state).tracklistAddress
 }
 
 export function getPlayerTrack (state) {
@@ -47,8 +47,8 @@ export function getPlayerTrack (state) {
 }
 
 export function getPlayerTracklist (state) {
-  const tracklistId = getPlayerTracklistId(state)
-  return getTracklistById(state, tracklistId)
+  const tracklistAddress = getPlayerTracklistAddress(state)
+  return getTracklistByAddress(state, tracklistAddress)
 }
 
 export function getPlayerTracklistRemaining (state) {
@@ -96,9 +96,9 @@ export function getPlayerTracklistCursor (state) {
   }
 }
 
-export function getPlayerTracklistContact (state) {
-  const tracklistId = getPlayerTracklistId(state)
-  return getContactByAddress(state, tracklistId)
+export function getPlayerTracklistLog (state) {
+  const tracklistAddress = getPlayerTracklistAddress(state)
+  return getLogByAddress(state, tracklistAddress)
 }
 
 //= ====================================

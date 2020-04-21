@@ -1,7 +1,7 @@
 import { List, Record } from 'immutable'
 
 export const Taglist = new Record({
-  id: null,
+  address: null,
   isPending: false,
   tags: new List()
 })

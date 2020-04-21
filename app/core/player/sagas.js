@@ -5,7 +5,7 @@ import { LOCATION_CHANGE } from 'react-router-redux'
 import { appActions } from '@core/app'
 import { fetchPlayerTracks, fetchShuffleTracks } from '@core/api'
 import { PLAYER_INITIAL_VOLUME, ITEMS_PER_LOAD } from '@core/constants'
-import { getTracklistById, getCurrentSelectedTags } from '@core/tracklists'
+import { getTracklistByAddress, getCurrentSelectedTags } from '@core/tracklists'
 import { playerActions } from './actions'
 import { audio, initAudio, setVolume } from '@core/audio'
 import { getPlayer, getPlayerTrack, getPlayerTracklistCursor } from './selectors'
@@ -16,7 +16,7 @@ export function * playTrack () {
     tracklistTrackIds,
     tracklistCursorId,
     tracklistHasMore,
-    tracklistId,
+    tracklistAddress,
     shuffleTrackIds,
     isShuffling,
     tracklistTags,
@@ -36,7 +36,7 @@ export function * playTrack () {
         query: tracklistQuery,
         end: start + ITEMS_PER_LOAD
       }
-      yield call(fetchPlayerTracks, { logId: tracklistId, params })
+      yield call(fetchPlayerTracks, { logAddress: tracklistAddress, params })
     }
   } else if (shuffleTrackIds.size < 3) {
     // TODO: reload shuffle without replacement
@@ -46,7 +46,7 @@ export function * playTrack () {
       query: tracklistQuery,
       limit: 18
     }
-    yield call(fetchShuffleTracks, { logId: tracklistId, params })
+    yield call(fetchShuffleTracks, { logAddress: tracklistAddress, params })
   }
 }
 
@@ -57,30 +57,30 @@ export function * playNextTrack () {
   }
 }
 
-export function * shuffleTracklist ({ tracklistId }) {
-  const tracklist = yield select(getTracklistById, tracklistId)
+export function * shuffleTracklist ({ tracklistAddress }) {
+  const tracklist = yield select(getTracklistByAddress, tracklistAddress)
   const { query } = tracklist
   const tags = yield select(getCurrentSelectedTags)
   const params = { shuffle: true, tags, query, limit: 20 }
   yield put(playerActions.shuffleTracklist({
-    tracklistId,
+    tracklistAddress,
     query,
     tags
   }))
-  yield call(fetchShuffleTracks, { logId: tracklistId, params })
+  yield call(fetchShuffleTracks, { logAddress: tracklistAddress, params })
   const { shuffleTrackIds } = yield select(getPlayer)
   if (shuffleTrackIds.size) yield call(playAudio)
 }
 
-export function * playTracklist ({ trackId, tracklistId }) {
-  const tracklist = yield select(getTracklistById, tracklistId)
+export function * playTracklist ({ trackId, tracklistAddress }) {
+  const tracklist = yield select(getTracklistByAddress, tracklistAddress)
   const startIndex = tracklist.trackIds.indexOf(trackId)
   const trackIds = tracklist.trackIds.slice(startIndex, 20)
   const tags = yield select(getCurrentSelectedTags)
   const { hasMore, query } = tracklist
   yield put(playerActions.playTracklist({
     trackId,
-    tracklistId,
+    tracklistAddress,
     trackIds,
     startIndex,
     hasMore,

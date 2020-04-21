@@ -47,7 +47,7 @@ class Track extends React.Component {
       app,
       style,
       index,
-      tracklistId,
+      tracklistAddress,
       contextMenuTrackId
     } = this.props
 
@@ -94,7 +94,7 @@ class Track extends React.Component {
         <div className='track__artist'>{track.artist}</div>
         <div className='track__tags-add cursor' onClick={this._handleClick}>+Tag</div>
         <div className='track__tags'>
-          <Tags track={track} tracklistId={tracklistId} />
+          <Tags track={track} tracklistAddress={tracklistAddress} />
         </div>
         <small className='track__bitrate'>{track.bitrate ? Math.round(parseInt(track.bitrate) / 1000) : 'Nan'}</small>
         <small className='track__duration'>

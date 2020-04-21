@@ -8,12 +8,12 @@ export { goToTracks, tracklistSagas } from './sagas'
 
 export {
   getCurrentTracklist,
-  getCurrentTracklistId,
+  getCurrentTracklistAddress,
   getCurrentTracklistIsUpdating,
-  getCurrentTracklistContact,
+  getCurrentTracklistLog,
   getCurrentSelectedTags,
   getPendingTrackCID,
-  getTracklistById,
+  getTracklistByAddress,
   getTracksForCurrentTracklist
 } from './selectors'
 

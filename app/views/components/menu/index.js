@@ -3,14 +3,14 @@ import { createSelector } from 'reselect'
 import { withRouter } from 'react-router'
 
 import { getApp } from '@core/app'
-import { getContactMe } from '@core/contacts'
+import { getMyLog } from '@core/logs'
 
 import Menu from './menu'
 
 const mapStateToProps = createSelector(
   getApp,
-  getContactMe,
-  (app, contact) => ({app, contact})
+  getMyLog,
+  (app, log) => ({app, log})
 )
 
 export default withRouter(connect(

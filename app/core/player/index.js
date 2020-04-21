@@ -17,9 +17,9 @@ export {
   getPlayerTrackId,
   getPlayerTrackIds,
   getPlayerTracklist,
-  getPlayerTracklistId,
+  getPlayerTracklistAddress,
   getPlayerTracklistCursor,
-  getPlayerTracklistContact,
+  getPlayerTracklistLog,
   getPlayerQueue,
   getTracksForQueue
 } from './selectors'

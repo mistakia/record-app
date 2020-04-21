@@ -12,7 +12,7 @@ import {
   getPlayerIsShuffling,
   getPlayerIsLoading,
   getPlayerTrackId,
-  getPlayerTracklistId,
+  getPlayerTracklistAddress,
   playerActions
 } from '@core/player'
 import { audio } from '@core/audio'
@@ -30,7 +30,7 @@ const Tracklist = ({
   play,
   selectedTrackId,
   selectTrack,
-  tracklistId,
+  tracklistAddress,
   search,
   tracks,
   hasMore,
@@ -65,8 +65,8 @@ const Tracklist = ({
         key={index}
         isPlaying={isSelected && isPlaying}
         isLoading={isSelected && isLoading}
-        play={isSelected ? play : selectTrack.bind(null, track.id, tracklistId)}
-        {...{style, track, index, isSelected, pause, tracklistId}}
+        play={isSelected ? play : selectTrack.bind(null, track.id, tracklistAddress)}
+        {...{style, track, index, isSelected, pause, tracklistAddress}}
       />
     )
   }
@@ -77,7 +77,7 @@ const Tracklist = ({
   }
 
   const onClear = () => {
-    clearSearch(tracklistId)
+    clearSearch(tracklistAddress)
   }
 
   return render({
@@ -88,7 +88,7 @@ const Tracklist = ({
     isItemLoaded,
     isShuffling,
     stopShuffle,
-    tracklistId,
+    tracklistAddress,
     query,
     onClear,
     itemCount,
@@ -101,20 +101,20 @@ const Tracklist = ({
 const mapStateToProps = createSelector(
   getPlayerIsPlaying,
   getPlayerIsShuffling,
-  getPlayerTracklistId,
+  getPlayerTracklistAddress,
   getPlayerTrackId,
   getCurrentTracklist,
   getTracksForCurrentTracklist,
   getPlayerIsLoading,
-  (isPlaying, isShuffling, playerTracklistId, playerTrackId, tracklist, tracks, isLoading) => ({
+  (isPlaying, isShuffling, playerTracklistAddress, playerTrackId, tracklist, tracks, isLoading) => ({
     displayLoadingIndicator: tracklist.isPending,
     isPlaying,
-    isShuffling: isShuffling && tracklist.id === playerTracklistId,
+    isShuffling: isShuffling && tracklist.address === playerTracklistAddress,
     isLoading,
     pause: audio.pause,
     play: audio.play,
     selectedTrackId: playerTrackId,
-    tracklistId: tracklist.id,
+    tracklistAddress: tracklist.address,
     query: tracklist.query,
     hasMore: tracklist.hasMore,
     tracks

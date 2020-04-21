@@ -1,0 +1,109 @@
+.log
+  padding 0
+  display flex
+  align-items center
+  color #000
+  &:not(.log__profile)
+    cursor pointer
+  + .log
+    margin-top -1px
+  &:hover
+    .log__edit-title
+      opacity 1
+
+.log__main
+  flex 0 0 35%
+  display flex
+  align-items center
+
+.log__side
+  display flex
+  align-items center
+  font-size 12px
+  > div
+    flex 0 0 auto
+    padding-left 10px
+
+.log__menu
+  flex 0 0 30%
+  text-align center
+
+.log__actions
+  flex 0 0 auto
+  display flex
+  align-items center
+  > div
+    flex 0 0 auto
+    min-width 40px
+
+.log__avatar
+  flex 0 0 45px
+  width 45px
+  height 45px
+  padding 8px
+
+.log__title
+  flex 1
+  vertical-align middle
+  padding 0 8px
+  overflow hidden
+  text-overflow ellipsis
+  white-space nowrap
+  small
+    padding 2px 4px
+    background #f0f0f0
+    margin-left 4px
+    border-radius 3px
+
+.log__menu
+  a:hover
+    background #f0f0f0 !important
+    color #444 !important
+  a.active
+    background rgba(20,20,20,0.9) !important
+    color white !important
+
+.log__edit-title
+  opacity 0
+
+.log__item.log
+  border 1px solid $borderColor
+  border-radius $borderRadius
+  display flex
+  &:hover
+    background #fbfbfb
+  .log__main
+    flex 1
+    max-width 450px
+  .log__side
+    flex 0 0 auto
+    > div
+      min-width 140px
+
+.log__profile.log
+  padding 0 16px
+  .log__title
+    flex 0 0 auto
+  .log__side
+    flex 0 0 35%
+    justify-content flex-end
+    div:after
+      content attr(data-label)
+      font-size 10px
+
+.log__connected:before
+.log__disconnected:before
+  content ' '
+  display inline-block
+  border-radius 99em
+  width 4px
+  height 4px
+  margin-right 8px
+  margin-left 3px
+  vertical-align middle
+
+.log__connected:before
+  background-color $successColor
+
+.log__disconnected:before
+  background-color $failureColor

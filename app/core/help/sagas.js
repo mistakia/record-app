@@ -8,14 +8,12 @@ import { getHelp } from './selectors'
 
 export function * saveHelpToStorage () {
   const help = yield select(getHelp)
-  console.log(help)
   yield call(helpStorage.setPrefs, help)
 }
 
 export function * setHelpFromStorage () {
   let help = yield call(helpStorage.getPrefs)
   help = Object.assign(DEFAULT_HELP_SETTINGS, help)
-  console.log(help)
   if (help) yield put(helpActions.setHelp(help))
 }
 

@@ -7,7 +7,7 @@ import {
   getPlayerIsLoading,
   getPlayerTrack,
   getPlayerTracklistCursor,
-  getPlayerTracklistContact
+  getPlayerTracklistLog
 } from '@core/player'
 import { audio } from '@core/audio'
 import { Track } from '@core/tracks'
@@ -36,8 +36,8 @@ const mapStateToProps = createShallowEqualSelector(
   getPlayerIsLoading,
   getPlayerTrack,
   getPlayerTracklistCursor,
-  getPlayerTracklistContact,
-  (app, player, isLoading, track, cursor, contact) => ({
+  getPlayerTracklistLog,
+  (app, player, isLoading, track, cursor, log) => ({
     app,
     decreaseVolume: audio.decreaseVolume,
     increaseVolume: audio.increaseVolume,
@@ -53,8 +53,8 @@ const mapStateToProps = createShallowEqualSelector(
     previousTrackId: cursor.previousTrackId,
     track,
     isLoading,
-    tracklistId: player.tracklistId,
-    tracklistContact: contact,
+    tracklistAddress: player.tracklistAddress,
+    tracklistLog: log,
     volume: player.volume
   })
 )

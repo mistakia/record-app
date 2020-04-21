@@ -2,11 +2,11 @@ import React from 'react'
 
 import { shell } from 'electron'
 import Icon from '@components/icon'
-import Contactlist from '@components/contactlist'
+import Loglist from '@components/loglist'
 import PageLayout from '@layouts/page'
 
 export default function () {
-  const { contacts, allContactlist, isHomeHelpVisible, toggleHomeHelp } = this.props
+  const { logs, allLoglist, isHomeHelpVisible, toggleHomeHelp } = this.props
 
   const help = (
     <div>
@@ -30,10 +30,10 @@ export default function () {
   )
 
   const body = (
-    <Contactlist
+    <Loglist
       showAdd
-      contacts={contacts}
-      displayLoadingIndicator={allContactlist.isPending} />
+      logs={logs}
+      displayLoadingIndicator={allLoglist.isPending} />
   )
 
   return (

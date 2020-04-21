@@ -16,16 +16,16 @@ class TagsBase extends React.Component {
     })
   }
 
-  onClick ({ tag, tracklistId }) {
-    const { currentTracklistId } = this.props
-    if (currentTracklistId === tracklistId) {
+  onClick ({ tag, tracklistAddress }) {
+    const { currentTracklistAddress } = this.props
+    if (currentTracklistAddress === tracklistAddress) {
       this.props.toggleTag(tag)
     } else {
-      history.push(`/tracks${tracklistId}?tags=${tag}`)
+      history.push(`/tracks${tracklistAddress}?tags=${tag}`)
     }
   }
 
-  getTagItems ({ tags, onClick, remove, tracklistId, isExternal }) {
+  getTagItems ({ tags, onClick, remove, tracklistAddress, isExternal }) {
     return tags.map((tag, idx) => {
       if (!tag) {
         return null
@@ -35,7 +35,7 @@ class TagsBase extends React.Component {
           key={idx}
           tag={tag}
           isExternal={isExternal}
-          onClick={onClick.bind(this, { tag, tracklistId })}
+          onClick={onClick.bind(this, { tag, tracklistAddress })}
           remove={remove && remove.bind(this, tag)}
         />
       )
@@ -47,7 +47,7 @@ class TagsBase extends React.Component {
       tags: this.props.track.tags,
       onClick: this.onClick,
       remove: this.remove,
-      tracklistId: this.props.app.address
+      tracklistAddress: this.props.app.address
     })
   }
 
@@ -55,7 +55,7 @@ class TagsBase extends React.Component {
     return this.getTagItems({
       tags: this.props.track.externalTags,
       onClick: this.onClick,
-      tracklistId: this.props.tracklistId,
+      tracklistAddress: this.props.tracklistAddress,
       isExternal: true
     })
   }

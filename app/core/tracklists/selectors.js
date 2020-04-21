@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect'
 
-import { getContactByAddress } from '@core/contacts'
+import { getLogByAddress } from '@core/logs'
 import { getTracks } from '@core/tracks'
 
 export function getTracklists (state) {
@@ -11,28 +11,28 @@ export function getPendingTrackCID (state) {
   return getTracklists(state).get('pendingTrackCID')
 }
 
-export function getTracklistById (state, logId) {
-  return getTracklists(state).get(logId)
+export function getTracklistByAddress (state, logAddress) {
+  return getTracklists(state).get(logAddress)
 }
 
-export function getCurrentTracklistId (state) {
+export function getCurrentTracklistAddress (state) {
   const tracklists = getTracklists(state)
-  return tracklists.get('currentTracklistId')
+  return tracklists.get('currentTracklistAddress')
 }
 
 export function getCurrentTracklist (state) {
   let tracklists = getTracklists(state)
-  return tracklists.get(tracklists.get('currentTracklistId'))
+  return tracklists.get(tracklists.get('currentTracklistAddress'))
 }
 
-export function getCurrentTracklistContact (state) {
-  const logId = getCurrentTracklistId(state)
-  return getContactByAddress(state, logId)
+export function getCurrentTracklistLog (state) {
+  const logAddress = getCurrentTracklistAddress(state)
+  return getLogByAddress(state, logAddress)
 }
 
 export function getCurrentSelectedTags (state) {
-  const logId = getCurrentTracklistId(state)
-  return getTracklistById(state, logId).tags.toJS()
+  const logAddress = getCurrentTracklistAddress(state)
+  return getTracklistByAddress(state, logAddress).tags.toJS()
 }
 
 //= ====================================
