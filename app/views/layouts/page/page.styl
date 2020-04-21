@@ -42,6 +42,9 @@
   fill white
   padding 16px
 
+  .button__outline
+    border-color white
+
 .page__help-body
   max-width 550px
 
@@ -52,6 +55,8 @@
   line-height 19px
   .icon
     flex 0 0 40px
+  div:not(a):not(.icon)
+    margin-left 8px
 
 .page__help-close
   position absolute
@@ -60,7 +65,7 @@
 
 .page__help-link
   text-transform uppercase
-  margin-left 25px
+  margin-left 33px
   color white
 
 .page__help-lead

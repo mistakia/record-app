@@ -51,17 +51,17 @@ export class TracksPage extends React.Component {
         </div>
         <div className='page__help-row'>
           <Icon name='star-solid' />
-          <div>You can add tracks from other libraries to your own.</div>
+          <div>Add tracks from other libraries to your own.</div>
         </div>
         <div className='page__help-row'>
           <Icon name='add' />
-          <div>You can add tracks from your computer and from the internet.</div>
+          <div>Add tracks from your computer and from the internet.</div>
         </div>
         <div className='page__help-row'>
           <Icon name='website' />
-          <div>You can add tracks from other websites using the chrome extension.</div>
+          <div>Add tracks from other websites using the chrome extension.</div>
         </div>
-        <a onClick={shell.openExternal.bind(null, 'https://github.com/mistakia/record-app/wiki')} className='button button__outline page__help-link'>Learn more</a>
+        <a onClick={shell.openExternal.bind(null, 'https://github.com/mistakia/record-app/wiki')} className='button button__text page__help-link'>Learn more</a>
       </div>
     )
 
