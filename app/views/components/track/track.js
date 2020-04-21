@@ -71,7 +71,7 @@ class Track extends React.Component {
         className={classNames.join(' ')}
         onContextMenu={this._handleContextMenu}
         style={style}>
-        <div className='track__index'>{index}</div>
+        <div className='track__index'>{index + 1}</div>
         <div className='track__save'>
           <IconButton
             icon={haveTrack ? 'star-solid' : 'star-outline'}

@@ -26,9 +26,7 @@ class App extends React.Component {
     this.state = {
       ipfs: ''
     }
-  }
 
-  componentWillMount () {
     this.listener = (event, message) => {
       // TODO: error handling
       this.props.init(message)

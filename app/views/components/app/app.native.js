@@ -26,9 +26,7 @@ class App extends React.Component {
     this.state = {
       ipfs: 'Loading'
     }
-  }
 
-  componentWillMount () {
     nodejs.start('bundle.js')
     nodejs.channel.send(JSON.stringify({ action: 'init' }))
 

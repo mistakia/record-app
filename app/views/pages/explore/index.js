@@ -12,7 +12,8 @@ import { getAllLogs } from '@core/logs'
 import render from './explore'
 
 class ExplorePage extends React.Component {
-  componentWillMount () {
+  constructor (props) {
+    super(props)
     this._load()
   }
 
