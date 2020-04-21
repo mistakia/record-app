@@ -19,7 +19,7 @@ export default class EditAboutPage extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
-  componentWillMount () {
+  componentDidMount () {
     const { app } = this.props
     this.props.loadLog(app.address)
   }

@@ -15,7 +15,8 @@ import PageLayout from '@layouts/page'
 import Log from '@components/log'
 
 class LogsPage extends React.Component {
-  componentWillMount () {
+  constructor (props) {
+    super(props)
     this._load()
   }
 

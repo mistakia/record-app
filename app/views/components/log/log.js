@@ -118,7 +118,7 @@ const Log = ({
             )}
         </div>
         {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='tracks'>{log.trackCount}</div>}
-        {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='logs'>{log.logCount}</div>}
+        {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='libraries'>{log.logCount}</div>}
       </div>
     </article>
   )

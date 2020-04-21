@@ -113,7 +113,7 @@ export default class LoadingIndicator extends PureComponent {
     this.mounted = false
   }
 
-  componentWillReceiveProps(props) {
+  static getDerivedStateFromProps(props, state) {
     let { animating } = this.props
 
     if (animating ^ props.animating) {

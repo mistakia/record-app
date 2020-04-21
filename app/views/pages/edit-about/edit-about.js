@@ -8,11 +8,10 @@ import './edit-about.styl'
 export default class EditAboutPage extends React.Component {
   constructor (props) {
     super(props)
-
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
-  componentWillMount () {
+  componentDidMount () {
     const { app } = this.props
     this.props.loadLog(app.address)
   }
