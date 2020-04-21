@@ -19,7 +19,7 @@ export default class LinkLogPage extends React.Component {
 
     this.state = {
       alias: alias || '',
-      address: logAddress || ''
+      linkAddress: logAddress || ''
     }
 
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -27,11 +27,11 @@ export default class LinkLogPage extends React.Component {
 
   handleSubmit () {
     // TODO: validation
-    const { alias, address } = this.state
+    const { alias, linkAddress } = this.state
     const { app } = this.props
 
-    if (address && alias) {
-      this.props.linkLog(app.address, { alias, address })
+    if (linkAddress && alias) {
+      this.props.linkLog(app.address, { alias, linkAddress })
     }
   }
 
@@ -47,8 +47,8 @@ export default class LinkLogPage extends React.Component {
         <TextInput
           style={formStyles.input}
           placeholder='/orbitdb/Qm.../record'
-          onChangeText={(address) => this.setState({address})}
-          value={this.state.address}
+          onChangeText={(linkAddress) => this.setState({linkAddress})}
+          value={this.state.linkAddress}
         />
         <Button
           onClick={this.handleSubmit}>

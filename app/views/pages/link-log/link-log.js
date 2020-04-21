@@ -20,15 +20,15 @@ export class LinkLogPage extends React.Component {
   handleSubmit (event) {
     const data = {
       alias: event.target.alias.value,
-      address: this.props.match.params.logAddress
+      linkAddress: this.props.match.params.logAddress
     }
     const { app } = this.props
 
-    if (!data.address && event.target.address) {
-      data.address = event.target.address.value
+    if (!data.linkAddress && event.target.address) {
+      data.linkAddress = event.target.address.value
     }
 
-    if (data.address) {
+    if (data.linkAddress) {
       this.props.linkLog(app.address, data)
     }
 
