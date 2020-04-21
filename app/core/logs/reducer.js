@@ -16,6 +16,7 @@ export function logsReducer (state = new Map(), {payload, type}) {
       })
 
     case logActions.LOG_LOADED:
+    case logActions.LOG_LOADING:
     case logActions.FETCH_LOG_FULFILLED:
       return state.withMutations(logs => {
         logs.set(payload.data.content.address, createLog(payload.data))
@@ -91,7 +92,8 @@ export function logsReducer (state = new Map(), {payload, type}) {
     case logActions.RECORD_PEER_JOINED:
     case logActions.LOG_PEER_JOINED:
       return state.withMutations(logs => {
-        logs.setIn([payload.logAddress, 'peers'], mergePeers(logs.get(payload.logAddress).peers, [payload.peerId]))
+        const log = logs.get(payload.logAddress)
+        logs.setIn([payload.logAddress, 'peers'], mergePeers(log.peers, [payload.peerId]))
       })
 
     case logActions.RECORD_PEER_LEFT:
@@ -103,6 +105,10 @@ export function logsReducer (state = new Map(), {payload, type}) {
       })
 
     case logActions.LOG_INDEX_UPDATED:
+      if (!state.get(payload.logAddress)) {
+        return state
+      }
+
       const data = JSON.parse(JSON.stringify(payload))
       const { isProcessingIndex, processingCount } = data
       const item = { isProcessingIndex, processingCount }
