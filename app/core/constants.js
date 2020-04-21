@@ -8,7 +8,8 @@ export const ITEMS_PER_LOAD = 500
 // -------------------------------------
 export const HELP_STORAGE_KEY = 'HELP_STOAGE_KEY'
 export const DEFAULT_HELP_SETTINGS = {
-  isHomeHelpVisible: true
+  isHomeHelpVisible: true,
+  isTrackHelpVisible: true
 }
 
 //= ====================================
