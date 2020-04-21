@@ -7,14 +7,13 @@ import {
   getPrivateKeyActions
 } from '@core/app'
 
-import { logDeleteActions } from '@core/log'
 import {
-  contactlistRequestActions,
-  contactlistPostActions,
-  contactlistDeleteActions,
-  allContactlistRequestActions,
-  peerContactlistRequestActions
-} from '@core/contactlists'
+  loglistRequestActions,
+  loglistPostActions,
+  loglistDeleteActions,
+  allLoglistRequestActions,
+  peerLoglistRequestActions
+} from '@core/loglists'
 import { infoRequestActions } from '@core/info'
 import {
   taglistRequestActions,
@@ -27,10 +26,11 @@ import {
   tracklistDeleteActions
 } from '@core/tracklists'
 import {
-  contactRequestActions,
-  contactConnectActions,
-  contactDisconnectActions
-} from '@core/contacts'
+  logRequestActions,
+  logDeleteActions,
+  logConnectActions,
+  logDisconnectActions
+} from '@core/logs'
 import {
   aboutPostActions
 } from '@core/about'
@@ -42,12 +42,12 @@ import {
 function * fetchAPI (apiFunction, actions, opts = {}) {
   const { abort, request } = apiRequest(apiFunction, opts)
   try {
-    yield put(actions.pending(opts.logId))
+    yield put(actions.pending(opts.logAddress))
     const data = yield call(request)
-    yield put(actions.fulfilled(opts.logId, data))
+    yield put(actions.fulfilled(opts.logAddress, data))
   } catch (err) {
     console.log(err)
-    yield put(actions.failed(opts.logId, err))
+    yield put(actions.failed(opts.logAddress, err))
   } finally {
     if (yield cancelled()) {
       abort()
@@ -62,14 +62,14 @@ function * fetch (...args) {
   ])
 }
 
-export const fetchContacts = fetch.bind(null, api.fetchContacts, contactlistRequestActions)
-export const postContact = fetch.bind(null, api.postContact, contactlistPostActions)
-export const deleteContact = fetch.bind(null, api.deleteContact, contactlistDeleteActions)
-export const requestConnectContact = fetch.bind(null, api.connectContact, contactConnectActions)
-export const requestDisconnectContact = fetch.bind(null, api.disconnectContact, contactDisconnectActions)
+export const fetchLogs = fetch.bind(null, api.fetchLogs, loglistRequestActions)
+export const postLogLink = fetch.bind(null, api.postLogLink, loglistPostActions)
+export const deleteLogLink = fetch.bind(null, api.deleteLogLink, loglistDeleteActions)
+export const requestConnectLog = fetch.bind(null, api.connectLog, logConnectActions)
+export const requestDisconnectLog = fetch.bind(null, api.disconnectLog, logDisconnectActions)
 
-export const fetchAllContacts = fetch.bind(null, api.fetchAllContacts, allContactlistRequestActions)
-export const fetchPeers = fetch.bind(null, api.fetchPeers, peerContactlistRequestActions)
+export const fetchAllLogs = fetch.bind(null, api.fetchAllLogs, allLoglistRequestActions)
+export const fetchPeers = fetch.bind(null, api.fetchPeers, peerLoglistRequestActions)
 
 export const fetchInfo = fetch.bind(null, api.fetchInfo, infoRequestActions)
 
@@ -83,7 +83,7 @@ export const fetchTracks = fetch.bind(null, api.fetchTracks, tracklistRequestAct
 export const postTrack = fetch.bind(null, api.postTrack, tracklistPostActions)
 export const deleteTrack = fetch.bind(null, api.deleteTrack, tracklistDeleteActions)
 
-export const fetchContact = fetch.bind(null, api.fetchContact, contactRequestActions)
+export const fetchLog = fetch.bind(null, api.fetchLog, logRequestActions)
 export const postAbout = fetch.bind(null, api.postAbout, aboutPostActions)
 
 export const postIdentity = fetch.bind(null, api.postIdentity, setIdentityActions)

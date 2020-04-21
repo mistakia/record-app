@@ -4,7 +4,7 @@ import { tracklistActions } from '@core/tracklists'
 import { taglistActions } from '@core/taglists'
 import { createTrack } from './track'
 import { trackActions } from './actions'
-import { contactActions } from '@core/contacts'
+import { logActions } from '@core/logs'
 import { playerActions } from '@core/player'
 
 export function tracksReducer (state = new Map(), {payload, type}) {
@@ -30,7 +30,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         tracks.set(payload.data.id, createTrack(payload.data))
       })
 
-    case contactActions.CONTACT_INDEX_UPDATED:
+    case logActions.LOG_INDEX_UPDATED:
       if (!payload.data || !payload.data.length) {
         return state
       }

@@ -1,7 +1,7 @@
 import { Record, List } from 'immutable'
 import { PLAYER_INITIAL_VOLUME, ITEMS_PER_LOAD } from '@core/constants'
 import { playerActions } from './actions'
-import { mergeIds } from '@core/utils'
+import { mergeList } from '@core/utils'
 
 export const PlayerState = new Record({
   isPlaying: false,
@@ -9,7 +9,7 @@ export const PlayerState = new Record({
   isPlayingFromQueue: false,
   isShuffling: false,
   trackId: null,
-  tracklistId: null,
+  tracklistAddress: null,
   tracklistCursorId: null,
   tracklistTrackIds: new List(),
   tracklistTags: new List(),
@@ -42,13 +42,13 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
     case playerActions.FETCH_PLAYER_TRACKS_FULFILLED:
       return state.merge({
         tracklistHasMore: payload.data.length === ITEMS_PER_LOAD,
-        tracklistTrackIds: mergeIds(state.tracklistTrackIds, payload.data)
+        tracklistTrackIds: mergeList(state.tracklistTrackIds, payload.data)
       })
 
     case playerActions.FETCH_PLAYER_SHUFFLE_FULFILLED:
       return state.merge({
         trackId: payload.data[0].id,
-        shuffleTrackIds: mergeIds(state.shuffleTrackIds, payload.data.slice(1))
+        shuffleTrackIds: mergeList(state.shuffleTrackIds, payload.data.slice(1))
       })
 
     case playerActions.AUDIO_VOLUME_CHANGED:
@@ -67,7 +67,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         isLoading: true,
         tracklistTrackIds: new List(),
         tracklistCursorId: null,
-        tracklistId: payload.tracklistId,
+        tracklistAddress: payload.tracklistAddress,
         tracklistTags: payload.tags,
         tracklistQuery: payload.query
       })
@@ -137,7 +137,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         tracklistHasMore: payload.hasMore,
         tracklistQuery: payload.query,
         trackId: payload.trackId,
-        tracklistId: payload.tracklistId || state.get('tracklistId')
+        tracklistAddress: payload.tracklistAddress || state.get('tracklistAddress')
       })
 
     default:

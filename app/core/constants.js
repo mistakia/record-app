@@ -23,5 +23,5 @@ export const PLAYER_STORAGE_KEY = 'PLAYER_STORAGE_KEY'
 //= ====================================
 //  TRACKLISTS
 // -------------------------------------
-export const PEER_CONTACTLIST_ID = 'PEER_CONTACTLIST_ID'
-export const ALL_CONTACTLIST_ID = 'ALL_CONTACTLIST_ID'
+export const PEER_LOGLIST_ADDRESS = 'PEER_LOGLIST_ADDRESS'
+export const ALL_LOGLIST_ADDRESS = 'ALL_LOGLIST_ADDRESS'

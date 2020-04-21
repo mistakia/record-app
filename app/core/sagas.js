@@ -1,11 +1,10 @@
 import { all } from 'redux-saga/effects'
 
 import { appSagas } from './app'
-import { contactSagas } from './contacts'
-import { contactlistSagas } from './contactlists'
+import { logsSagas } from './logs'
+import { loglistSagas } from './loglists'
 import { helpSagas } from './help'
 import { infoSagas } from './info'
-import { logSagas } from './log'
 import { playerSagas } from './player'
 import { aboutSagas } from './about'
 import { taglistSagas } from './taglists'
@@ -15,9 +14,8 @@ import { tracklistSagas } from './tracklists'
 export default function * rootSaga () {
   yield all([
     ...appSagas,
-    ...contactSagas,
-    ...contactlistSagas,
-    ...logSagas,
+    ...logsSagas,
+    ...loglistSagas,
     ...infoSagas,
     ...helpSagas,
     ...playerSagas,

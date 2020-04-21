@@ -71,7 +71,7 @@ const main = async () => {
         address: data.orbitdb.address
       }, { spaces: 2 })
 
-      setTimeout(() => record.contacts.connect(), 5000)
+      setTimeout(() => record.logs.connect(), 5000)
     } catch (e) {
       console.log(e)
     }
@@ -80,14 +80,20 @@ const main = async () => {
   try {
     await record.init()
   } catch (err) {
+    console.log(err)
+
     await dialog.showMessageBox({
       type: 'error',
       message: 'Startup error, please restart.',
       detail: err.toString()
     })
-    console.log(`Error starting node: ${err.toString()}`)
-    console.log(err)
-    ipc.send('error')
+
+    if (
+      process.env.NODE_ENV === 'production' &&
+        process.env.DEBUG_PROD !== 'true'
+    ) {
+      ipc.send('error')
+    }
   }
 }
 

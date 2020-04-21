@@ -4,10 +4,10 @@ import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
 import { trackActions } from '@core/tracks'
 import { taglistActions } from '@core/taglists'
-import { contactActions } from '@core/contacts'
+import { logActions } from '@core/logs'
 
 export const initialState = new Map({
-  currentTracklistId: null,
+  currentTracklistAddress: null,
   pendingTrackCID: null
 })
 
@@ -20,31 +20,31 @@ export function tracklistsReducer (state = initialState, action) {
     case tracklistActions.FETCH_TRACKS_PENDING:
     case tracklistActions.POST_TRACK_PENDING:
       return state.set(
-        payload.logId,
-        tracklistReducer(state.get(payload.logId), action)
+        payload.logAddress,
+        tracklistReducer(state.get(payload.logAddress), action)
       )
 
     case trackActions.TRACK_ADDED:
       return state.set(
-        payload.logId,
-        tracklistReducer(state.get(payload.logId), action)
+        payload.logAddress,
+        tracklistReducer(state.get(payload.logAddress), action)
       )
 
-    case contactActions.CONTACT_INDEX_UPDATED:
+    case logActions.LOG_INDEX_UPDATED:
       if (!payload.data || !payload.data.length) {
         return state
       }
 
       return state.set(
-        payload.logId,
-        tracklistReducer(state.get(payload.logId), action)
+        payload.logAddress,
+        tracklistReducer(state.get(payload.logAddress), action)
       )
 
     case tracklistActions.SEARCH_TRACKS:
     case tracklistActions.TOGGLE_TAG:
-      const logId = state.get('currentTracklistId')
+      const logAddress = state.get('currentTracklistAddress')
       return state.merge({
-        [logId]: tracklistReducer(state.get(logId), action)
+        [logAddress]: tracklistReducer(state.get(logAddress), action)
       })
 
     case tracklistActions.ADD_TRACK:
@@ -56,12 +56,12 @@ export function tracklistsReducer (state = initialState, action) {
     case taglistActions.POST_TAG_FAILED:
     case taglistActions.POST_TAG_FULFILLED:
       state.set('pendingTrackCID', null)
-      return state.setIn([payload.logId, 'isUpdating'], false)
+      return state.setIn([payload.logAddress, 'isUpdating'], false)
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({
-        currentTracklistId: payload.logId,
-        [payload.logId]: tracklistReducer(undefined, action)
+        currentTracklistAddress: payload.logAddress,
+        [payload.logAddress]: tracklistReducer(undefined, action)
       })
 
     default:

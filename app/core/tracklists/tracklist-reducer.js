@@ -4,8 +4,8 @@ import { ITEMS_PER_LOAD } from '@core/constants'
 import { trackActions } from '@core/tracks'
 import { tracklistActions } from './actions'
 import { Tracklist } from './tracklist'
-import { contactActions } from '@core/contacts'
-import { mergeIds } from '@core/utils'
+import { logActions } from '@core/logs'
+import { mergeList } from '@core/utils'
 
 export function tracklistReducer (state = new Tracklist(), {payload, type}) {
   switch (type) {
@@ -29,7 +29,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         tracklist.merge({
           isPending: false,
           hasMore: hasQuery ? false : payload.data.length === ITEMS_PER_LOAD,
-          trackIds: mergeIds(tracklist.trackIds, payload.data)
+          trackIds: mergeList(tracklist.trackIds, payload.data)
         })
       })
 
@@ -48,11 +48,11 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
     case trackActions.TRACK_ADDED:
       return state.withMutations(tracklist => {
         tracklist.merge({
-          trackIds: mergeIds(tracklist.trackIds, [payload.data])
+          trackIds: mergeList(tracklist.trackIds, [payload.data])
         })
       })
 
-    case contactActions.CONTACT_INDEX_UPDATED:
+    case logActions.LOG_INDEX_UPDATED:
       const trackEntries = payload.data.filter(entry => entry.payload.value.type === 'track')
       if (!trackEntries.length) {
         return state
@@ -62,7 +62,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
 
       return state.withMutations(tracklist => {
         tracklist.merge({
-          trackIds: mergeIds(tracklist.trackIds, tracks)
+          trackIds: mergeList(tracklist.trackIds, tracks)
         })
       })
 
@@ -74,7 +74,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({
-        id: payload.logId,
+        address: payload.logAddress,
         query: payload.query,
         tags: payload.tags ? new List(payload.tags) : new List()
       })

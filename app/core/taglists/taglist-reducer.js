@@ -17,7 +17,7 @@ export function taglistReducer (state = new Taglist(), { payload, type }) {
       return state.set('isPending', true)
 
     case taglistActions.LOAD_TAGS:
-      return state.set('id', payload.logId)
+      return state.set('address', payload.logAddress)
 
     default:
       return state

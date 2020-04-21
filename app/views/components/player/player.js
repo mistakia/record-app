@@ -54,7 +54,7 @@ export default class Player extends React.Component {
       add,
       isLoading,
       shuffle,
-      tracklistId,
+      tracklistAddress,
       isShuffling,
       tags,
       query,
@@ -64,7 +64,7 @@ export default class Player extends React.Component {
       loadTracks,
       app,
       isQueueVisible,
-      tracklistContact,
+      tracklistLog,
       toggleQueue
     } = this.props
 
@@ -104,8 +104,8 @@ export default class Player extends React.Component {
               icon='shuffle'
               label='Shuffle'
               isActive={isShuffling}
-              onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistId)}
-              disabled={!isShuffling && !tracklistId}
+              onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}
+              disabled={!isShuffling && !tracklistAddress}
             />
 
             <IconButton
@@ -149,10 +149,10 @@ export default class Player extends React.Component {
         </div>
 
         <div className='player__tracklist'>
-          <div className='player__tracklist-info cursor' onClick={loadTracks.bind(null, { logId: tracklistContact.address, query, tags })}>
-            {tracklistContact.displayName}
+          <div className='player__tracklist-info cursor' onClick={loadTracks.bind(null, { logAddress: tracklistLog.address, query, tags })}>
+            {tracklistLog.displayName}
           </div>
-          <Artwork className='player__tracklist-artwork' url={tracklistContact.avatar} background />
+          <Artwork className='player__tracklist-artwork' url={tracklistLog.avatar} background />
         </div>
       </div>
     )

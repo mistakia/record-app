@@ -32,48 +32,48 @@ export const playerActions = {
     type: playerActions.TOGGLE_QUEUE
   }),
 
-  fetchPlayerShuffleRequestPending: (logId) => ({
+  fetchPlayerShuffleRequestPending: (logAddress) => ({
     type: playerActions.FETCH_PLAYER_SHUFFLE_PENDING,
     payload: {
-      logId
+      logAddress
     }
   }),
 
-  fetchPlayerShuffleRequestFailed: (logId, error) => ({
+  fetchPlayerShuffleRequestFailed: (logAddress, error) => ({
     type: playerActions.FETCH_PLAYER_SHUFFLE_FAILED,
     payload: {
-      logId,
+      logAddress,
       error
     }
   }),
 
-  fetchPlayerShuffleRequestFulfilled: (logId, data) => ({
+  fetchPlayerShuffleRequestFulfilled: (logAddress, data) => ({
     type: playerActions.FETCH_PLAYER_SHUFFLE_FULFILLED,
     payload: {
-      logId,
+      logAddress,
       data
     }
   }),
 
-  fetchPlayerTracksRequestPending: logId => ({
+  fetchPlayerTracksRequestPending: logAddress => ({
     type: playerActions.FETCH_PLAYER_TRACKS_PENDING,
     payload: {
-      logId
+      logAddress
     }
   }),
 
-  fetchPlayerTracksRequestFailed: (logId, error) => ({
+  fetchPlayerTracksRequestFailed: (logAddress, error) => ({
     type: playerActions.FETCH_PLAYER_TRACKS_FAILED,
     payload: {
-      logId,
+      logAddress,
       error
     }
   }),
 
-  fetchPlayerTracksRequestFulfilled: (logId, data) => ({
+  fetchPlayerTracksRequestFulfilled: (logAddress, data) => ({
     type: playerActions.FETCH_PLAYER_TRACKS_FULFILLED,
     payload: {
-      logId,
+      logAddress,
       data
     }
   }),
@@ -147,18 +147,18 @@ export const playerActions = {
   }),
 
   // play button
-  playSelectedTrack: (trackId, tracklistId) => ({
+  playSelectedTrack: (trackId, tracklistAddress) => ({
     type: playerActions.PLAY_SELECTED_TRACK,
     payload: {
       trackId,
-      tracklistId
+      tracklistAddress
     }
   }),
 
   // play button
   playTracklist: ({
     trackId,
-    tracklistId,
+    tracklistAddress,
     trackIds,
     tags,
     startIndex,
@@ -168,7 +168,7 @@ export const playerActions = {
     type: playerActions.PLAY_TRACKLIST,
     payload: {
       trackId,
-      tracklistId,
+      tracklistAddress,
       trackIds,
       tags,
       startIndex,
@@ -181,17 +181,17 @@ export const playerActions = {
     type: playerActions.STOP_SHUFFLE
   }),
 
-  shuffleSelectedTracklist: (tracklistId) => ({
+  shuffleSelectedTracklist: (tracklistAddress) => ({
     type: playerActions.SHUFFLE_SELECTED_TRACKLIST,
     payload: {
-      tracklistId
+      tracklistAddress
     }
   }),
 
-  shuffleTracklist: ({ tracklistId, tags, query }) => ({
+  shuffleTracklist: ({ tracklistAddress, tags, query }) => ({
     type: playerActions.SHUFFLE_TRACKLIST,
     payload: {
-      tracklistId,
+      tracklistAddress,
       tags,
       query
     }

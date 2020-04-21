@@ -11,8 +11,8 @@ import { getCurrentSelectedTags } from '@core/tracklists'
 import history from '@core/history'
 
 export function * addTrack ({ payload }) {
-  const { logId, data } = payload
-  yield call(postTrack, { logId, data })
+  const { logAddress, data } = payload
+  yield call(postTrack, { logAddress, data })
 }
 
 export function * goToTracks () {
@@ -25,25 +25,25 @@ export function * loadNextTracks () {
   const start = tracklist.trackIds.size
   const tags = yield select(getCurrentSelectedTags)
   const params = { start, end: start + ITEMS_PER_LOAD, tags }
-  yield call(fetchTracks, { logId: tracklist.id, params })
+  yield call(fetchTracks, { logAddress: tracklist.address, params })
 }
 
 export function * loadTracks () {
-  const { id, query } = yield select(getCurrentTracklist)
+  const { address, query } = yield select(getCurrentTracklist)
   const tags = yield select(getCurrentSelectedTags)
 
-  const tracksPath = `/tracks${id}`
+  const tracksPath = `/tracks${address}`
   if (history.location.pathname !== tracksPath) {
     return yield put(push(tracksPath + '?' + queryString.stringify({ tags, query })))
   }
 
   const params = { start: 0, end: ITEMS_PER_LOAD, tags, query }
-  yield call(fetchTracks, { logId: id, params })
+  yield call(fetchTracks, { logAddress: address, params })
 }
 
 export function * removeTrack ({ payload }) {
-  const { logId, data } = payload
-  yield call(deleteTrack, { logId, data })
+  const { logAddress, data } = payload
+  yield call(deleteTrack, { logAddress, data })
 }
 
 //= ====================================

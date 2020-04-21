@@ -3,30 +3,30 @@ import { View } from 'react-native'
 
 import Heading from '@components/heading'
 import PageLayout from '@layouts/page'
-import Contactlist from '@components/contactlist'
+import Loglist from '@components/loglist'
 
 export default function () {
   const {
-    peerContactlist,
-    allContactlist,
-    peerContacts,
-    allContacts
+    peerLoglist,
+    allLoglist,
+    peerLogs,
+    allLogs
   } = this.props
 
   const body = (
     <View>
       <Heading title='Live' />
-      <Contactlist
-        contacts={peerContacts}
-        displayLoadingIndicator={peerContactlist.isPending} />
+      <Loglist
+        logs={peerLogs}
+        displayLoadingIndicator={peerLoglist.isPending} />
       <Heading title='All' />
-      <Contactlist
-        contacts={allContacts}
-        displayLoadingIndicator={allContactlist.isPending} />
+      <Loglist
+        logs={allLogs}
+        displayLoadingIndicator={allLoglist.isPending} />
     </View>
   )
 
   return (
-    <PageLayout title='Explore' body={body} />
+    <PageLayout title='Home' body={body} />
   )
 }

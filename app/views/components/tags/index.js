@@ -2,15 +2,15 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { contextMenuActions } from '@core/context-menu'
-import { getCurrentTracklistId, tracklistActions } from '@core/tracklists'
+import { getCurrentTracklistAddress, tracklistActions } from '@core/tracklists'
 import { taglistActions } from '@core/taglists'
 import { getApp } from '@core/app'
 import Tags from './tags'
 
 const mapStateToProps = createSelector(
   getApp,
-  getCurrentTracklistId,
-  (app, currentTracklistId) => ({ app, currentTracklistId })
+  getCurrentTracklistAddress,
+  (app, currentTracklistAddress) => ({ app, currentTracklistAddress })
 )
 
 const mapDispatchToProps = {

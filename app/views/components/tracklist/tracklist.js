@@ -9,7 +9,7 @@ import Input from '@components/input'
 
 const render = ({
   loading,
-  tracklistId,
+  tracklistAddress,
   isItemLoaded,
   itemCount,
   loadMoreItems,
@@ -46,7 +46,7 @@ const render = ({
             icon='shuffle'
             label='Shuffle'
             isActive={isShuffling}
-            onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistId)}
+            onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}
           />
         </div>
       </div>

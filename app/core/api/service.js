@@ -15,8 +15,8 @@ const DELETE = {
 }
 
 export const api = {
-  fetchContacts ({ logId }) {
-    const url = `http://localhost:3000/contacts${logId}`
+  fetchLogs ({ logAddress }) {
+    const url = `http://localhost:3000/logs${logAddress}`
     return { url }
   },
   fetchInfo () {
@@ -31,46 +31,46 @@ export const api = {
     const url = 'http://localhost:3000/export'
     return { url }
   },
-  fetchContact ({ logId }) {
-    const url = `http://localhost:3000/contact${logId}`
+  fetchLog ({ logAddress }) {
+    const url = `http://localhost:3000/log${logAddress}`
     return { url }
   },
-  fetchAllContacts () {
-    const url = 'http://localhost:3000/contacts/all'
+  fetchAllLogs () {
+    const url = 'http://localhost:3000/logs/all'
     return { url }
   },
-  fetchTags ({ logId }) {
-    const url = `http://localhost:3000/tags${logId}`
+  fetchTags ({ logAddress }) {
+    const url = `http://localhost:3000/tags${logAddress}`
     return { url }
   },
-  fetchPlayerTracks ({ logId, params }) {
-    const url = `http://localhost:3000/tracks${logId}?${queryString.stringify(params)}`
+  fetchPlayerTracks ({ logAddress, params }) {
+    const url = `http://localhost:3000/tracks${logAddress}?${queryString.stringify(params)}`
     return { url }
   },
-  fetchShuffleTracks ({ logId, params }) {
-    const url = `http://localhost:3000/tracks${logId}?${queryString.stringify(params)}`
+  fetchShuffleTracks ({ logAddress, params }) {
+    const url = `http://localhost:3000/tracks${logAddress}?${queryString.stringify(params)}`
     return { url }
   },
-  fetchTracks ({ logId, params }) {
-    const url = `http://localhost:3000/tracks${logId}?${queryString.stringify(params)}`
+  fetchTracks ({ logAddress, params }) {
+    const url = `http://localhost:3000/tracks${logAddress}?${queryString.stringify(params)}`
     return { url }
   },
-  postTag ({ logId, data }) {
+  postTag ({ logAddress, data }) {
     const url = 'http://localhost:3000/tags'
     const post = POST(data)
     return { url, ...post }
   },
-  deleteTag ({ logId, data }) {
+  deleteTag ({ logAddress, data }) {
     const url = `http://localhost:3000/tags?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
-  postContact ({ logId, data }) {
-    const url = 'http://localhost:3000/contacts'
+  postLogLink ({ logAddress, data }) {
+    const url = 'http://localhost:3000/logs'
     const post = POST(data)
     return { url, ...post }
   },
-  deleteContact ({ logId, data }) {
-    const url = `http://localhost:3000/contacts?${queryString.stringify(data)}`
+  deleteLogLink ({ logAddress, data }) {
+    const url = `http://localhost:3000/logs?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
   postAbout ({ data }) {
@@ -92,18 +92,16 @@ export const api = {
     const post = POST({ privateKey })
     return { url, ...post }
   },
-  connectContact ({ logId, contactId }) {
-    const params = { contactId }
-    const url = `http://localhost:3000/connect${logId}?${queryString.stringify(params)}`
+  connectLog ({ logAddress }) {
+    const url = `http://localhost:3000/connect${logAddress}`
     return { url }
   },
-  disconnectContact ({ logId, contactId }) {
-    const params = { contactId }
-    const url = `http://localhost:3000/disconnect${logId}?${queryString.stringify(params)}`
+  disconnectLog ({ logAddress }) {
+    const url = `http://localhost:3000/disconnect${logAddress}`
     return { url }
   },
-  deleteLog ({ logId }) {
-    const url = `http://localhost:3000/contact${logId}`
+  deleteLog ({ logAddress }) {
+    const url = `http://localhost:3000/log${logAddress}`
     return { url, ...DELETE }
   }
 }

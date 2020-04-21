@@ -2,8 +2,8 @@ import { combineReducers } from 'redux-immutable'
 
 import { aboutReducer } from './about'
 import { appReducer } from './app'
-import { contactsReducer } from './contacts'
-import { contactlistsReducer } from './contactlists'
+import { logsReducer } from './logs'
+import { loglistsReducer } from './loglists'
 import { contextMenuReducer } from './context-menu'
 import { infoReducer } from './info'
 import { helpReducer } from './help'
@@ -16,8 +16,8 @@ const rootReducer = asyncReducers => {
   return combineReducers({
     about: aboutReducer,
     app: appReducer,
-    contacts: contactsReducer,
-    contactlists: contactlistsReducer,
+    logs: logsReducer,
+    loglists: loglistsReducer,
     contextMenu: contextMenuReducer,
     info: infoReducer,
     help: helpReducer,

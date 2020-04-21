@@ -3,13 +3,13 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 import queryString from 'query-string'
 
-import { tracklistActions, getCurrentTracklistContact } from '@core/tracklists'
-import { contactActions } from '@core/contacts'
+import { tracklistActions, getCurrentTracklistLog } from '@core/tracklists'
+import { logActions } from '@core/logs'
 import { taglistActions } from '@core/taglists'
 import { getApp } from '@core/app'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
-import Contact from '@components/contact'
+import Log from '@components/log'
 
 export class TracksPage extends React.Component {
   componentWillMount () {
@@ -25,24 +25,24 @@ export class TracksPage extends React.Component {
   }
 
   _load () {
-    const { logId } = this.props.match.params
+    const { logAddress } = this.props.match.params
     const { tags, query } = queryString.parse(this.props.location.search)
     this.props.loadTracks({
-      logId,
+      logAddress,
       tags: (tags && !Array.isArray(tags)) ? [tags] : (tags || []),
       query
     })
-    this.props.loadTags(logId)
-    this.props.loadContact(logId)
+    this.props.loadTags(logAddress)
+    this.props.loadLog(logAddress)
   }
 
   render () {
-    const { logId } = this.props.match.params
-    const { app, contact } = this.props
+    const { logAddress } = this.props.match.params
+    const { app, log } = this.props
 
-    const head = <Contact type='profile' contact={contact} />
+    const head = <Log type='profile' log={log} />
 
-    const showAdd = logId === app.address
+    const showAdd = logAddress === app.address
     const body = <Tracklist showAdd={showAdd} />
 
     return (
@@ -53,13 +53,13 @@ export class TracksPage extends React.Component {
 
 const mapStateToProps = createSelector(
   getApp,
-  getCurrentTracklistContact,
-  (app, contact) => ({ app, contact })
+  getCurrentTracklistLog,
+  (app, log) => ({ app, log })
 )
 
 const mapDispatchToProps = {
   loadTracks: tracklistActions.loadTracks,
-  loadContact: contactActions.loadContact,
+  loadLog: logActions.loadLog,
   loadTags: taglistActions.loadTags
 }
 

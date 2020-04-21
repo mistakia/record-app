@@ -16,94 +16,94 @@ export const taglistActions = {
   DELETE_TAG_FULFILLED: 'DELETE_TAG_FULFILLED',
   DELETE_TAG_PENDING: 'DELETE_TAG_PENDING',
 
-  fetchTagsFailed: (logId, error) => ({
+  fetchTagsFailed: (logAddress, error) => ({
     type: taglistActions.FETCH_TAGS_FAILED,
     payload: {
-      logId,
+      logAddress,
       error
     }
   }),
 
-  fetchTagsFulfilled: (logId, data) => ({
+  fetchTagsFulfilled: (logAddress, data) => ({
     type: taglistActions.FETCH_TAGS_FULFILLED,
     payload: {
       data,
-      logId
+      logAddress
     }
   }),
 
-  fetchTagsPending: logId => ({
+  fetchTagsPending: logAddress => ({
     type: taglistActions.FETCH_TAGS_PENDING,
     payload: {
-      logId
+      logAddress
     }
   }),
 
-  loadTags: logId => ({
+  loadTags: logAddress => ({
     type: taglistActions.LOAD_TAGS,
     payload: {
-      logId
+      logAddress
     }
   }),
 
-  postTagFailed: (logId, error) => ({
+  postTagFailed: (logAddress, error) => ({
     type: taglistActions.POST_TAG_FAILED,
     payload: {
-      logId,
+      logAddress,
       error
     }
   }),
 
-  postTagFulfilled: (logId, data) => ({
+  postTagFulfilled: (logAddress, data) => ({
     type: taglistActions.POST_TAG_FULFILLED,
     payload: {
-      logId,
+      logAddress,
       data
     }
   }),
 
-  postTagPending: logId => ({
+  postTagPending: logAddress => ({
     type: taglistActions.POST_TAG_PENDING,
     payload: {
-      logId
+      logAddress
     }
   }),
 
-  addTag: (logId, data) => ({
+  addTag: (logAddress, data) => ({
     type: taglistActions.ADD_TAG,
     payload: {
-      logId,
+      logAddress,
       data
     }
   }),
 
-  deleteTagFailed: (logId, error) => ({
+  deleteTagFailed: (logAddress, error) => ({
     type: taglistActions.DELETE_TAG_FAILED,
     payload: {
-      logId,
+      logAddress,
       error
     }
   }),
 
-  deleteTagFulfilled: (logId, data) => ({
+  deleteTagFulfilled: (logAddress, data) => ({
     type: taglistActions.DELETE_TAG_FULFILLED,
     payload: {
-      logId,
+      logAddress,
       data
     }
   }),
 
-  deleteTagPending: logId => ({
+  deleteTagPending: logAddress => ({
     type: taglistActions.DELETE_TAG_PENDING,
     payload: {
-      logId
+      logAddress
     }
   }),
 
-  removeTag: (logId, data) => ({
+  removeTag: (logAddress, data) => ({
     type: taglistActions.REMOVE_TAG,
     payload: {
-      logId,
+      logAddress,
       data
     }
   })

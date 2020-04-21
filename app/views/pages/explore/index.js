@@ -3,11 +3,11 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import {
-  contactlistActions,
-  getAllContactlist
-} from '@core/contactlists'
+  loglistActions,
+  getAllLoglist
+} from '@core/loglists'
 import { getHelp, helpActions } from '@core/help'
-import { getAllContacts } from '@core/contacts'
+import { getAllLogs } from '@core/logs'
 
 import render from './explore'
 
@@ -17,8 +17,8 @@ class ExplorePage extends React.Component {
   }
 
   _load () {
-    this.props.loadPeerContacts()
-    this.props.loadAllContacts()
+    this.props.loadPeerLogs()
+    this.props.loadAllLogs()
   }
 
   render () {
@@ -27,19 +27,19 @@ class ExplorePage extends React.Component {
 }
 
 const mapStateToProps = createSelector(
-  getAllContacts,
-  getAllContactlist,
+  getAllLogs,
+  getAllLoglist,
   getHelp,
-  (contacts, allContactlist, help) => ({
-    contacts,
-    allContactlist,
+  (logs, allLoglist, help) => ({
+    logs,
+    allLoglist,
     isHomeHelpVisible: help.isHomeHelpVisible
   })
 )
 
 const mapDispatchToProps = {
-  loadAllContacts: contactlistActions.loadAllContacts,
-  loadPeerContacts: contactlistActions.loadPeerContacts,
+  loadAllLogs: loglistActions.loadAllLogs,
+  loadPeerLogs: loglistActions.loadPeerLogs,
   toggleHomeHelp: helpActions.toggleHomeHelp
 }
 

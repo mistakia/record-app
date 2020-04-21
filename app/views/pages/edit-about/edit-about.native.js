@@ -9,11 +9,11 @@ export default class EditAboutPage extends React.Component {
   constructor (props) {
     super(props)
 
-    const { contact } = this.props
+    const { log } = this.props
     this.state = {
-      name: contact.name,
-      location: contact.location,
-      bio: contact.bio
+      name: log.name,
+      location: log.location,
+      bio: log.bio
     }
 
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -21,7 +21,7 @@ export default class EditAboutPage extends React.Component {
 
   componentWillMount () {
     const { app } = this.props
-    this.props.loadContact(app.address)
+    this.props.loadLog(app.address)
   }
 
   handleSubmit () {

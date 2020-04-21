@@ -8,27 +8,27 @@ import { taglistActions } from './actions'
 
 export function * loadTags ({ payload }) {
   const app = yield select(getApp)
-  const logId = payload.logId || app.address
-  yield call(fetchTags, { logId })
+  const logAddress = payload.logAddress || app.address
+  yield call(fetchTags, { logAddress })
 }
 
 export function * addTag ({ payload }) {
-  const { logId, data } = payload
+  const { logAddress, data } = payload
   if (!data.tag) return
-  yield call(postTag, { logId, data })
+  yield call(postTag, { logAddress, data })
 }
 
 export function * removeTag ({ payload }) {
-  const { logId, data } = payload
-  yield call(deleteTag, { logId, data })
+  const { logAddress, data } = payload
+  yield call(deleteTag, { logAddress, data })
 }
 
 // make sure selected tags all exist - otherwise clear
 export function * checkSelectedTags ({ payload }) {
-  const { logId } = payload
+  const { logAddress } = payload
   const existingTags = payload.data.map(t => t.tag)
 
-  if (history.location.pathname !== `/tracks${logId}`) return
+  if (history.location.pathname !== `/tracks${logAddress}`) return
 
   let selectedTags = yield select(getCurrentSelectedTags)
   let shouldClear = false
@@ -40,7 +40,7 @@ export function * checkSelectedTags ({ payload }) {
   }
 
   if (shouldClear) {
-    const action = tracklistActions.loadTracks({ logId, tags: [], query: null })
+    const action = tracklistActions.loadTracks({ logAddress, tags: [], query: null })
     yield put(action)
   }
 }

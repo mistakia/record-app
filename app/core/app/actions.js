@@ -1,8 +1,8 @@
 export const appActions = {
   INIT_APP: 'INIT_APP',
 
-  CONTACTS_CONNECTED: 'CONTACTS_CONNECTED',
-  CONTACTS_DISCONNECTED: 'CONTACTS_DISCONNECTED',
+  LOGS_CONNECTED: 'LOGS_CONNECTED',
+  LOGS_DISCONNECTED: 'LOGS_DISCONNECTED',
 
   SET_IDENTITY: 'SET_IDENTITY',
 
@@ -35,7 +35,7 @@ export const appActions = {
     type: appActions.SET_IDENTITY_PENDING
   }),
 
-  setIdentityFulfilled: (logId, data) => ({
+  setIdentityFulfilled: (logAddress, data) => ({
     type: appActions.SET_IDENTITY_FULFILLED,
     payload: data
   }),
@@ -49,7 +49,7 @@ export const appActions = {
     payload: error
   }),
 
-  getPrivateKeyFulfilled: (logId, data) => ({
+  getPrivateKeyFulfilled: (logAddress, data) => ({
     type: appActions.GET_PRIVATE_KEY_FULFILLED,
     payload: data
   }),

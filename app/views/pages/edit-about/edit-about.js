@@ -14,7 +14,7 @@ export default class EditAboutPage extends React.Component {
 
   componentWillMount () {
     const { app } = this.props
-    this.props.loadContact(app.address)
+    this.props.loadLog(app.address)
   }
 
   handleSubmit (event) {
@@ -30,9 +30,9 @@ export default class EditAboutPage extends React.Component {
   }
 
   render () {
-    const { contact } = this.props
+    const { log } = this.props
 
-    if (!contact) return null
+    if (!log) return null
 
     const body = (
       <form id='edit-about' onSubmit={this.handleSubmit}>
@@ -41,7 +41,7 @@ export default class EditAboutPage extends React.Component {
           <input
             type='text'
             name='name'
-            defaultValue={contact.name}
+            defaultValue={log.name}
             placeholder='Name' />
         </label>
         <label>
@@ -49,14 +49,14 @@ export default class EditAboutPage extends React.Component {
           <input
             type='text'
             name='location'
-            defaultValue={contact.location}
+            defaultValue={log.location}
             placeholder='Location' />
         </label>
         <label>
           Bio
           <textarea
             name='bio'
-            defaultValue={contact.bio}
+            defaultValue={log.bio}
             placeholder='Bio' />
         </label>
         <Button type='submit' isLoading={this.props.isUpdating}>Save</Button>
