@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { shell } from 'electron'
+import IconButton from '@components/icon-button'
 import Icon from '@components/icon'
 import Loglist from '@components/loglist'
 import PageLayout from '@layouts/page'
@@ -22,10 +23,10 @@ export default function () {
         <div>You should link to libraries you want to keep around.</div>
       </div>
       <div className='page__help-row'>
-        <Icon name='add' />
+        <IconButton className='button__outline' icon='link' label='link' link='/link-log' />
         <div>If you have a library's address, you can add it directly.</div>
       </div>
-      <a onClick={shell.openExternal.bind(null, 'https://github.com/mistakia/record-app/wiki')} className='button button__outline page__help-link'>Learn more</a>
+      <a onClick={shell.openExternal.bind(null, 'https://github.com/mistakia/record-app/wiki')} className='button button__text page__help-link'>Learn more</a>
     </div>
   )
 
