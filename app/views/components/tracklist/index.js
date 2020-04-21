@@ -43,7 +43,7 @@ const Tracklist = ({
 }) => {
   const isItemLoaded = index => tracks.has(index)
   const itemCount = query
-    ? tracks.size
+    ? (displayLoadingIndicator ? 1 : tracks.size)
     : (hasMore ? tracks.size + 1 : tracks.size)
   const load = async () => loadNextTracks()
   const loadMoreItems = displayLoadingIndicator ? () => {} : load
@@ -72,10 +72,7 @@ const Tracklist = ({
     )
   }
 
-  const onSearch = (query) => {
-    search(query)
-    listRef.current.scrollToItem(0)
-  }
+  const onSearch = (query) => search(query)
 
   const onClear = () => {
     clearSearch(tracklistAddress)
