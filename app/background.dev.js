@@ -11,10 +11,9 @@ const { chromaprintPath } = require('./binaries')
 
 console.log(`process id: ${process.pid}`)
 
-if (
-  process.env.NODE_ENV === 'development' ||
-  process.env.DEBUG_PROD === 'true'
-) {
+const isDev = process.env.NODE_ENV === 'development'
+
+if (isDev || process.env.DEBUG_PROD === 'true') {
   const Logger = require('logplease')
   const debug = require('debug')
   debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,libp2p:connection-manager,ipfs:bitswap')
@@ -24,7 +23,7 @@ if (
 let record
 
 const main = async () => {
-  const recorddir = path.resolve(app.getPath('appData'), './record')
+  const recorddir = path.resolve(isDev ? app.getPath('temp') : app.getPath('appData'), './record')
   if (!fs.existsSync(recorddir)) { fs.mkdirSync(recorddir) }
 
   const infoPath = path.resolve(recorddir, 'info.json')
@@ -42,6 +41,21 @@ const main = async () => {
     address: orbitAddress,
     api: true,
     chromaprintPath
+  }
+
+  if (isDev) {
+    opts.api = { port: 3001 }
+    opts.bitboot = { enabled : false }
+    opts.ipfs = {
+      config: {
+        Addresses: {
+          Swarm: [
+            '/ip4/0.0.0.0/tcp/0/ws',
+            '/ip4/206.189.77.125/tcp/5892/ws/p2p-stardust/p2p/QmPb9StGzfenPYnkyjpc5taLXwoC5hxdUgQub5LSi4AewA'
+          ]
+        }
+      }
+    }
   }
 
   if (id) {
