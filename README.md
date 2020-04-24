@@ -15,9 +15,10 @@ At it's core, the application intends to be a media library management & playbac
 - Supported audio formats: mp3, mp4, m4a/aac, flac, wav, ogg, 3gpp, aiff
 - Metadata / Audio File Tags Support via [Music Metadata](https://github.com/Borewit/music-metadata)
 - Audio fingerprinting via Chromaprint
-- Play / Shuffle search results & selected tags.
+- Full listening history w/ counter and timestamps
+- Play / Shuffle search results & selected tags
 - Organization using tags
-- Import files from the local file system.
+- Import files from the local file system
 - Import from various web-based sources: Youtube, Soundcloud, Bandcamp, etc
   - [Record Chrome extension](https://github.com/mistakia/record-chrome-extension)
 - Content deduplication
