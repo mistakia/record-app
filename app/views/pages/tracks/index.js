@@ -42,7 +42,7 @@ export class TracksPage extends React.Component {
 
   render () {
     const { logAddress } = this.props.match.params
-    const { app, log, isTrackHelpVisible, toggleTrackHelp } = this.props
+    const { app, log, isTrackHelpVisible, toggleTrackHelp, loadNextTracks } = this.props
 
     const help = (
       <div>
@@ -68,7 +68,7 @@ export class TracksPage extends React.Component {
     const head = <Log type='profile' log={log} />
 
     const isMyTracklist = logAddress === app.address
-    const body = <Tracklist showAdd={isMyTracklist} />
+    const body = <Tracklist showAdd={isMyTracklist} loadNext={loadNextTracks} />
 
     return (
       <PageLayout
@@ -93,6 +93,7 @@ const mapStateToProps = createSelector(
 
 const mapDispatchToProps = {
   loadTracks: tracklistActions.loadTracks,
+  loadNextTracks: tracklistActions.loadNextTracks,
   loadLog: logActions.loadLog,
   loadTags: taglistActions.loadTags,
   toggleTrackHelp: helpActions.toggleTrackHelp

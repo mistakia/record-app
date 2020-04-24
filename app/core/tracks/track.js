@@ -17,7 +17,8 @@ export const Track = new Record({
   haveTrack: false,
   isUpdating: false,
   webpage_url: null,
-  contentCID: null
+  contentCID: null,
+  listens: new List()
 })
 
 const getFromResolver = (resolver, attribute) => {
@@ -89,6 +90,7 @@ export function createTrack (data) {
     url,
     isLocal: !!data.isLocal,
     contentCID: data.contentCID,
+    listens: new List(data.listens),
     haveTrack: !!data.haveTrack,
     tags: new List(data.tags),
     externalTags: new List(data.externalTags)

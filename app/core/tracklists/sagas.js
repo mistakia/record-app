@@ -6,8 +6,7 @@ import { getApp } from '@core/app'
 import { fetchTracks, postTrack, deleteTrack } from '@core/api'
 import { ITEMS_PER_LOAD } from '@core/constants'
 import { tracklistActions } from './actions'
-import { getCurrentTracklist } from './selectors'
-import { getCurrentSelectedTags } from '@core/tracklists'
+import { getCurrentTracklist, getCurrentSelectedTags } from './selectors'
 import history from '@core/history'
 
 export function * addTrack ({ payload }) {
@@ -24,7 +23,7 @@ export function * loadNextTracks () {
   const tracklist = yield select(getCurrentTracklist)
   const start = tracklist.trackIds.size
   const tags = yield select(getCurrentSelectedTags)
-  const params = { start, end: start + ITEMS_PER_LOAD, tags }
+  const params = { start, limit: ITEMS_PER_LOAD, tags }
   yield call(fetchTracks, { logAddress: tracklist.address, params })
 }
 
@@ -37,7 +36,7 @@ export function * loadTracks () {
     return yield put(push(tracksPath + '?' + queryString.stringify({ tags, query })))
   }
 
-  const params = { start: 0, end: ITEMS_PER_LOAD, tags, query }
+  const params = { start: 0, limit: ITEMS_PER_LOAD, tags, query }
   yield call(fetchTracks, { logAddress: address, params })
 }
 

@@ -9,6 +9,7 @@ export const playerActions = {
   PLAY_QUEUE_TRACK: 'PLAY_QUEUE_TRACK',
   PLAY_TRACKLIST: 'PLAY_TRACKLIST',
   PLAY_SELECTED_TRACK: 'PLAY_SELECTED_TRACK',
+  PLAY_PREVIOUS: 'PLAY_PREVIOUS',
 
   SHUFFLE_SELECTED_TRACKLIST: 'SHUFFLE_SELECTED_TRACKLIST',
   SHUFFLE_TRACKLIST: 'SHUFFLE_TRACKLIST',
@@ -19,6 +20,7 @@ export const playerActions = {
   REORDER_QUEUE: 'REORDER_QUEUE',
   CLEAR_QUEUE: 'CLEAR_QUEUE',
   TOGGLE_QUEUE: 'TOGGLE_QUEUE',
+  TOGGLE_PLAY_REPEAT: 'TOGGLE_PLAY_REPEAT',
 
   FETCH_PLAYER_SHUFFLE_PENDING: 'FETCH_PLAYER_SHUFFLE_PENDING',
   FETCH_PLAYER_SHUFFLE_FAILED: 'FETCH_PLAYER_SHUFFLE_FAILED',
@@ -30,6 +32,10 @@ export const playerActions = {
 
   toggleQueue: () => ({
     type: playerActions.TOGGLE_QUEUE
+  }),
+
+  togglePlayRepeat: () => ({
+    type: playerActions.TOGGLE_PLAY_REPEAT
   }),
 
   fetchPlayerShuffleRequestPending: (logAddress) => ({
@@ -127,6 +133,14 @@ export const playerActions = {
     type: playerActions.AUDIO_VOLUME_CHANGED,
     payload: {
       volume
+    }
+  }),
+
+  playPrevious: (trackId, tracklistPreviousTrackId) => ({
+    type: playerActions.PLAY_PREVIOUS,
+    payload: {
+      trackId,
+      tracklistPreviousTrackId
     }
   }),
 

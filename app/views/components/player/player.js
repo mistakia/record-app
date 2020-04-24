@@ -46,6 +46,8 @@ export default class Player extends React.Component {
   render () {
     const {
       isPlaying,
+      repeat,
+      toggleRepeat,
       nextTrack,
       pause,
       play,
@@ -101,6 +103,12 @@ export default class Player extends React.Component {
         <div className='player__controls'>
           <div className='player__controls-actions'>
             <IconButton
+              icon={repeat === 1 ? 'repeat-one' : 'repeat'}
+              isActive={repeat > 0}
+              label='repeat'
+              onClick={toggleRepeat} />
+
+            <IconButton
               icon='shuffle'
               label='Shuffle'
               isActive={isShuffling}
@@ -135,6 +143,11 @@ export default class Player extends React.Component {
               isActive={isQueueVisible}
               onClick={toggleQueue}
               label='play-queue' />
+
+            <IconButton
+              icon='history'
+              label='history'
+              navlink='/listens' />
           </div>
 
           <div className='player__timeline'>
@@ -148,12 +161,12 @@ export default class Player extends React.Component {
           </div>
         </div>
 
-        <div className='player__tracklist'>
+        {tracklistLog && <div className='player__tracklist'>
           <div className='player__tracklist-info cursor' onClick={loadTracks.bind(null, { logAddress: tracklistLog.address, query, tags })}>
             {tracklistLog.displayName}
           </div>
           <Artwork className='player__tracklist-artwork' url={tracklistLog.avatar} background />
-        </div>
+        </div>}
       </div>
     )
   }

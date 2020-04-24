@@ -2,13 +2,18 @@ import { eventChannel } from 'redux-saga'
 import { call, fork, put, select, take } from 'redux-saga/effects'
 import { LOCATION_CHANGE } from 'react-router-redux'
 
-import { appActions } from '@core/app'
-import { fetchPlayerTracks, fetchShuffleTracks } from '@core/api'
+import { appActions, getApp } from '@core/app'
+import { fetchPlayerTracks, fetchShuffleTracks, postListen } from '@core/api'
 import { PLAYER_INITIAL_VOLUME, ITEMS_PER_LOAD } from '@core/constants'
 import { getTracklistByAddress, getCurrentSelectedTags } from '@core/tracklists'
 import { playerActions } from './actions'
 import { audio, initAudio, setVolume } from '@core/audio'
-import { getPlayer, getPlayerTrack, getPlayerTracklistCursor } from './selectors'
+import {
+  getPlayer,
+  getPlayerTrack,
+  getPlayerTracklistCursor,
+  getPlayerTracklistAddress
+} from './selectors'
 import { playerStorage } from './storage'
 
 export function * playTrack () {
@@ -75,13 +80,12 @@ export function * shuffleTracklist ({ tracklistAddress }) {
 export function * playTracklist ({ trackId, tracklistAddress }) {
   const tracklist = yield select(getTracklistByAddress, tracklistAddress)
   const startIndex = tracklist.trackIds.indexOf(trackId)
-  const trackIds = tracklist.trackIds.slice(startIndex, 20)
   const tags = yield select(getCurrentSelectedTags)
   const { hasMore, query } = tracklist
   yield put(playerActions.playTracklist({
     trackId,
     tracklistAddress,
-    trackIds,
+    trackIds: tracklist.trackIds,
     startIndex,
     hasMore,
     tags,
@@ -93,6 +97,17 @@ export function * playAudio () {
   const track = yield select(getPlayerTrack)
   yield call(audio.load, track.url)
   yield call(audio.play)
+
+  const app = yield select(getApp)
+  const tracklistAddress = yield select(getPlayerTracklistAddress)
+  yield call(postListen, {
+    logAddress: app.address,
+    data: {
+      logAddress: tracklistAddress,
+      trackId: track.id,
+      cid: track.contentCID
+    }
+  })
 }
 
 export function * saveVolumeToStorage ({volume}) {
@@ -141,6 +156,13 @@ export function * watchInitApp () {
     yield take(appActions.INIT_APP)
     yield fork(subscribeToAudio)
     yield fork(setVolumeFromStorage)
+  }
+}
+
+export function * watchPlayPrevious () {
+  while (true) {
+    yield take(playerActions.PLAY_PREVIOUS)
+    yield fork(playAudio)
   }
 }
 
@@ -196,6 +218,7 @@ export const playerSagas = [
   fork(watchAudioVolumeChanged),
   fork(watchInitApp),
   fork(watchPlayTrack),
+  fork(watchPlayPrevious),
   fork(watchPlayQueueTrack),
   fork(watchPlayTracklist),
   fork(watchPlaySelectedTrack),

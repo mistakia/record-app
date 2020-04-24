@@ -1,10 +1,12 @@
 import { Map } from 'immutable'
 
+import { LISTENS_TRACKLIST_ADDRESS } from '@core/constants'
 import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
 import { trackActions } from '@core/tracks'
 import { taglistActions } from '@core/taglists'
 import { logActions } from '@core/logs'
+import { listensActions } from '@core/listens'
 
 export const initialState = new Map({
   currentTracklistAddress: null,
@@ -22,6 +24,17 @@ export function tracklistsReducer (state = initialState, action) {
       return state.set(
         payload.logAddress,
         tracklistReducer(state.get(payload.logAddress), action)
+      )
+
+    case listensActions.POST_LISTEN_FULFILLED:
+    case listensActions.POST_LISTEN_FAILED:
+    case listensActions.POST_LISTEN_PENDING:
+    case listensActions.FETCH_LISTENS_PENDING:
+    case listensActions.FETCH_LISTENS_FULFILLED:
+    case listensActions.FETCH_LISTENS_FAILED:
+      return state.set(
+        LISTENS_TRACKLIST_ADDRESS,
+        tracklistReducer(state.get(LISTENS_TRACKLIST_ADDRESS), action)
       )
 
     case trackActions.TRACK_ADDED:
@@ -57,6 +70,12 @@ export function tracklistsReducer (state = initialState, action) {
     case taglistActions.POST_TAG_FULFILLED:
       state.set('pendingTrackCID', null)
       return state.setIn([payload.logAddress, 'isUpdating'], false)
+
+    case listensActions.LOAD_LISTENS:
+      return state.merge({
+        currentTracklistAddress: LISTENS_TRACKLIST_ADDRESS,
+        [LISTENS_TRACKLIST_ADDRESS]: tracklistReducer(undefined, action)
+      })
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({

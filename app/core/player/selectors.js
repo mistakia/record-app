@@ -29,8 +29,8 @@ export function getPlayerTrackId (state) {
 }
 
 export function getPlayerTrackIds (state) {
-  const { trackId, tracklistTrackIds, shuffleTrackIds, queue } = getPlayer(state)
-  return tracklistTrackIds.merge(shuffleTrackIds, queue).push(trackId)
+  const { trackId, tracklistTrackIds, shuffleTrackIds, queue, history } = getPlayer(state)
+  return tracklistTrackIds.merge(shuffleTrackIds, queue, history).push(trackId)
 }
 
 export function getPlayerQueue (state) {
@@ -60,11 +60,12 @@ export function getPlayerTracklistRemaining (state) {
 export function getPlayerTracklistCursor (state) {
   const {
     queue,
+    repeat,
+    history,
     tracklistCursorId,
     trackId,
     shuffleTrackIds,
     isShuffling,
-    isPlayingFromQueue,
     tracklistTrackIds
   } = getPlayer(state)
 
@@ -72,11 +73,13 @@ export function getPlayerTracklistCursor (state) {
     return {}
   }
 
+  const lastPlayedTrackId = history.first()
+
   if (isShuffling && !queue.size) {
     return {
       selectedTrackId: trackId,
       nextTrackId: shuffleTrackIds.first(),
-      previousTrackId: null
+      previousTrackId: lastPlayedTrackId
     }
   }
 
@@ -89,10 +92,15 @@ export function getPlayerTracklistCursor (state) {
     if (index > 0) previousTrackId = tracklistTrackIds.get(index - 1)
   }
 
+  if (repeat > 0 && !nextTrackId) {
+    nextTrackId = tracklistTrackIds.first()
+  }
+
   return {
     selectedTrackId: trackId,
     nextTrackId: queue.size ? queue.first() : nextTrackId,
-    previousTrackId: !(isPlayingFromQueue && queue.size) && previousTrackId
+    previousTrackId: lastPlayedTrackId,
+    tracklistPreviousTrackId: previousTrackId
   }
 }
 

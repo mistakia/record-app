@@ -15,6 +15,15 @@ const DELETE = {
 }
 
 export const api = {
+  fetchListens ({ logAddress, params }) {
+    const url = `http://localhost:3000/listens?${queryString.stringify(params)}`
+    return { url }
+  },
+  postListen ({ logAddress, data }) {
+    const url = 'http://localhost:3000/listens'
+    const post = POST(data)
+    return { url, ...post }
+  },
   fetchLogs ({ logAddress }) {
     const url = `http://localhost:3000/logs${logAddress}`
     return { url }
@@ -41,14 +50,6 @@ export const api = {
   },
   fetchTags ({ logAddress }) {
     const url = `http://localhost:3000/tags${logAddress}`
-    return { url }
-  },
-  fetchPlayerTracks ({ logAddress, params }) {
-    const url = `http://localhost:3000/tracks${logAddress}?${queryString.stringify(params)}`
-    return { url }
-  },
-  fetchShuffleTracks ({ logAddress, params }) {
-    const url = `http://localhost:3000/tracks${logAddress}?${queryString.stringify(params)}`
     return { url }
   },
   fetchTracks ({ logAddress, params }) {

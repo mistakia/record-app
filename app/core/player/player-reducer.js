@@ -6,9 +6,11 @@ import { mergeList } from '@core/utils'
 export const PlayerState = new Record({
   isPlaying: false,
   isLoading: true,
+  repeat: 0,
   isPlayingFromQueue: false,
   isShuffling: false,
   trackId: null,
+  history: new List(),
   tracklistAddress: null,
   tracklistCursorId: null,
   tracklistTrackIds: new List(),
@@ -32,6 +34,12 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
       return state.merge({
         isPlaying: true,
         isLoading: false
+      })
+
+    case playerActions.TOGGLE_PLAY_REPEAT:
+      const repeat = state.repeat + 1
+      return state.merge({
+        repeat: repeat > 2 ? 0 : repeat
       })
 
     case playerActions.TOGGLE_QUEUE:
@@ -100,10 +108,24 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
           : state.queue.filter(trackId => trackId !== payload.trackId)
       })
 
+    case playerActions.PLAY_PREVIOUS: {
+      const { trackId, tracklistPreviousTrackId } = payload
+      return state.merge({
+        history: state.history.shift(),
+        trackId: payload.trackId,
+        tracklistCursorId: tracklistPreviousTrackId ? payload.tracklistPreviousTrackId : state.tracklistCursorId,
+        isLoading: true
+      })
+    }
+
     case playerActions.PLAY_TRACK: {
       const fromQueue = state.queue.first() === payload.trackId
       const { isShuffling } = state
+      const cancelRepeat = state.repeat === 1 &&
+        (state.trackId === state.tracklistTrackIds.last() && payload.trackId === state.tracklistTrackIds.first())
       return state.merge({
+        repeat: cancelRepeat ? 0 : state.repeat,
+        history: state.trackId ? state.history.unshift(state.trackId) : state.history,
         trackId: payload.trackId,
         tracklistCursorId: fromQueue || isShuffling ? state.tracklistCursorId : payload.trackId,
         isPlayingFromQueue: fromQueue,
@@ -117,6 +139,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
       const { queueIndex } = payload
       const trackId = state.queue.get(queueIndex)
       return state.merge({
+        history: state.trackId ? state.history.unshift(state.trackId) : state.history,
         trackId,
         isPlayingFromQueue: true,
         isLoading: true,
@@ -126,6 +149,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
 
     case playerActions.PLAY_TRACKLIST:
       return state.merge({
+        history: state.trackId ? state.history.unshift(state.trackId) : state.history,
         isLoading: true,
         isShuffling: false,
         isPlayingFromQueue: false,

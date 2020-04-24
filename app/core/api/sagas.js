@@ -38,6 +38,10 @@ import {
   playerShuffleRequestActions,
   playerTracksRequestActions
 } from '@core/player'
+import {
+  listensRequestActions,
+  listenPostActions
+} from '@core/listens'
 
 function * fetchAPI (apiFunction, actions, opts = {}) {
   const { abort, request } = apiRequest(apiFunction, opts)
@@ -77,8 +81,8 @@ export const fetchTags = fetch.bind(null, api.fetchTags, taglistRequestActions)
 export const postTag = fetch.bind(null, api.postTag, taglistPostActions)
 export const deleteTag = fetch.bind(null, api.deleteTag, taglistDeleteActions)
 
-export const fetchShuffleTracks = fetch.bind(null, api.fetchShuffleTracks, playerShuffleRequestActions)
-export const fetchPlayerTracks = fetch.bind(null, api.fetchPlayerTracks, playerTracksRequestActions)
+export const fetchShuffleTracks = fetch.bind(null, api.fetchTracks, playerShuffleRequestActions)
+export const fetchPlayerTracks = fetch.bind(null, api.fetchTracks, playerTracksRequestActions)
 export const fetchTracks = fetch.bind(null, api.fetchTracks, tracklistRequestActions)
 export const postTrack = fetch.bind(null, api.postTrack, tracklistPostActions)
 export const deleteTrack = fetch.bind(null, api.deleteTrack, tracklistDeleteActions)
@@ -90,3 +94,6 @@ export const postIdentity = fetch.bind(null, api.postIdentity, setIdentityAction
 export const fetchPrivateKey = fetch.bind(null, api.fetchPrivateKey, getPrivateKeyActions)
 
 export const deleteLog = fetch.bind(null, api.deleteLog, logDeleteActions)
+
+export const fetchListens = fetch.bind(null, api.fetchListens, listensRequestActions)
+export const postListen = fetch.bind(null, api.postListen, listenPostActions)

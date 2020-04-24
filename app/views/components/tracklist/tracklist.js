@@ -9,6 +9,8 @@ import Input from '@components/input'
 
 const render = ({
   loading,
+  hideTaglist,
+  hideSearch,
   tracklistAddress,
   isItemLoaded,
   itemCount,
@@ -26,7 +28,7 @@ const render = ({
 }) => (
   <div className='list'>
     <div className='list__head'>
-      <div className='list__header-row'>
+      {!hideSearch && <div className='list__header-row'>
         <Input
           type='text'
           onSubmit={onSearch}
@@ -50,8 +52,8 @@ const render = ({
             onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}
           />
         </div>
-      </div>
-      <Taglist />
+      </div>}
+      {!hideTaglist && <Taglist />}
       <div className='list__header track'>
         <div className='track__index' />
         <div className='track__save' />
@@ -63,6 +65,7 @@ const render = ({
         <div className='track__bitrate'>Bitrate</div>
         <div className='track__duration'>Time</div>
         <div className='track__format'>Format</div>
+        <div className='track__listens'>Listens</div>
       </div>
     </div>
     <div className='list__body'>
