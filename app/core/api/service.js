@@ -2,6 +2,8 @@
 
 import queryString from 'query-string'
 
+import { BASE_URL } from '@core/constants'
+
 const POST = (data) => ({
   method: 'POST',
   body: JSON.stringify(data),
@@ -14,98 +16,95 @@ const DELETE = {
   method: 'DELETE'
 }
 
-const port = process.env.NODE_ENV === 'development' ? 3001 : 3000
-const baseUrl = `http://localhost:${port}`
-
 export const api = {
   fetchListens ({ logAddress, params }) {
-    const url = `${baseUrl}/listens?${queryString.stringify(params)}`
+    const url = `${BASE_URL}/listens?${queryString.stringify(params)}`
     return { url }
   },
   postListen ({ logAddress, data }) {
-    const url = `${baseUrl}/listens`
+    const url = `${BASE_URL}/listens`
     const post = POST(data)
     return { url, ...post }
   },
   fetchLogs ({ logAddress }) {
-    const url = `${baseUrl}/logs${logAddress}`
+    const url = `${BASE_URL}/logs${logAddress}`
     return { url }
   },
   fetchInfo () {
-    const url = `${baseUrl}/info`
+    const url = `${BASE_URL}/info`
     return { url }
   },
   fetchPeers () {
-    const url = `${baseUrl}/peers`
+    const url = `${BASE_URL}/peers`
     return { url }
   },
   fetchPrivateKey () {
-    const url = `${baseUrl}/export`
+    const url = `${BASE_URL}/export`
     return { url }
   },
   fetchLog ({ logAddress }) {
-    const url = `${baseUrl}/log${logAddress}`
+    const url = `${BASE_URL}/log${logAddress}`
     return { url }
   },
   fetchAllLogs () {
-    const url = `${baseUrl}/logs/all`
+    const url = `${BASE_URL}/logs/all`
     return { url }
   },
   fetchTags ({ logAddress }) {
-    const url = `${baseUrl}/tags${logAddress}`
+    const url = `${BASE_URL}/tags${logAddress}`
     return { url }
   },
   fetchTracks ({ logAddress, params }) {
-    const url = `${baseUrl}/tracks${logAddress}?${queryString.stringify(params)}`
+    const url = `${BASE_URL}/tracks${logAddress}?${queryString.stringify(params)}`
     return { url }
   },
   postTag ({ logAddress, data }) {
-    const url = `${baseUrl}/tags`
+    const url = `${BASE_URL}/tags`
     const post = POST(data)
     return { url, ...post }
   },
   deleteTag ({ logAddress, data }) {
-    const url = `${baseUrl}/tags?${queryString.stringify(data)}`
+    const url = `${BASE_URL}/tags?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
   postLogLink ({ logAddress, data }) {
-    const url = `${baseUrl}/logs`
+    const url = `${BASE_URL}/logs`
     const post = POST(data)
     return { url, ...post }
   },
   deleteLogLink ({ logAddress, data }) {
-    const url = `${baseUrl}/logs?${queryString.stringify(data)}`
+    const url = `${BASE_URL}/logs?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
   postAbout ({ data }) {
-    const url = `${baseUrl}/about`
+    const url = `${BASE_URL}/about`
     const post = POST(data)
     return { url, ...post }
   },
   postTrack ({ data }) {
-    const url = `${baseUrl}/tracks`
+    const url = `${BASE_URL}/tracks`
     const post = POST(data)
     return { url, ...post }
   },
   deleteTrack ({ data }) {
-    const url = `${baseUrl}/tracks?${queryString.stringify(data)}`
+    const url = `${BASE_URL}/tracks?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
   postIdentity ({ privateKey }) {
-    const url = `${baseUrl}/import`
+    const url = `${BASE_URL}/import`
     const post = POST({ privateKey })
     return { url, ...post }
   },
   connectLog ({ logAddress }) {
-    const url = `${baseUrl}/connect${logAddress}`
+    const url = `${BASE_URL}/connect${logAddress}`
     return { url }
   },
   disconnectLog ({ logAddress }) {
-    const url = `${baseUrl}/disconnect${logAddress}`
+    const url = `${BASE_URL}/disconnect${logAddress}`
     return { url }
   },
   deleteLog ({ logAddress }) {
-    const url = `${baseUrl}/log${logAddress}`
+    const url = `${BASE_URL}/log${logAddress}`
     return { url, ...DELETE }
   }
 }

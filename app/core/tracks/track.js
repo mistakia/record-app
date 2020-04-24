@@ -1,5 +1,7 @@
 import { Record, List } from 'immutable'
 
+import { BASE_URL } from '@core/constants'
+
 export const Track = new Record({
   duration: null,
   id: null,
@@ -34,7 +36,7 @@ const getArtwork = (content) => {
   if (!content.artwork.length) return getFromResolver(content.resolver, 'thumbnail')
 
   const artwork = content.artwork[0]
-  return `http://localhost:3000/file/${artwork}`
+  return `${BASE_URL}/file/${artwork}`
 }
 
 const getTitle = (content) => {
@@ -49,7 +51,7 @@ const getTitle = (content) => {
 
 const getUrl = (content) => {
   if (content.hash) {
-    return `http://localhost:3000/file/${content.hash}?size=${content.size}`
+    return `${BASE_URL}/file/${content.hash}?size=${content.size}`
   }
 
   return getFromResolver(content.resolver, 'url')
