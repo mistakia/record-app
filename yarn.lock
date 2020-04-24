@@ -13609,9 +13609,9 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
-record-node@mistakia/record-node#2bc2781:
+record-node@mistakia/record-node#e813414:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/2bc2781903f8427f1fe544796d81cb24c505aeb3"
+  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/e813414ec93227c0bef0ce54417a55cc6b226228"
   dependencies:
     bitboot "^0.1.0"
     body-parser "^1.18.3"
