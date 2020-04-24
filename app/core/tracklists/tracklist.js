@@ -7,5 +7,6 @@ export const Tracklist = new Record({
   hasMore: true,
   query: null,
   tags: new List(),
-  trackIds: new List()
+  trackIds: new List(),
+  filteredTrackIds: new List()
 })

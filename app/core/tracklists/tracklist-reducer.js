@@ -14,24 +14,26 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
       return state.withMutations(tracklist => {
         tracklist.merge({
           query: null,
-          trackIds: new List()
+          filteredTrackIds: new List()
         })
       })
 
     case tracklistActions.SEARCH_TRACKS:
       return state.withMutations(tracklist => {
         const { query } = payload
-        tracklist.merge({ query, trackIds: new List() })
+        tracklist.merge({ query, filteredTrackIds: new List() })
       })
 
     case tracklistActions.FETCH_TRACKS_FULFILLED:
     case listensActions.FETCH_LISTENS_FULFILLED:
       const hasQuery = !!state.get('query')
+      const isFiltered = hasQuery || state.tags.size
       return state.withMutations(tracklist => {
         tracklist.merge({
           isPending: false,
           hasMore: hasQuery ? false : payload.data.length === ITEMS_PER_LOAD,
-          trackIds: mergeList(tracklist.trackIds, payload.data)
+          filteredTrackIds: isFiltered ? mergeList(tracklist.filteredTrackIds, payload.data) : tracklist.filteredTrackIds,
+          trackIds: !isFiltered ? mergeList(tracklist.trackIds, payload.data) : tracklist.trackIds
         })
       })
 
@@ -46,7 +48,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
       const { tag } = payload
       return state.withMutations(tracklist => {
         tracklist.merge({
-          trackIds: new List(),
+          filteredTrackIds: new List(),
           tags: state.tags.includes(tag)
             ? state.tags.splice(state.tags.indexOf(tag), 1)
             : state.tags.push(tag)
