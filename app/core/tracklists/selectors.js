@@ -46,7 +46,7 @@ export const getCurrentTracklistIsUpdating = createSelector(
 
 export const getCurrentTrackIds = createSelector(
   getCurrentTracklist,
-  tracklist => tracklist.trackIds
+  tracklist => (tracklist.query || tracklist.tags.size) ? tracklist.filteredTrackIds : tracklist.trackIds
 )
 
 export const getTracksForCurrentTracklist = createSelector(
