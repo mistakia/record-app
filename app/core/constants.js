@@ -6,6 +6,9 @@ export const PEER_LOGLIST_ADDRESS = '/PEER_LOGLIST_ADDRESS'
 export const ALL_LOGLIST_ADDRESS = '/ALL_LOGLIST_ADDRESS'
 export const LISTENS_TRACKLIST_ADDRESS = '/LISTENS_TRACKLIST_ADDRESS'
 
+const PORT = process.env.NODE_ENV === 'development' ? 3001 : 3000
+export const BASE_URL = `http://localhost:${PORT}`
+
 //= ====================================
 //  HELP
 // -------------------------------------
