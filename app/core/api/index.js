@@ -1,4 +1,6 @@
 export {
+  postListen,
+  fetchListens,
   fetchLogs,
   fetchInfo,
   fetchPeers,

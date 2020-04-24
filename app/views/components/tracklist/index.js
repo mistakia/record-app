@@ -22,6 +22,8 @@ import Loading from '@components/loading'
 import render from './tracklist'
 
 const Tracklist = ({
+  hideTaglist,
+  hideSearch,
   displayLoadingIndicator,
   isPlaying,
   isShuffling,
@@ -34,7 +36,7 @@ const Tracklist = ({
   search,
   tracks,
   hasMore,
-  loadNextTracks,
+  loadNext,
   query,
   showAdd,
   stopShuffle,
@@ -45,7 +47,7 @@ const Tracklist = ({
   const itemCount = query
     ? (displayLoadingIndicator ? 1 : tracks.size)
     : (hasMore ? tracks.size + 1 : tracks.size)
-  const load = async () => loadNextTracks()
+  const load = async () => loadNext()
   const loadMoreItems = displayLoadingIndicator ? () => {} : load
   const listRef = React.createRef()
   const isEmpty = !displayLoadingIndicator && !itemCount
@@ -93,6 +95,8 @@ const Tracklist = ({
     isEmpty,
     loadMoreItems,
     Row,
+    hideSearch,
+    hideTaglist,
     listRef
   })
 }
@@ -123,7 +127,6 @@ const mapStateToProps = createSelector(
 const mapDispatchToProps = {
   search: tracklistActions.searchTracks,
   selectTrack: playerActions.playSelectedTrack,
-  loadNextTracks: tracklistActions.loadNextTracks,
   shuffle: playerActions.shuffleSelectedTracklist,
   stopShuffle: playerActions.stopShuffle,
   clearSearch: tracklistActions.clearSearch

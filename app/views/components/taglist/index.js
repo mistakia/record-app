@@ -48,7 +48,7 @@ const mapStateToProps = createSelector(
   getCurrentSelectedTags,
   getTagsForCurrentTaglist,
   (app, taglist, selectedTags, tags) => ({
-    isExternal: taglist.id !== app.address,
+    isExternal: taglist.address !== app.address,
     displayLoadingIndicator: taglist.isPending,
     selectedTags,
     tags

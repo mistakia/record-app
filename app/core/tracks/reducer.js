@@ -6,12 +6,14 @@ import { createTrack } from './track'
 import { trackActions } from './actions'
 import { logActions } from '@core/logs'
 import { playerActions } from '@core/player'
+import { listensActions } from '@core/listens'
 
 export function tracksReducer (state = new Map(), {payload, type}) {
   switch (type) {
     case trackActions.CLEAR:
       return state.filter((value, key) => payload.trackIds ? payload.trackIds.contains(key) : false)
 
+    case listensActions.FETCH_LISTENS_FULFILLED:
     case playerActions.FETCH_PLAYER_TRACKS_FULFILLED:
     case playerActions.FETCH_PLAYER_SHUFFLE_FULFILLED:
     case tracklistActions.FETCH_TRACKS_FULFILLED:
@@ -94,6 +96,16 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         })
       })
     }
+
+    case playerActions.POST_LISTEN_FULFILLED:
+      const { trackId, count } = payload.data
+      if (!state.has(trackId)) {
+        return state
+      }
+
+      return state.withMutations(tracks => {
+        tracks.setIn([payload.data.trackId, 'listens'], count)
+      })
 
     default:
       return state
