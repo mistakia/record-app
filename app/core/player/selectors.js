@@ -8,6 +8,10 @@ export function getPlayer (state) {
   return state.get('player')
 }
 
+export function getPlayerRepeat (state) {
+  return getPlayer(state).repeat
+}
+
 export function getPlayerIsPlaying (state) {
   return getPlayer(state).isPlaying
 }
@@ -92,7 +96,7 @@ export function getPlayerTracklistCursor (state) {
     if (index > 0) previousTrackId = tracklistTrackIds.get(index - 1)
   }
 
-  if (repeat > 0 && !nextTrackId) {
+  if (repeat === 2 && !nextTrackId) {
     nextTrackId = tracklistTrackIds.first()
   }
 
