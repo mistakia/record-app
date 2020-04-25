@@ -108,6 +108,15 @@ export function * playAudio () {
   yield call(audio.load, track.url)
   yield call(audio.play)
 
+  // record listens only after track loads
+  yield take(playerActions.AUDIO_PLAYING)
+
+  // probably an anti-pattern but need to exclude stale saga effects
+  const nowplaying = yield select(getPlayerTrack)
+  if (track.id !== nowplaying.id) {
+    return
+  }
+
   const app = yield select(getApp)
   const tracklistAddress = yield select(getPlayerTracklistAddress)
   yield call(postListen, {
