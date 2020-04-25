@@ -9,6 +9,7 @@ export { playerSagas } from './sagas'
 
 export {
   getPlayer,
+  getPlayerRepeat,
   getPlayerIsPlaying,
   getPlayerIsShuffling,
   getPlayerIsLoading,

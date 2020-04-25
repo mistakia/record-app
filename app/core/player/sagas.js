@@ -10,6 +10,7 @@ import { playerActions } from './actions'
 import { audio, initAudio, setVolume } from '@core/audio'
 import {
   getPlayer,
+  getPlayerRepeat,
   getPlayerTrack,
   getPlayerTracklistCursor,
   getPlayerTracklistAddress
@@ -26,8 +27,13 @@ export function * playTrack () {
     isShuffling,
     tracklistTags,
     tracklistQuery,
+    repeat,
     tracklistStartIndex
   } = yield select(getPlayer)
+
+  if (repeat === 1) {
+    yield put(playerActions.togglePlayRepeat())
+  }
 
   if (!isShuffling) {
     const cursorIndex = tracklistTrackIds.indexOf(tracklistCursorId)
@@ -56,8 +62,12 @@ export function * playTrack () {
 }
 
 export function * playNextTrack () {
+  const repeat = yield select(getPlayerRepeat)
   const cursor = yield select(getPlayerTracklistCursor)
-  if (cursor.nextTrackId) {
+
+  if (repeat === 1) {
+    yield put(playerActions.playTrack(cursor.selectedTrackId))
+  } else if (cursor.nextTrackId) {
     yield put(playerActions.playTrack(cursor.nextTrackId))
   }
 }
