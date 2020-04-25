@@ -99,15 +99,16 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       })
     }
 
-    case playerActions.POST_LISTEN_FULFILLED:
-      const { trackId, count } = payload.data
+    case listensActions.POST_LISTEN_FULFILLED: {
+      const { trackId, timestamps } = payload.data
       if (!state.has(trackId)) {
         return state
       }
 
       return state.withMutations(tracks => {
-        tracks.setIn([payload.data.trackId, 'listens'], count)
+        tracks.setIn([trackId, 'listens'], new List(timestamps))
       })
+    }
 
     default:
       return state

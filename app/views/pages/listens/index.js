@@ -1,6 +1,5 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
 
 import { listensActions } from '@core/listens'
 import Tracklist from '@components/tracklist'
@@ -14,7 +13,7 @@ export class ListensPage extends React.Component {
 
   render () {
     const { loadNextListens } = this.props
-    const body = <Tracklist hideTaglist={true} hideSearch={true} loadNext={loadNextListens} />
+    const body = <Tracklist hideTaglist hideSearch loadNext={loadNextListens} />
     return (
       <PageLayout
         title='Listening History'
