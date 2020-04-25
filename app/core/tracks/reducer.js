@@ -39,8 +39,10 @@ export function tracksReducer (state = new Map(), {payload, type}) {
 
       return state.withMutations(tracks => {
         payload.data.forEach(entry => {
-          const track = entry.payload.value
-          tracks.set(track.id, createTrack(track))
+          if (entry.payload.value.type === 'track') {
+            const track = entry.payload.value
+            tracks.set(track.id, createTrack(track))
+          }
         })
       })
 
