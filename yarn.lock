@@ -13609,9 +13609,9 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
-record-node@mistakia/record-node#e813414:
+record-node@mistakia/record-node#a5d83f3:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/e813414ec93227c0bef0ce54417a55cc6b226228"
+  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/a5d83f39d9ab0c542335cfd2077b5c1d318b1604"
   dependencies:
     bitboot "^0.1.0"
     body-parser "^1.18.3"
@@ -13630,6 +13630,7 @@ record-node@mistakia/record-node#e813414:
     ipfs-log "github:mistakia/ipfs-log#proto/record"
     ipfs-pubsub-room "^2.0.1"
     it-to-stream "^0.1.1"
+    jsonfile "^6.0.1"
     leveldown "^5.1.1"
     libp2p "github:mistakia/js-libp2p#fix/staleConnections"
     libp2p-bootstrap "^0.10.4"

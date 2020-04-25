@@ -101,7 +101,7 @@ class Track extends React.Component {
           <FormattedTime value={track.duration} unit={'ms'} />
         </small>
         <small className='track__format'>{track.format}</small>
-        <small className='track__listens'>{track.listens.size}</small>
+        <small className='track__listens'>{track.listens.size || null}</small>
       </article>
     )
   }

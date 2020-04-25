@@ -45,7 +45,7 @@ const main = async () => {
 
   if (isDev) {
     opts.api = { port: 3001 }
-    opts.bitboot = { enabled : false }
+    opts.bitboot = { enabled: false }
     opts.ipfs = {
       config: {
         Addresses: {
