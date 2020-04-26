@@ -9,6 +9,11 @@ import log from 'electron-log'
 
 const { BrowserWindow, app, ipcMain: ipc, globalShortcut } = electron
 
+// Only one instance can run at a time
+if (!app.requestSingleInstanceLock()) {
+  process.exit(0)
+}
+
 export default class AppUpdater {
   constructor () {
     log.transports.file.level = 'info'
@@ -125,7 +130,7 @@ const createMainWindow = async () => {
   })
 
   // eslint-disable-next-line
-  new AppUpdater()
+  // new AppUpdater()
 }
 
 const createBackgroundWindow = () => {

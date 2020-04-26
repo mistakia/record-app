@@ -4,4 +4,6 @@ object-assign
 @license MIT
 */
 
+/*! http://mths.be/fromcodepoint v0.1.0 by @mathias */
+
 /*!*/

@@ -203,6 +203,12 @@
  */
 
 /*!
+ * media-typer
+ * Copyright(c) 2014-2017 Douglas Christopher Wilson
+ * MIT Licensed
+ */
+
+/*!
  * merge-descriptors
  * Copyright(c) 2014 Jonathan Ong
  * Copyright(c) 2015 Douglas Christopher Wilson
@@ -366,3 +372,7 @@
  * @copyright Chen, Yi-Cyuan 2015-2018
  * @license MIT
  */
+
+//! stable.js 0.1.8, https://github.com/Two-Screen/stable
+
+//! © 2018 Angry Bytes and contributors. MIT licensed.
