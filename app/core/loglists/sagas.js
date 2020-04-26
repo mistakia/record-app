@@ -1,11 +1,10 @@
 import { call, fork, takeLatest, put, select } from 'redux-saga/effects'
-import { push } from 'react-router-redux'
+import { goBack } from 'react-router-redux'
 
 import {
   PEER_LOGLIST_ADDRESS,
   ALL_LOGLIST_ADDRESS
 } from '@core/constants'
-import { getApp } from '@core/app'
 import {
   fetchLogs,
   fetchPeers,
@@ -14,6 +13,7 @@ import {
   deleteLogLink
 } from '@core/api'
 import { loglistActions } from './actions'
+import history from '@core/history'
 
 export function * loadLogs ({ payload }) {
   const { logAddress } = payload
@@ -39,8 +39,9 @@ export function * unlinkLog ({ payload }) {
 }
 
 export function * goToMyLogs () {
-  const app = yield select(getApp)
-  yield put(push(`/logs${app.address}`))
+  if (history.location.pathname.includes('/link-log')) {
+    yield put(goBack())
+  }
 }
 
 export function * watchLoadLogs () {
