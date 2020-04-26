@@ -11,9 +11,9 @@ export const loglistActions = {
 
   LINK_LOG: 'LINK_LOG',
 
-  DELETE_LOG_FAILED: 'DELETE_LOG_FAILED',
-  DELETE_LOG_FULFILLED: 'DELETE_LOG_FULFILLED',
-  DELETE_LOG_PENDING: 'DELETE_LOG_PENDING',
+  DELETE_LOG_LINK_FAILED: 'DELETE_LOG_LINK_FAILED',
+  DELETE_LOG_LINK_FULFILLED: 'DELETE_LOG_LINK_FULFILLED',
+  DELETE_LOG_LINK_PENDING: 'DELETE_LOG_LINK_PENDING',
 
   UNLINK_LOG: 'UNLINK_LOG',
 
@@ -97,24 +97,24 @@ export const loglistActions = {
     }
   }),
 
-  deleteLogFailed: (logAddress, error) => ({
-    type: loglistActions.DELETE_LOG_FAILED,
+  deleteLogLinkFailed: (logAddress, error) => ({
+    type: loglistActions.DELETE_LOG_LINK_FAILED,
     payload: {
       logAddress,
       error
     }
   }),
 
-  deleteLogFulfilled: (logAddress, data) => ({
-    type: loglistActions.DELETE_LOG_FULFILLED,
+  deleteLogLinkFulfilled: (logAddress, data) => ({
+    type: loglistActions.DELETE_LOG_LINK_FULFILLED,
     payload: {
       logAddress,
       data
     }
   }),
 
-  deleteLogPending: logAddress => ({
-    type: loglistActions.DELETE_LOG_PENDING,
+  deleteLogLinkPending: logAddress => ({
+    type: loglistActions.DELETE_LOG_LINK_PENDING,
     payload: {
       logAddress
     }
@@ -188,9 +188,9 @@ export const loglistPostActions = {
 }
 
 export const loglistDeleteActions = {
-  failed: loglistActions.deleteLogFailed,
-  fulfilled: loglistActions.deleteLogFulfilled,
-  pending: loglistActions.deleteLogPending
+  failed: loglistActions.deleteLogLinkFailed,
+  fulfilled: loglistActions.deleteLogLinkFulfilled,
+  pending: loglistActions.deleteLogLinkPending
 }
 
 export const allLoglistRequestActions = {
