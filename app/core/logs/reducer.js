@@ -60,10 +60,11 @@ export function logsReducer (state = new Map(), {payload, type}) {
         }
       })
 
-    case loglistActions.DELETE_LOG_FULFILLED:
+    case loglistActions.DELETE_LOG_LINK_FULFILLED:
+      console.log(payload)
       return state.withMutations(logs => {
-        logs.setIn([payload.data.content.address, 'isLinked'], false)
-        logs.setIn([payload.data.content.address, 'isUpdating'], false)
+        logs.setIn([payload.data.linkAddress, 'isLinked'], false)
+        logs.setIn([payload.data.linkAddress, 'isUpdating'], false)
       })
 
     case logActions.CONNECT_LOG_PENDING:
@@ -73,9 +74,9 @@ export function logsReducer (state = new Map(), {payload, type}) {
         logs.setIn([payload.logAddress, 'isUpdating'], true)
       })
 
-    case loglistActions.REMOVE_LOG:
+    case loglistActions.UNLINK_LOG:
       return state.withMutations(logs => {
-        logs.setIn([payload.data.logAddress, 'isUpdating'], true)
+        logs.setIn([payload.data.linkAddress, 'isUpdating'], true)
       })
 
     case logActions.DISCONNECT_LOG_FAILED:
@@ -84,7 +85,7 @@ export function logsReducer (state = new Map(), {payload, type}) {
     case logActions.CONNECT_LOG_FAILED:
     case loglistActions.POST_LOG_FAILED:
     case loglistActions.POST_LOG_FULFILLED:
-    case loglistActions.DELETE_LOG_FAILED:
+    case loglistActions.DELETE_LOG_LINK_FAILED:
       return state.withMutations(logs => {
         logs.setIn([payload.logAddress, 'isUpdating'], false)
       })
