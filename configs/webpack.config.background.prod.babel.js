@@ -49,9 +49,18 @@ export default merge.smart(baseConfig, {
       ? []
       : [
         new TerserPlugin({
-          parallel: true,
-          sourceMap: true,
-          cache: true
+          terserOptions: {
+            mangle: false,
+            sourceMap: true,
+            compress: false,
+            keep_classnames: true,
+            keep_fnames: true,
+            output: {
+              comments: false,
+            },
+            parallel: true,
+            cache: true
+          }
         })
       ]
   },

@@ -126,6 +126,9 @@
       "private": false
     }
   },
+  "go-ipfs": {
+    "version": "v0.5.0-rc4"
+  },
   "dependencies": {
     "@hot-loader/react-dom": "^16.13.0",
     "abortcontroller-polyfill": "^1.4.0",
@@ -133,10 +136,13 @@
     "electron-log": "^4.1.1",
     "electron-updater": "^4.2.5",
     "fix-path": "^3.0.0",
+    "go-ipfs-dep": "0.5.0",
     "hashicon": "^0.3.0",
     "history": "^4.10.1",
     "hotkeys-js": "^3.7.6",
     "immutable": "^3.8.2",
+    "ipfs-http-client": "44.0.0",
+    "ipfsd-ctl": "4.1.0",
     "jsonfile": "^6.0.1",
     "logplease": "^1.2.15",
     "normalize.css": "^8.0.0",
@@ -152,7 +158,8 @@
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.5",
     "react-window-infinite-loader": "^1.0.3",
-    "record-node": "mistakia/record-node#f611234",
+    "record-ipfsd": "mistakia/record-ipfsd#1cb0443",
+    "record-node": "mistakia/record-node#469ea00",
     "redux": "^4.0.0",
     "redux-immutable": "^4.0.0",
     "redux-saga": "^1.0.0-beta.1",
@@ -207,7 +214,7 @@
     "style-loader": "~0.13.0",
     "stylus": "~0.54.5",
     "stylus-loader": "^3.0.2",
-    "terser-webpack-plugin": "^2.3.5",
+    "terser-webpack-plugin": "2.3.6",
     "url-loader": "^1.0.1",
     "v8-compile-cache": "^2.1.0",
     "webpack": "^4.42.1",

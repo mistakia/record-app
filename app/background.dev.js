@@ -6,6 +6,7 @@ const jsonfile = require('jsonfile')
 const RecordNode = require('record-node')
 const electron = require('electron')
 const log = require('electron-log')
+const createIPFSDaemon = require('record-ipfsd')
 const ipc = electron.ipcRenderer
 const { app, dialog } = electron.remote
 const { chromaprintPath } = require('./binaries')
@@ -14,17 +15,23 @@ log.catchErrors()
 console.log = log.log
 Object.assign(console, log.functions)
 
+const getIpfsBinPath = () => require('go-ipfs-dep')
+  .path()
+  .replace('app.asar', 'app.asar.unpacked')
+
 const isDev = process.env.NODE_ENV === 'development'
 console.log(`process id: ${process.pid}, isDev: ${isDev}`)
 
 if (isDev || process.env.DEBUG_PROD === 'true') {
-  const Logger = require('logplease')
   const debug = require('debug')
   debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap')
-  Logger.setLogLevel(Logger.LogLevels.DEBUG)
+
+  const Logger = require('logplease')
+  Logger.setLogLevel(Logger.LogLevels.INFO)
 }
 
 let record
+let ipfsd
 
 const main = async () => {
   const recorddir = path.resolve(isDev ? app.getPath('temp') : app.getPath('appData'), './record')
@@ -34,7 +41,6 @@ const main = async () => {
   const info = (fs.existsSync(infoPath) && jsonfile.readFileSync(infoPath)) || {}
   const orbitAddress = info.address || 'record'
   const id = info.id
-
   console.log(`ID: ${id}`)
   console.log(`Orbit Address: ${orbitAddress}`)
   let opts = {
@@ -96,7 +102,12 @@ const main = async () => {
   })
 
   try {
-    await record.init()
+    ipfsd = await createIPFSDaemon({
+      repo: path.resolve(recorddir, 'ipfs'),
+      log: log.info,
+      ipfsBin: getIpfsBinPath()
+    })
+    await record.init(ipfsd.api)
   } catch (error) {
     log.error(error)
 
@@ -121,12 +132,28 @@ try {
   log.error(error)
 }
 
+const handler = async () => {
+  console.log(`Online: ${navigator.onLIne}`)
+
+  if (ipfsd && navigator.onLine) {
+    // await ipfsd.stop()
+    // await ipfsd.start()
+  }
+}
+
+window.addEventListener('online', handler)
+window.addEventListener('offline', handler)
 window.onbeforeunload = async (e) => {
+  if (ipfsd) {
+    await ipfsd.stop()
+    console.log('ipfs shutdown successfully')
+  }
+
   if (record) {
     await record.stop()
-    log.info('record shutdown successfully')
-    window.onbeforeunload = null
-    app.exit()
+    console.log('record shutdown successfully')
   }
+  window.onbeforeunload = null
+  app.exit()
   e.returnValue = false
 }
