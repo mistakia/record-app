@@ -1,11 +1,11 @@
-const blacklist = require('metro-config/src/defaults/blacklist');
+const blacklist = require('metro-config/src/defaults/blacklist')
 
 module.exports = {
-  resolver:{
+  resolver: {
     blacklistRE: blacklist([
       /nodejs-assets\/.*/,
       /android\/.*/,
       /ios\/.*/
     ])
-  },
-};
+  }
+}

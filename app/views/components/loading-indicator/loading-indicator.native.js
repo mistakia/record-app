@@ -22,26 +22,7 @@ const styles = StyleSheet.create({
 })
 
 export default class LoadingIndicator extends PureComponent {
-  static defaultProps = {
-    animationEasing: Easing.linear,
-    animationDuration: 1800,
-
-    animating: true,
-    interaction: true,
-
-    color: 'rgb(0, 0, 0)',
-    size: 30
-  }
-
-  static propTypes = {
-    animationEasing: PropTypes.func,
-    animationDuration: PropTypes.number,
-
-    animating: PropTypes.bool,
-    interaction: PropTypes.bool
-  }
-
-  constructor(props) {
+  constructor (props) {
     super(props)
 
     this.startAnimation = this.startAnimation.bind(this)
@@ -54,15 +35,15 @@ export default class LoadingIndicator extends PureComponent {
     this.mounted = false
   }
 
-  startAnimation({ finished } = {}) {
+  startAnimation ({ finished } = {}) {
     let { progress } = this.state
     let {
       interaction,
       animationEasing,
-      animationDuration,
+      animationDuration
     } = this.props
 
-    if (!this.mounted || false === finished) {
+    if (!this.mounted || finished === false) {
       return
     }
 
@@ -72,7 +53,7 @@ export default class LoadingIndicator extends PureComponent {
         easing: animationEasing,
         useNativeDriver: true,
         isInteraction: interaction,
-        toValue: 1,
+        toValue: 1
       })
 
     if (hasLoopSupport) {
@@ -87,7 +68,7 @@ export default class LoadingIndicator extends PureComponent {
     this.setState({ animation })
   }
 
-  stopAnimation() {
+  stopAnimation () {
     let { animation } = this.state
 
     if (animation == null) {
@@ -99,7 +80,7 @@ export default class LoadingIndicator extends PureComponent {
     this.setState({ animation: null })
   }
 
-  componentDidMount() {
+  componentDidMount () {
     let { animating } = this.props
 
     this.mounted = true
@@ -109,11 +90,11 @@ export default class LoadingIndicator extends PureComponent {
     }
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     this.mounted = false
   }
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps (props, state) {
     let { animating } = this.props
 
     if (animating ^ props.animating) {
@@ -125,7 +106,7 @@ export default class LoadingIndicator extends PureComponent {
     }
   }
 
-  render() {
+  render () {
     let { style, size, color, animationDuration, ...props } = this.props
     let { progress } = this.state
 
@@ -133,9 +114,11 @@ export default class LoadingIndicator extends PureComponent {
     let easing = Easing.bezier(0.4, 0.0, 0.7, 1.0)
 
     let inputRange = Array
+      // eslint-disable-next-line
       .from(new Array(frames), (undefined, frameIndex) => frameIndex / (frames - 1))
 
     let outputRange = Array
+      // eslint-disable-next-line
       .from(new Array(frames), (undefined, frameIndex) => {
         let progress = 2 * frameIndex / (frames - 1)
         let rotation = +(360 - 15)
@@ -155,8 +138,8 @@ export default class LoadingIndicator extends PureComponent {
       transform: [{
         rotate: progress.interpolate({
           inputRange: [0, 1],
-          outputRange: [(0 + 30 + 15) + 'deg', (2 * 360 + 30 + 15) + 'deg'],
-        }),
+          outputRange: [(0 + 30 + 15) + 'deg', (2 * 360 + 30 + 15) + 'deg']
+        })
       }]
     }
 
@@ -164,9 +147,9 @@ export default class LoadingIndicator extends PureComponent {
       width: size,
       height: size,
       transform: [{
-        translateY: -size / 2,
+        translateY: -size / 2
       }, {
-        rotate: progress.interpolate({ inputRange, outputRange }),
+        rotate: progress.interpolate({ inputRange, outputRange })
       }]
     }
 
@@ -204,4 +187,23 @@ export default class LoadingIndicator extends PureComponent {
       </View>
     )
   }
+}
+
+LoadingIndicator.propTypes = {
+  animationEasing: PropTypes.func,
+  animationDuration: PropTypes.number,
+
+  animating: PropTypes.bool,
+  interaction: PropTypes.bool
+}
+
+LoadingIndicator.defaultProps = {
+  animationEasing: Easing.linear,
+  animationDuration: 1800,
+
+  animating: true,
+  interaction: true,
+
+  color: 'rgb(0, 0, 0)',
+  size: 30
 }

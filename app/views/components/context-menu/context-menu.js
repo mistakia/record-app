@@ -37,7 +37,7 @@ export class ContextMenu extends React.Component {
   }
 
   componentDidUpdate () {
-    const { id, visible, clickX, clickY, trackId } = this.props.contextMenuInfo
+    const { id, visible, clickX, clickY } = this.props.contextMenuInfo
 
     if (!visible || !this.root) {
       return this._removeListeners()

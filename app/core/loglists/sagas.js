@@ -1,4 +1,4 @@
-import { call, fork, takeLatest, put, select } from 'redux-saga/effects'
+import { call, fork, takeLatest, put } from 'redux-saga/effects'
 import { goBack } from 'react-router-redux'
 
 import {

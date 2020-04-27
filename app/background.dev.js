@@ -5,18 +5,22 @@ const path = require('path')
 const jsonfile = require('jsonfile')
 const RecordNode = require('record-node')
 const electron = require('electron')
+const log = require('electron-log')
 const ipc = electron.ipcRenderer
 const { app, dialog } = electron.remote
 const { chromaprintPath } = require('./binaries')
 
-console.log(`process id: ${process.pid}`)
+log.catchErrors()
+console.log = log.log
+Object.assign(console, log.functions)
 
 const isDev = process.env.NODE_ENV === 'development'
+console.log(`process id: ${process.pid}, isDev: ${isDev}`)
 
 if (isDev || process.env.DEBUG_PROD === 'true') {
   const Logger = require('logplease')
   const debug = require('debug')
-  debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,libp2p:connection-manager,ipfs:bitswap')
+  debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap')
   Logger.setLogLevel(Logger.LogLevels.DEBUG)
 }
 
@@ -86,20 +90,20 @@ const main = async () => {
       }, { spaces: 2 })
 
       setTimeout(() => record.logs.connect(), 5000)
-    } catch (e) {
-      console.log(e)
+    } catch (error) {
+      log.error(error)
     }
   })
 
   try {
     await record.init()
-  } catch (err) {
-    console.log(err)
+  } catch (error) {
+    log.error(error)
 
     await dialog.showMessageBox({
       type: 'error',
       message: 'Startup error, please restart.',
-      detail: err.toString()
+      detail: error.toString()
     })
 
     if (
@@ -113,14 +117,14 @@ const main = async () => {
 
 try {
   main()
-} catch (err) {
-  console.log(err)
+} catch (error) {
+  log.error(error)
 }
 
 window.onbeforeunload = async (e) => {
   if (record) {
     await record.stop()
-    console.log('record shutdown successfully')
+    log.info('record shutdown successfully')
     window.onbeforeunload = null
     app.exit()
   }

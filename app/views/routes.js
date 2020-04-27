@@ -12,7 +12,7 @@ import SetIdentityPage from '@pages/set-identity'
 import AccountPage from '@pages/account'
 import ListensPage from '@pages/listens'
 
-const logAddressRe = '[0-9a-zA-Z\/-]*'
+const logAddressRe = '[0-9a-zA-Z/-]*'
 
 const Routes = () => (
   <Switch>

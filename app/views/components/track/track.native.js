@@ -11,7 +11,7 @@ import Tags from '@components/tags'
 
 class Track extends React.Component {
   render () {
-    const { isPlaying, isSelected, pause, play, track } = this.props
+    const { isPlaying, pause, play, track } = this.props
 
     const trackStyles = [styles.track]
 
