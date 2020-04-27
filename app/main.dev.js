@@ -4,8 +4,18 @@ import 'v8-compile-cache'
 import electron from 'electron'
 // import path from 'path'
 import fixpath from 'fix-path'
+import { autoUpdater } from 'electron-updater'
+import log from 'electron-log'
 
 const { BrowserWindow, app, ipcMain: ipc, globalShortcut } = electron
+
+export default class AppUpdater {
+  constructor () {
+    log.transports.file.level = 'info'
+    autoUpdater.logger = log
+    autoUpdater.checkForUpdatesAndNotify()
+  }
+}
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support')
@@ -29,23 +39,23 @@ const installExtensions = async () => {
 
   return Promise.all(
     extensions.map(name => installer.default(installer[name], forceDownload))
-  ).catch(console.log)
+  ).catch(log.error)
 }
 
 process.on('uncaughtException', error => {
-  console.log(error)
+  log.error(error)
   process.exit(1)
 })
 
 process.on('unhandledRejection', error => {
-  console.log(error)
+  log.error(error)
   process.exit(1)
 })
 
 ipc.on('error', () => process.exit(1))
 
-console.log(`Electron Node version: ${process.versions.node}`)
-console.log(`Development Mode: ${process.env.NODE_ENV}`)
+log.info(`Electron Node version: ${process.versions.node}`)
+log.info(`Development Mode: ${process.env.NODE_ENV}`)
 
 // Module to control application life.
 app.disableHardwareAcceleration()
@@ -113,6 +123,9 @@ const createMainWindow = async () => {
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.send('ready', data)
   })
+
+  // eslint-disable-next-line
+  new AppUpdater()
 }
 
 const createBackgroundWindow = () => {
@@ -135,17 +148,14 @@ const createBackgroundWindow = () => {
 const registerGlobalShortcuts = () => {
   globalShortcut.register('MediaPlayPause', () => {
     if (mainWindow) mainWindow.webContents.send('redux', { type: 'MEDIA_PLAY_PAUSE' })
-    console.log('Media Play/Pause')
   })
 
   globalShortcut.register('MediaNextTrack', () => {
     if (mainWindow) mainWindow.webContents.send('redux', { type: 'MEDIA_NEXT' })
-    console.log('Media Next Track')
   })
 
   globalShortcut.register('MediaPreviousTrack', () => {
     if (mainWindow) mainWindow.webContents.send('redux', { type: 'MEDIA_PREVIOUS' })
-    console.log('Media Previous Track')
   })
 }
 

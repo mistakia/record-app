@@ -3,7 +3,7 @@ console.log(`Node version: ${process.versions.node}`)
 require('@babel/polyfill')
 
 const rnBridge = require('rn-bridge')
-//const os = require('os')
+// const os = require('os')
 const fs = require('fs')
 const path = require('path')
 const debug = require('debug')
@@ -13,7 +13,7 @@ const RecordNode = require('record-node')
 // Log Record / IPFS / OrbitDB
 debug.useColors = () => false // disable colors in log (fixes xcode issue)
 const logger = debug('main')
-debug.enable('main,ipfs,ipfs:err,record:*') //libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
+debug.enable('main,ipfs,ipfs:err,record:*') // libp2p:switch:dial,libp2p:switch:transport,libp2p:swarm:dialer')
 Logger.setLogLevel(Logger.LogLevels.DEBUG)
 process.on('uncaughtException', logger)
 
@@ -30,8 +30,8 @@ let record
 
 try {
   const orbitAddressPath = path.resolve(recorddir, 'address.txt')
-  const orbitAddress = fs.existsSync(orbitAddressPath) ?
-    fs.readFileSync(orbitAddressPath, 'utf8') : 'record'
+  const orbitAddress = fs.existsSync(orbitAddressPath)
+    ? fs.readFileSync(orbitAddressPath, 'utf8') : 'record'
 
   const opts = {
     address: orbitAddress,
@@ -83,7 +83,7 @@ try {
   record.on('ipfs:state', (state) => sendApp('ipfs:state', state))
   record.on('ready', async () => {
     try {
-      const log = await record.log.get()
+      await record.log.get()
       logger(`Orbit Address: ${record._log.address}`)
       fs.writeFileSync(orbitAddressPath, record._log.address)
     } catch (e) {
@@ -96,7 +96,6 @@ try {
 
     setTimeout(() => { record.contacts.connect() }, 5000)
   })
-
 } catch (e) {
   logger(e)
   sendApp('ipfs:state', 'failed')

@@ -113,7 +113,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
       return state.merge({
         history: state.history.shift(),
         trackId,
-        tracklistCursorId: tracklistPreviousTrackId ? tracklistPreviousTrackId : state.tracklistCursorId,
+        tracklistCursorId: tracklistPreviousTrackId || state.tracklistCursorId,
         isLoading: true
       })
     }

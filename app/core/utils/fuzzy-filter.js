@@ -1,3 +1,5 @@
+/* eslint no-labels: ["error", { "allowLoop": true }] */
+
 // https://github.com/bevacqua/fuzzysearch
 const fuzzySearch = (needle, haystack) => {
   const hlen = haystack.length
