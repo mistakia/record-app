@@ -1,3 +1,4 @@
+import hashicon from 'hashicon'
 import { Record, List } from 'immutable'
 
 const getShortAddress = (address) => {
@@ -8,6 +9,12 @@ const getShortAddress = (address) => {
 
   const multihash = parts[0]
   return `${multihash.slice(0, 5)}...${multihash.slice(-5)}`
+}
+
+const generateAvatar = (id) => {
+  const opts = { size: 100 }
+  const icon = hashicon(id, opts)
+  return icon.toDataURL()
 }
 
 export const Log = new Record({
@@ -51,7 +58,7 @@ export function createLog (data) {
     latestHeadTimestamp: latestHead ? latestHead.payload.value.timestamp : null,
     address: data.content.address,
     alias: data.content.alias,
-    avatar: data.content.avatar || data.avatar,
+    avatar: data.content.avatar || data.avatar || generateAvatar(data.content.address),
     name: data.content.name,
     location: data.content.location,
     bio: data.content.bio,
