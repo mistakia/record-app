@@ -27,7 +27,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          yarn package-ci
+          yarn package:ci
           yarn lint
 
 # Failing beacuse virtual framebuffer not installed
