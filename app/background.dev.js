@@ -24,7 +24,7 @@ console.log(`process id: ${process.pid}, isDev: ${isDev}`)
 
 if (isDev || process.env.DEBUG_PROD === 'true') {
   const debug = require('debug')
-  debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap')
+  debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap,ipfsd-ctl:daemon*')
 
   const Logger = require('logplease')
   Logger.setLogLevel(Logger.LogLevels.INFO)

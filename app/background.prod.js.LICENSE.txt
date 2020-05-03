@@ -357,14 +357,6 @@
 /*!*/
 
 /**
- * Timestamp for 64-bit time_t, nanosecond precision and strftime
- *
- * @author Yusuke Kawasaki
- * @license MIT
- * @see https://github.com/kawanet/timestamp-nano
- */
-
-/**
  * [js-sha3]{@link https://github.com/emn178/js-sha3}
  *
  * @version 0.8.0

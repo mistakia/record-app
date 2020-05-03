@@ -12108,9 +12108,9 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
-record-ipfsd@mistakia/record-ipfsd#1cb0443:
+record-ipfsd@mistakia/record-ipfsd#ff643bd:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-ipfsd/tar.gz/1cb0443aeaf3bcc5e0ea66a9f96dd1c7294def74"
+  resolved "https://codeload.github.com/mistakia/record-ipfsd/tar.gz/ff643bd577d25545b3259ee85b84d9cf0f89cc0d"
   dependencies:
     ipfs-http-client "^44.0.1"
     ipfsd-ctl "^4.1.0"
