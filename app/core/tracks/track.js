@@ -51,7 +51,7 @@ const getTitle = (content) => {
 
 const getUrl = (content) => {
   if (content.hash) {
-    return `${BASE_URL}/file/${content.hash}?size=${content.size}`
+    return `${BASE_URL}/file/${content.hash}`
   }
 
   return getFromResolver(content.resolver, 'url')

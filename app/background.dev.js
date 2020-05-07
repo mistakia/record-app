@@ -133,7 +133,7 @@ try {
 }
 
 const handler = async () => {
-  console.log(`Online: ${navigator.onLIne}`)
+  console.log(`Online: ${navigator.onLine}`)
 
   if (ipfsd && navigator.onLine) {
     // await ipfsd.stop()
