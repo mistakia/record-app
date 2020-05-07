@@ -11528,9 +11528,9 @@ record-ipfsd@mistakia/record-ipfsd#ff643bd:
     ipfs-http-client "^44.0.1"
     ipfsd-ctl "^4.1.0"
 
-record-node@mistakia/record-node#4793826:
+record-node@mistakia/record-node#622bf01:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/4793826426a08fc2c2e785150ee29b3fbdae49db"
+  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/622bf0133669e6c275d7245a5610a52742ec87b0"
   dependencies:
     bitboot "^0.1.0"
     body-parser "^1.18.3"
