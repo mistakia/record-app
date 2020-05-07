@@ -118,13 +118,13 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
       })
     }
 
+    case playerActions.PLAY_NEXT:
     case playerActions.PLAY_TRACK: {
       const fromQueue = state.queue.first() === payload.trackId
       const { isShuffling } = state
-      const cancelRepeat = state.repeat === 1 &&
-        (state.trackId === state.tracklistTrackIds.last() && payload.trackId === state.tracklistTrackIds.first())
+      const cancelRepeat = state.repeat === 1 && playerActions.PLAY_NEXT === type
       return state.merge({
-        repeat: cancelRepeat ? 0 : state.repeat,
+        repeat: cancelRepeat ? 2 : state.repeat,
         history: state.trackId ? state.history.unshift(state.trackId) : state.history,
         trackId: payload.trackId,
         tracklistCursorId: fromQueue || isShuffling ? state.tracklistCursorId : payload.trackId,
@@ -154,6 +154,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         isShuffling: false,
         isPlayingFromQueue: false,
         shuffleTrackIds: new List(),
+        repeat: 0,
         tracklistCursorId: payload.trackId,
         tracklistTrackIds: payload.trackIds,
         tracklistTags: payload.tags,

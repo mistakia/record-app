@@ -10,6 +10,7 @@ export const playerActions = {
   PLAY_TRACKLIST: 'PLAY_TRACKLIST',
   PLAY_SELECTED_TRACK: 'PLAY_SELECTED_TRACK',
   PLAY_PREVIOUS: 'PLAY_PREVIOUS',
+  PLAY_NEXT: 'PLAY_NEXT',
 
   SHUFFLE_SELECTED_TRACKLIST: 'SHUFFLE_SELECTED_TRACKLIST',
   SHUFFLE_TRACKLIST: 'SHUFFLE_TRACKLIST',
@@ -141,6 +142,13 @@ export const playerActions = {
     payload: {
       trackId,
       tracklistPreviousTrackId
+    }
+  }),
+
+  playNext: (trackId) => ({
+    type: playerActions.PLAY_NEXT,
+    payload: {
+      trackId
     }
   }),
 

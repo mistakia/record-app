@@ -27,13 +27,8 @@ export function * playTrack () {
     isShuffling,
     tracklistTags,
     tracklistQuery,
-    repeat,
     tracklistStartIndex
   } = yield select(getPlayer)
-
-  if (repeat === 1) {
-    yield put(playerActions.togglePlayRepeat())
-  }
 
   if (!isShuffling) {
     const cursorIndex = tracklistTrackIds.indexOf(tracklistCursorId)
@@ -61,7 +56,7 @@ export function * playTrack () {
   }
 }
 
-export function * playNextTrack () {
+export function * onAudioEnded () {
   const repeat = yield select(getPlayerRepeat)
   const cursor = yield select(getPlayerTracklistCursor)
 
@@ -159,7 +154,7 @@ export function * hideQueue () {
 export function * watchAudioEnded () {
   while (true) {
     yield take(playerActions.AUDIO_ENDED)
-    yield fork(playNextTrack)
+    yield fork(onAudioEnded)
   }
 }
 
@@ -187,7 +182,7 @@ export function * watchPlayPrevious () {
 
 export function * watchPlayTrack () {
   while (true) {
-    yield take(playerActions.PLAY_TRACK)
+    yield take([playerActions.PLAY_TRACK, playerActions.PLAY_NEXT])
     yield fork(playAudio)
     yield fork(playTrack)
   }
