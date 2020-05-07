@@ -72,6 +72,8 @@ export default class Player extends React.Component {
 
     if (!track) return null
 
+    const artworkUrl = track.thumbnail && `${track.thumbnail}?trackId=${track.id}`
+
     const { haveTrack } = track
 
     return (
@@ -86,7 +88,7 @@ export default class Player extends React.Component {
             />
           </div>
 
-          <Artwork className='player__track-artwork' url={track.thumbnail} background />
+          <Artwork className='player__track-artwork' url={artworkUrl} background />
 
           <div className='player__track-info' onContextMenu={this._handleContextMenu}>
             <div className='player__track-title'>{track.name}</div>

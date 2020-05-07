@@ -105,7 +105,7 @@ export function * playTracklist ({ trackId, tracklistAddress }) {
 
 export function * playAudio () {
   const track = yield select(getPlayerTrack)
-  yield call(audio.load, track.url)
+  yield call(audio.load, `${track.url}?trackId=${track.id}`)
   yield call(audio.play)
 
   // record listens only after track loads
