@@ -94,7 +94,9 @@ export function logsReducer (state = new Map(), {payload, type}) {
     case logActions.LOG_PEER_JOINED:
       return state.withMutations(logs => {
         const log = logs.get(payload.logAddress)
-        logs.setIn([payload.logAddress, 'peers'], mergePeers(log.peers, [payload.peerId]))
+        if (log) {
+          logs.setIn([payload.logAddress, 'peers'], mergePeers(log.peers, [payload.peerId]))
+        }
       })
 
     case logActions.RECORD_PEER_LEFT:
