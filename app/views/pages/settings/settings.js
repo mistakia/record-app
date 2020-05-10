@@ -91,6 +91,6 @@ export default function () {
   )
 
   return (
-    <PageLayout title='Settings' body={body} scroll />
+    <PageLayout body={body} scroll />
   )
 }

@@ -6,6 +6,7 @@ import Log from '@components/log'
 import render from './loglist'
 
 const Loglist = ({
+  log,
   logs,
   displayLoadingIndicator,
   showAdd
@@ -16,7 +17,7 @@ const Loglist = ({
 
   const loading = (displayLoadingIndicator && <Loading loading />)
 
-  return render({ logItems, loading, showAdd })
+  return render({ logItems, loading, showAdd, log })
 }
 
 export default Loglist

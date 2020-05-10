@@ -25,6 +25,7 @@ const Log = ({
   const showEdit = log.isMe || log.isLinked
   const noPropagation = e => e.stopPropagation()
 
+  // TODO - move to own component
   const handleSyncClick = (e) => {
     e.stopPropagation()
     log.isReplicating

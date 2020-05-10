@@ -63,6 +63,6 @@ export default function () {
   )
 
   return (
-    <PageLayout title='Account' body={body} scroll />
+    <PageLayout body={body} scroll />
   )
 }
