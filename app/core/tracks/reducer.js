@@ -7,6 +7,7 @@ import { trackActions } from './actions'
 import { logActions } from '@core/logs'
 import { playerActions } from '@core/player'
 import { listensActions } from '@core/listens'
+import { importerActions } from '@core/importer'
 
 export function tracksReducer (state = new Map(), {payload, type}) {
   switch (type) {
@@ -44,6 +45,11 @@ export function tracksReducer (state = new Map(), {payload, type}) {
             tracks.set(track.id, createTrack(track))
           }
         })
+      })
+
+    case importerActions.IMPORTER_PROCESSED_FILE:
+      return state.withMutations(tracks => {
+        tracks.set(payload.track.id, createTrack(payload.track))
       })
 
     case tracklistActions.ADD_TRACK:

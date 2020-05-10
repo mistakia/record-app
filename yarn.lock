@@ -11521,16 +11521,16 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
-record-ipfsd@mistakia/record-ipfsd#ff643bd:
+record-ipfsd@mistakia/record-ipfsd#6bb15a3:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-ipfsd/tar.gz/ff643bd577d25545b3259ee85b84d9cf0f89cc0d"
+  resolved "https://codeload.github.com/mistakia/record-ipfsd/tar.gz/6bb15a323e466297d494ac3157748f59ffc48748"
   dependencies:
     ipfs-http-client "^44.0.1"
     ipfsd-ctl "^4.1.0"
 
-record-node@mistakia/record-node#7c163cb:
+record-node@mistakia/record-node#ffd6a1d:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/7c163cb5e28efd36aadaf336878e99a3ff9dc4ef"
+  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/ffd6a1d6019f5cd80cee0ea168ec2733093dad1d"
   dependencies:
     bitboot "^0.1.0"
     body-parser "^1.18.3"

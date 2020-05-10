@@ -7,6 +7,7 @@ import { Tracklist } from './tracklist'
 import { logActions } from '@core/logs'
 import { mergeList } from '@core/utils'
 import { listensActions } from '@core/listens'
+import { importerActions } from '@core/importer'
 
 export function tracklistReducer (state = new Tracklist(), {payload, type}) {
   switch (type) {
@@ -54,6 +55,14 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
             : state.tags.push(tag)
         })
       })
+
+    case importerActions.IMPORTER_PROCESSED_FILE: {
+      if (!payload.track) {
+        return state
+      }
+
+      return state.merge({ trackIds: mergeList(state.trackIds, [payload.track]) })
+    }
 
     case tracklistActions.POST_TRACK_FULFILLED:
     case trackActions.TRACK_ADDED:

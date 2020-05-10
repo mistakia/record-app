@@ -5,8 +5,10 @@ import { appReducer } from './app'
 import { logsReducer } from './logs'
 import { loglistsReducer } from './loglists'
 import { contextMenuReducer } from './context-menu'
+import { importerReducer } from './importer'
 import { infoReducer } from './info'
 import { helpReducer } from './help'
+import { notificationsReducer } from './notifications'
 import { playerReducer, playerTimesReducer } from './player'
 import { taglistsReducer } from './taglists'
 import { tracklistsReducer } from './tracklists'
@@ -19,8 +21,10 @@ const rootReducer = asyncReducers => {
     logs: logsReducer,
     loglists: loglistsReducer,
     contextMenu: contextMenuReducer,
+    importer: importerReducer,
     info: infoReducer,
     help: helpReducer,
+    notifications: notificationsReducer,
     player: playerReducer,
     playerTimes: playerTimesReducer,
     taglists: taglistsReducer,

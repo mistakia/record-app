@@ -2,6 +2,7 @@ import React from 'react'
 
 import TrackContextMenu from '@components/track-context-menu'
 import TagContextMenu from '@components/tag-context-menu'
+import UrlContextMenu from '@components/url-context-menu'
 
 import './context-menu.styl'
 
@@ -50,7 +51,7 @@ export class ContextMenu extends React.Component {
     const screenW = window.innerWidth
     const screenH = window.innerHeight
 
-    if (id === 'tag') {
+    if (id === 'tag' || id === 'url') {
       this.root.style.top = `${(screenH / 2) - (rootH / 2)}px`
       this.root.style.left = `${(screenW / 2) - (rootW / 2)}px`
       return
@@ -89,6 +90,7 @@ export class ContextMenu extends React.Component {
       switch (id) {
         case 'track': return TrackContextMenu
         case 'tag': return TagContextMenu
+        case 'url': return UrlContextMenu
       }
     }
 

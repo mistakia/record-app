@@ -5,7 +5,9 @@ import { listensSagas } from './listens'
 import { logsSagas } from './logs'
 import { loglistSagas } from './loglists'
 import { helpSagas } from './help'
+import { importerSagas } from './importer'
 import { infoSagas } from './info'
+import { notificationSagas } from './notifications'
 import { playerSagas } from './player'
 import { aboutSagas } from './about'
 import { taglistSagas } from './taglists'
@@ -18,8 +20,10 @@ export default function * rootSaga () {
     ...listensSagas,
     ...logsSagas,
     ...loglistSagas,
+    ...importerSagas,
     ...infoSagas,
     ...helpSagas,
+    ...notificationSagas,
     ...playerSagas,
     ...aboutSagas,
     ...taglistSagas,

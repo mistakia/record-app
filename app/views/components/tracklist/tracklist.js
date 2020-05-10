@@ -44,7 +44,7 @@ const render = ({
               className='action button__floating'
               icon='add'
               label='add tracks'
-              link='/new-track' />}
+              link='/importer' />}
           <IconButton
             icon='shuffle'
             label='Shuffle'

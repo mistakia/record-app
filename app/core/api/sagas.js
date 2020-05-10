@@ -20,6 +20,7 @@ import {
   taglistPostActions,
   taglistDeleteActions
 } from '@core/taglists'
+import { importerPostActions } from '@core/importer'
 import {
   tracklistRequestActions,
   tracklistPostActions,
@@ -85,6 +86,7 @@ export const fetchShuffleTracks = fetch.bind(null, api.fetchTracks, playerShuffl
 export const fetchPlayerTracks = fetch.bind(null, api.fetchTracks, playerTracksRequestActions)
 export const fetchTracks = fetch.bind(null, api.fetchTracks, tracklistRequestActions)
 export const postTrack = fetch.bind(null, api.postTrack, tracklistPostActions)
+export const postImporter = fetch.bind(null, api.postImporter, importerPostActions)
 export const deleteTrack = fetch.bind(null, api.deleteTrack, tracklistDeleteActions)
 
 export const fetchLog = fetch.bind(null, api.fetchLog, logRequestActions)

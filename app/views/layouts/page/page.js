@@ -1,6 +1,8 @@
 import React from 'react'
 
+import Notification from '@components/notification'
 import IconButton from '@components/icon-button'
+import ImporterProgress from '@components/importer-progress'
 import './page.styl'
 
 export const PageLayout = ({ help, head, body, title, playerOpen, scroll, onHelpClose }) => (
@@ -18,16 +20,20 @@ export const PageLayout = ({ help, head, body, title, playerOpen, scroll, onHelp
         />
       </div>
     }
-    <div className='page__head'>
-      <div className='page__container'>
-        <div className='page__nav-info'>
-          { title ? <div className='page__title'>{title}</div> : head }
+    { (head || title) &&
+      <div className='page__head'>
+        <div className='page__container'>
+          <div className='page__nav-info'>
+            { title ? <div className='page__title'>{title}</div> : head }
+          </div>
         </div>
       </div>
-    </div>
+    }
     <div className={'page__body' + (scroll ? ' scroll' : '')}>
       { body }
     </div>
+    <Notification />
+    <ImporterProgress />
   </section>
 )
 
