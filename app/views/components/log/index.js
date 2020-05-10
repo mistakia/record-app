@@ -29,7 +29,7 @@ const LogBase = ({ unlinkLog, log, ...props }) => {
       title: 'Unsave',
       message: `Are you sure you want to unsave ${logName}`,
       detail: 'Unlinking this library will eventually remove its data from your device',
-      onConfirm: () => unlinkLog({ linkAddress: log.address })
+      onConfirm: () => unlinkLog(log.address)
     })
   }
 

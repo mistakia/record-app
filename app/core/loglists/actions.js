@@ -90,10 +90,10 @@ export const loglistActions = {
     }
   }),
 
-  unlinkLog: (data) => ({
+  unlinkLog: (logAddress) => ({
     type: loglistActions.UNLINK_LOG,
     payload: {
-      data
+      logAddress
     }
   }),
 

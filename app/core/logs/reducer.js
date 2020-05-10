@@ -68,14 +68,10 @@ export function logsReducer (state = new Map(), {payload, type}) {
 
     case logActions.CONNECT_LOG_PENDING:
     case logActions.DISCONNECT_LOG_PENDING:
-    case loglistActions.LINK_LOG:
+    case loglistActions.DELETE_LOG_LINK_PENDING:
+    case loglistActions.POST_LOG_PENDING:
       return state.withMutations(logs => {
         logs.setIn([payload.logAddress, 'isUpdating'], true)
-      })
-
-    case loglistActions.UNLINK_LOG:
-      return state.withMutations(logs => {
-        logs.setIn([payload.data.linkAddress, 'isUpdating'], true)
       })
 
     case logActions.DISCONNECT_LOG_FAILED:

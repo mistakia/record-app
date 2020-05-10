@@ -52,7 +52,7 @@ function * fetchAPI (apiFunction, actions, opts = {}) {
     yield put(actions.fulfilled(opts.logAddress, data))
   } catch (err) {
     console.log(err)
-    yield put(actions.failed(opts.logAddress, err))
+    yield put(actions.failed(opts.logAddress, err.toString()))
   } finally {
     if (yield cancelled()) {
       abort()
@@ -61,9 +61,14 @@ function * fetchAPI (apiFunction, actions, opts = {}) {
 }
 
 function * fetch (...args) {
+  const fn = args[0]
+  if (fn === api.postLogLink) {
+    return yield call(fetchAPI.bind(null, ...args))
+  }
+
   yield race([
     call(fetchAPI.bind(null, ...args)),
-    take(LOCATION_CHANGE) // TODO: make optional, not all requests should be cancelled
+    take(LOCATION_CHANGE)
   ])
 }
 

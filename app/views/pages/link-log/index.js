@@ -2,14 +2,13 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { getApp } from '@core/app'
-import { loglistActions, getMyLoglistIsUpdating } from '@core/loglists'
+import { loglistActions } from '@core/loglists'
 
 import LinkLogPage from './link-log'
 
 const mapStateToProps = createSelector(
   getApp,
-  getMyLoglistIsUpdating,
-  (app, isUpdating) => ({ app, isUpdating })
+  (app) => ({ app })
 )
 
 const mapDispatchToProps = {

@@ -123,5 +123,14 @@ export const apiRequest = (apiFunction, opts) => {
 }
 
 export const dispatchFetch = (options) => {
-  return fetch(options.url, options).then(response => response.json())
+  return fetch(options.url, options).then(response => {
+    const res = response.json()
+    if (response.status >= 200 && response.status < 300) {
+      return res
+    } else {
+      const error = new Error(res.error || response.statusText)
+      error.response = response
+      throw error
+    }
+  })
 }
