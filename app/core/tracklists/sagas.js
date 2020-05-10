@@ -4,13 +4,18 @@ import queryString from 'query-string'
 
 import { fetchTracks, postTrack, deleteTrack } from '@core/api'
 import { ITEMS_PER_LOAD } from '@core/constants'
+import { notificationActions } from '@core/notifications'
 import { tracklistActions } from './actions'
 import { getCurrentTracklist, getCurrentSelectedTags } from './selectors'
 import history from '@core/history'
 
 export function * addTrack ({ payload }) {
   const { logAddress, data } = payload
-  yield call(postTrack, { logAddress, data })
+  yield fork(postTrack, { logAddress, data })
+  yield put(notificationActions.show({
+    text: 'Adding track',
+    dismiss: 2000
+  }))
 }
 
 export function * loadNextTracks () {

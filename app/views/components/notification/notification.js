@@ -22,8 +22,8 @@ class Notification extends React.Component {
       <div className={classNames.join(' ')}>
         <div className='notification--text'>{item.text}</div>
         { action &&
-          <Button onClick={() => dismiss() && dispatch(action.onclick())} className='button__text'>{action.text}</Button>}
-        <Button onClick={dismiss} className='button__text'>Dismiss</Button>
+          <Button onClick={() => dismiss(item.id) && dispatch(action.onclick())} className='button__text'>{action.text}</Button>}
+        <Button onClick={() => dismiss(item.id)} className='button__text'>Dismiss</Button>
       </div>
     )
   }

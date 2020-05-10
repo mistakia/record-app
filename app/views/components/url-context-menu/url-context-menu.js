@@ -25,7 +25,7 @@ export class UrlContextMenu extends React.Component {
 
     if (event.key === 'Enter') {
       event.preventDefault()
-      this.props.addTrack(this.address, { url: this.state.url })
+      this.props.addTrack(this.props.app.address, { url: this.state.url })
       this.props.hide()
     }
   }
