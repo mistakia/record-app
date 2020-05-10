@@ -12,6 +12,7 @@ import {
   postLogLink,
   deleteLogLink
 } from '@core/api'
+import { notificationActions } from '@core/notifications'
 import { loglistActions } from './actions'
 import history from '@core/history'
 
@@ -43,6 +44,20 @@ export function * unlinkLog ({ payload }) {
   yield call(deleteLogLink, { logAddress, data })
 }
 
+export function * postLogFailed () {
+  yield put(notificationActions.show({
+    text: 'Failed to link library',
+    dismiss: 2000
+  }))
+}
+
+export function * deleteLogLinkFailed () {
+  yield put(notificationActions.show({
+    text: 'Failed to remove library',
+    dismiss: 2000
+  }))
+}
+
 export function * watchLoadLogs () {
   yield takeLatest(loglistActions.LOAD_LOGS, loadLogs)
 }
@@ -63,10 +78,21 @@ export function * watchLoadAllLogs () {
   yield takeLatest(loglistActions.LOAD_ALL_LOGS, loadAllLogs)
 }
 
+export function * watchDeleteLogLinkFailed () {
+  yield takeLatest(loglistActions.DELETE_LOG_LINK_FAILED, deleteLogLinkFailed)
+}
+
+export function * watchPostLogFailed () {
+  yield takeLatest(loglistActions.POST_LOG_FAILED, postLogFailed)
+}
+
 export const loglistSagas = [
   fork(watchLoadLogs),
   fork(watchLinkLog),
   fork(watchUnlinkLog),
   fork(watchLoadPeerLogs),
-  fork(watchLoadAllLogs)
+  fork(watchLoadAllLogs),
+
+  fork(watchPostLogFailed),
+  fork(watchDeleteLogLinkFailed)
 ]

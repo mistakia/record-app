@@ -13,6 +13,13 @@ export function * importerAdd ({ payload }) {
   }))
 }
 
+export function * postImporterFailed () {
+  yield put(notificationActions.show({
+    text: 'Importer failed',
+    dismiss: 2000
+  }))
+}
+
 //= ====================================
 //  WATCHERS
 // -------------------------------------
@@ -21,10 +28,16 @@ export function * watchImporterAdd () {
   yield takeLatest(importerActions.IMPORTER_ADD, importerAdd)
 }
 
+export function * watchPostImporterFailed () {
+  yield takeLatest(importerActions.POST_IMPORTER_FAILED, postImporterFailed)
+}
+
 //= ====================================
 //  ROOT
 // -------------------------------------
 
 export const importerSagas = [
-  fork(watchImporterAdd)
+  fork(watchImporterAdd),
+
+  fork(watchPostImporterFailed)
 ]
