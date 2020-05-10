@@ -1,6 +1,7 @@
-import { call, select, fork, takeLatest } from 'redux-saga/effects'
+import { call, put, select, fork, takeLatest } from 'redux-saga/effects'
 
 import { listensActions } from './actions'
+import { notificationActions } from '@core/notifications'
 import { ITEMS_PER_LOAD, LISTENS_TRACKLIST_ADDRESS } from '@core/constants'
 import { getCurrentTracklist } from '@core/tracklists'
 import { fetchListens } from '@core/api'
@@ -17,6 +18,13 @@ export function * loadListens () {
   yield call(fetchListens, { logAddress: LISTENS_TRACKLIST_ADDRESS, params })
 }
 
+export function * postListenFailed () {
+  yield put(notificationActions.show({
+    text: 'Failed to add track to listening history',
+    dismiss: 2000
+  }))
+}
+
 //= ====================================
 //  WATCHERS
 // -------------------------------------
@@ -29,11 +37,17 @@ export function * watchLoadNextListens () {
   yield takeLatest(listensActions.LOAD_NEXT_LISTENS, loadNextListens)
 }
 
+export function * watchPostListenFailed () {
+  yield takeLatest(listensActions.POST_LISTEN_FAILED, postListenFailed)
+}
+
 //= ====================================
 //  ROOT
 // -------------------------------------
 
 export const listensSagas = [
   fork(watchLoadListens),
-  fork(watchLoadNextListens)
+  fork(watchLoadNextListens),
+
+  fork(watchPostListenFailed)
 ]

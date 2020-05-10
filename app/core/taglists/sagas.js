@@ -3,6 +3,7 @@ import { call, fork, takeLatest, takeLeading, select, put } from 'redux-saga/eff
 import history from '@core/history'
 import { fetchTags, postTag, deleteTag } from '@core/api'
 import { appActions, getApp } from '@core/app'
+import { notificationActions } from '@core/notifications'
 import { tracklistActions, getCurrentSelectedTags } from '@core/tracklists'
 import { taglistActions } from './actions'
 
@@ -45,6 +46,20 @@ export function * checkSelectedTags ({ payload }) {
   }
 }
 
+export function * deleteTagFailed () {
+  yield put(notificationActions.show({
+    text: 'Failed to remove tag',
+    dismiss: 2000
+  }))
+}
+
+export function * postTagFailed () {
+  yield put(notificationActions.show({
+    text: 'Failed to add tag',
+    dismiss: 2000
+  }))
+}
+
 export function * watchLoadTags () {
   yield takeLatest(taglistActions.LOAD_TAGS, loadTags)
 }
@@ -73,6 +88,14 @@ export function * watchFetchTagsFulfilled () {
   yield takeLatest(taglistActions.FETCH_TAGS_FULFILLED, checkSelectedTags)
 }
 
+export function * watchDeleteTagFailed () {
+  yield takeLatest(taglistActions.DELETE_TAG_FAILED, deleteTagFailed)
+}
+
+export function * watchPostTagFailed () {
+  yield takeLatest(taglistActions.POST_TAG_FAILED, postTagFailed)
+}
+
 export const taglistSagas = [
   fork(watchLoadTags),
   fork(watchInitApp),
@@ -80,5 +103,8 @@ export const taglistSagas = [
   fork(watchRemoveTag),
   fork(watchPostTagFulfilled),
   fork(watchDeleteTagFulfilled),
-  fork(watchFetchTagsFulfilled)
+  fork(watchFetchTagsFulfilled),
+
+  fork(watchDeleteTagFailed),
+  fork(watchPostTagFailed)
 ]

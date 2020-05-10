@@ -44,6 +44,20 @@ export function * removeTrack ({ payload }) {
   yield call(deleteTrack, { logAddress, data })
 }
 
+export function * postTrackFailed () {
+  yield put(notificationActions.show({
+    text: 'Failed to add track',
+    dismiss: 2000
+  }))
+}
+
+export function * deleteTrackFailed () {
+  yield put(notificationActions.show({
+    text: 'Failed to remove track',
+    dismiss: 2000
+  }))
+}
+
 //= ====================================
 //  WATCHERS
 // -------------------------------------
@@ -76,6 +90,14 @@ export function * watchToggleTag () {
   yield takeLatest(tracklistActions.TOGGLE_TAG, loadTracks)
 }
 
+export function * watchDeleteTrackFailed () {
+  yield takeLatest(tracklistActions.DELETE_TRACK_FAILED, deleteTrackFailed)
+}
+
+export function * watchPostTrackFailed () {
+  yield takeLatest(tracklistActions.POST_TRACK_FAILED, postTrackFailed)
+}
+
 //= ====================================
 //  ROOT
 // -------------------------------------
@@ -87,5 +109,8 @@ export const tracklistSagas = [
   fork(watchRemoveTrack),
   fork(watchSearchTracks),
   fork(watchClearSearch),
-  fork(watchToggleTag)
+  fork(watchToggleTag),
+
+  fork(watchPostTrackFailed),
+  fork(watchDeleteTrackFailed)
 ]
