@@ -13,7 +13,7 @@ export function * addTrack ({ payload }) {
   const { logAddress, data } = payload
   yield fork(postTrack, { logAddress, data })
   yield put(notificationActions.show({
-    text: 'Adding track',
+    text: 'Adding',
     dismiss: 2000
   }))
 }

@@ -38,6 +38,6 @@ export default function () {
   )
 
   return (
-    <PageLayout title='Home' help={isHomeHelpVisible && help} body={body} onHelpClose={toggleHomeHelp} />
+    <PageLayout help={isHomeHelpVisible && help} body={body} onHelpClose={toggleHomeHelp} />
   )
 }

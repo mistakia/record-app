@@ -40,7 +40,7 @@ class LogsPage extends React.Component {
     const head = <Log type='profile' log={log} />
 
     const showAdd = logAddress === app.address
-    const body = <Loglist {...{logs, displayLoadingIndicator, showAdd}} />
+    const body = <Loglist {...{logs, displayLoadingIndicator, showAdd, log}} />
 
     return (
       <PageLayout head={head} body={body} />

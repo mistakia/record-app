@@ -3,6 +3,7 @@ import { FixedSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import InfiniteLoader from 'react-window-infinite-loader'
 
+import EmptyMessage from '@components/empty-message'
 import IconButton from '@components/icon-button'
 import Taglist from '@components/taglist'
 import Input from '@components/input'
@@ -24,7 +25,8 @@ const render = ({
   onClear,
   isEmpty,
   query,
-  listRef
+  listRef,
+  log
 }) => (
   <div className='list'>
     <div className='list__head'>
@@ -70,7 +72,7 @@ const render = ({
     </div>
     <div className='list__body'>
       { isEmpty
-        ? <div className='list__body-empty'>Empty</div>
+        ? <EmptyMessage log={log} />
         : <InfiniteLoader
           isItemLoaded={isItemLoaded}
           itemCount={itemCount}

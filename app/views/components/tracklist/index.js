@@ -41,7 +41,8 @@ const Tracklist = ({
   showAdd,
   stopShuffle,
   shuffle,
-  clearSearch
+  clearSearch,
+  log
 }) => {
   const isItemLoaded = index => tracks.has(index)
   const itemCount = query
@@ -97,7 +98,8 @@ const Tracklist = ({
     Row,
     hideSearch,
     hideTaglist,
-    listRef
+    listRef,
+    log
   })
 }
 

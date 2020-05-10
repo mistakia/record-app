@@ -1,8 +1,9 @@
 import React from 'react'
 
+import EmptyMessage from '@components/empty-message'
 import IconButton from '@components/icon-button'
 
-const render = ({ logItems, loading, showAdd }) => (
+const render = ({ logItems, loading, showAdd, log }) => (
   <div className='list'>
     <div className='list__head'>
       {showAdd &&
@@ -25,7 +26,7 @@ const render = ({ logItems, loading, showAdd }) => (
     <div className='list__body'>
       {logItems}
       {loading}
-      {(!loading && !logItems.size) && <div className='list__body-empty'>Empty</div>}
+      {(!loading && !logItems.size) && <EmptyMessage log={log} />}
     </div>
   </div>
 )

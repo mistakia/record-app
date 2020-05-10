@@ -68,7 +68,7 @@ export class TracksPage extends React.Component {
     const head = <Log type='profile' log={log} />
 
     const isMyTracklist = logAddress === app.address
-    const body = <Tracklist showAdd={isMyTracklist} loadNext={loadNextTracks} />
+    const body = <Tracklist showAdd={isMyTracklist} loadNext={loadNextTracks} log={log} />
 
     return (
       <PageLayout
