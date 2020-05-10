@@ -4,7 +4,6 @@ import {
   PEER_LOGLIST_ADDRESS,
   ALL_LOGLIST_ADDRESS
 } from '@core/constants'
-import { getApp } from '@core/app'
 import { getLogs, getLogByAddress, Log } from '@core/logs'
 import { Loglist } from './loglist'
 
@@ -42,12 +41,6 @@ export function getPeerLoglist (state) {
 export function getAllLoglist (state) {
   let loglists = getLoglists(state)
   return loglists.get(ALL_LOGLIST_ADDRESS) || new Loglist()
-}
-
-export function getMyLoglistIsUpdating (state) {
-  const { address } = getApp(state)
-  const myLogList = getLoglistByAddress(state, address)
-  return myLogList ? myLogList.isUpdating : null
 }
 
 export const getCurrentLogAddresses = createSelector(

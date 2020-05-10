@@ -58,7 +58,7 @@ export class LinkLogPage extends React.Component {
             <input type='text' name='address' defaultValue={logAddress} placeholder='/orbitdb/Qm.../record' disabled={!!isLinked} required />
           </label>
         }
-        <Button type='submit' isLoading={this.props.isUpdating}>{isLinked ? 'Save' : 'Link'}</Button>
+        <Button type='submit'>{isLinked ? 'Save' : 'Link'}</Button>
         {<label>Note: linking a library adds it to your library, synchronizes with it and saves the data.</label>}
       </form>
     )

@@ -16,8 +16,7 @@ export {
   getAllLoglist,
   getLogsForCurrentLoglist,
   getLogsForPeerLoglist,
-  getLogsForAllLoglist,
-  getMyLoglistIsUpdating
+  getLogsForAllLoglist
 } from './selectors'
 
 export { loglistsReducer } from './loglists-reducer'

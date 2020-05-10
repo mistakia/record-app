@@ -30,18 +30,17 @@ export function * loadAllLogs () {
 
 export function * linkLog ({ payload }) {
   const { logAddress, data } = payload
-  yield call(postLogLink, { logAddress, data })
-}
+  yield fork(postLogLink, { logAddress, data })
 
-export function * unlinkLog ({ payload }) {
-  const { logAddress, data } = payload
-  yield call(deleteLogLink, { logAddress, data })
-}
-
-export function * goToMyLogs () {
   if (history.location.pathname.includes('/link-log')) {
     yield put(goBack())
   }
+}
+
+export function * unlinkLog ({ payload }) {
+  const { logAddress } = payload
+  const data = { linkAddress: logAddress }
+  yield call(deleteLogLink, { logAddress, data })
 }
 
 export function * watchLoadLogs () {
@@ -56,10 +55,6 @@ export function * watchUnlinkLog () {
   yield takeLatest(loglistActions.UNLINK_LOG, unlinkLog)
 }
 
-export function * watchAddLogFulfilled () {
-  yield takeLatest(loglistActions.POST_LOG_FULFILLED, goToMyLogs)
-}
-
 export function * watchLoadPeerLogs () {
   yield takeLatest(loglistActions.LOAD_PEER_LOGS, loadPeerLogs)
 }
@@ -72,7 +67,6 @@ export const loglistSagas = [
   fork(watchLoadLogs),
   fork(watchLinkLog),
   fork(watchUnlinkLog),
-  fork(watchAddLogFulfilled),
   fork(watchLoadPeerLogs),
   fork(watchLoadAllLogs)
 ]
