@@ -52,7 +52,11 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         tracks.set(payload.track.id, createTrack(payload.track))
       })
 
-    case tracklistActions.ADD_TRACK:
+    case tracklistActions.ADD_TRACK: {
+      if (!payload.data.cid) {
+        return state
+      }
+
       return state.withMutations(tracks => {
         tracks.map(track => {
           if (track.contentCID === payload.data.cid) {
@@ -60,6 +64,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
           }
         })
       })
+    }
 
     case tracklistActions.REMOVE_TRACK:
       return state.withMutations(tracks => {

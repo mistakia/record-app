@@ -15,7 +15,7 @@ const mapStateToProps = createSelector(
 )
 
 const mapDispatchToProps = dispatch => ({
-  dismiss: () => dispatch(notificationActions.dismiss()),
+  dismiss: (id) => dispatch(notificationActions.dismiss(id)),
   dispatch
 })
 
