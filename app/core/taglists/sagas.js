@@ -46,6 +46,13 @@ export function * checkSelectedTags ({ payload }) {
   }
 }
 
+export function * postTagPending () {
+  yield put(notificationActions.show({
+    text: 'Adding tag',
+    dismiss: 1250
+  }))
+}
+
 export function * deleteTagFailed () {
   yield put(notificationActions.show({
     text: 'Failed to remove tag',
@@ -96,6 +103,10 @@ export function * watchPostTagFailed () {
   yield takeLatest(taglistActions.POST_TAG_FAILED, postTagFailed)
 }
 
+export function * watchPostTagPending () {
+  yield takeLatest(taglistActions.POST_TAG_PENDING, postTagPending)
+}
+
 export const taglistSagas = [
   fork(watchLoadTags),
   fork(watchInitApp),
@@ -104,6 +115,7 @@ export const taglistSagas = [
   fork(watchPostTagFulfilled),
   fork(watchDeleteTagFulfilled),
   fork(watchFetchTagsFulfilled),
+  fork(watchPostTagPending),
 
   fork(watchDeleteTagFailed),
   fork(watchPostTagFailed)
