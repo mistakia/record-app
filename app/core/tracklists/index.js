@@ -4,7 +4,7 @@ export {
   tracklistPostActions,
   tracklistDeleteActions
 } from './actions'
-export { goToTracks, tracklistSagas } from './sagas'
+export { tracklistSagas } from './sagas'
 
 export {
   getCurrentTracklist,
@@ -12,7 +12,6 @@ export {
   getCurrentTracklistIsUpdating,
   getCurrentTracklistLog,
   getCurrentSelectedTags,
-  getPendingTrackCID,
   getTracklistByAddress,
   getTracksForCurrentTracklist
 } from './selectors'

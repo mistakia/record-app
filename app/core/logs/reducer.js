@@ -61,7 +61,6 @@ export function logsReducer (state = new Map(), {payload, type}) {
       })
 
     case loglistActions.DELETE_LOG_LINK_FULFILLED:
-      console.log(payload)
       return state.withMutations(logs => {
         logs.setIn([payload.data.linkAddress, 'isLinked'], false)
         logs.setIn([payload.data.linkAddress, 'isUpdating'], false)

@@ -18,6 +18,7 @@ export {
   deleteLog,
   postAbout,
   postTrack,
+  postImporter,
   deleteTrack,
   postIdentity,
   requestConnectLog,

@@ -7,10 +7,10 @@ import { trackActions } from '@core/tracks'
 import { taglistActions } from '@core/taglists'
 import { logActions } from '@core/logs'
 import { listensActions } from '@core/listens'
+import { importerActions } from '@core/importer'
 
 export const initialState = new Map({
-  currentTracklistAddress: null,
-  pendingTrackCID: null
+  currentTracklistAddress: null
 })
 
 export function tracklistsReducer (state = initialState, action) {
@@ -37,6 +37,13 @@ export function tracklistsReducer (state = initialState, action) {
         tracklistReducer(state.get(LISTENS_TRACKLIST_ADDRESS), action)
       )
 
+    case importerActions.IMPORTER_PROCESSED_FILE:
+      return state.withMutations(state => {
+        payload.logAddresses.forEach(logAddress => {
+          state.set(logAddress, tracklistReducer(state.get(logAddress), action))
+        })
+      })
+
     case trackActions.TRACK_ADDED:
       return state.set(
         payload.logAddress,
@@ -60,15 +67,10 @@ export function tracklistsReducer (state = initialState, action) {
         [logAddress]: tracklistReducer(state.get(logAddress), action)
       })
 
-    case tracklistActions.ADD_TRACK:
-    case taglistActions.ADD_TAG:
-      return state.set('pendingTrackCID', action.payload.data.cid)
-
     case tracklistActions.POST_TRACK_FAILED:
     case tracklistActions.POST_TRACK_FULFILLED:
     case taglistActions.POST_TAG_FAILED:
     case taglistActions.POST_TAG_FULFILLED:
-      state.set('pendingTrackCID', null)
       return state.setIn([payload.logAddress, 'isUpdating'], false)
 
     case listensActions.LOAD_LISTENS:

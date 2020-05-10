@@ -2,7 +2,6 @@ import { call, fork, put, select, takeLatest } from 'redux-saga/effects'
 import { push } from 'react-router-redux'
 import queryString from 'query-string'
 
-import { getApp } from '@core/app'
 import { fetchTracks, postTrack, deleteTrack } from '@core/api'
 import { ITEMS_PER_LOAD } from '@core/constants'
 import { tracklistActions } from './actions'
@@ -12,11 +11,6 @@ import history from '@core/history'
 export function * addTrack ({ payload }) {
   const { logAddress, data } = payload
   yield call(postTrack, { logAddress, data })
-}
-
-export function * goToTracks () {
-  const app = yield select(getApp)
-  yield put(push(`/tracks${app.address}`))
 }
 
 export function * loadNextTracks () {

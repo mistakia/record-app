@@ -1,0 +1,33 @@
+$width = 344px
+
+.notification
+  position absolute
+  bottom 16px
+  left 'calc(50% - %s)' % ($width / 2)
+  width $width
+  padding 6px 8px 6px 16px
+  line-height 30px
+  background rgb(50,50,50)
+  border-radius 3px
+  color white
+  display flex
+  align-items center
+  flex-wrap wrap
+  justify-content flex-end
+  &.notification--expanded
+    .notification--text
+      flex-basis 100%
+      width 100%
+  .progress-container
+    absolute left bottom right
+    margin 0
+    border-radius 0 0 3px 3px
+    overflow hidden
+    height 4px
+
+  .notification--text
+    flex 1
+  button
+    flex 0 auto
+    align-self flex-end
+    color white

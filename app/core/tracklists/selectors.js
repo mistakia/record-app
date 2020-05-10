@@ -7,10 +7,6 @@ export function getTracklists (state) {
   return state.get('tracklists')
 }
 
-export function getPendingTrackCID (state) {
-  return getTracklists(state).get('pendingTrackCID')
-}
-
 export function getTracklistByAddress (state, logAddress) {
   return getTracklists(state).get(logAddress)
 }

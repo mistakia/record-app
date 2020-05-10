@@ -31,7 +31,7 @@ export const api = {
     return { url }
   },
   fetchInfo () {
-    const url = `${BASE_URL}/info`
+    const url = `${BASE_URL}/settings`
     return { url }
   },
   fetchPeers () {
@@ -83,6 +83,11 @@ export const api = {
   },
   postTrack ({ data }) {
     const url = `${BASE_URL}/tracks`
+    const post = POST(data)
+    return { url, ...post }
+  },
+  postImporter ({ data }) {
+    const url = `${BASE_URL}/importer`
     const post = POST(data)
     return { url, ...post }
   },

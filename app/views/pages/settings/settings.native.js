@@ -12,15 +12,6 @@ import TextStyles from '@styles/text'
 export default function () {
   const { info } = this.props
 
-  const peers = info.peers.map((peer, index) => {
-    return (
-      <View key={index} style={styles.row}>
-        <View style={styles.cell}><Text>{index + 1}</Text></View>
-        <View style={[styles.cell, {flex: 5}]}><Text style={TextStyles.small}>{peer.address}</Text></View>
-      </View>
-    )
-  })
-
   const body = (
     <View style={{margin: 20}}>
       <Text style={ItemStyles.label}>State</Text>
@@ -53,8 +44,6 @@ export default function () {
           <View style={styles.cell}><Text style={TextStyles.small}>{parseFloat(info.repo.repoSize).toFixed(2)} Mb</Text></View>
         </View>
       </View>
-      <Text style={ItemStyles.label}>Peers</Text>
-      <View style={styles.table}>{peers}</View>
     </View>
   )
 
