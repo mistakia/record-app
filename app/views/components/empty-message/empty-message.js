@@ -8,7 +8,7 @@ const EmptyMessage = ({
   log,
   address
 }) => {
-  if (!log || log.isReplicaating || log.address === address) {
+  if (!log || log.isReplicating || log.address === address) {
     return <div className='list__body-empty'>Empty</div>
   }
 
