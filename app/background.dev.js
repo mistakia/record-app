@@ -10,6 +10,7 @@ const createIPFSDaemon = require('record-ipfsd')
 const ipc = electron.ipcRenderer
 const { app, dialog } = electron.remote
 const { chromaprintPath } = require('./binaries')
+const debug = require('debug')
 
 log.catchErrors()
 console.log = log.log
@@ -23,11 +24,12 @@ const isDev = process.env.NODE_ENV === 'development'
 console.log(`process id: ${process.pid}, isDev: ${isDev}`)
 
 if (isDev || process.env.DEBUG_PROD === 'true') {
-  const debug = require('debug')
   debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap,ipfsd-ctl:daemon*')
 
   const Logger = require('logplease')
   Logger.setLogLevel(Logger.LogLevels.INFO)
+} else {
+  debug.enable('record:*')
 }
 
 let record
