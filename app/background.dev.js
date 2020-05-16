@@ -9,7 +9,7 @@ const log = require('electron-log')
 const createIPFSDaemon = require('record-ipfsd')
 const ipc = electron.ipcRenderer
 const { app, dialog } = electron.remote
-const { chromaprintPath } = require('./binaries')
+const { chromaprintPath, ffmpegPath } = require('./binaries')
 const debug = require('debug')
 
 log.catchErrors()
@@ -52,7 +52,8 @@ const main = async () => {
     },
     address: orbitAddress,
     api: true,
-    chromaprintPath
+    chromaprintPath,
+    ffmpegPath
   }
 
   if (isDev) {

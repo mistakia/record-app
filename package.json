@@ -163,7 +163,7 @@
     "react-window": "^1.8.5",
     "react-window-infinite-loader": "^1.0.3",
     "record-ipfsd": "mistakia/record-ipfsd#6bb15a3",
-    "record-node": "mistakia/record-node#eb2d1d8",
+    "record-node": "mistakia/record-node#7ff2ec0",
     "redux": "^4.0.0",
     "redux-immutable": "^4.0.0",
     "redux-saga": "^1.0.0-beta.1",
