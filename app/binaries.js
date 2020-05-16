@@ -30,5 +30,6 @@ const binariesPath =
     : path.join(root, './resources', getPlatform(), './bin')
 
 module.exports = {
-  chromaprintPath: path.resolve(path.join(binariesPath, './fpcalc'))
+  chromaprintPath: path.resolve(path.join(binariesPath, './fpcalc')),
+  ffmpegPath: path.resolve(path.join(binariesPath, './ffmpeg'))
 }
