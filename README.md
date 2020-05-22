@@ -7,32 +7,32 @@
 
 *Note: This repo is the React & React Native UI for [Record Node](https://github.com/mistakia/record-node).*
 
-A proof of concept distributed music application (library management, sharing, discovery & curation) built entirely on [IPFS](https://github.com/ipfs/js-ipfs). User data is stored on IPFS via a [scuttlebot](http://scuttlebot.io/)-esque immutable log via [IPFS-Log](https://github.com/orbitdb/ipfs-log) & [OrbitDB](https://github.com/orbitdb/orbit-db). Bootstraping/peer discovery is done via [bitboot](https://github.com/tintfoundation/bitboot).
+Record is a proof of concept immutable distributed system for managing a music collection. Built entirely on [IPFS](https://github.com/ipfs/js-ipfs), user data is stored in a [scuttlebot](http://scuttlebot.io/)-esque immutable log via [IPFS-Log](https://github.com/orbitdb/ipfs-log) & [OrbitDB](https://github.com/orbitdb/orbit-db). Bootstraping/peer discovery is done via [bitboot](https://github.com/tintfoundation/bitboot).
 
 At it's core, the application intends to be a media library management & playback system akin to [beets](https://github.com/beetbox/beets) with the ability to join various sources of music like [tomahawk player](https://github.com/tomahawk-player/tomahawk). By building everything on top of IPFS, it can become a connected network of libraries, opening the door to many other possibilities (i.e. distributed version of soundcloud & musicbrainz), while still being entirely distributed and thus being able to function permanently.
 
 ## Features
-- Supported audio formats: mp3, mp4, m4a/aac, flac, wav, ogg, 3gpp, aiff
-- Metadata / Audio File Tags Support via [Music Metadata](https://github.com/Borewit/music-metadata)
-- Audio fingerprinting via Chromaprint
-- Full listening history w/ counter and timestamps
-- Play / Shuffle search results & selected tags
-- Organization using tags
+- Supports: mp3, mp4, m4a/aac, flac, wav, ogg, 3gpp, aiff
+- Audio file tag support via [Music Metadata](https://github.com/Borewit/music-metadata)
+- Audio fingerprinting via [Chromaprint](https://acoustid.org/chromaprint)
+- Listening history w/ counter and timestamps
+- Tagging system for organization
+- Play / Shuffle search results & organizational tags
 - Import files from the local file system
 - Import from various web-based sources: Youtube, Soundcloud, Bandcamp, etc
   - [Record Chrome extension](https://github.com/mistakia/record-chrome-extension)
 - Content deduplication
-- Play queue (play next, add to queue, resumes playing from previous library or shuffle mode)
+- Play queue
 
 **Future Features**
 - Metadata cleaning / import using: discogs, musicbrainz, last.fm, allmusic, beatport, streaming services, etc
 - Media server (MPD, Sonos, Plex, Kodi, Emby)
 - Audio and music analysis (Aubio, Essentia)
 - Audio Scrobbling (last.fm, libre.fm, listenbrainz)
-- Trustless timestamping / distributed copyrighting & distribution (OpenTimestamps, UJO, Ethereum, Nano)
+- Trustless timestamping / distributed copyrighting & distribution (OpenTimestamps, Ethereum, Nano)
 
 ## More Info
-- Read the [wiki](https://github.com/mistakia/record-app/wiki) for a primer.
+- Read the [wiki](https://ipfs.infura.io/ipfs/Qmf4wAJLhU7jWjKbgZ7F1fe6iLARtbuvsHZugGxutxwSuk/) for a primer.
 - Check out [the roadmap](https://github.com/mistakia/record-app/projects/1) to view planned features.
 
 ## Install
