@@ -13,6 +13,7 @@ import Icon from '@components/icon'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
 import Log from '@components/log'
+import { WIKI_URL } from '@core/constants'
 
 export class TracksPage extends React.Component {
   constructor (props) {
@@ -61,7 +62,7 @@ export class TracksPage extends React.Component {
           <Icon name='website' />
           <div>Add tracks from other websites using the chrome extension.</div>
         </div>
-        <a onClick={shell.openExternal.bind(null, 'https://github.com/mistakia/record-app/wiki')} className='button button__text page__help-link'>Learn more</a>
+        <a onClick={shell.openExternal.bind(null, WIKI_URL)} className='button button__text page__help-link'>Learn more</a>
       </div>
     )
 
