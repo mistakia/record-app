@@ -5,6 +5,7 @@ import IconButton from '@components/icon-button'
 import Icon from '@components/icon'
 import Loglist from '@components/loglist'
 import PageLayout from '@layouts/page'
+import { WIKI_URL } from '@core/constants'
 
 export default function () {
   const { logs, allLoglist, isHomeHelpVisible, toggleHomeHelp } = this.props
@@ -26,7 +27,7 @@ export default function () {
         <IconButton className='button__outline' icon='link' label='link' link='/link-log' />
         <div>If you have a library's address, you can add it directly.</div>
       </div>
-      <a onClick={shell.openExternal.bind(null, 'https://github.com/mistakia/record-app/wiki')} className='button button__text page__help-link'>Learn more</a>
+      <a onClick={shell.openExternal.bind(null, WIKI_URL)} className='button button__text page__help-link'>Learn more</a>
     </div>
   )
 

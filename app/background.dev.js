@@ -24,10 +24,10 @@ const isDev = process.env.NODE_ENV === 'development'
 console.log(`process id: ${process.pid}, isDev: ${isDev}`)
 
 if (isDev || process.env.DEBUG_PROD === 'true') {
-  debug.enable('record:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap,ipfsd-ctl:daemon*')
+  debug.enable('record:*,ipfs:http-api:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap,ipfsd-ctl:daemon*')
 
   const Logger = require('logplease')
-  Logger.setLogLevel(Logger.LogLevels.INFO)
+  Logger.setLogLevel(Logger.LogLevels.DEBUG)
 } else {
   debug.enable('record:*')
 }
