@@ -1,12 +1,10 @@
 .page
-  absolute left right top bottom 75px
-  height 100%
+  absolute left $menuWidth right top bottom 0
   overflow hidden
   display flex
   flex-direction column
-  padding-top 60px
   &.player-open
-    padding-bottom 75px
+    bottom 75px
 
 .page__container
   display flex
@@ -18,7 +16,7 @@
 .page__head
   flex 0 0 40px
   border-bottom 1px solid $borderColorDark
-  background #fcfcfc
+  -webkit-app-region drag
   button.button__arrow-back
     border none
     padding 0

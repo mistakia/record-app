@@ -23,13 +23,14 @@ export const Log = new Record({
   alias: null,
   avatar: null,
   name: null,
+  logName: null,
   displayName: null,
   shortAddress: null,
   location: null,
   bio: null,
   isLinked: false,
   isReplicating: false,
-  isBuildingIndex: false,
+  isLoadingIndex: false,
   isProcessingIndex: false,
   latestHeadTimestamp: null,
   processingCount: 0,
@@ -50,8 +51,12 @@ export function createLog (data) {
   const shortAddress = getShortAddress(data.content.address)
   const displayName = data.content.alias || data.content.name || shortAddress
   const latestHead = data.heads.sort((a, b) => b.timestamp - a.timestamp)[0]
+  const logName = data.isMe
+    ? (data.content.name || shortAddress)
+    : (displayName)
 
   return new Log({
+    logName,
     shortAddress,
     displayName,
     id: data.id,
@@ -66,7 +71,7 @@ export function createLog (data) {
     isLinked: !!data.isLinked,
     isMe: !!data.isMe,
     isReplicating: !!data.isReplicating,
-    isBuildingIndex: !!data.isBuildingIndex,
+    isLoadingIndex: !!data.isLoadingIndex,
     isProcessingIndex: !!data.isProcessingIndex,
     trackCount: data.trackCount,
     logCount: data.logCount,

@@ -18,7 +18,7 @@ class Track extends React.Component {
     const { track, showContext } = this.props
     showContext({
       id: 'track',
-      trackId: track.id,
+      data: { trackId: track.id },
       clickX: event.clientX,
       clickY: event.clientY
     })
@@ -30,7 +30,7 @@ class Track extends React.Component {
       id: 'tag',
       clickX: event.clientX,
       clickY: event.clientY,
-      trackId: track.id
+      data: { trackId: track.id }
     })
   }
 

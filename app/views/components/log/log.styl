@@ -1,6 +1,5 @@
 .log
   padding 0
-  display flex
   align-items center
   color #000
   &:not(.log__profile)
@@ -17,7 +16,6 @@
     opacity 0
 
 .log__main
-  flex 0 0 35%
   display flex
   align-items center
 
@@ -82,9 +80,14 @@
     flex 0 0 auto
     > div
       min-width 140px
+  .log__main
+    flex 0 0 35%
 
 .log__profile.log
   padding 0 16px
+  display flex
+  .log__main
+    flex 0 0 35%
   .log__title
     flex 0 0 auto
   .log__side
@@ -94,19 +97,8 @@
       content attr(data-label)
       font-size 10px
 
-.log__connected:before
-.log__disconnected:before
-  content ' '
-  display inline-block
-  border-radius 99em
-  width 4px
-  height 4px
-  margin-right 8px
-  margin-left 3px
-  vertical-align middle
-
-.log__connected:before
-  background-color $successColor
-
-.log__disconnected:before
-  background-color $failureColor
+.log__menu-item
+  .log__avatar
+    flex 0 0 35px
+    display flex
+    height 35px

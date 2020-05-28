@@ -21,35 +21,38 @@ export const tracklistActions = {
   DELETE_TRACK_FULFILLED: 'DELETE_TRACK_FULFILLED',
   DELETE_TRACK_PENDING: 'DELETE_TRACK_PENDING',
 
-  fetchTracksFailed: (logAddress, error) => ({
+  fetchTracksFailed: (address, error) => ({
     type: tracklistActions.FETCH_TRACKS_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  fetchTracksFulfilled: (logAddress, data) => ({
+  fetchTracksFulfilled: (address, data) => ({
     type: tracklistActions.FETCH_TRACKS_FULFILLED,
     payload: {
       data,
-      logAddress
+      address
     }
   }),
 
-  fetchTracksPending: logAddress => ({
+  fetchTracksPending: address => ({
     type: tracklistActions.FETCH_TRACKS_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  loadTracks: ({ logAddress, tags, query }) => ({
+  loadTracks: ({ path, addresses, tags, query, order, sort }) => ({
     type: tracklistActions.LOAD_TRACKS,
     payload: {
-      logAddress,
+      path,
+      addresses,
       tags,
-      query
+      query,
+      order,
+      sort
     }
   }),
 
@@ -64,71 +67,70 @@ export const tracklistActions = {
     type: tracklistActions.LOAD_NEXT_TRACKS
   }),
 
-  postTrackFailed: (logAddress, error) => ({
+  postTrackFailed: (address, error) => ({
     type: tracklistActions.POST_TRACK_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  postTrackFulfilled: (logAddress, data) => ({
+  postTrackFulfilled: (address, data) => ({
     type: tracklistActions.POST_TRACK_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  postTrackPending: logAddress => ({
+  postTrackPending: address => ({
     type: tracklistActions.POST_TRACK_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  addTrack: (logAddress, data) => ({
+  addTrack: (address, data) => ({
     type: tracklistActions.ADD_TRACK,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  removeTrack: (logAddress, data) => ({
+  removeTrack: (address, data) => ({
     type: tracklistActions.REMOVE_TRACK,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  deleteTrackFailed: (logAddress, error) => ({
+  deleteTrackFailed: (address, error) => ({
     type: tracklistActions.DELETE_TRACK_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  deleteTrackPending: logAddress => ({
+  deleteTrackPending: address => ({
     type: tracklistActions.DELETE_TRACK_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  deleteTrackFulfilled: (logAddress, data) => ({
+  deleteTrackFulfilled: (address, data) => ({
     type: tracklistActions.DELETE_TRACK_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  clearSearch: (logAddress) => ({
-    type: tracklistActions.CLEAR_SEARCH,
-    payload: { logAddress }
+  clearSearch: () => ({
+    type: tracklistActions.CLEAR_SEARCH
   }),
 
   searchTracks: (query) => ({

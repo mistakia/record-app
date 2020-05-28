@@ -47,12 +47,12 @@ import {
 function * fetchAPI (apiFunction, actions, opts = {}) {
   const { abort, request } = apiRequest(apiFunction, opts)
   try {
-    yield put(actions.pending(opts.logAddress))
+    yield put(actions.pending(opts.address))
     const data = yield call(request)
-    yield put(actions.fulfilled(opts.logAddress, data))
+    yield put(actions.fulfilled(opts.address, data))
   } catch (err) {
     console.log(err)
-    yield put(actions.failed(opts.logAddress, err.toString()))
+    yield put(actions.failed(opts.address, err.toString()))
   } finally {
     if (yield cancelled()) {
       abort()

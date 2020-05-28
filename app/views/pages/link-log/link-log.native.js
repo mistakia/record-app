@@ -14,12 +14,12 @@ export default class LinkLogPage extends React.Component {
   constructor (props) {
     super(props)
 
-    const { logAddress } = this.props.match.params
+    const { address } = this.props.match.params
     const { alias } = queryString.parse(this.props.location.search)
 
     this.state = {
       alias: alias || '',
-      linkAddress: logAddress || ''
+      linkAddress: address || ''
     }
 
     this.handleSubmit = this.handleSubmit.bind(this)

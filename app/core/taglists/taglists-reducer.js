@@ -2,24 +2,21 @@ import { Map } from 'immutable'
 
 import { taglistActions } from './actions'
 import { taglistReducer } from './taglist-reducer'
+import { CURRENT_TAGLIST_ADDRESS } from '@core/constants'
 
 export const initialState = new Map()
 
-export function taglistsReducer (state = initialState, action) {
-  const { payload } = action
+// TODO update taglist on new entries (remote or local)
 
+export function taglistsReducer (state = initialState, action) {
   switch (action.type) {
     case taglistActions.FETCH_TAGS_FULFILLED:
     case taglistActions.FETCH_TAGS_PENDING:
-      return state.set(
-        payload.logAddress,
-        taglistReducer(state.get(payload.logAddress), action)
-      )
-
     case taglistActions.LOAD_TAGS:
-      return state.merge({
-        [payload.logAddress]: taglistReducer(undefined, action)
-      })
+      return state.set(
+        CURRENT_TAGLIST_ADDRESS,
+        taglistReducer(state.get(CURRENT_TAGLIST_ADDRESS), action)
+      )
 
     default:
       return state

@@ -1,6 +1,6 @@
 $playerHeight = 75px
-$textColor = rgba(255,255,255,0.6)
-$backgroundColor = #2d2e2f
+// $textColor = rgba(255,255,255,0.6)
+$backgroundColor = white
 
 @keyframes show-player
   0%
@@ -9,14 +9,15 @@ $backgroundColor = #2d2e2f
     bottom 0
 
 .player
-  fixed bottom 0 right
+  fixed left $menuWidth bottom 0 right
   z-index 10001
   display flex
-  width 100%
   height $playerHeight
   color $textColor
   background $backgroundColor
   align-items center
+  border-top 1px solid $borderColorDark
+  -webkit-app-region drag
 
   transform translateZ(0)
   transition all 0.35s ease
@@ -28,19 +29,8 @@ $backgroundColor = #2d2e2f
   small
     color $textColor
 
-  .tag
-    color $textColor
-    background rgba($accentColorRGB,0.3)
-    .tag--count
-    .tag--remove
-      border-color $backgroundColor
-
   .button__icon
     fill $textColor
-
-    &:hover
-      fill rgba(255,255,255,0.9)
-      // background transparent
 
     &:active
       background rgba(255, 255, 255, 0.15)
@@ -56,6 +46,7 @@ $backgroundColor = #2d2e2f
 
 .player__track-artwork
   flex 0 0 $playerHeight - 10px
+  height $playerHeight - 10px
   margin-right 5px
   overflow hidden
 
@@ -95,7 +86,7 @@ $backgroundColor = #2d2e2f
   flex 1
   font-family monospace
   font-size 10px
-  color white
+  color black
   display flex
   align-items baseline
   color #888
@@ -107,7 +98,7 @@ $backgroundColor = #2d2e2f
   flex 0
 
 .player__track-title
-  color white
+  color rgb(0,0,0)
 
 .player__track-title
 .player__track-artist
@@ -130,14 +121,13 @@ $backgroundColor = #2d2e2f
 .player__tracklist-info
   flex 0 0 auto
   &:hover
-    color white
+    color black
 
 .player__tracklist-artwork
   flex 0 0 $playerHeight - 10px
   margin 0 8px
   overflow hidden
   height $playerHeight - 10px
-  background transparent
 
 .player__track-tags
   position relative

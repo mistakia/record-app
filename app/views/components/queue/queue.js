@@ -12,7 +12,7 @@ class Queue extends React.Component {
     const { showContext } = this.props
     showContext({
       id: 'track',
-      trackId,
+      data: { trackId },
       clickX: event.clientX,
       clickY: event.clientY
     })

@@ -11,8 +11,8 @@ export function getLoglists (state) {
   return state.get('loglists')
 }
 
-export function getLoglistByAddress (state, logAddress) {
-  return getLoglists(state).get(logAddress)
+export function getLoglistByAddress (state, address) {
+  return getLoglists(state).get(address)
 }
 
 export function getCurrentLoglistAddress (state) {
@@ -26,11 +26,11 @@ export function getCurrentLoglist (state) {
 }
 
 export function getCurrentLoglistLog (state) {
-  const logAddress = getCurrentLoglistAddress(state)
-  if (!logAddress) {
+  const address = getCurrentLoglistAddress(state)
+  if (!address) {
     return new Log()
   }
-  return getLogByAddress(state, logAddress)
+  return getLogByAddress(state, address)
 }
 
 export function getPeerLoglist (state) {
@@ -43,41 +43,41 @@ export function getAllLoglist (state) {
   return loglists.get(ALL_LOGLIST_ADDRESS) || new Loglist()
 }
 
-export const getCurrentLogAddresses = createSelector(
+export const getCurrentAddresses = createSelector(
   getCurrentLoglist,
-  loglist => loglist.logAddresses
+  loglist => loglist.addresses
 )
 
-export const getPeerLogAddresses = createSelector(
+export const getPeerAddresses = createSelector(
   getPeerLoglist,
-  loglist => loglist.logAddresses
+  loglist => loglist.addresses
 )
 
-export const getAllLogAddresses = createSelector(
+export const getAllAddresses = createSelector(
   getAllLoglist,
-  loglist => loglist.logAddresses
+  loglist => loglist.addresses
 )
 
 export const getLogsForCurrentLoglist = createSelector(
-  getCurrentLogAddresses,
+  getCurrentAddresses,
   getLogs,
-  (logAddresses, logs) => {
-    return logAddresses.map(address => logs.get(address))
+  (addresses, logs) => {
+    return addresses.map(address => logs.get(address))
   }
 )
 
 export const getLogsForPeerLoglist = createSelector(
-  getPeerLogAddresses,
+  getPeerAddresses,
   getLogs,
-  (logAddresses, logs) => {
-    return logAddresses.map(address => logs.get(address))
+  (addresses, logs) => {
+    return addresses.map(address => logs.get(address))
   }
 )
 
 export const getLogsForAllLoglist = createSelector(
-  getAllLogAddresses,
+  getAllAddresses,
   getLogs,
-  (logAddresses, logs) => {
-    return logAddresses.map(address => logs.get(address))
+  (addresses, logs) => {
+    return addresses.map(address => logs.get(address))
   }
 )

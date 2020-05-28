@@ -10,7 +10,8 @@ export class TrackContextMenu extends React.Component {
       contextMenuInfo,
       showContext
     } = this.props
-    const { trackId, clickX, clickY } = contextMenuInfo
+    const { data, clickX, clickY } = contextMenuInfo
+    const { trackId } = data
     const isQueued = queue.contains(trackId)
 
     return (
@@ -29,7 +30,7 @@ export class TrackContextMenu extends React.Component {
           Remove from queue</div>
         <div
           className={'context-menu--option'}
-          onClick={() => setImmediate(() => showContext({ id: 'tag', trackId, clickX, clickY }))}>
+          onClick={() => setImmediate(() => showContext({ id: 'tag', data: { trackId }, clickX, clickY }))}>
           Add Tag</div>
       </div>
     )

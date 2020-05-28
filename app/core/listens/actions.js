@@ -18,49 +18,49 @@ export const listensActions = {
     type: listensActions.LOAD_NEXT_LISTENS
   }),
 
-  fetchListensRequestFailed: (logAddress, error) => ({
+  fetchListensRequestFailed: (address, error) => ({
     type: listensActions.FETCH_LISTENS_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  fetchListensRequestFulfilled: (logAddress, data) => ({
+  fetchListensRequestFulfilled: (address, data) => ({
     type: listensActions.FETCH_LISTENS_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  fetchListensRequestPending: logAddress => ({
+  fetchListensRequestPending: address => ({
     type: listensActions.FETCH_LISTENS_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  postListenFailed: (logAddress, error) => ({
+  postListenFailed: (address, error) => ({
     type: listensActions.POST_LISTEN_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  postListenFulfilled: (logAddress, data) => ({
+  postListenFulfilled: (address, data) => ({
     type: listensActions.POST_LISTEN_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  postListenPending: logAddress => ({
+  postListenPending: address => ({
     type: listensActions.POST_LISTEN_PENDING,
     payload: {
-      logAddress
+      address
     }
   })
 }

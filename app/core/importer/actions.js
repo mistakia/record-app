@@ -9,33 +9,33 @@ export const importerActions = {
   POST_IMPORTER_FULFILLED: 'POST_IMPORTER_FULFILLED',
   POST_IMPORTER_PENDING: 'POST_IMPORTER_PENDING',
 
-  postImporterFailed: (logAddress, error) => ({
+  postImporterFailed: (address, error) => ({
     type: importerActions.POST_IMPORTER_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  postImporterFulfilled: (logAddress, data) => ({
+  postImporterFulfilled: (address, data) => ({
     type: importerActions.POST_IMPORTER_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  postImporterPending: logAddress => ({
+  postImporterPending: address => ({
     type: importerActions.POST_IMPORTER_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  add: (logAddress, data) => ({
+  add: (address, data) => ({
     type: importerActions.IMPORTER_ADD,
     payload: {
-      logAddress,
+      address,
       data
     }
   })

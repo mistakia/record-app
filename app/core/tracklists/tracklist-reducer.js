@@ -1,6 +1,6 @@
 import { List } from 'immutable'
 
-import { ITEMS_PER_LOAD, LISTENS_TRACKLIST_ADDRESS } from '@core/constants'
+import { ITEMS_PER_LOAD } from '@core/constants'
 import { trackActions } from '@core/tracks'
 import { tracklistActions } from './actions'
 import { Tracklist } from './tracklist'
@@ -15,41 +15,39 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
       return state.withMutations(tracklist => {
         tracklist.merge({
           query: null,
-          filteredTrackIds: new List()
+          trackIds: new List()
         })
       })
 
     case tracklistActions.SEARCH_TRACKS:
       return state.withMutations(tracklist => {
         const { query } = payload
-        tracklist.merge({ query, filteredTrackIds: new List() })
+        tracklist.merge({ query, trackIds: new List() })
       })
 
-    case tracklistActions.FETCH_TRACKS_FULFILLED:
     case listensActions.FETCH_LISTENS_FULFILLED:
-      const hasQuery = !!state.get('query')
-      const isFiltered = hasQuery || state.tags.size
+    case tracklistActions.FETCH_TRACKS_FULFILLED:
       return state.withMutations(tracklist => {
         tracklist.merge({
           isPending: false,
-          hasMore: hasQuery ? false : payload.data.length === ITEMS_PER_LOAD,
-          filteredTrackIds: isFiltered ? mergeList(tracklist.filteredTrackIds, payload.data) : tracklist.filteredTrackIds,
-          trackIds: !isFiltered ? mergeList(tracklist.trackIds, payload.data) : tracklist.trackIds
+          hasMore: payload.data.length === ITEMS_PER_LOAD,
+          trackIds: mergeList(tracklist.trackIds, payload.data)
         })
       })
 
-    case listensActions.POST_LISTEN_FULFILLED:
-      const { trackId } = payload.data
-      return state.merge({
-        isUpdating: false,
-        trackIds: state.trackIds.unshift(trackId)
-      })
+    case listensActions.POST_LISTEN_FULFILLED: {
+      if (state.path !== '/listens') {
+        return state
+      }
+
+      return state.merge({ isOutdated: true })
+    }
 
     case tracklistActions.TOGGLE_TAG:
       const { tag } = payload
       return state.withMutations(tracklist => {
         tracklist.merge({
-          filteredTrackIds: new List(),
+          trackIds: new List(),
           tags: state.tags.includes(tag)
             ? state.tags.splice(state.tags.indexOf(tag), 1)
             : state.tags.push(tag)
@@ -61,34 +59,36 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         return state
       }
 
-      return state.merge({ trackIds: mergeList(state.trackIds, [payload.track]) })
+      let isOutdated = false
+      for (const address of payload.addresses) {
+        if (state.addresses.includes(address)) {
+          isOutdated = true
+          break
+        }
+      }
+
+      return state.merge({ isOutdated: isOutdated || state.isOutdated })
     }
 
     case tracklistActions.POST_TRACK_FULFILLED:
-    case trackActions.TRACK_ADDED:
-      return state.withMutations(tracklist => {
-        tracklist.merge({
-          trackIds: mergeList(tracklist.trackIds, [payload.data])
-        })
-      })
+    case trackActions.TRACK_ADDED: {
+      const isOutdated = state.addresses.includes(payload.address)
+      return state.merge({ isOutdated: isOutdated || state.isOutdated })
+    }
 
-    case logActions.LOG_INDEX_UPDATED:
+    case logActions.LOG_INDEX_UPDATED: {
       const trackEntries = payload.data.filter(entry => entry.payload.value.type === 'track')
       if (!trackEntries.length) {
         return state
       }
 
-      const tracks = trackEntries.map(entry => entry.payload.value)
+      const isOutdated = state.addresses.includes(payload.address)
+      return state.merge({ isOutdated: isOutdated || state.isOutdated })
+    }
 
-      return state.withMutations(tracklist => {
-        tracklist.merge({
-          trackIds: mergeList(tracklist.trackIds, tracks)
-        })
-      })
-
-    case listensActions.POST_LISTEN_PENDING:
-    case tracklistActions.POST_TRACK_PENDING:
-      return state.set('isUpdating', true)
+    case listensActions.FETCH_LISTENS_FAILED:
+    case tracklistActions.FETCH_TRACKS_FAILED:
+      return state.set('isPending', false)
 
     case listensActions.FETCH_LISTENS_PENDING:
     case tracklistActions.FETCH_TRACKS_PENDING:
@@ -96,14 +96,19 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
 
     case listensActions.LOAD_LISTENS:
       return state.merge({
-        address: LISTENS_TRACKLIST_ADDRESS
+        path: '/listens',
+        trackIds: new List()
       })
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({
-        address: payload.logAddress,
+        path: payload.path || state.path,
+        addresses: payload.addresses,
+        sort: payload.sort || state.sort,
+        order: payload.order || state.order,
         query: payload.query,
-        tags: payload.tags ? new List(payload.tags) : new List()
+        tags: payload.tags ? new List(payload.tags) : new List(),
+        trackIds: new List()
       })
 
     default:

@@ -23,8 +23,8 @@ export function loglistsReducer (state = initialState, action) {
     case loglistActions.FETCH_ALL_LOGS_PENDING:
     case loglistActions.FETCH_ALL_LOGS_FULFILLED:
       return state.set(
-        payload.logAddress,
-        loglistReducer(state.get(payload.logAddress), action)
+        payload.address,
+        loglistReducer(state.get(payload.address), action)
       )
 
     case logActions.LOG_LOADED:
@@ -35,15 +35,15 @@ export function loglistsReducer (state = initialState, action) {
 
     case loglistActions.POST_LOG_FAILED:
     case loglistActions.POST_LOG_FULFILLED:
-      return state.setIn([payload.logAddress, 'isUpdating'], false)
+      return state.setIn([payload.address, 'isUpdating'], false)
 
     case loglistActions.POST_LOG_PENDING:
-      return state.setIn([payload.logAddress, 'isUpdating'], true)
+      return state.setIn([payload.address, 'isUpdating'], true)
 
     case loglistActions.LOAD_LOGS:
       return state.merge({
-        currentLoglistAddress: payload.logAddress,
-        [payload.logAddress]: loglistReducer(undefined, action)
+        currentLoglistAddress: payload.address,
+        [payload.address]: loglistReducer(undefined, action)
       })
 
     case loglistActions.LOAD_PEER_LOGS:

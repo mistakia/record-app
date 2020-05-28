@@ -7,13 +7,15 @@ import { shell } from 'electron'
 import { tracklistActions, getCurrentTracklistLog } from '@core/tracklists'
 import { logActions } from '@core/logs'
 import { taglistActions } from '@core/taglists'
+import { getApp } from '@core/app'
 import { getHelp, helpActions } from '@core/help'
 import Icon from '@components/icon'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
+import Log from '@components/log'
 import { WIKI_URL } from '@core/constants'
 
-export class TracksPage extends React.Component {
+export class SingleTracksPage extends React.Component {
   constructor (props) {
     super(props)
     this._load()
@@ -28,25 +30,28 @@ export class TracksPage extends React.Component {
   }
 
   _load () {
-    const { tags, query, addresses, sort, order } = queryString.parse(this.props.location.search)
+    const { address } = this.props.match.params
+    const { tags, query, sort, order } = queryString.parse(this.props.location.search)
     this.props.loadTracks({
       path: this.props.location.pathname,
-      addresses: (addresses && !Array.isArray(addresses)) ? [addresses] : (addresses || []),
+      addresses: [address],
       sort,
       order,
       tags: (tags && !Array.isArray(tags)) ? [tags] : (tags || []),
       query
     })
-    this.props.loadTags(addresses)
+    this.props.loadTags([address])
+    this.props.loadLog(address)
   }
 
   render () {
-    const { log, isTracksHelpVisible, toggleTracksHelp, loadNextTracks } = this.props
+    const { address } = this.props.match.params
+    const { app, log, isMyTracksHelpVisible, toggleMyTracksHelp, loadNextTracks } = this.props
 
     const help = (
       <div>
         <div className='page__help-row'>
-          <div className='page__help-lead'>Here you will see all tracks, from all libraries.</div>
+          <div className='page__help-lead'>Here you will see tracks that you've added to your library.</div>
         </div>
         <div className='page__help-row'>
           <Icon name='star-solid' />
@@ -64,24 +69,30 @@ export class TracksPage extends React.Component {
       </div>
     )
 
-    const body = <Tracklist showAdd loadNext={loadNextTracks} log={log} />
+    const head = <Log type='profile' log={log} />
+
+    const isMyTracklist = address === app.address
+    const body = <Tracklist showAdd={isMyTracklist} loadNext={loadNextTracks} log={log} tracklistAddress={address} />
 
     return (
       <PageLayout
-        help={isTracksHelpVisible && help}
-        onHelpClose={toggleTracksHelp}
-        title='Tracks'
-        body={body} />
+        help={isMyTracksHelpVisible && isMyTracklist && help}
+        onHelpClose={toggleMyTracksHelp}
+        head={head}
+        body={body}
+      />
     )
   }
 }
 
 const mapStateToProps = createSelector(
+  getApp,
   getCurrentTracklistLog,
   getHelp,
-  (log, help) => ({
+  (app, log, help) => ({
+    app,
     log,
-    isTracksHelpVisible: help.isTracksHelpVisible
+    isMyTracksHelpVisible: help.isMyTracksHelpVisible
   })
 )
 
@@ -90,10 +101,10 @@ const mapDispatchToProps = {
   loadNextTracks: tracklistActions.loadNextTracks,
   loadLog: logActions.loadLog,
   loadTags: taglistActions.loadTags,
-  toggleTracksHelp: helpActions.toggleTracksHelp
+  toggleMyTracksHelp: helpActions.toggleMyTracksHelp
 }
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(TracksPage)
+)(SingleTracksPage)

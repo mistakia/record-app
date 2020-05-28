@@ -7,6 +7,8 @@ import PlayerTimeline from '@components/player-timeline'
 import AudioCurrentTime from '@components/audio-current-time'
 import FormattedTime from '@components/formatted-time'
 import Tags from '@components/tags'
+import history from '@core/history'
+import queryString from 'query-string'
 
 import './player.styl'
 
@@ -14,6 +16,7 @@ export default class Player extends React.Component {
   constructor () {
     super()
     this._handleContextMenu = this._handleContextMenu.bind(this)
+    this._handleTracklistClick = this._handleTracklistClick.bind(this)
   }
 
   componentDidMount () {
@@ -37,10 +40,31 @@ export default class Player extends React.Component {
     const { track, showContext } = this.props
     showContext({
       id: 'track',
-      trackId: track.id,
+      data: { trackId: track.id },
       clickX: event.clientX,
       clickY: event.clientY
     })
+  }
+
+  _handleTracklistClick () {
+    const currentPath = history.location.pathname
+    if (currentPath === '/listens') {
+      return
+    }
+
+    const { tracklist } = this.props
+    if (currentPath === tracklist.path) {
+      this.props.loadTracks({ ...tracklist.toJS() })
+    } else {
+      const qs = queryString.stringify({
+        addresses: tracklist.addresses.toJS(),
+        tags: tracklist.tags.toJS(),
+        query: tracklist.query,
+        sort: tracklist.sort,
+        order: tracklist.order
+      })
+      history.push(`${tracklist.path}?${qs}`)
+    }
   }
 
   render () {
@@ -56,17 +80,15 @@ export default class Player extends React.Component {
       add,
       isLoading,
       shuffle,
+      tracklist,
       tracklistAddress,
+      tracklistLog,
       isShuffling,
-      tags,
-      query,
       stopShuffle,
       remove,
       queue,
-      loadTracks,
       app,
       isQueueVisible,
-      tracklistLog,
       toggleQueue
     } = this.props
 
@@ -97,7 +119,7 @@ export default class Player extends React.Component {
               <small>{track.format}</small> · <small>{Math.round(track.bitrate / 1000)} kbps</small>
             </div>
             <div className='player__track-tags'>
-              <Tags track={track} />
+              <Tags track={track} tracklistAddress={tracklistAddress} />
             </div>
           </div>
         </div>
@@ -115,7 +137,6 @@ export default class Player extends React.Component {
               label='Shuffle'
               isActive={isShuffling}
               onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}
-              disabled={!isShuffling && !tracklistAddress}
             />
 
             <IconButton
@@ -163,12 +184,17 @@ export default class Player extends React.Component {
           </div>
         </div>
 
-        {tracklistLog && <div className='player__tracklist'>
-          <div className='player__tracklist-info cursor' onClick={loadTracks.bind(null, { logAddress: tracklistLog.address, query, tags })}>
-            {tracklistLog.displayName}
+        <div className='player__tracklist'>
+          <div className='player__tracklist-info cursor' onClick={this._handleTracklistClick}>
+            {tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}
           </div>
-          <Artwork className='player__tracklist-artwork' url={tracklistLog.avatar} background />
-        </div>}
+          <Artwork
+            onClick={this._handleTracklistClick}
+            className='player__tracklist-artwork cursor'
+            url={tracklistLog && tracklistLog.avatar}
+            background
+          />
+        </div>
       </div>
     )
   }

@@ -17,7 +17,7 @@ export function loglistReducer (state = new Loglist(), {payload, type}) {
       return state.withMutations(loglist => {
         loglist.merge({
           isPending: false,
-          logAddresses: mergeList(loglist.logAddresses, data, 'content.address')
+          addresses: mergeList(loglist.addresses, data, 'content.address')
         })
       })
 
@@ -27,7 +27,7 @@ export function loglistReducer (state = new Loglist(), {payload, type}) {
       return state.set('isPending', true)
 
     case loglistActions.LOAD_LOGS:
-      return state.set('address', payload.logAddress)
+      return state.set('address', payload.address)
 
     case loglistActions.LOAD_PEER_LOGS:
       return state.set('address', PEER_LOGLIST_ADDRESS)

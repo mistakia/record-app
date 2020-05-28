@@ -3,6 +3,7 @@ import React from 'react'
 import TrackContextMenu from '@components/track-context-menu'
 import TagContextMenu from '@components/tag-context-menu'
 import UrlContextMenu from '@components/url-context-menu'
+import LogContextMenu from '@components/log-context-menu'
 
 import './context-menu.styl'
 
@@ -91,6 +92,7 @@ export class ContextMenu extends React.Component {
         case 'track': return TrackContextMenu
         case 'tag': return TagContextMenu
         case 'url': return UrlContextMenu
+        case 'log': return LogContextMenu
       }
     }
 

@@ -10,23 +10,23 @@ import {
 import { notificationActions } from '@core/notifications'
 
 export function * removeLog ({ payload }) {
-  const { logAddress } = payload
-  yield call(deleteLog, { logAddress })
+  const { address } = payload
+  yield call(deleteLog, { address })
 }
 
 export function * loadLog ({ payload = {} }) {
-  const { logAddress } = payload
-  yield call(fetchLog, { logAddress })
+  const { address } = payload
+  yield call(fetchLog, { address })
 }
 
 export function * connectLog ({ payload }) {
-  const { logAddress } = payload
-  yield call(requestConnectLog, { logAddress })
+  const { address } = payload
+  yield call(requestConnectLog, { address })
 }
 
 export function * disconnectLog ({ payload }) {
-  const { logAddress } = payload
-  yield call(requestDisconnectLog, { logAddress })
+  const { address } = payload
+  yield call(requestDisconnectLog, { address })
 }
 
 export function * deleteLogFailed () {

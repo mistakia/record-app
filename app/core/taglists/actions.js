@@ -16,94 +16,94 @@ export const taglistActions = {
   DELETE_TAG_FULFILLED: 'DELETE_TAG_FULFILLED',
   DELETE_TAG_PENDING: 'DELETE_TAG_PENDING',
 
-  fetchTagsFailed: (logAddress, error) => ({
+  fetchTagsFailed: (address, error) => ({
     type: taglistActions.FETCH_TAGS_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  fetchTagsFulfilled: (logAddress, data) => ({
+  fetchTagsFulfilled: (address, data) => ({
     type: taglistActions.FETCH_TAGS_FULFILLED,
     payload: {
       data,
-      logAddress
+      address
     }
   }),
 
-  fetchTagsPending: logAddress => ({
+  fetchTagsPending: address => ({
     type: taglistActions.FETCH_TAGS_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  loadTags: logAddress => ({
+  loadTags: addresses => ({
     type: taglistActions.LOAD_TAGS,
     payload: {
-      logAddress
+      addresses
     }
   }),
 
-  postTagFailed: (logAddress, error) => ({
+  postTagFailed: (address, error) => ({
     type: taglistActions.POST_TAG_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  postTagFulfilled: (logAddress, data) => ({
+  postTagFulfilled: (address, data) => ({
     type: taglistActions.POST_TAG_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  postTagPending: logAddress => ({
+  postTagPending: address => ({
     type: taglistActions.POST_TAG_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  addTag: (logAddress, data) => ({
+  addTag: (address, data) => ({
     type: taglistActions.ADD_TAG,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  deleteTagFailed: (logAddress, error) => ({
+  deleteTagFailed: (address, error) => ({
     type: taglistActions.DELETE_TAG_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  deleteTagFulfilled: (logAddress, data) => ({
+  deleteTagFulfilled: (address, data) => ({
     type: taglistActions.DELETE_TAG_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  deleteTagPending: logAddress => ({
+  deleteTagPending: address => ({
     type: taglistActions.DELETE_TAG_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  removeTag: (logAddress, data) => ({
+  removeTag: (address, data) => ({
     type: taglistActions.REMOVE_TAG,
     payload: {
-      logAddress,
+      address,
       data
     }
   })

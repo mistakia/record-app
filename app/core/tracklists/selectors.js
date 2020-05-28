@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect'
 
+import { CURRENT_TRACKLIST_ADDRESS } from '@core/constants'
 import { getLogByAddress } from '@core/logs'
 import { getTracks } from '@core/tracks'
 
@@ -7,42 +8,27 @@ export function getTracklists (state) {
   return state.get('tracklists')
 }
 
-export function getTracklistByAddress (state, logAddress) {
-  return getTracklists(state).get(logAddress)
-}
-
-export function getCurrentTracklistAddress (state) {
-  const tracklists = getTracklists(state)
-  return tracklists.get('currentTracklistAddress')
-}
-
 export function getCurrentTracklist (state) {
-  let tracklists = getTracklists(state)
-  return tracklists.get(tracklists.get('currentTracklistAddress'))
+  return getTracklists(state).get(CURRENT_TRACKLIST_ADDRESS)
 }
 
 export function getCurrentTracklistLog (state) {
-  const logAddress = getCurrentTracklistAddress(state)
-  return getLogByAddress(state, logAddress)
-}
+  const tracklist = getCurrentTracklist(state)
+  if (!tracklist) {
+    return null
+  }
 
-export function getCurrentSelectedTags (state) {
-  const logAddress = getCurrentTracklistAddress(state)
-  return getTracklistByAddress(state, logAddress).tags.toJS()
+  const addresses = tracklist.get('addresses')
+  return getLogByAddress(state, addresses.first())
 }
 
 //= ====================================
 //  MEMOIZED SELECTORS
 // -------------------------------------
 
-export const getCurrentTracklistIsUpdating = createSelector(
-  getCurrentTracklist,
-  tracklist => tracklist.isUpdating
-)
-
 export const getCurrentTrackIds = createSelector(
   getCurrentTracklist,
-  tracklist => (tracklist.query || tracklist.tags.size) ? tracklist.filteredTrackIds : tracklist.trackIds
+  tracklist => tracklist.trackIds
 )
 
 export const getTracksForCurrentTracklist = createSelector(

@@ -1,6 +1,5 @@
 import { createSelector } from 'reselect'
 
-import { getTracklistByAddress } from '@core/tracklists'
 import { getTracks, getTrackById } from '@core/tracks'
 import { getLogByAddress } from '@core/logs'
 
@@ -12,29 +11,14 @@ export function getPlayerRepeat (state) {
   return getPlayer(state).repeat
 }
 
-export function getPlayerIsPlaying (state) {
-  return getPlayer(state).isPlaying
-}
-
-export function getPlayerIsShuffling (state) {
-  return getPlayer(state).isShuffling
-}
-
-export function getPlayerIsLoading (state) {
-  return getPlayer(state).isLoading
-}
-
 export function getPlayerTimes (state) {
   return state.get('playerTimes')
 }
 
-export function getPlayerTrackId (state) {
-  return getPlayer(state).trackId
-}
-
 export function getPlayerTrackIds (state) {
-  const { trackId, tracklistTrackIds, shuffleTrackIds, queue, history } = getPlayer(state)
-  return tracklistTrackIds.merge(shuffleTrackIds, queue, history).push(trackId)
+  const { trackId, tracklist, queue, history } = getPlayer(state)
+  const tracklistTrackIds = tracklist.get('trackIds')
+  return tracklistTrackIds.merge(queue, history).push(trackId)
 }
 
 export function getPlayerQueue (state) {
@@ -46,19 +30,18 @@ export function getPlayerTracklistAddress (state) {
 }
 
 export function getPlayerTrack (state) {
-  const trackId = getPlayerTrackId(state)
+  const { trackId } = getPlayer(state)
   return getTrackById(state, trackId)
 }
 
 export function getPlayerTracklist (state) {
-  const tracklistAddress = getPlayerTracklistAddress(state)
-  return getTracklistByAddress(state, tracklistAddress)
+  return getPlayer(state).tracklist
 }
 
 export function getPlayerTracklistRemaining (state) {
-  const { tracklistCursorId, tracklistTrackIds } = getPlayer(state)
-  const index = tracklistTrackIds.indexOf(tracklistCursorId)
-  return tracklistTrackIds.size - index
+  const { tracklistCursorId, tracklist } = getPlayer(state)
+  const index = tracklist.get('trackIds').indexOf(tracklistCursorId)
+  return tracklist.get('trackIds').size - index
 }
 
 export function getPlayerTracklistCursor (state) {
@@ -68,36 +51,36 @@ export function getPlayerTracklistCursor (state) {
     history,
     tracklistCursorId,
     trackId,
-    shuffleTrackIds,
-    isShuffling,
-    tracklistTrackIds
+    tracklist,
+    isShuffling
   } = getPlayer(state)
 
   if (!trackId) {
     return {}
   }
 
+  const trackIds = tracklist.get('trackIds')
   const lastPlayedTrackId = history.first()
 
   if (isShuffling && !queue.size) {
     return {
       selectedTrackId: trackId,
-      nextTrackId: shuffleTrackIds.first(),
+      nextTrackId: trackIds.first(),
       previousTrackId: lastPlayedTrackId
     }
   }
 
-  const index = tracklistTrackIds.indexOf(tracklistCursorId)
+  const index = trackIds.indexOf(tracklistCursorId)
   let nextTrackId = null
   let previousTrackId = null
 
   if (index !== -1) {
-    if (index < tracklistTrackIds.size - 1) nextTrackId = tracklistTrackIds.get(index + 1)
-    if (index > 0) previousTrackId = tracklistTrackIds.get(index - 1)
+    if (index < trackIds.size - 1) nextTrackId = trackIds.get(index + 1)
+    if (index > 0) previousTrackId = trackIds.get(index - 1)
   }
 
   if (repeat === 2 && !nextTrackId) {
-    nextTrackId = tracklistTrackIds.first()
+    nextTrackId = trackIds.first()
   }
 
   return {
@@ -110,6 +93,9 @@ export function getPlayerTracklistCursor (state) {
 
 export function getPlayerTracklistLog (state) {
   const tracklistAddress = getPlayerTracklistAddress(state)
+  if (!tracklistAddress) {
+    return null
+  }
   return getLogByAddress(state, tracklistAddress)
 }
 

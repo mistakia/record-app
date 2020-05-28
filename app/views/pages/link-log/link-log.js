@@ -20,7 +20,7 @@ export class LinkLogPage extends React.Component {
   handleSubmit (event) {
     const data = {
       alias: event.target.alias.value,
-      linkAddress: this.props.match.params.logAddress
+      linkAddress: this.props.match.params.address
     }
     const { app } = this.props
 
@@ -36,10 +36,10 @@ export class LinkLogPage extends React.Component {
   }
 
   render () {
-    const { logAddress } = this.props.match.params
+    const { address } = this.props.match.params
     const { alias, isLinked } = queryString.parse(this.props.location.search)
 
-    const addressIcon = logAddress ? hashicon(logAddress, 40) : null
+    const addressIcon = address ? hashicon(address, 40) : null
 
     const body = (
       <form id='link-log' onSubmit={this.handleSubmit}>
@@ -47,15 +47,15 @@ export class LinkLogPage extends React.Component {
           Alias
           <input type='text' name='alias' defaultValue={alias} placeholder='Library Nickname' />
         </label>
-        { logAddress
-          ? <CopyText text={logAddress}>
+        { address
+          ? <CopyText text={address}>
             <label>Library Address</label>
             <img src={addressIcon && addressIcon.toDataURL()} />
-            <small>{logAddress}</small>
+            <small>{address}</small>
           </CopyText>
           : <label>
             Address
-            <input type='text' name='address' defaultValue={logAddress} placeholder='/orbitdb/Qm.../record' disabled={!!isLinked} required />
+            <input type='text' name='address' defaultValue={address} placeholder='/orbitdb/Qm.../record' disabled={!!isLinked} required />
           </label>
         }
         <Button type='submit'>{isLinked ? 'Save' : 'Link'}</Button>

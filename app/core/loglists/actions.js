@@ -29,94 +29,94 @@ export const loglistActions = {
   FETCH_PEER_LOGS_FULFILLED: 'FETCH_PEER_LOGS_FULFILLED',
   FETCH_PEER_LOGS_PENDING: 'FETCH_PEER_LOGS_PENDING',
 
-  fetchLogsFailed: (logAddress, error) => ({
+  fetchLogsFailed: (address, error) => ({
     type: loglistActions.FETCH_LOGS_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  fetchLogsFulfilled: (logAddress, data) => ({
+  fetchLogsFulfilled: (address, data) => ({
     type: loglistActions.FETCH_LOGS_FULFILLED,
     payload: {
       data,
-      logAddress
+      address
     }
   }),
 
-  fetchLogsPending: logAddress => ({
+  fetchLogsPending: address => ({
     type: loglistActions.FETCH_LOGS_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  loadLogs: logAddress => ({
+  loadLogs: address => ({
     type: loglistActions.LOAD_LOGS,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  postLogFailed: (logAddress, error) => ({
+  postLogFailed: (address, error) => ({
     type: loglistActions.POST_LOG_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  postLogFulfilled: (logAddress, data) => ({
+  postLogFulfilled: (address, data) => ({
     type: loglistActions.POST_LOG_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  postLogPending: logAddress => ({
+  postLogPending: address => ({
     type: loglistActions.POST_LOG_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  linkLog: (logAddress, data) => ({
+  linkLog: (address, data) => ({
     type: loglistActions.LINK_LOG,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  unlinkLog: (logAddress) => ({
+  unlinkLog: (address) => ({
     type: loglistActions.UNLINK_LOG,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  deleteLogLinkFailed: (logAddress, error) => ({
+  deleteLogLinkFailed: (address, error) => ({
     type: loglistActions.DELETE_LOG_LINK_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  deleteLogLinkFulfilled: (logAddress, data) => ({
+  deleteLogLinkFulfilled: (address, data) => ({
     type: loglistActions.DELETE_LOG_LINK_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  deleteLogLinkPending: logAddress => ({
+  deleteLogLinkPending: address => ({
     type: loglistActions.DELETE_LOG_LINK_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
@@ -124,26 +124,26 @@ export const loglistActions = {
     type: loglistActions.LOAD_ALL_LOGS
   }),
 
-  fetchAllLogsFailed: (logAddress, error) => ({
+  fetchAllLogsFailed: (address, error) => ({
     type: loglistActions.FETCH_ALL_LOGS_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  fetchAllLogsFulfilled: (logAddress, data) => ({
+  fetchAllLogsFulfilled: (address, data) => ({
     type: loglistActions.FETCH_ALL_LOGS_FULFILLED,
     payload: {
       data,
-      logAddress
+      address
     }
   }),
 
-  fetchAllLogsPending: logAddress => ({
+  fetchAllLogsPending: address => ({
     type: loglistActions.FETCH_ALL_LOGS_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
@@ -151,26 +151,26 @@ export const loglistActions = {
     type: loglistActions.LOAD_PEER_LOGS
   }),
 
-  fetchPeerLogsFailed: (logAddress, error) => ({
+  fetchPeerLogsFailed: (address, error) => ({
     type: loglistActions.FETCH_PEER_LOGS_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  fetchPeerLogsFulfilled: (logAddress, data) => ({
+  fetchPeerLogsFulfilled: (address, data) => ({
     type: loglistActions.FETCH_PEER_LOGS_FULFILLED,
     payload: {
       data,
-      logAddress
+      address
     }
   }),
 
-  fetchPeerLogsPending: logAddress => ({
+  fetchPeerLogsPending: address => ({
     type: loglistActions.FETCH_PEER_LOGS_PENDING,
     payload: {
-      logAddress
+      address
     }
   })
 }

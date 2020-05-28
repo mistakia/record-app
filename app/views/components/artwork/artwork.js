@@ -2,7 +2,7 @@ import React from 'react'
 
 import './artwork.styl'
 
-export default function Artwork ({ className, children, background, url }) {
+export default function Artwork ({ className, children, background, url, onClick }) {
   const classNames = ['artwork', className]
 
   const style = (background && url) && {
@@ -10,7 +10,7 @@ export default function Artwork ({ className, children, background, url }) {
   }
 
   return (
-    <div className={classNames.join(' ')}>
+    <div className={classNames.join(' ')} onClick={onClick}>
       <div className='disc'>
         <div className='disc-label' />
       </div>

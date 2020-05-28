@@ -12,18 +12,30 @@ import './log.styl'
 const Log = ({
   connect,
   disconnect,
-  logName,
   logLocation,
   logBio,
   log,
   type,
   unlink,
-  style
+  style,
+  showContext
 }) => {
-  const peers = log.peers.size
-  const loading = log.isBuildingIndex || log.isProcessingIndex
+  // const peers = log.peers.size
+  const loading = log.isLoadingIndex || log.isProcessingIndex
   const showEdit = log.isMe || log.isLinked
   const noPropagation = e => e.stopPropagation()
+  const tracksPath = `/tracks${log.address}`
+  const logsPath = `/logs${log.address}`
+
+  const handleMoreClick = (event) => {
+    event && event.stopPropagation && event.stopPropagation()
+    showContext({
+      id: 'log',
+      data: { address: log.address },
+      clickX: event.clientX,
+      clickY: event.clientY
+    })
+  }
 
   // TODO - move to own component
   const handleSyncClick = (e) => {
@@ -83,8 +95,26 @@ const Log = ({
   )
 
   const viewUser = () => {
-    history.push(`/tracks${log.address}`)
+    history.push(tracksPath)
   }
+
+  const actions = (
+    <div className='log__actions'>
+      <div>{!log.isMe && logAction}</div>
+      <div>{!log.isMe && connectionStatusAction}</div>
+      <div>{showEdit && (log.isMe ? editSelf : editLog)}</div>
+    </div>
+  )
+
+  const more = (
+    <div className='log__actions'>
+      <IconButton
+        label='more'
+        onClick={handleMoreClick}
+        icon='more'
+      />
+    </div>
+  )
 
   return (
     <article
@@ -95,21 +125,17 @@ const Log = ({
         <div className='log__avatar'>
           <img src={log.avatar} />
         </div>
-        <div className={`log__title ${(peers || log.isMe) ? 'log__connected' : 'log__disconnected'}`}>
-          {logName}
+        <div className='log__title'>
+          {log.logName}
           {log.isMe && <small>Owner</small>}
         </div>
-        <div className='log__actions'>
-          <div>{!log.isMe && logAction}</div>
-          <div>{!log.isMe && connectionStatusAction}</div>
-          <div>{showEdit && (log.isMe ? editSelf : editLog)}</div>
-        </div>
+        {type === 'menu-item' ? more : actions}
       </div>
       {type === 'profile' && <div className='log__menu menu'>
-        <NavLink activeClassName='active' to={`/tracks${log.address}`}>Tracks</NavLink>
-        <NavLink activeClassName='active' to={`/logs${log.address}`}>Libraries</NavLink>
+        <NavLink activeClassName='active' to={tracksPath}>Tracks</NavLink>
+        <NavLink activeClassName='active' to={logsPath}>Libraries</NavLink>
       </div>}
-      <div className='log__side'>
+      {type !== 'menu-item' && <div className='log__side'>
         <div>
           {log.latestHeadTimestamp && <TimeAgo datetime={log.latestHeadTimestamp} />}
         </div>
@@ -123,7 +149,7 @@ const Log = ({
         </div>
         {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='tracks'>{log.trackCount}</div>}
         {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='libraries'>{log.logCount}</div>}
-      </div>
+      </div>}
     </article>
   )
 }

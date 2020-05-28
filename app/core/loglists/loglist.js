@@ -4,5 +4,5 @@ export const Loglist = new Record({
   address: null,
   isPending: false,
   isUpdating: false,
-  logAddresses: new List()
+  addresses: new List()
 })
