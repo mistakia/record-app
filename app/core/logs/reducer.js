@@ -24,39 +24,39 @@ export function logsReducer (state = new Map(), {payload, type}) {
 
     case logActions.LOG_REPLICATED:
       return state.withMutations(logs => {
-        const log = logs.get(payload.logAddress)
+        const log = logs.get(payload.address)
         if (log) {
-          logs.setIn([payload.logAddress, 'length'], payload.length)
+          logs.setIn([payload.address, 'length'], payload.length)
           if (payload.replicationStatus.max > log.max) {
-            logs.setIn([payload.logAddress, 'max'], payload.replicationStatus.max)
+            logs.setIn([payload.address, 'max'], payload.replicationStatus.max)
           }
         }
       })
 
     case logActions.LOG_REPLICATE_PROGRESS:
       return state.withMutations(logs => {
-        const log = logs.get(payload.logAddress)
+        const log = logs.get(payload.address)
         if (log) {
-          logs.setIn([payload.logAddress, 'length'], payload.length)
+          logs.setIn([payload.address, 'length'], payload.length)
           if (payload.replicationStatus.max > log.max) {
-            logs.setIn([payload.logAddress, 'max'], payload.replicationStatus.max)
+            logs.setIn([payload.address, 'max'], payload.replicationStatus.max)
           }
         }
       })
 
     case logActions.LOG_CONNECTED:
       return state.withMutations(logs => {
-        const log = logs.get(payload.logAddress)
+        const log = logs.get(payload.address)
         if (log) {
-          logs.setIn([payload.logAddress, 'isReplicating'], true)
+          logs.setIn([payload.address, 'isReplicating'], true)
         }
       })
 
     case logActions.LOG_DISCONNECTED:
       return state.withMutations(logs => {
-        const log = logs.get(payload.logAddress)
+        const log = logs.get(payload.address)
         if (log) {
-          logs.setIn([payload.logAddress, 'isReplicating'], false)
+          logs.setIn([payload.address, 'isReplicating'], false)
         }
       })
 
@@ -71,7 +71,7 @@ export function logsReducer (state = new Map(), {payload, type}) {
     case loglistActions.DELETE_LOG_LINK_PENDING:
     case loglistActions.POST_LOG_PENDING:
       return state.withMutations(logs => {
-        logs.setIn([payload.logAddress, 'isUpdating'], true)
+        logs.setIn([payload.address, 'isUpdating'], true)
       })
 
     case logActions.DISCONNECT_LOG_FAILED:
@@ -82,15 +82,15 @@ export function logsReducer (state = new Map(), {payload, type}) {
     case loglistActions.POST_LOG_FULFILLED:
     case loglistActions.DELETE_LOG_LINK_FAILED:
       return state.withMutations(logs => {
-        logs.setIn([payload.logAddress, 'isUpdating'], false)
+        logs.setIn([payload.address, 'isUpdating'], false)
       })
 
     case logActions.RECORD_PEER_JOINED:
     case logActions.LOG_PEER_JOINED:
       return state.withMutations(logs => {
-        const log = logs.get(payload.logAddress)
+        const log = logs.get(payload.address)
         if (log) {
-          logs.setIn([payload.logAddress, 'peers'], mergePeers(log.peers, [payload.peerId]))
+          logs.setIn([payload.address, 'peers'], mergePeers(log.peers, [payload.peerId]))
         }
       })
 
@@ -103,7 +103,7 @@ export function logsReducer (state = new Map(), {payload, type}) {
       })
 
     case logActions.LOG_INDEX_UPDATED:
-      if (!state.get(payload.logAddress)) {
+      if (!state.get(payload.address)) {
         return state
       }
 
@@ -114,7 +114,7 @@ export function logsReducer (state = new Map(), {payload, type}) {
       if (data.logCount) item.logCount = data.logCount
 
       return state.withMutations(logs => {
-        logs.mergeIn([payload.logAddress], item)
+        logs.mergeIn([payload.address], item)
       })
 
     default:

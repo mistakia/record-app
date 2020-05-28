@@ -6,17 +6,16 @@ const ContextMenuState = new Record({
   visible: false,
   clickX: null,
   clickY: null,
-  trackId: null,
   data: null
 })
 
 export function contextMenuReducer (state = new ContextMenuState(), { payload, type }) {
   switch (type) {
     case contextMenuActions.SHOW_CONTEXT_MENU:
-      const { id, trackId, clickX, clickY } = payload
+      const { id, data, clickX, clickY } = payload
       return state.merge({
         id,
-        trackId,
+        data,
         clickX,
         clickY,
         visible: true

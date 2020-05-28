@@ -4,7 +4,6 @@ import { connect } from 'react-redux'
 import {
   playerActions,
   getPlayer,
-  getPlayerIsLoading,
   getPlayerTrack,
   getPlayerTracklistCursor,
   getPlayerTracklistLog
@@ -33,11 +32,10 @@ Player.propTypes = {
 const mapStateToProps = createShallowEqualSelector(
   getApp,
   getPlayer,
-  getPlayerIsLoading,
   getPlayerTrack,
   getPlayerTracklistCursor,
   getPlayerTracklistLog,
-  (app, player, isLoading, track, cursor, log) => ({
+  (app, player, track, cursor, log) => ({
     app,
     decreaseVolume: audio.decreaseVolume,
     increaseVolume: audio.increaseVolume,
@@ -49,11 +47,10 @@ const mapStateToProps = createShallowEqualSelector(
     pause: audio.pause,
     play: audio.play,
     repeat: player.repeat,
-    tags: player.tracklistTags.toJS(),
-    query: player.tracklistQuery,
     previousTrackId: cursor.previousTrackId,
     track,
-    isLoading,
+    isLoading: player.isLoading,
+    tracklist: player.tracklist,
     tracklistAddress: player.tracklistAddress,
     tracklistLog: log,
     volume: player.volume

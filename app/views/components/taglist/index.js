@@ -2,19 +2,17 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
-import { getApp } from '@core/app'
 import {
   getCurrentTaglist,
   getTagsForCurrentTaglist
 } from '@core/taglists'
-import { tracklistActions, getCurrentSelectedTags } from '@core/tracklists'
+import { tracklistActions, getCurrentTracklist } from '@core/tracklists'
 import LoadingIndicator from '@components/loading-indicator'
 import Tag from '@components/tag'
 
 import render from './taglist'
 
 const Taglist = ({
-  isExternal,
   displayLoadingIndicator,
   selectedTags,
   toggleTag,
@@ -29,7 +27,6 @@ const Taglist = ({
       <Tag
         key={index}
         tag={tag.tag}
-        isExternal={isExternal}
         isSelected={isSelected}
         onClick={toggleTag.bind(null, tag.tag)}
         count={tag.count}
@@ -43,14 +40,12 @@ const Taglist = ({
 }
 
 const mapStateToProps = createSelector(
-  getApp,
   getCurrentTaglist,
-  getCurrentSelectedTags,
+  getCurrentTracklist,
   getTagsForCurrentTaglist,
-  (app, taglist, selectedTags, tags) => ({
-    isExternal: taglist.address !== app.address,
+  (taglist, tracklist, tags) => ({
     displayLoadingIndicator: taglist.isPending,
-    selectedTags,
+    selectedTags: tracklist.tags.toJS(),
     tags
   })
 )

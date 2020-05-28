@@ -3,20 +3,26 @@ import { Record } from 'immutable'
 import { helpActions } from './actions'
 
 const HelpState = new Record({
-  isHomeHelpVisible: false,
-  isTrackHelpVisible: false
+  isTracksHelpVisible: false,
+  isMyTracksHelpVisible: false,
+  isMyLogsHelpVisible: false
 })
 
 export function helpReducer (state = new HelpState(), { payload, type }) {
   switch (type) {
-    case helpActions.TOGGLE_HOME_HELP:
+    case helpActions.TOGGLE_TRACKS_HELP:
       return state.merge({
-        isHomeHelpVisible: !state.isHomeHelpVisible
+        isTracksHelpVisible: !state.isTracksHelpVisible
       })
 
-    case helpActions.TOGGLE_TRACK_HELP:
+    case helpActions.TOGGLE_MY_TRACKS_HELP:
       return state.merge({
-        isTrackHelpVisible: !state.isTrackHelpVisible
+        isMyTracksHelpVisible: !state.isMyTracksHelpVisible
+      })
+
+    case helpActions.TOGGLE_MY_LOGS_HELP:
+      return state.merge({
+        isMyLogsHelpVisible: !state.isMyLogsHelpVisible
       })
 
     case helpActions.SET_HELP:

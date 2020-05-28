@@ -5,26 +5,26 @@ export const aboutActions = {
   POST_ABOUT_FULFILLED: 'POST_ABOUT_FULFILLED',
   POST_ABOUT_PENDING: 'POST_ABOUT_PENDING',
 
-  postAboutFailed: (logAddress, error) => ({
+  postAboutFailed: (address, error) => ({
     type: aboutActions.POST_ABOUT_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  postAboutFulfilled: (logAddress, data) => ({
+  postAboutFulfilled: (address, data) => ({
     type: aboutActions.POST_ABOUT_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   }),
 
-  postAboutPending: logAddress => ({
+  postAboutPending: address => ({
     type: aboutActions.POST_ABOUT_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 

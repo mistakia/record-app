@@ -5,8 +5,8 @@ import { notificationActions } from '@core/notifications'
 import { importerActions } from './actions'
 
 export function * importerAdd ({ payload }) {
-  const { logAddress, data } = payload
-  yield fork(postImporter, { logAddress, data })
+  const { address, data } = payload
+  yield fork(postImporter, { address, data })
   yield put(notificationActions.show({
     text: 'Starting import',
     dismiss: 2000

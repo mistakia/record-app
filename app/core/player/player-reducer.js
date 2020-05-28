@@ -3,6 +3,8 @@ import { PLAYER_INITIAL_VOLUME, ITEMS_PER_LOAD } from '@core/constants'
 import { playerActions } from './actions'
 import { mergeList } from '@core/utils'
 
+import { Tracklist } from '@core/tracklists'
+
 export const PlayerState = new Record({
   isPlaying: false,
   isLoading: true,
@@ -11,14 +13,10 @@ export const PlayerState = new Record({
   isShuffling: false,
   trackId: null,
   history: new List(),
+  tracklist: new Tracklist(),
   tracklistAddress: null,
   tracklistCursorId: null,
-  tracklistTrackIds: new List(),
-  tracklistTags: new List(),
   tracklistStartIndex: null,
-  tracklistHasMore: true,
-  tracklistQuery: null,
-  shuffleTrackIds: new List(),
   isQueueVisible: false,
   queue: new List(),
   volume: PLAYER_INITIAL_VOLUME
@@ -48,24 +46,21 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
       })
 
     case playerActions.FETCH_PLAYER_TRACKS_FULFILLED:
-      return state.merge({
-        tracklistHasMore: payload.data.length === ITEMS_PER_LOAD,
-        tracklistTrackIds: mergeList(state.tracklistTrackIds, payload.data)
-      })
+      return state
+        .mergeIn(['tracklist', 'hasMore'], payload.data.length === ITEMS_PER_LOAD)
+        .mergeIn(['tracklist', 'trackIds'], mergeList(state.tracklist.trackIds, payload.data))
 
     case playerActions.FETCH_PLAYER_SHUFFLE_FULFILLED:
       return state.merge({
-        trackId: payload.data[0].id,
-        shuffleTrackIds: mergeList(state.shuffleTrackIds, payload.data.slice(1))
-      })
+        trackId: payload.data[0].id
+      }).mergeIn(['tracklist', 'trackIds'], mergeList(state.tracklist.trackIds, payload.data.slice(1)))
 
     case playerActions.AUDIO_VOLUME_CHANGED:
       return state.set('volume', payload.volume)
 
     case playerActions.STOP_SHUFFLE:
       return state.merge({
-        isShuffling: false,
-        shuffleTrackIds: new List()
+        isShuffling: false
       })
 
     case playerActions.SHUFFLE_TRACKLIST:
@@ -73,11 +68,9 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         isShuffling: true,
         isPlayingFromQueue: false,
         isLoading: true,
-        tracklistTrackIds: new List(),
+        tracklist: payload.tracklist,
         tracklistCursorId: null,
-        tracklistAddress: payload.tracklistAddress,
-        tracklistTags: payload.tags,
-        tracklistQuery: payload.query
+        tracklistAddress: payload.tracklistAddress
       })
 
     case playerActions.CLEAR_QUEUE: {
@@ -130,9 +123,11 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         tracklistCursorId: fromQueue || isShuffling ? state.tracklistCursorId : payload.trackId,
         isPlayingFromQueue: fromQueue,
         queue: fromQueue ? state.queue.shift() : state.queue,
-        shuffleTrackIds: isShuffling ? state.shuffleTrackIds.shift() : new List(),
         isLoading: true
-      })
+      }).mergeIn(['tracklist', 'trackIds'], isShuffling
+        ? state.get('tracklist').get('trackIds').shift()
+        : new List()
+      )
     }
 
     case playerActions.PLAY_QUEUE_TRACK: {
@@ -153,16 +148,12 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         isLoading: true,
         isShuffling: false,
         isPlayingFromQueue: false,
-        shuffleTrackIds: new List(),
         repeat: 0,
         tracklistCursorId: payload.trackId,
-        tracklistTrackIds: payload.trackIds,
-        tracklistTags: payload.tags,
         tracklistStartIndex: payload.startIndex,
-        tracklistHasMore: payload.hasMore,
-        tracklistQuery: payload.query,
         trackId: payload.trackId,
-        tracklistAddress: payload.tracklistAddress || state.get('tracklistAddress')
+        tracklist: payload.tracklist,
+        tracklistAddress: payload.tracklistAddress
       })
 
     default:

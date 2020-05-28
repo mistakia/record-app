@@ -8,11 +8,7 @@ import {
   tracklistActions
 } from '@core/tracklists'
 import {
-  getPlayerIsPlaying,
-  getPlayerIsShuffling,
-  getPlayerIsLoading,
-  getPlayerTrackId,
-  getPlayerTracklistAddress,
+  getPlayer,
   playerActions
 } from '@core/player'
 import { audio } from '@core/audio'
@@ -45,9 +41,7 @@ const Tracklist = ({
   log
 }) => {
   const isItemLoaded = index => tracks.has(index)
-  const itemCount = query
-    ? (displayLoadingIndicator ? 1 : tracks.size)
-    : (hasMore ? tracks.size + 1 : tracks.size)
+  const itemCount = displayLoadingIndicator ? (tracks.size + 1) : (hasMore ? tracks.size + 1 : tracks.size)
   const load = async () => loadNext()
   const loadMoreItems = displayLoadingIndicator ? () => {} : load
   const listRef = React.createRef()
@@ -76,10 +70,7 @@ const Tracklist = ({
   }
 
   const onSearch = (query) => search(query)
-
-  const onClear = () => {
-    clearSearch(tracklistAddress)
-  }
+  const onClear = () => clearSearch()
 
   return render({
     loading: displayLoadingIndicator,
@@ -104,22 +95,17 @@ const Tracklist = ({
 }
 
 const mapStateToProps = createSelector(
-  getPlayerIsPlaying,
-  getPlayerIsShuffling,
-  getPlayerTracklistAddress,
-  getPlayerTrackId,
+  getPlayer,
   getCurrentTracklist,
   getTracksForCurrentTracklist,
-  getPlayerIsLoading,
-  (isPlaying, isShuffling, playerTracklistAddress, playerTrackId, tracklist, tracks, isLoading) => ({
+  (player, tracklist, tracks) => ({
     displayLoadingIndicator: tracklist.isPending,
-    isPlaying,
-    isShuffling: isShuffling && tracklist.address === playerTracklistAddress,
-    isLoading,
+    isPlaying: player.isPlaying,
+    isShuffling: player.isShuffling && tracklist.path === player.tracklist.path,
+    isLoading: player.isLoading,
     pause: audio.pause,
     play: audio.play,
-    selectedTrackId: playerTrackId,
-    tracklistAddress: tracklist.address,
+    selectedTrackId: player.trackId,
     query: tracklist.query,
     hasMore: tracklist.hasMore,
     tracks

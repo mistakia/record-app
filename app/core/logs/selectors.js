@@ -7,8 +7,8 @@ export function getAllLogs (state) {
   return logs.map(v => v).toList()
 }
 
-export function getLogByAddress (state, logAddress) {
-  return getLogs(state).get(logAddress)
+export function getLogByAddress (state, address) {
+  return getLogs(state).get(address)
 }
 
 export function getMyLog (state) {

@@ -28,21 +28,30 @@ export function * watchInitApp () {
   }
 }
 
-export function * watchToggleHomeHelp () {
+export function * watchToggleTracksHelp () {
   while (true) {
-    yield take(helpActions.TOGGLE_HOME_HELP)
+    yield take(helpActions.TOGGLE_TRACKS_HELP)
     let help = yield select(getHelp)
     // persist only when set to not visible
-    if (!help.isHomeHelpVisible) yield fork(saveHelpToStorage)
+    if (!help.isTracksHelpVisible) yield fork(saveHelpToStorage)
   }
 }
 
-export function * watchToggleTrackHelp () {
+export function * watchToggleMyTracksHelp () {
   while (true) {
-    yield take(helpActions.TOGGLE_TRACK_HELP)
+    yield take(helpActions.TOGGLE_MY_TRACKS_HELP)
     let help = yield select(getHelp)
     // persist only when set to not visible
-    if (!help.isHomeTrackVisible) yield fork(saveHelpToStorage)
+    if (!help.isMyTracksTrackVisible) yield fork(saveHelpToStorage)
+  }
+}
+
+export function * watchToggleMyLogsHelp () {
+  while (true) {
+    yield take(helpActions.TOGGLE_MY_LOGS_HELP)
+    let help = yield select(getHelp)
+    // persist only when set to not visible
+    if (!help.isMyLogsTrackVisible) yield fork(saveHelpToStorage)
   }
 }
 
@@ -52,6 +61,7 @@ export function * watchToggleTrackHelp () {
 
 export const helpSagas = [
   fork(watchInitApp),
-  fork(watchToggleHomeHelp),
-  fork(watchToggleTrackHelp)
+  fork(watchToggleTracksHelp),
+  fork(watchToggleMyTracksHelp),
+  fork(watchToggleMyLogsHelp)
 ]

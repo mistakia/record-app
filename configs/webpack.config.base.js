@@ -8,7 +8,7 @@ import nib from 'nib'
 import { dependencies as externals } from '../app/package.json'
 
 export default {
-  externals: [...Object.keys(externals || {}), 'vertx', 'youtube-dl', 'electron'],
+  externals: [...Object.keys(externals || {}), 'vertx', 'electron', 'mssql', 'mssql/lib/base', 'mssql/package.json', 'mysql', 'mysql2', 'oracledb', 'pg', 'pg-query-stream', 'tedious'],
 
   module: {
     rules: [

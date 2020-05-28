@@ -1,37 +1,38 @@
+import { List } from 'immutable'
 import { call, fork, takeLatest, takeLeading, select, put } from 'redux-saga/effects'
 
 import history from '@core/history'
 import { fetchTags, postTag, deleteTag } from '@core/api'
-import { appActions, getApp } from '@core/app'
+import { appActions } from '@core/app'
 import { notificationActions } from '@core/notifications'
-import { tracklistActions, getCurrentSelectedTags } from '@core/tracklists'
+import { tracklistActions, getCurrentTracklist } from '@core/tracklists'
 import { taglistActions } from './actions'
 
 export function * loadTags ({ payload }) {
-  const app = yield select(getApp)
-  const logAddress = payload.logAddress || app.address
-  yield call(fetchTags, { logAddress })
+  const addresses = payload.addresses
+  const params = { addresses }
+  yield call(fetchTags, { params })
 }
 
 export function * addTag ({ payload }) {
-  const { logAddress, data } = payload
+  const { address, data } = payload
   if (!data.tag) return
-  yield call(postTag, { logAddress, data })
+  yield call(postTag, { address, data })
 }
 
 export function * removeTag ({ payload }) {
-  const { logAddress, data } = payload
-  yield call(deleteTag, { logAddress, data })
+  const { address, data } = payload
+  yield call(deleteTag, { address, data })
 }
 
-// make sure selected tags all exist - otherwise clear
+// make sure selected tags all exist - otherwise clear/reload
 export function * checkSelectedTags ({ payload }) {
-  const { logAddress } = payload
+  let tracklist = yield select(getCurrentTracklist)
   const existingTags = payload.data.map(t => t.tag)
 
-  if (history.location.pathname !== `/tracks${logAddress}`) return
+  if (history.location.pathname !== tracklist.path) return
 
-  let selectedTags = yield select(getCurrentSelectedTags)
+  let selectedTags = tracklist.tags.toJS()
   let shouldClear = false
   for (const tag of selectedTags) {
     if (!existingTags.includes(tag)) {
@@ -41,7 +42,8 @@ export function * checkSelectedTags ({ payload }) {
   }
 
   if (shouldClear) {
-    const action = tracklistActions.loadTracks({ logAddress, tags: [], query: null })
+    tracklist = tracklist.set('tags', new List())
+    const action = tracklistActions.loadTracks({ ...tracklist.toJS() })
     yield put(action)
   }
 }

@@ -15,6 +15,7 @@
     "go-ipfs-dep": "0.5.0",
     "leveldown": "^5.1.1",
     "secp256k1": "3.8.0",
+    "sqlite3": "^4.2.0",
     "youtube-dl": "^3.0.2"
   }
 }

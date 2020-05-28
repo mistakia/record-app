@@ -1,39 +1,50 @@
 #menu
-  fixed left top right
+  fixed left top bottom
   z-index 10001
-  background #2d2e2f
-  height 60px
+  background #f0f0f0
+  width $menuWidth
   display flex
-  justify-content center
-  align-items center
+  flex-direction column
   -webkit-app-region drag
-  fill rgba(255,255,255,0.9)
   a
-    color rgba(255,255,255,0.9)
     -webkit-app-region no-drag
     cursor pointer
     &.active
-      background rgba(255,255,255,0.3)
+      background rgba(255,255,255,0.9)
 
   a
   button:not(disabled)
     &:hover
-      background rgba(255,255,255,0.15)
+      background rgba(255,255,255,0.9)
 
-  .menu__side
-    position absolute
-    top 0px
-    right 8px
-    bottom 0px
-    display flex
-    justify-content center
-    align-items center
+  small
+    padding 10px
+    margin-top 25px
 
-.menu__navigation
+.menu__top-section
+  flex 0 auto
+  height 40px
   display flex
-  position fixed
-  top 10px
-  left 100px
+  justify-content flex-end
+
+.menu__main-section
+  flex 0 auto
+  display flex
+  flex-direction column
+  > a
+    margin 0 8px
+
+.menu__libraries-section
+  flex 1
+  display flex
+  flex-direction column
+
+.menu__bottom-section
+  flex 0 auto
+  height 40px
+  display flex
+  justify-content space-between
+  align-items center
 
 .menu__account
   border  0

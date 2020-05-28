@@ -1,3 +1,4 @@
+import { List } from 'immutable'
 import { eventChannel } from 'redux-saga'
 import { call, fork, put, select, take } from 'redux-saga/effects'
 import { LOCATION_CHANGE } from 'react-router-redux'
@@ -5,7 +6,7 @@ import { LOCATION_CHANGE } from 'react-router-redux'
 import { appActions, getApp } from '@core/app'
 import { fetchPlayerTracks, fetchShuffleTracks, postListen } from '@core/api'
 import { PLAYER_INITIAL_VOLUME, ITEMS_PER_LOAD } from '@core/constants'
-import { getTracklistByAddress, getCurrentSelectedTags } from '@core/tracklists'
+import { getCurrentTracklist } from '@core/tracklists'
 import { playerActions } from './actions'
 import { audio, initAudio, setVolume } from '@core/audio'
 import {
@@ -19,40 +20,38 @@ import { playerStorage } from './storage'
 
 export function * playTrack () {
   const {
-    tracklistTrackIds,
     tracklistCursorId,
-    tracklistHasMore,
-    tracklistAddress,
-    shuffleTrackIds,
+    tracklist,
     isShuffling,
-    tracklistTags,
-    tracklistQuery,
     tracklistStartIndex
   } = yield select(getPlayer)
 
-  if (!isShuffling) {
-    const cursorIndex = tracklistTrackIds.indexOf(tracklistCursorId)
-    const tracksRemaining = tracklistTrackIds.size - cursorIndex
+  const { query, sort, order } = tracklist
+  const addresses = tracklist.addresses.toJS()
+  const tags = tracklist.tags.toJS()
+  const trackIds = tracklist.get('trackIds')
 
-    if (tracklistHasMore && tracksRemaining < 3) {
-      const start = tracklistTrackIds.size + tracklistStartIndex
+  if (!isShuffling) {
+    const cursorIndex = trackIds.indexOf(tracklistCursorId)
+    const tracksRemaining = trackIds.size - cursorIndex
+
+    if (tracklist.hasMore && tracksRemaining < 3) {
+      const start = trackIds.size + tracklistStartIndex
       const params = {
         start,
-        tags: tracklistTags,
-        query: tracklistQuery,
-        end: start + ITEMS_PER_LOAD
+        addresses,
+        tags,
+        sort,
+        order,
+        query,
+        limit: ITEMS_PER_LOAD
       }
-      yield call(fetchPlayerTracks, { logAddress: tracklistAddress, params })
+      yield call(fetchPlayerTracks, { params })
     }
-  } else if (shuffleTrackIds.size < 3) {
+  } else if (trackIds.size < 3) {
     // TODO: reload shuffle without replacement
-    const params = {
-      shuffle: true,
-      tags: tracklistTags.toJS(),
-      query: tracklistQuery,
-      limit: 18
-    }
-    yield call(fetchShuffleTracks, { logAddress: tracklistAddress, params })
+    const params = { shuffle: true, limit: 18, tags, query, addresses }
+    yield call(fetchShuffleTracks, { params })
   }
 }
 
@@ -68,33 +67,29 @@ export function * onAudioEnded () {
 }
 
 export function * shuffleTracklist ({ tracklistAddress }) {
-  const tracklist = yield select(getTracklistByAddress, tracklistAddress)
-  const { query } = tracklist
-  const tags = yield select(getCurrentSelectedTags)
-  const params = { shuffle: true, tags, query, limit: 20 }
+  let tracklist = yield select(getCurrentTracklist)
+  tracklist = tracklist.set('trackIds', new List())
   yield put(playerActions.shuffleTracklist({
-    tracklistAddress,
-    query,
-    tags
+    tracklist,
+    tracklistAddress
   }))
-  yield call(fetchShuffleTracks, { logAddress: tracklistAddress, params })
-  const { shuffleTrackIds } = yield select(getPlayer)
-  if (shuffleTrackIds.size) yield call(playAudio)
+  const { query } = tracklist
+  const addresses = tracklist.addresses.toJS()
+  const tags = tracklist.tags.toJS()
+  const params = { shuffle: true, limit: 20, tags, query, addresses }
+  yield call(fetchShuffleTracks, { params })
+  const player = yield select(getPlayer)
+  if (player.tracklist.trackIds.size) yield call(playAudio)
 }
 
 export function * playTracklist ({ trackId, tracklistAddress }) {
-  const tracklist = yield select(getTracklistByAddress, tracklistAddress)
+  const tracklist = yield select(getCurrentTracklist)
   const startIndex = tracklist.trackIds.indexOf(trackId)
-  const tags = yield select(getCurrentSelectedTags)
-  const { hasMore, query } = tracklist
   yield put(playerActions.playTracklist({
     trackId,
-    tracklistAddress,
-    trackIds: tracklist.trackIds,
+    tracklist,
     startIndex,
-    hasMore,
-    tags,
-    query
+    tracklistAddress
   }))
 }
 
@@ -115,9 +110,9 @@ export function * playAudio () {
   const app = yield select(getApp)
   const tracklistAddress = yield select(getPlayerTracklistAddress)
   yield call(postListen, {
-    logAddress: app.address,
+    address: app.address,
     data: {
-      logAddress: tracklistAddress,
+      address: tracklistAddress,
       trackId: track.id,
       cid: track.contentCID
     }

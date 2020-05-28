@@ -37,102 +37,102 @@ export const logActions = {
   DELETE_LOG_FAILED: 'DELETE_LOG_FAILED',
   DELETE_LOG_FULFILLED: 'DELETE_LOG_FULFILLED',
 
-  connectLogFailed: (logAddress, error) => ({
+  connectLogFailed: (address, error) => ({
     type: logActions.CONNECT_LOG_FAILED,
-    payload: { logAddress, error }
+    payload: { address, error }
   }),
 
-  connectLogPending: logAddress => ({
+  connectLogPending: address => ({
     type: logActions.CONNECT_LOG_PENDING,
-    payload: { logAddress }
+    payload: { address }
   }),
 
-  connectLogFulfilled: (logAddress, data) => ({
+  connectLogFulfilled: (address, data) => ({
     type: logActions.CONNECT_LOG_FULFILLED,
-    payload: { logAddress, data }
+    payload: { address, data }
   }),
 
-  disconnectLogFailed: (logAddress, error) => ({
+  disconnectLogFailed: (address, error) => ({
     type: logActions.DISCONNECT_LOG_FAILED,
-    payload: { logAddress, error }
+    payload: { address, error }
   }),
 
-  disconnectLogPending: logAddress => ({
+  disconnectLogPending: address => ({
     type: logActions.DISCONNECT_LOG_PENDING,
-    payload: { logAddress }
+    payload: { address }
   }),
 
-  disconnectLogFulfilled: (logAddress, data) => ({
+  disconnectLogFulfilled: (address, data) => ({
     type: logActions.DISCONNECT_LOG_FULFILLED,
-    payload: { logAddress, data }
+    payload: { address, data }
   }),
 
-  fetchLogFailed: (logAddress, error) => ({
+  fetchLogFailed: (address, error) => ({
     type: logActions.FETCH_LOG_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  fetchLogFulfilled: (logAddress, data) => ({
+  fetchLogFulfilled: (address, data) => ({
     type: logActions.FETCH_LOG_FULFILLED,
     payload: {
       data,
-      logAddress
+      address
     }
   }),
 
-  fetchLogPending: logAddress => ({
+  fetchLogPending: address => ({
     type: logActions.FETCH_LOG_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  connectLog: (logAddress) => ({
+  connectLog: (address) => ({
     type: logActions.CONNECT_LOG,
-    payload: { logAddress }
+    payload: { address }
   }),
 
-  disconnectLog: (logAddress) => ({
+  disconnectLog: (address) => ({
     type: logActions.DISCONNECT_LOG,
-    payload: { logAddress }
+    payload: { address }
   }),
 
-  loadLog: logAddress => ({
+  loadLog: address => ({
     type: logActions.LOAD_LOG,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  deleteLog: (logAddress) => ({
+  deleteLog: (address) => ({
     type: logActions.DELETE_LOG,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  deleteLogFailed: (logAddress, error) => ({
+  deleteLogFailed: (address, error) => ({
     type: logActions.DELETE_LOG_FAILED,
     payload: {
-      logAddress,
+      address,
       error
     }
   }),
 
-  deleteLogPending: logAddress => ({
+  deleteLogPending: address => ({
     type: logActions.DELETE_LOG_PENDING,
     payload: {
-      logAddress
+      address
     }
   }),
 
-  deleteLogFulfilled: (logAddress, data) => ({
+  deleteLogFulfilled: (address, data) => ({
     type: logActions.DELETE_LOG_FULFILLED,
     payload: {
-      logAddress,
+      address,
       data
     }
   })

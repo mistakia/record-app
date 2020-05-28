@@ -2,7 +2,7 @@ import { call, put, select, fork, takeLatest } from 'redux-saga/effects'
 
 import { listensActions } from './actions'
 import { notificationActions } from '@core/notifications'
-import { ITEMS_PER_LOAD, LISTENS_TRACKLIST_ADDRESS } from '@core/constants'
+import { ITEMS_PER_LOAD } from '@core/constants'
 import { getCurrentTracklist } from '@core/tracklists'
 import { fetchListens } from '@core/api'
 
@@ -10,12 +10,12 @@ export function * loadNextListens () {
   const tracklist = yield select(getCurrentTracklist)
   const start = tracklist.trackIds.size
   const params = { start, limit: ITEMS_PER_LOAD }
-  yield call(fetchListens, { logAddress: tracklist.address, params })
+  yield call(fetchListens, { params })
 }
 
 export function * loadListens () {
   const params = { start: 0, limit: ITEMS_PER_LOAD }
-  yield call(fetchListens, { logAddress: LISTENS_TRACKLIST_ADDRESS, params })
+  yield call(fetchListens, { params })
 }
 
 export function * postListenFailed () {

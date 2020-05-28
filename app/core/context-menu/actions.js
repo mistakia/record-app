@@ -6,11 +6,11 @@ export const contextMenuActions = {
     type: contextMenuActions.HIDE_CONTEXT_MENU
   }),
 
-  show: ({ id, trackId, clickX, clickY }) => ({
+  show: ({ id, data, clickX, clickY }) => ({
     type: contextMenuActions.SHOW_CONTEXT_MENU,
     payload: {
       id,
-      trackId,
+      data,
       clickX,
       clickY
     }

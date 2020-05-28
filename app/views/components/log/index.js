@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { loglistActions } from '@core/loglists'
 import Confirm from '@components/confirm'
 import { logActions } from '@core/logs'
+import { contextMenuActions } from '@core/context-menu'
 
 import Log from './log'
 
@@ -10,10 +11,6 @@ const LogBase = ({ unlinkLog, log, ...props }) => {
   if (!log) {
     return null
   }
-
-  const logName = log.isMe
-    ? (log.name || log.shortAddress)
-    : (log.displayName)
 
   const logLocation = log.isMe
     ? (log.location || 'Location')
@@ -27,7 +24,7 @@ const LogBase = ({ unlinkLog, log, ...props }) => {
     event && event.stopPropagation && event.stopPropagation()
     Confirm({
       title: 'Unsave',
-      message: `Are you sure you want to unsave ${logName}`,
+      message: `Are you sure you want to unsave ${log.logName}`,
       detail: 'Unlinking this library will eventually remove its data from your device',
       onConfirm: () => unlinkLog(log.address)
     })
@@ -36,7 +33,6 @@ const LogBase = ({ unlinkLog, log, ...props }) => {
   return Log({
     log,
     unlink,
-    logName,
     logLocation,
     logBio,
     ...props
@@ -46,7 +42,8 @@ const LogBase = ({ unlinkLog, log, ...props }) => {
 const mapDispatchToProps = {
   unlinkLog: loglistActions.unlinkLog,
   connect: logActions.connectLog,
-  disconnect: logActions.disconnectLog
+  disconnect: logActions.disconnectLog,
+  showContext: contextMenuActions.show
 }
 
 export default connect(

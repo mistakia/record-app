@@ -83,7 +83,7 @@ const render = ({
                 <List
                   height={height}
                   itemCount={itemCount}
-                  overscanCount={20}
+                  overscanCount={50}
                   onItemsRendered={onItemsRendered}
                   ref={listRef}
                   itemSize={36}

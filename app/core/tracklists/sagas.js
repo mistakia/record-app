@@ -1,17 +1,14 @@
 import { call, fork, put, select, takeLatest } from 'redux-saga/effects'
-import { push } from 'react-router-redux'
-import queryString from 'query-string'
 
 import { fetchTracks, postTrack, deleteTrack } from '@core/api'
 import { ITEMS_PER_LOAD } from '@core/constants'
 import { notificationActions } from '@core/notifications'
 import { tracklistActions } from './actions'
-import { getCurrentTracklist, getCurrentSelectedTags } from './selectors'
-import history from '@core/history'
+import { getCurrentTracklist } from './selectors'
 
 export function * addTrack ({ payload }) {
-  const { logAddress, data } = payload
-  yield fork(postTrack, { logAddress, data })
+  const { address, data } = payload
+  yield fork(postTrack, { address, data })
   yield put(notificationActions.show({
     text: 'Adding',
     dismiss: 2000
@@ -20,28 +17,26 @@ export function * addTrack ({ payload }) {
 
 export function * loadNextTracks () {
   const tracklist = yield select(getCurrentTracklist)
+  const { query, sort, order } = tracklist
+  const addresses = tracklist.addresses.toJS()
+  const tags = tracklist.tags.toJS()
   const start = tracklist.trackIds.size
-  const tags = yield select(getCurrentSelectedTags)
-  const params = { start, limit: ITEMS_PER_LOAD, tags }
-  yield call(fetchTracks, { logAddress: tracklist.address, params })
+  const params = { start, limit: ITEMS_PER_LOAD, tags, query, addresses, sort, order }
+  yield call(fetchTracks, { address: tracklist.address, params })
 }
 
 export function * loadTracks () {
-  const { address, query } = yield select(getCurrentTracklist)
-  const tags = yield select(getCurrentSelectedTags)
-
-  const tracksPath = `/tracks${address}`
-  if (history.location.pathname !== tracksPath) {
-    return yield put(push(tracksPath + '?' + queryString.stringify({ tags, query })))
-  }
-
-  const params = { start: 0, limit: ITEMS_PER_LOAD, tags, query }
-  yield call(fetchTracks, { logAddress: address, params })
+  const tracklist = yield select(getCurrentTracklist)
+  const { query, sort, order } = tracklist
+  const addresses = tracklist.addresses.toJS()
+  const tags = tracklist.tags.toJS()
+  const params = { start: 0, limit: ITEMS_PER_LOAD, tags, query, addresses, sort, order }
+  yield call(fetchTracks, { params })
 }
 
 export function * removeTrack ({ payload }) {
-  const { logAddress, data } = payload
-  yield call(deleteTrack, { logAddress, data })
+  const { address, data } = payload
+  yield call(deleteTrack, { address, data })
 }
 
 export function * postTrackFailed () {

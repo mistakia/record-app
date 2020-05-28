@@ -17,17 +17,17 @@ const DELETE = {
 }
 
 export const api = {
-  fetchListens ({ logAddress, params }) {
+  fetchListens ({ params }) {
     const url = `${BASE_URL}/listens?${queryString.stringify(params)}`
     return { url }
   },
-  postListen ({ logAddress, data }) {
+  postListen ({ address, data }) {
     const url = `${BASE_URL}/listens`
     const post = POST(data)
     return { url, ...post }
   },
-  fetchLogs ({ logAddress }) {
-    const url = `${BASE_URL}/logs${logAddress}`
+  fetchLogs ({ address }) {
+    const url = `${BASE_URL}/logs${address}`
     return { url }
   },
   fetchInfo () {
@@ -42,37 +42,37 @@ export const api = {
     const url = `${BASE_URL}/export`
     return { url }
   },
-  fetchLog ({ logAddress }) {
-    const url = `${BASE_URL}/log${logAddress}`
+  fetchLog ({ address }) {
+    const url = `${BASE_URL}/log${address}`
     return { url }
   },
   fetchAllLogs () {
     const url = `${BASE_URL}/logs/all`
     return { url }
   },
-  fetchTags ({ logAddress }) {
-    const url = `${BASE_URL}/tags${logAddress}`
+  fetchTags ({ params }) {
+    const url = `${BASE_URL}/tags?${queryString.stringify(params)}`
     return { url }
   },
-  fetchTracks ({ logAddress, params }) {
-    const url = `${BASE_URL}/tracks${logAddress}?${queryString.stringify(params)}`
+  fetchTracks ({ params }) {
+    const url = `${BASE_URL}/tracks?${queryString.stringify(params)}`
     return { url }
   },
-  postTag ({ logAddress, data }) {
+  postTag ({ address, data }) {
     const url = `${BASE_URL}/tags`
     const post = POST(data)
     return { url, ...post }
   },
-  deleteTag ({ logAddress, data }) {
+  deleteTag ({ address, data }) {
     const url = `${BASE_URL}/tags?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
-  postLogLink ({ logAddress, data }) {
+  postLogLink ({ address, data }) {
     const url = `${BASE_URL}/logs`
     const post = POST(data)
     return { url, ...post }
   },
-  deleteLogLink ({ logAddress, data }) {
+  deleteLogLink ({ address, data }) {
     const url = `${BASE_URL}/logs?${queryString.stringify(data)}`
     return { url, ...DELETE }
   },
@@ -100,16 +100,16 @@ export const api = {
     const post = POST({ privateKey })
     return { url, ...post }
   },
-  connectLog ({ logAddress }) {
-    const url = `${BASE_URL}/connect${logAddress}`
+  connectLog ({ address }) {
+    const url = `${BASE_URL}/connect${address}`
     return { url }
   },
-  disconnectLog ({ logAddress }) {
-    const url = `${BASE_URL}/disconnect${logAddress}`
+  disconnectLog ({ address }) {
+    const url = `${BASE_URL}/disconnect${address}`
     return { url }
   },
-  deleteLog ({ logAddress }) {
-    const url = `${BASE_URL}/log${logAddress}`
+  deleteLog ({ address }) {
+    const url = `${BASE_URL}/log${address}`
     return { url, ...DELETE }
   }
 }

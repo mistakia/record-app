@@ -10,12 +10,8 @@ export { playerSagas } from './sagas'
 export {
   getPlayer,
   getPlayerRepeat,
-  getPlayerIsPlaying,
-  getPlayerIsShuffling,
-  getPlayerIsLoading,
   getPlayerTimes,
   getPlayerTrack,
-  getPlayerTrackId,
   getPlayerTrackIds,
   getPlayerTracklist,
   getPlayerTracklistAddress,

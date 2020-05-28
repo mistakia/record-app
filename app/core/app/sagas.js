@@ -1,8 +1,9 @@
 import { call, take, fork, put, takeLatest } from 'redux-saga/effects'
 import { push } from 'react-router-redux'
+
 import { appActions } from './actions'
 import { logActions } from '@core/logs'
-
+import { loglistActions } from '@core/loglists'
 import { notificationActions } from '@core/notifications'
 import { postIdentity, fetchPrivateKey } from '@core/api'
 
@@ -13,6 +14,7 @@ export function * watchInitApp () {
     const { payload } = yield take(appActions.INIT_APP)
     // TODO: handle error on ipfs initialization
     if (payload.orbitdb.address) yield put(logActions.loadLog(payload.orbitdb.address))
+    yield put(loglistActions.loadAllLogs())
   }
 }
 

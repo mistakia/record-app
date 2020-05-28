@@ -17,21 +17,21 @@ import { loglistActions } from './actions'
 import history from '@core/history'
 
 export function * loadLogs ({ payload }) {
-  const { logAddress } = payload
-  yield call(fetchLogs, { logAddress })
+  const { address } = payload
+  yield call(fetchLogs, { address })
 }
 
 export function * loadPeerLogs () {
-  yield call(fetchPeers, { logAddress: PEER_LOGLIST_ADDRESS })
+  yield call(fetchPeers, { address: PEER_LOGLIST_ADDRESS })
 }
 
 export function * loadAllLogs () {
-  yield call(fetchAllLogs, { logAddress: ALL_LOGLIST_ADDRESS })
+  yield call(fetchAllLogs, { address: ALL_LOGLIST_ADDRESS })
 }
 
 export function * linkLog ({ payload }) {
-  const { logAddress, data } = payload
-  yield fork(postLogLink, { logAddress, data })
+  const { address, data } = payload
+  yield fork(postLogLink, { address, data })
 
   if (history.location.pathname.includes('/link-log')) {
     yield put(goBack())
@@ -39,9 +39,9 @@ export function * linkLog ({ payload }) {
 }
 
 export function * unlinkLog ({ payload }) {
-  const { logAddress } = payload
-  const data = { linkAddress: logAddress }
-  yield call(deleteLogLink, { logAddress, data })
+  const { address } = payload
+  const data = { linkAddress: address }
+  yield call(deleteLogLink, { address, data })
 }
 
 export function * postLogFailed () {

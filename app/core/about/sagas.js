@@ -8,7 +8,7 @@ import { notificationActions } from '@core/notifications'
 export function * setAbout ({ payload }) {
   const app = yield select(getApp)
   const { data } = payload
-  yield call(postAbout, { logAddress: app.address, data })
+  yield call(postAbout, { address: app.address, data })
 }
 
 export function * setAboutFailed () {

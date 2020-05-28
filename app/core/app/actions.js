@@ -35,7 +35,7 @@ export const appActions = {
     type: appActions.SET_IDENTITY_PENDING
   }),
 
-  setIdentityFulfilled: (logAddress, data) => ({
+  setIdentityFulfilled: (address, data) => ({
     type: appActions.SET_IDENTITY_FULFILLED,
     payload: data
   }),
@@ -49,7 +49,7 @@ export const appActions = {
     payload: error
   }),
 
-  getPrivateKeyFulfilled: (logAddress, data) => ({
+  getPrivateKeyFulfilled: (address, data) => ({
     type: appActions.GET_PRIVATE_KEY_FULFILLED,
     payload: data
   }),
