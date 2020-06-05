@@ -34,7 +34,12 @@ const Menu = ({ app, log, logs }) => (
     <div className='menu__libraries-section'>
       <small>Libraries</small>
       {logs.map((log, index) => (
-        <Log type='menu-item' log={log} key={index} />
+        <Log
+          type='menu-item'
+          log={log}
+          key={index}
+          active={history.location.pathname.includes(log.address)}
+        />
       ))}
     </div>
     <div className='menu__bottom-section'>

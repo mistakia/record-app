@@ -18,6 +18,7 @@ const Log = ({
   type,
   unlink,
   style,
+  active,
   showContext
 }) => {
   // const peers = log.peers.size
@@ -116,9 +117,15 @@ const Log = ({
     </div>
   )
 
+  const classNames = ['log', `log__${type}`]
+
+  if (active) {
+    classNames.push('active')
+  }
+
   return (
     <article
-      className={`log log__${type}`}
+      className={classNames.join(' ')}
       style={style}
       onClick={type !== 'profile' ? viewUser : null}>
       <div className='log__main'>
