@@ -105,7 +105,7 @@ const createMainWindow = async () => {
 
   ipc.on('redux', (event, data) => {
     if (data.type === 'TRACK_ADDED') {
-      mainWindow.show()
+      app.dock.bounce()
     }
     if (mainWindow) mainWindow.webContents.send('redux', data)
   })
