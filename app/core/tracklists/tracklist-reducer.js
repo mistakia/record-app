@@ -77,6 +77,10 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
     }
 
     case logActions.LOG_INDEX_UPDATED: {
+      if (!payload.data || !payload.data.length) {
+        return state
+      }
+
       const trackEntries = payload.data.filter(entry => entry.payload.value.type === 'track')
       if (!trackEntries.length) {
         return state
@@ -102,6 +106,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
 
     case tracklistActions.LOAD_TRACKS:
       return state.merge({
+        isOutdated: false,
         path: payload.path || state.path,
         addresses: payload.addresses,
         sort: payload.sort || state.sort,
