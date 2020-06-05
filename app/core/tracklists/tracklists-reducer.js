@@ -5,12 +5,17 @@ import {
 } from '@core/constants'
 import { tracklistActions } from './actions'
 import { tracklistReducer } from './tracklist-reducer'
+import { Tracklist } from './tracklist'
 import { trackActions } from '@core/tracks'
 import { logActions } from '@core/logs'
 import { listensActions } from '@core/listens'
 import { importerActions } from '@core/importer'
 
-export function tracklistsReducer (state = new Map(), action) {
+const initialState = new Map({
+  [CURRENT_TRACKLIST_ADDRESS]: new Tracklist()
+})
+
+export function tracklistsReducer (state = initialState, action) {
   switch (action.type) {
     case tracklistActions.CLEAR_SEARCH:
     case tracklistActions.FETCH_TRACKS_FULFILLED:

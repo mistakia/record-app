@@ -56,7 +56,7 @@ class SingleLogsPage extends React.Component {
         </div>
         <div className='page__help-row'>
           <Icon name='sync' />
-          <div>To access a library you will first need to synchronize with it.</div>
+          <div>To access a library you will first need to connect to it.</div>
         </div>
         <div className='page__help-row'>
           <Icon name='link' />
@@ -72,12 +72,12 @@ class SingleLogsPage extends React.Component {
 
     const head = <Log type='profile' log={log} />
 
-    const showAdd = address === app.address
-    const body = <Loglist {...{logs, displayLoadingIndicator, showAdd, log}} />
+    const isMyLoglist = address === app.address
+    const body = <Loglist showAdd={isMyLoglist} {...{logs, displayLoadingIndicator, log}} />
 
     return (
       <PageLayout
-        help={isMyLogsHelpVisible && help}
+        help={isMyLogsHelpVisible && isMyLoglist && help}
         onHelpClose={toggleMyLogsHelp}
         head={head}
         body={body}

@@ -10,7 +10,7 @@ export class LogContextMenu extends React.Component {
 
     const showEdit = log.isMe || log.isLinked
 
-    const handleSyncClick = () => log.isReplicating
+    const handleConnectClick = () => log.isReplicating
       ? disconnect(log.address, log.id)
       : connect(log.address, log.id)
 
@@ -34,14 +34,14 @@ export class LogContextMenu extends React.Component {
 
     return (
       <div>
-        <div
+        {!log.isMe && <div
           className='context-menu--option'
-          onClick={() => { handleSyncClick(); hide() }}>
-          {log.isReplicating ? 'Disconnect' : 'Connect'}</div>
-        <div
+          onClick={() => { handleConnectClick(); hide() }}>
+          {log.isReplicating ? 'Disconnect' : 'Connect'}</div>}
+        {!log.isMe && <div
           className='context-menu--option'
           onClick={(e) => { handleLinkClick(e); hide() }}>
-          {log.isLinked ? 'Unlink' : 'Link'}</div>
+          {log.isLinked ? 'Unlink' : 'Link'}</div>}
         {showEdit && <div
           className='context-menu--option'
           onClick={() => { handleEditClick(); hide() }}>

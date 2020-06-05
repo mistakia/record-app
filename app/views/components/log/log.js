@@ -38,7 +38,7 @@ const Log = ({
   }
 
   // TODO - move to own component
-  const handleSyncClick = (e) => {
+  const handleConnectClick = (e) => {
     e.stopPropagation()
     log.isReplicating
       ? disconnect(log.address, log.id)
@@ -90,7 +90,7 @@ const Log = ({
       label='status'
       isLoading={log.isUpdating}
       className={connectionStatusClassName.join(' ')}
-      onClick={handleSyncClick}
+      onClick={handleConnectClick}
       icon='sync' />
   )
 

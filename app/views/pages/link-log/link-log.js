@@ -59,7 +59,7 @@ export class LinkLogPage extends React.Component {
           </label>
         }
         <Button type='submit'>{isLinked ? 'Save' : 'Link'}</Button>
-        {<label>Note: linking a library adds it to your library, synchronizes with it and saves the data.</label>}
+        {<label>Note: linking a library adds it to your library, connects to it and saves the data.</label>}
       </form>
     )
 

@@ -2,9 +2,12 @@ import { Map } from 'immutable'
 
 import { taglistActions } from './actions'
 import { taglistReducer } from './taglist-reducer'
+import { Taglist } from './taglist'
 import { CURRENT_TAGLIST_ADDRESS } from '@core/constants'
 
-export const initialState = new Map()
+export const initialState = new Map({
+  [CURRENT_TAGLIST_ADDRESS]: new Taglist()
+})
 
 // TODO update taglist on new entries (remote or local)
 

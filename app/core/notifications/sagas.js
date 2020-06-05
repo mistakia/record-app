@@ -1,4 +1,4 @@
-import { fork, take, select, put, delay } from 'redux-saga/effects'
+import { fork, take, select, put, delay, takeLatest } from 'redux-saga/effects'
 import { push } from 'react-router-redux'
 
 import { getApp } from '@core/app'
@@ -6,6 +6,9 @@ import { importerActions } from '@core/importer'
 import { trackActions } from '@core/tracks'
 import { notificationActions } from './actions'
 import { getNotificationItem } from './selectors'
+import { listensActions } from '@core/listens'
+import { tracklistActions, getCurrentTracklist } from '@core/tracklists'
+import { logActions } from '@core/logs'
 
 export function * importerFinished () {
   const app = yield select(getApp)
@@ -45,6 +48,27 @@ export function * showNotification (payload) {
   }
 }
 
+export function * updateTracklist () {
+  const tracklist = yield select(getCurrentTracklist)
+  if (!tracklist.isOutdated) {
+    return
+  }
+
+  const action = tracklistActions.loadTracks({ ...tracklist.toJS() })
+
+  if (!tracklist.isPending && !tracklist.trackIds.size) {
+    yield put(action)
+  } else {
+    yield put(notificationActions.show({
+      text: 'New tracks available.',
+      action: {
+        text: 'Refresh',
+        onclick: () => action
+      }
+    }))
+  }
+}
+
 //= ====================================
 //  WATCHERS
 // -------------------------------------
@@ -77,6 +101,15 @@ export function * watchDismissNotification () {
   }
 }
 
+export function * watchTracklistOutdated () {
+  yield takeLatest([
+    listensActions.POST_LISTEN_FULFILLED,
+    importerActions.IMPORTER_PROCESSED_FILE,
+    tracklistActions.POST_TRACK_FULFILLED,
+    logActions.LOG_INDEX_UPDATED
+  ], updateTracklist)
+}
+
 //= ====================================
 //  ROOT
 // -------------------------------------
@@ -84,5 +117,6 @@ export function * watchDismissNotification () {
 export const notificationSagas = [
   fork(watchImporterFinished),
   fork(watchTrackAdded),
-  fork(watchShowNotification)
+  fork(watchShowNotification),
+  fork(watchTracklistOutdated)
 ]
