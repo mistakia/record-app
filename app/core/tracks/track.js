@@ -82,7 +82,7 @@ export function createTrack (data) {
     duration: data.content.audio.duration,
     id: data.id,
     thumbnail: artwork,
-    format: data.content.audio.dataformat,
+    format: data.content.audio.container,
     bitrate: data.content.audio.bitrate,
     title,
     artist,

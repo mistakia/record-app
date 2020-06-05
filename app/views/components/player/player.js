@@ -116,7 +116,9 @@ export default class Player extends React.Component {
             <div className='player__track-title'>{track.name}</div>
             <div className='player__track-artist'>{track.artist}</div>
             <div className='player__track-meta'>
-              <small>{track.format}</small> · <small>{Math.round(track.bitrate / 1000)} kbps</small>
+              {track.format && <small>{track.format}</small>}
+              {track.format && <span> · </span>}
+              <small>{Math.round(track.bitrate / 1000)} kbps</small>
             </div>
             <div className='player__track-tags'>
               <Tags track={track} tracklistAddress={tracklistAddress} />
