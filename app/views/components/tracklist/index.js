@@ -18,11 +18,8 @@ import Loading from '@components/loading'
 import render from './tracklist'
 
 const Tracklist = ({
-  hideTaglist,
-  hideSearch,
   displayLoadingIndicator,
   isPlaying,
-  isShuffling,
   isLoading,
   pause,
   play,
@@ -34,11 +31,8 @@ const Tracklist = ({
   hasMore,
   loadNext,
   query,
-  showAdd,
-  stopShuffle,
-  shuffle,
   clearSearch,
-  log
+  ...props
 }) => {
   const isItemLoaded = index => tracks.has(index)
   const itemCount = displayLoadingIndicator ? (tracks.size + 1) : (hasMore ? tracks.size + 1 : tracks.size)
@@ -75,11 +69,7 @@ const Tracklist = ({
   return render({
     loading: displayLoadingIndicator,
     onSearch,
-    showAdd,
-    shuffle,
     isItemLoaded,
-    isShuffling,
-    stopShuffle,
     tracklistAddress,
     query,
     onClear,
@@ -87,10 +77,8 @@ const Tracklist = ({
     isEmpty,
     loadMoreItems,
     Row,
-    hideSearch,
-    hideTaglist,
     listRef,
-    log
+    ...props
   })
 }
 

@@ -150,13 +150,18 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
 
     case playerActions.PLAY_PLAYER_TRACKLIST_TRACK: {
       const { index } = payload
-      const trackId = state.tracklist.trackIds.get(index)
+      const base = state.isShuffling ? 0 : (state.tracklist.trackIds.indexOf(state.tracklistCursorId) + 1)
+      const trackId = state.tracklist.trackIds.get(base + index)
       return state.merge({
         history: state.trackId ? state.history.unshift(state.trackId) : state.history,
         trackId,
         isPlayingFromQueue: false,
+        tracklistCursorId: state.isShuffing ? state.tracklistCursorId : trackId,
         isLoading: true
-      }).mergeIn(['tracklist', 'trackIds'], state.tracklist.trackIds.delete(index))
+      }).mergeIn(
+        ['tracklist', 'trackIds'],
+        state.isShuffling ? state.tracklist.trackIds.delete(index) : state.tracklist.trackIds
+      )
     }
 
     case playerActions.PLAY_TRACKLIST:

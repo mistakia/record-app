@@ -104,10 +104,13 @@ export function getPlayerTracklistLog (state) {
 // -------------------------------------
 
 export const getTracksForPlayerTracklist = createSelector(
+  getPlayer,
   getPlayerTracklist,
   (state) => getTracks(state),
-  (tracklist, tracks) => {
-    return tracklist.trackIds.map(id => tracks.get(id))
+  (player, tracklist, tracks) => {
+    return player.isShuffling
+      ? tracklist.trackIds.map(id => tracks.get(id))
+      : tracklist.trackIds.slice(tracklist.trackIds.indexOf(player.tracklistCursorId) + 1).map(id => tracks.get(id))
   }
 )
 
