@@ -1,6 +1,6 @@
 import { List } from 'immutable'
 import { eventChannel } from 'redux-saga'
-import { call, fork, put, select, take } from 'redux-saga/effects'
+import { call, fork, put, select, take, takeLatest } from 'redux-saga/effects'
 import { LOCATION_CHANGE } from 'react-router-redux'
 
 import { appActions, getApp } from '@core/app'
@@ -168,11 +168,13 @@ export function * watchInitApp () {
   }
 }
 
-export function * watchPlayPrevious () {
-  while (true) {
-    yield take(playerActions.PLAY_PREVIOUS)
-    yield fork(playAudio)
-  }
+export function * watchPlay () {
+  yield takeLatest([
+    playerActions.PLAY_PREVIOUS,
+    playerActions.PLAY_TRACKLIST,
+    playerActions.PLAY_QUEUE_TRACK,
+    playerActions.PLAY_PLAYER_TRACKLIST_TRACK
+  ], playAudio)
 }
 
 export function * watchPlayTrack () {
@@ -180,20 +182,6 @@ export function * watchPlayTrack () {
     yield take([playerActions.PLAY_TRACK, playerActions.PLAY_NEXT])
     yield fork(playAudio)
     yield fork(playTrack)
-  }
-}
-
-export function * watchPlayQueueTrack () {
-  while (true) {
-    yield take(playerActions.PLAY_QUEUE_TRACK)
-    yield fork(playAudio)
-  }
-}
-
-export function * watchPlayTracklist () {
-  while (true) {
-    yield take(playerActions.PLAY_TRACKLIST)
-    yield fork(playAudio)
   }
 }
 
@@ -223,13 +211,11 @@ export function * watchLocationChange () {
 // -------------------------------------
 
 export const playerSagas = [
+  fork(watchPlay),
   fork(watchAudioEnded),
   fork(watchAudioVolumeChanged),
   fork(watchInitApp),
   fork(watchPlayTrack),
-  fork(watchPlayPrevious),
-  fork(watchPlayQueueTrack),
-  fork(watchPlayTracklist),
   fork(watchPlaySelectedTrack),
   fork(watchShuffleTracklist),
   fork(watchLocationChange)

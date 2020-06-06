@@ -27,11 +27,17 @@ class Queue extends React.Component {
       tracks,
       track,
       playQueueTrack,
+      playPlayerTracklistTrack,
       pause,
       play,
       toggleQueue,
       clearQueue,
-      reorderQueue
+      isShuffling,
+      tracklistLog,
+      tracklist,
+      reorderQueue,
+      reorderPlayerTracklist,
+      playerTracklistTracks
     } = this.props
 
     if (!isQueueVisible) {
@@ -39,11 +45,11 @@ class Queue extends React.Component {
     }
     const selectedTrackId = track.id
 
-    const SortableItem = SortableElement(({ track, queueIndex }) => {
+    const SortableItem = SortableElement(({ track, queueIndex, queue }) => {
       const isSelected = track.id === selectedTrackId
       const isTrackPlaying = isSelected && isPlaying
       const isTrackLoading = isSelected && isLoading
-      const playTrack = isSelected ? play : playQueueTrack.bind(null, queueIndex)
+      const playTrack = isSelected ? play : (queue ? playQueueTrack.bind(null, queueIndex) : playPlayerTracklistTrack.bind(null, queueIndex))
 
       const classNames = ['queue__track']
       if (contextMenuTrackId === track.id) classNames.push('context-menu-visible')
@@ -82,11 +88,11 @@ class Queue extends React.Component {
       )
     })
 
-    const SortableList = SortableContainer(({ items }) => {
+    const SortableList = SortableContainer(({ items, queue }) => {
       return (
         <div>
           {items.map((track, index) => (
-            <SortableItem key={`item-${track.id}-${index}`} index={index} queueIndex={index} track={track} />
+            <SortableItem key={`item-${track.id}-${index}`} index={index} queueIndex={index} track={track} queue={queue} />
           ))}
         </div>
       )
@@ -106,7 +112,7 @@ class Queue extends React.Component {
           </div>
           <div className='player__queue-side'>
             <div className='player__queue-header'>
-              <div className='player__queue-header-title'>Queue</div>
+              <div className='player__queue-header-title'>Playing next</div>
               <IconButton
                 label='clear queue'
                 className='player__queue-clear'
@@ -116,8 +122,19 @@ class Queue extends React.Component {
             </div>
             <div className='player__queue-tracks'>
               <SortableList
+                queue
                 items={tracks}
                 onSortEnd={reorderQueue}
+                helperClass='sortable__helper' />
+              {playerTracklistTracks.size &&
+                <div className='player__queue-tracks-header'>
+                  <div className='player__queue-tracks-header-title'>Back To:</div>
+                  {isShuffling && 'Shuffling '}
+                  {tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}
+                </div>}
+              <SortableList
+                items={playerTracklistTracks}
+                onSortEnd={reorderPlayerTracklist}
                 helperClass='sortable__helper' />
             </div>
           </div>

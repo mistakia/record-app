@@ -103,6 +103,14 @@ export function getPlayerTracklistLog (state) {
 //  MEMOIZED SELECTORS
 // -------------------------------------
 
+export const getTracksForPlayerTracklist = createSelector(
+  getPlayerTracklist,
+  (state) => getTracks(state),
+  (tracklist, tracks) => {
+    return tracklist.trackIds.map(id => tracks.get(id))
+  }
+)
+
 export const getTracksForQueue = createSelector(
   getPlayerQueue,
   (state) => getTracks(state),

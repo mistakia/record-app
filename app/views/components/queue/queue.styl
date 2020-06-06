@@ -21,16 +21,17 @@ $textColorDark = rgb(0,0,0)
   height 100%
 
 .player__queue-main
-  flex 1
+  flex 3
   display flex
   align-items center
 
 .player__queue-side
-  flex 0 0 450px
+  flex 2
   display flex
   flex-direction column
   margin-left 40px
   color $textColor
+  width 100px
 
 .player__queue-header
   flex 0 0 auto
@@ -56,6 +57,20 @@ $textColorDark = rgb(0,0,0)
   overflow hidden
   overflow-y scroll
 
+.player__queue-tracks-header
+  height 56px
+  margin-top 16px
+  padding 0 8px
+  display flex
+  align-items center
+  border-bottom 1px solid $textColor
+  color $textColorDark
+  text-transform capitalize
+
+.player__queue-tracks-header-title
+  font-weight 500
+  margin-right 8px
+
 .player__queue-close
   position absolute
   left 8px
@@ -79,7 +94,6 @@ $textColorDark = rgb(0,0,0)
   flex 0 0 40px
   height 40px
   margin-right 16px
-  fill white
 
 .queue__track-body
   display flex
@@ -125,4 +139,4 @@ $textColorDark = rgb(0,0,0)
 
 .sortable__helper
   background $backgroundColor
-  z-index 9999
+  z-index 9999999
