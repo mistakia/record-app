@@ -7,6 +7,7 @@ import EmptyMessage from '@components/empty-message'
 import IconButton from '@components/icon-button'
 import Taglist from '@components/taglist'
 import Input from '@components/input'
+import TracklistFilter from '@components/tracklist-filter'
 
 const render = ({
   loading,
@@ -26,7 +27,8 @@ const render = ({
   isEmpty,
   query,
   listRef,
-  log
+  log,
+  reorder
 }) => (
   <div className='list'>
     <div className='list__head'>
@@ -60,12 +62,12 @@ const render = ({
         <div className='track__index' />
         <div className='track__save' />
         <div className='track__play' />
-        <div className='track__body'>Name</div>
-        <div className='track__artist'>Artist</div>
+        <TracklistFilter type='title' className='track__body' />
+        <TracklistFilter type='artist' className='track__artist' />
         <div className='track__tags-add' />
         <div className='track__tags'>Tags</div>
-        <div className='track__bitrate'>Bitrate</div>
-        <div className='track__duration'>Time</div>
+        <TracklistFilter type='bitrate' className='track__bitrate' />
+        <TracklistFilter type='duration' title='Time' className='track__duration' />
         <div className='track__format'>Format</div>
         <div className='track__listens'>Listens</div>
       </div>

@@ -13,15 +13,21 @@
   .disc
     flex 0 0 auto
     border-radius 50%
-    width 35%
-    height 35%
+    width 50%
     background rgba(0,0,0,0.08)
     display flex
     justify-content center
     align-items center
+    &:after
+      content ""
+      display block
+      padding-bottom 100%
     .disc-label
       background rgba($accentColorRGB, 0.08)
       border-radius 50%
       width 30%
-      height 30%
       flex 0 0 auto
+      &:after
+        content ""
+        display block
+        padding-bottom 100%

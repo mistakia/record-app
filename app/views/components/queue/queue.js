@@ -126,12 +126,11 @@ class Queue extends React.Component {
                 items={tracks}
                 onSortEnd={reorderQueue}
                 helperClass='sortable__helper' />
-              {playerTracklistTracks.size &&
-                <div className='player__queue-tracks-header'>
-                  <div className='player__queue-tracks-header-title'>Back To:</div>
-                  {isShuffling && 'Shuffling '}
-                  {tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}
-                </div>}
+              {!!playerTracklistTracks.size && !!tracks.size && <div className='player__queue-tracks-header'>
+                <div className='player__queue-tracks-header-title'>Back To:</div>
+                {isShuffling && 'Shuffling '}
+                {tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}
+              </div>}
               <SortableList
                 items={playerTracklistTracks}
                 onSortEnd={reorderPlayerTracklist}

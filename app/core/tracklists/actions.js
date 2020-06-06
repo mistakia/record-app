@@ -8,6 +8,7 @@ export const tracklistActions = {
   TOGGLE_TAG: 'TOGGLE_TAG',
   SEARCH_TRACKS: 'SEARCH_TRACKS',
   CLEAR_SEARCH: 'CLEAR_SEARCH',
+  REORDER_TRACKLIST: 'REORDER_TRACKLIST',
 
   FETCH_TRACKS_FAILED: 'FETCH_TRACKS_FAILED',
   FETCH_TRACKS_FULFILLED: 'FETCH_TRACKS_FULFILLED',
@@ -137,6 +138,13 @@ export const tracklistActions = {
     type: tracklistActions.SEARCH_TRACKS,
     payload: {
       query
+    }
+  }),
+
+  reorderTracklist: (sort) => ({
+    type: tracklistActions.REORDER_TRACKLIST,
+    payload: {
+      sort
     }
   })
 }

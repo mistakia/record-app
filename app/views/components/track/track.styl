@@ -35,7 +35,7 @@ $accentColorLight = lighten($accentColor, 92%)
     width 100%
     line-height 25px
     opacity 0
-  &:hover
+  &:hover:not(.list__header)
     background #fbfbfb
     .track__play button
       display block
@@ -58,7 +58,6 @@ $accentColorLight = lighten($accentColor, 92%)
     overflow hidden
     text-overflow ellipsis
     white-space nowrap
-    line-height 20px
   .track__artist
     flex 1 0 10%
   .track__duration
@@ -80,6 +79,7 @@ $accentColorLight = lighten($accentColor, 92%)
   .track__artist
   .track__tags
     padding 0 4px
+    line-height 20px
 
   .track__format
     text-overflow ellipsis

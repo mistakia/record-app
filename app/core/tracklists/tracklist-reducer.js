@@ -107,10 +107,10 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
     case tracklistActions.LOAD_TRACKS:
       return state.merge({
         isOutdated: false,
-        path: payload.path || state.path,
+        path: payload.path,
         addresses: payload.addresses,
-        sort: payload.sort || state.sort,
-        order: payload.order || state.order,
+        sort: payload.sort,
+        order: payload.order,
         query: payload.query,
         tags: payload.tags ? new List(payload.tags) : new List(),
         trackIds: new List()

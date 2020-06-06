@@ -34,6 +34,22 @@ export function * loadTracks () {
   yield call(fetchTracks, { params })
 }
 
+export function * reorderTracklist ({ payload }) {
+  const { sort } = payload
+  let tracklist = yield select(getCurrentTracklist)
+  if (!tracklist.sort || sort !== tracklist.sort) {
+    tracklist = tracklist.merge({
+      sort,
+      order: 'asc'
+    })
+  } else if (tracklist.order === 'asc') {
+    tracklist = tracklist.merge({ order: 'desc' })
+  } else {
+    tracklist = tracklist.merge({ order: null, sort: null })
+  }
+  yield put(tracklistActions.loadTracks({ ...tracklist.toJS() }))
+}
+
 export function * removeTrack ({ payload }) {
   const { address, data } = payload
   yield call(deleteTrack, { address, data })
@@ -93,6 +109,10 @@ export function * watchPostTrackFailed () {
   yield takeLatest(tracklistActions.POST_TRACK_FAILED, postTrackFailed)
 }
 
+export function * watchReorderTracklist () {
+  yield takeLatest(tracklistActions.REORDER_TRACKLIST, reorderTracklist)
+}
+
 //= ====================================
 //  ROOT
 // -------------------------------------
@@ -105,6 +125,7 @@ export const tracklistSagas = [
   fork(watchSearchTracks),
   fork(watchClearSearch),
   fork(watchToggleTag),
+  fork(watchReorderTracklist),
 
   fork(watchPostTrackFailed),
   fork(watchDeleteTrackFailed)
