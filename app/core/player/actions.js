@@ -7,6 +7,7 @@ export const playerActions = {
 
   PLAY_TRACK: 'PLAY_TRACK',
   PLAY_QUEUE_TRACK: 'PLAY_QUEUE_TRACK',
+  PLAY_PLAYER_TRACKLIST_TRACK: 'PLAY_PLAYER_TRACKLIST_TRACK',
   PLAY_TRACKLIST: 'PLAY_TRACKLIST',
   PLAY_SELECTED_TRACK: 'PLAY_SELECTED_TRACK',
   PLAY_PREVIOUS: 'PLAY_PREVIOUS',
@@ -22,6 +23,7 @@ export const playerActions = {
   CLEAR_QUEUE: 'CLEAR_QUEUE',
   TOGGLE_QUEUE: 'TOGGLE_QUEUE',
   TOGGLE_PLAY_REPEAT: 'TOGGLE_PLAY_REPEAT',
+  REORDER_PLAYER_TRACKLIST: 'REORDER_PLAYER_TRACKLIST',
 
   FETCH_PLAYER_SHUFFLE_PENDING: 'FETCH_PLAYER_SHUFFLE_PENDING',
   FETCH_PLAYER_SHUFFLE_FAILED: 'FETCH_PLAYER_SHUFFLE_FAILED',
@@ -109,6 +111,14 @@ export const playerActions = {
     }
   }),
 
+  reorderPlayerTracklist: ({ oldIndex, newIndex }) => ({
+    type: playerActions.REORDER_PLAYER_TRACKLIST,
+    payload: {
+      oldIndex,
+      newIndex
+    }
+  }),
+
   clearQueue: () => ({
     type: playerActions.CLEAR_QUEUE
   }),
@@ -157,6 +167,14 @@ export const playerActions = {
     type: playerActions.PLAY_QUEUE_TRACK,
     payload: {
       queueIndex
+    }
+  }),
+
+  // play from player tracklist up next
+  playPlayerTracklistTrack: (index) => ({
+    type: playerActions.PLAY_PLAYER_TRACKLIST_TRACK,
+    payload: {
+      index
     }
   }),
 

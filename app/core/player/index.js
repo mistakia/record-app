@@ -18,5 +18,6 @@ export {
   getPlayerTracklistCursor,
   getPlayerTracklistLog,
   getPlayerQueue,
-  getTracksForQueue
+  getTracksForQueue,
+  getTracksForPlayerTracklist
 } from './selectors'

@@ -87,6 +87,12 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
       })
     }
 
+    case playerActions.REORDER_PLAYER_TRACKLIST: {
+      const { oldIndex, newIndex } = payload
+      const trackId = state.tracklist.trackIds.get(oldIndex)
+      return state.mergeIn(['tracklist', 'trackIds'], state.tracklist.trackIds.delete(oldIndex).insert(newIndex, trackId))
+    }
+
     case playerActions.QUEUE_TRACK:
       return state.merge({
         queue: payload.playNext
@@ -140,6 +146,17 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         isLoading: true,
         queue: state.queue.delete(queueIndex)
       })
+    }
+
+    case playerActions.PLAY_PLAYER_TRACKLIST_TRACK: {
+      const { index } = payload
+      const trackId = state.tracklist.trackIds.get(index)
+      return state.merge({
+        history: state.trackId ? state.history.unshift(state.trackId) : state.history,
+        trackId,
+        isPlayingFromQueue: false,
+        isLoading: true
+      }).mergeIn(['tracklist', 'trackIds'], state.tracklist.trackIds.delete(index))
     }
 
     case playerActions.PLAY_TRACKLIST:
