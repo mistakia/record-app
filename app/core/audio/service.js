@@ -52,6 +52,10 @@ export const audio = {
     if (url) _audio.src = url
   },
 
+  unload () {
+    _audio.src = ''
+  },
+
   pause () {
     _audio.pause()
   },

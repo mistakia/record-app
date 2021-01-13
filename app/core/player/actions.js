@@ -1,6 +1,7 @@
 export const playerActions = {
   AUDIO_ENDED: 'AUDIO_ENDED',
   AUDIO_PAUSED: 'AUDIO_PAUSED',
+  AUDIO_CANCELLED: 'AUDIO_CANCELLED',
   AUDIO_PLAYING: 'AUDIO_PLAYING',
   AUDIO_TIME_UPDATED: 'AUDIO_TIME_UPDATED',
   AUDIO_VOLUME_CHANGED: 'AUDIO_VOLUME_CHANGED',
@@ -117,6 +118,10 @@ export const playerActions = {
       oldIndex,
       newIndex
     }
+  }),
+
+  audioCancelled: () => ({
+    type: playerActions.AUDIO_CANCELLED,
   }),
 
   clearQueue: () => ({

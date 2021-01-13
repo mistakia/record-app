@@ -1,12 +1,13 @@
 import { List } from 'immutable'
 import { eventChannel } from 'redux-saga'
-import { call, fork, put, select, take, takeLatest } from 'redux-saga/effects'
+import { call, fork, put, select, take, takeLatest, race, delay } from 'redux-saga/effects'
 import { LOCATION_CHANGE } from 'react-router-redux'
 
 import { appActions, getApp } from '@core/app'
 import { fetchPlayerTracks, fetchShuffleTracks, postListen } from '@core/api'
 import { PLAYER_INITIAL_VOLUME, ITEMS_PER_LOAD } from '@core/constants'
 import { getCurrentTracklist } from '@core/tracklists'
+import { notificationActions } from '@core/notifications'
 import { playerActions } from './actions'
 import { audio, initAudio, setVolume } from '@core/audio'
 import {
@@ -99,7 +100,20 @@ export function * playAudio () {
   yield call(audio.play)
 
   // record listens only after track loads
-  yield take(playerActions.AUDIO_PLAYING)
+  const [response, cancel] = yield race([
+    take(playerActions.AUDIO_PLAYING),
+    delay(10000)
+  ])
+
+  if (cancel) {
+    yield call(audio.unload)
+    yield put(playerActions.audioCancelled())
+    yield put(notificationActions.show({
+      text: 'Track not currently available'
+    }))
+    // TODO - add action to dispatch to notification (play next)
+    return
+  }
 
   // probably an anti-pattern but need to exclude stale saga effects
   const nowplaying = yield select(getPlayerTrack)

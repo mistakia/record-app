@@ -24,6 +24,9 @@ export const PlayerState = new Record({
 
 export function playerReducer (state = new PlayerState(), {payload, type}) {
   switch (type) {
+    case playerActions.AUDIO_CANCELLED:
+      return state.set('isLoading', false)
+
     case playerActions.AUDIO_ENDED:
     case playerActions.AUDIO_PAUSED:
       return state.set('isPlaying', false)
