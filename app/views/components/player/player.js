@@ -188,7 +188,8 @@ export default class Player extends React.Component {
 
         <div className='player__tracklist'>
           <div className='player__tracklist-info cursor' onClick={this._handleTracklistClick}>
-            {tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}
+            <div className='player__tracklist-info-lead'>{tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}</div>
+            <div className='player__tracklist-info-subtitle'>Playing from</div>
           </div>
           <Artwork
             onClick={this._handleTracklistClick}

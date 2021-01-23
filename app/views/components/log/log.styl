@@ -18,6 +18,11 @@
   &.active
     background rgba(255,255,255,0.9)
 
+.log__updated
+.log__metadata
+  font-size 10px
+  color lighten($textColor, 10%)
+
 .log__main
   display flex
   align-items center
@@ -27,7 +32,7 @@
   align-items center
   > div
     flex 0 0 auto
-    padding-left 10px
+    padding-left 5px
 
 .log__menu
   flex 0 0 30%
@@ -97,10 +102,14 @@
     justify-content flex-end
     div:after
       content attr(data-label)
+      padding-left 2px
       font-size 10px
+      text-transform lowercase
 
 .log__menu-item
   .log__avatar
     flex 0 0 35px
     display flex
     height 35px
+  .log__title small
+    display none
