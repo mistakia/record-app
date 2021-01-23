@@ -120,8 +120,19 @@ $backgroundColor = white
 
 .player__tracklist-info
   flex 0 0 auto
+  display flex
+  flex-direction column
   &:hover
     color black
+
+.player__tracklist-info-lead
+  flex 1
+
+.player__tracklist-info-subtitle
+  flex 1
+  font-size 8px
+  text-transform uppercase
+  color lighten($textColor, 50%)
 
 .player__tracklist-artwork
   flex 0 0 $playerHeight - 10px

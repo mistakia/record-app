@@ -100,9 +100,9 @@ export function * playAudio () {
   yield call(audio.play)
 
   // record listens only after track loads
-  const [response, cancel] = yield race([
-    take(playerActions.AUDIO_PLAYING),
-    delay(10000)
+  const [cancel] = yield race([
+    delay(10000),
+    take(playerActions.AUDIO_PLAYING)
   ])
 
   if (cancel) {

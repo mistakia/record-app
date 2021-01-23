@@ -113,12 +113,12 @@ class Queue extends React.Component {
           <div className='player__queue-side'>
             <div className='player__queue-header'>
               <div className='player__queue-header-title'>Playing next</div>
-              <IconButton
+              {!!tracks.size && <IconButton
                 label='clear queue'
                 className='player__queue-clear'
                 disabled={!tracks.size}
                 onClick={clearQueue}
-                icon='remove' />
+                icon='remove' />}
             </div>
             <div className='player__queue-tracks'>
               <SortableList

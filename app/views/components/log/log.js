@@ -143,10 +143,10 @@ const Log = ({
         <NavLink activeClassName='active' to={logsPath}>Libraries</NavLink>
       </div>}
       {type !== 'menu-item' && <div className='log__side'>
-        <div>
+        <div className='log__updated'>
           {log.latestHeadTimestamp && <TimeAgo datetime={log.latestHeadTimestamp} />}
         </div>
-        <div data-label='entries'>
+        <div className='log__metadata' data-label='entries'>
           {log.length < log.max && <Progress progress={(log.length / log.max) * 100} />}
           {log.length >= log.max
             ? (log.max > 0 && log.max)
@@ -154,8 +154,8 @@ const Log = ({
               `${log.length}/${log.max}`
             )}
         </div>
-        {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='tracks'>{log.trackCount}</div>}
-        {type === 'profile' && <div className={loading ? 'blink' : ''} data-label='libraries'>{log.logCount}</div>}
+        {type === 'profile' && <div className={'log__metadata' + (loading ? ' blink' : '')} data-label='tracks'>{log.trackCount}</div>}
+        {type === 'profile' && <div className={'log__metadata' + (loading ? ' blink' : '')} data-label='libraries'>{log.logCount}</div>}
       </div>}
     </article>
   )

@@ -92,8 +92,12 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
 
     case playerActions.REORDER_PLAYER_TRACKLIST: {
       const { oldIndex, newIndex } = payload
-      const trackId = state.tracklist.trackIds.get(oldIndex)
-      return state.mergeIn(['tracklist', 'trackIds'], state.tracklist.trackIds.delete(oldIndex).insert(newIndex, trackId))
+      const baseIndex = state.tracklist.trackIds.indexOf(state.tracklistCursorId) + 1
+      const trackId = state.tracklist.trackIds.get(oldIndex + baseIndex)
+      return state.mergeIn(['tracklist', 'trackIds'],
+        state.tracklist.trackIds
+          .delete(baseIndex + oldIndex)
+          .insert(baseIndex + newIndex, trackId))
     }
 
     case playerActions.QUEUE_TRACK:
