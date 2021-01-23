@@ -16,7 +16,7 @@ log.catchErrors()
 console.log = log.log
 Object.assign(console, log.functions)
 
-const getIpfsBinPath = () => require('go-ipfs-dep')
+const getIpfsBinPath = () => require('go-ipfs')
   .path()
   .replace('app.asar', 'app.asar.unpacked')
 
