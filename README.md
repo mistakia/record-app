@@ -7,7 +7,7 @@
 
 *Note: This repo is the React & React Native UI for [Record Node](https://github.com/mistakia/record-node).*
 
-Record is a proof of concept immutable distributed system for managing a music collection. Built entirely on [IPFS](https://github.com/ipfs/js-ipfs), user data is stored in a [scuttlebot](http://scuttlebot.io/)-esque immutable log via [IPFS-Log](https://github.com/orbitdb/ipfs-log) & [OrbitDB](https://github.com/orbitdb/orbit-db). Bootstraping/peer discovery is done via [bitboot](https://github.com/tintfoundation/bitboot).
+Record is a proof of concept immutable distributed system for audio files. Built entirely on [IPFS](https://github.com/ipfs/js-ipfs), user data is stored in a [scuttlebot](http://scuttlebot.io/)-esque immutable log via [IPFS-Log](https://github.com/orbitdb/ipfs-log) & [OrbitDB](https://github.com/orbitdb/orbit-db). Bootstraping/peer discovery is done via [bitboot](https://github.com/tintfoundation/bitboot).
 
 At it's core, the application intends to be a media library management & playback system akin to [beets](https://github.com/beetbox/beets) with the ability to join various sources of music like [tomahawk player](https://github.com/tomahawk-player/tomahawk). By building everything on top of IPFS, it can become a connected network of libraries, opening the door to many other possibilities (i.e. distributed version of soundcloud & musicbrainz), while still being entirely distributed and thus being able to function permanently.
 
@@ -29,10 +29,10 @@ At it's core, the application intends to be a media library management & playbac
 - Media server (MPD, Sonos, Plex, Kodi, Emby)
 - Audio and music analysis (Aubio, Essentia)
 - Audio Scrobbling (last.fm, libre.fm, listenbrainz)
-- Trustless timestamping / distributed copyrighting & distribution (OpenTimestamps, Ethereum, Nano)
+- Trustless timestamping / distributed copyrighting & distribution (OpenTimestamps, Nano, etc)
 
 ## More Info
-- Read the [wiki](https://ipfs.infura.io/ipfs/Qmf4wAJLhU7jWjKbgZ7F1fe6iLARtbuvsHZugGxutxwSuk/) for a primer.
+- Read the [wiki](https://bafybeih6r4ynrzoy6mfwe4bkbkksnlqfbl4r7cxqnev2tldj5tnenyjiru.ipfs.infura-ipfs.io/) for a primer.
 - Check out [the roadmap](https://github.com/mistakia/record-app/projects/1) to view planned features.
 
 ## Install

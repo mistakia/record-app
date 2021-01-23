@@ -121,7 +121,7 @@ export const playerActions = {
   }),
 
   audioCancelled: () => ({
-    type: playerActions.AUDIO_CANCELLED,
+    type: playerActions.AUDIO_CANCELLED
   }),
 
   clearQueue: () => ({
