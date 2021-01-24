@@ -1,5 +1,4 @@
 import { call, fork, takeLatest, put } from 'redux-saga/effects'
-import { goBack } from 'react-router-redux'
 
 import {
   PEER_LOGLIST_ADDRESS,
@@ -34,7 +33,7 @@ export function * linkLog ({ payload }) {
   yield fork(postLogLink, { address, data })
 
   if (history.location.pathname.includes('/link-log')) {
-    yield put(goBack())
+    yield call(history.back)
   }
 }
 
