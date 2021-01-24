@@ -13,14 +13,12 @@ const Menu = ({ app, log, logs }) => (
       <IconButton
         icon='arrow-back'
         label='go back'
-        onClick={history.goBack}
-        disabled={history.length < 2}
+        onClick={history.back}
       />
       <IconButton
         icon='arrow-forward'
         label='go forward'
-        onClick={history.goForward}
-        disabled={history.length < 2}
+        onClick={history.forward}
       />
     </div>
     <div className='menu__main-section'>
