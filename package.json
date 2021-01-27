@@ -130,9 +130,6 @@
       "private": false
     }
   },
-  "go-ipfs": {
-    "version": "v0.5.0-rc4"
-  },
   "dependencies": {
     "@hot-loader/react-dom": "^16.13.0",
     "abortcontroller-polyfill": "^1.4.0",
@@ -161,15 +158,15 @@
     "react-window": "^1.8.5",
     "react-window-infinite-loader": "^1.0.3",
     "record-ipfsd": "mistakia/record-ipfsd#965babb",
-    "record-node": "mistakia/record-node#b1d2c7d",
+    "record-node": "mistakia/record-node#749aa09",
     "redux": "^4.0.0",
     "redux-immutable": "^4.0.0",
     "redux-saga": "^1.0.0-beta.1",
     "reselect": "4.0.0",
     "source-map-support": "^0.5.16",
     "timeago-react": "^3.0.0",
-    "whatwg-fetch": "^2.0.3",
-    "v8-compile-cache": "2.2.0"
+    "v8-compile-cache": "2.2.0",
+    "whatwg-fetch": "^2.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
