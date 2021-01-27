@@ -15,8 +15,12 @@ import DeleteSourceMaps from '../internals/scripts/DeleteSourceMaps'
 CheckNodeEnv('production')
 DeleteSourceMaps()
 
+const devtoolsConfig = process.env.DEBUG_PROD === 'true' ? {
+  devtool: 'source-map'
+} : {}
+
 export default merge.smart(baseConfig, {
-  devtool: process.env.DEBUG_PROD === 'true' ? 'source-map' : 'none',
+  ...devtoolsConfig,
 
   mode: 'production',
 
@@ -49,17 +53,15 @@ export default merge.smart(baseConfig, {
       ? []
       : [
         new TerserPlugin({
+          parallel: true,
           terserOptions: {
             mangle: false,
-            sourceMap: true,
             compress: false,
             keep_classnames: true,
             keep_fnames: true,
             output: {
               comments: false,
-            },
-            parallel: true,
-            cache: true
+            }
           }
         })
       ]

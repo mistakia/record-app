@@ -14,7 +14,6 @@ export default {
     rules: [
       {
         test: /\.m?js$/,
-        exclude: /(node_modules)/,
         use: {
           loader: 'babel-loader',
           options: {
@@ -22,27 +21,38 @@ export default {
           }
         }
       }, {
-        test: /\.(styl|css)$/,
+        test: /\.css$/,
+
+        use: [{
+	      loader: 'style-loader'
+        }, {
+	      loader: 'css-loader'
+        }]
+      }, {
+        test: /\.styl$/,
         use: [{
 	      loader: 'style-loader'
         }, {
 	      loader: 'css-loader',
+          options: {
+            importLoaders: 1
+          }
         }, {
 	      loader: 'stylus-loader',
 	      options: {
-	        use: [nib()],
-	        import: [
-	          '~nib/lib/nib/index.styl',
-	          path.resolve(__dirname, '../app/styles/variables.styl')
-	        ]
+            stylusOptions: {
+	          use: [nib()],
+	          import: [
+	            'nib',
+	            path.resolve(__dirname, '../app/styles/variables.styl')
+	          ],
+              includeCSS: true
+            }
 	      }
         }]
       }, {
         test: /\.(png|jpg)$/,
-        loader: 'url-loader',
-        options: {
-	      limit: 8192
-        }
+        type: 'asset'
       }, { // https://github.com/ashtuchkin/iconv-lite/issues/204#issuecomment-432048618
         test: /node_modules[\/\\](iconv-lite)[\/\\].+/,
         resolve: {
@@ -50,6 +60,10 @@ export default {
         }
       }
     ]
+  },
+
+  optimization: {
+    moduleIds: 'named'
   },
 
   output: {
@@ -70,8 +84,6 @@ export default {
   plugins: [
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'production'
-    }),
-
-    new webpack.NamedModulesPlugin()
+    })
   ]
 }
