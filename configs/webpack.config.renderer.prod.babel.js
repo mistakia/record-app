@@ -17,8 +17,12 @@ import DeleteSourceMaps from '../internals/scripts/DeleteSourceMaps'
 CheckNodeEnv('production')
 DeleteSourceMaps()
 
+const devtoolsConfig = process.env.DEBUG_PROD === 'true' ? {
+  devtool: 'source-map'
+} : {}
+
 export default merge.smart(baseConfig, {
-  devtool: process.env.DEBUG_PROD === 'true' ? 'source-map' : 'none',
+  ...devtoolsConfig,
 
   mode: 'production',
 
@@ -34,16 +38,14 @@ export default merge.smart(baseConfig, {
 
   module: {
     rules: [{
-      test: /\.m?js$/,
-      exclude: /(node_modules|bower_components)/,
-      use: {
-        loader: 'babel-loader',
-        options: {
-          presets: ['@babel/preset-env']
-        }
-      }
+      test: /\.css$/,
+      use: [{
+	    loader: 'style-loader'
+      }, {
+	    loader: 'css-loader',
+      }]
     }, {
-      test: /\.(styl|css)$/,
+      test: /\.styl$/,
       use: [{
 	    loader: 'style-loader'
       }, {
@@ -51,16 +53,18 @@ export default merge.smart(baseConfig, {
       }, {
 	    loader: 'stylus-loader',
 	    options: {
-	      use: [nib()],
-	      import: [
-	        '~nib/lib/nib/index.styl',
-	        path.resolve(__dirname, '../app/styles/variables.styl')
-	      ]
+          stylusOptions: {
+	        use: [nib()],
+	        import: [
+	          '~nib/lib/nib/index.styl',
+	          path.resolve(__dirname, '../app/styles/variables.styl')
+	        ]
+          }
 	    }
       }]
     }, {
       test: /\.(png|jpg)$/,
-      loader: 'url-loader?limit=8192'
+      type: 'assets'
     }]
   },
 
@@ -69,9 +73,7 @@ export default merge.smart(baseConfig, {
       ? []
       : [
         new TerserPlugin({
-          parallel: true,
-          sourceMap: true,
-          cache: true
+          parallel: true
         })
       ]
   },
