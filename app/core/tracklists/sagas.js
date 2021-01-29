@@ -1,4 +1,4 @@
-import { call, fork, put, select, takeLatest } from 'redux-saga/effects'
+import { call, fork, put, select, takeLatest, takeEvery } from 'redux-saga/effects'
 
 import { fetchTracks, postTrack, deleteTrack } from '@core/api'
 import { ITEMS_PER_LOAD } from '@core/constants'
@@ -76,7 +76,7 @@ export function * deleteTrackFailed () {
 // -------------------------------------
 
 export function * watchAddTrack () {
-  yield takeLatest(tracklistActions.ADD_TRACK, addTrack)
+  yield takeEvery(tracklistActions.ADD_TRACK, addTrack)
 }
 
 export function * watchLoadNextTracks () {
@@ -88,7 +88,7 @@ export function * watchLoadTracks () {
 }
 
 export function * watchRemoveTrack () {
-  yield takeLatest(tracklistActions.REMOVE_TRACK, removeTrack)
+  yield takeEvery(tracklistActions.REMOVE_TRACK, removeTrack)
 }
 
 export function * watchSearchTracks () {

@@ -30,8 +30,8 @@ hotkeys.filter = (event) => {
   let flag = true
   // ignore: isContentEditable === 'true', <input> and <textarea> when readOnly state is false, <select>
   if (
-    target.isContentEditable
-    || ((tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') && !target.readOnly)
+    target.isContentEditable ||
+      ((tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') && !target.readOnly)
   ) {
     flag = false
   }
