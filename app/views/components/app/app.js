@@ -20,6 +20,24 @@ import './app.styl'
 
 const { ipcRenderer } = require('electron')
 
+// do not filter out esc shortcut when focused on inputs etc
+hotkeys.filter = (event) => {
+  const key = event.keyCode || event.which || event.charCode
+  if (key === 27) return true
+
+  const target = event.target || event.srcElement
+  const { tagName } = target
+  let flag = true
+  // ignore: isContentEditable === 'true', <input> and <textarea> when readOnly state is false, <select>
+  if (
+    target.isContentEditable
+    || ((tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') && !target.readOnly)
+  ) {
+    flag = false
+  }
+  return flag
+}
+
 class App extends React.Component {
   constructor (props) {
     super(props)
