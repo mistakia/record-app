@@ -84,6 +84,12 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       })
     }
 
+    case tracklistActions.DELETE_TRACK_FAILED:
+    case tracklistActions.POST_TRACK_FAILED: {
+      // TODO
+      return state
+    }
+
     case tracklistActions.DELETE_TRACK_FULFILLED:
       return state.updateIn([payload.data.trackId], t => t.merge({ isUpdating: false, haveTrack: false }))
 
