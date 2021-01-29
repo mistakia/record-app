@@ -14,7 +14,8 @@ export function * setAbout ({ payload }) {
 export function * setAboutFailed () {
   yield put(notificationActions.show({
     text: 'Profile update failed',
-    dismiss: 2000
+    dismiss: 2000,
+    severity: 'error'
   }))
 }
 

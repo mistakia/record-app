@@ -58,6 +58,7 @@ export function * removeTrack ({ payload }) {
 export function * postTrackFailed () {
   yield put(notificationActions.show({
     text: 'Failed to add track',
+    severity: 'error',
     dismiss: 2000
   }))
 }
@@ -65,6 +66,7 @@ export function * postTrackFailed () {
 export function * deleteTrackFailed () {
   yield put(notificationActions.show({
     text: 'Failed to remove track',
+    severity: 'error',
     dismiss: 2000
   }))
 }

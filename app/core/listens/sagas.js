@@ -21,6 +21,7 @@ export function * loadListens () {
 export function * postListenFailed () {
   yield put(notificationActions.show({
     text: 'Failed to add track to listening history',
+    severity: 'error',
     dismiss: 2000
   }))
 }

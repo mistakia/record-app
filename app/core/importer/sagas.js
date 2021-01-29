@@ -16,6 +16,7 @@ export function * importerAdd ({ payload }) {
 export function * postImporterFailed () {
   yield put(notificationActions.show({
     text: 'Importer failed',
+    severity: 'error',
     dismiss: 2000
   }))
 }
