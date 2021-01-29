@@ -43,13 +43,13 @@ class Notification extends React.Component {
   }
 
   componentDidUpdate (prevProps) {
-    if (prevProps.notification.text !== this.props.notification.text) {
+    const nextNotification = this.state.list[0] || this.state.notification || {}
+    if (prevProps.notification.key !== this.props.notification.key && nextNotification.text !== this.props.notification.text) {
       this.setState({ list: [...this.state.list, this.props.notification.toJS()] })
     }
 
     if (this.state.list.length && !this.state.notification) {
-      this.setState({ notification: this.state.list[0] })
-      this.setState({ list: this.state.list.slice(1), open: true })
+      this.setState({ notification: this.state.list[0], list: this.state.list.slice(1), open: true })
     } else if (this.state.list.length && this.state.notification && this.state.open) {
       this.setState({ open: false })
     }
