@@ -157,7 +157,7 @@
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.5",
     "react-window-infinite-loader": "^1.0.3",
-    "record-ipfsd": "mistakia/record-ipfsd#d04873a",
+    "record-ipfsd": "mistakia/record-ipfsd#2302cc0",
     "record-node": "mistakia/record-node#25368a8",
     "redux": "^4.0.0",
     "redux-immutable": "^4.0.0",
