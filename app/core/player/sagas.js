@@ -109,7 +109,8 @@ export function * playAudio () {
     yield call(audio.unload)
     yield put(playerActions.audioCancelled())
     yield put(notificationActions.show({
-      text: 'Track not currently available'
+      text: 'Track not currently available',
+      severity: 'warning'
     }))
     // TODO - add action to dispatch to notification (play next)
     return

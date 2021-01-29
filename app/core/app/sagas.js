@@ -37,6 +37,7 @@ export function * goBack () {
 export function * setIdentityFailed () {
   yield put(notificationActions.show({
     text: 'Could not load account',
+    severity: 'error',
     dismiss: 2000
   }))
 }

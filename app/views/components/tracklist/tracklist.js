@@ -75,10 +75,7 @@ const render = ({
     <div className='list__body'>
       { isEmpty
         ? <EmptyMessage log={log} />
-        : <InfiniteLoader
-          isItemLoaded={isItemLoaded}
-          itemCount={itemCount}
-          loadMoreItems={loadMoreItems}>
+        : <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={itemCount} loadMoreItems={loadMoreItems}>
           {({ onItemsRendered, ref }) => (
             <AutoSizer>
               {({ height, width }) => (

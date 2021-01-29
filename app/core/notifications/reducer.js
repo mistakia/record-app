@@ -1,23 +1,19 @@
-import { Map, List } from 'immutable'
+import { Record } from 'immutable'
 
 import { notificationActions } from './actions'
 
-export const initialState = new Map({
-  items: new List()
+export const initialState = new Record({
+  text: null,
+  severity: null,
+  key: null,
+  action: null,
+  dismiss: null
 })
 
-export function notificationsReducer (state = initialState, { payload, type }) {
+export function notificationReducer (state = initialState(), { payload, type }) {
   switch (type) {
-    case notificationActions.DISMISS_NOTIFICATION:
-      return state.merge({
-        items: state.get('items').filter(i => i.id !== payload.id)
-      })
-
     case notificationActions.SHOW_NOTIFICATION:
-      payload.item.id = new Date().getTime()
-      return state.merge({
-        items: state.get('items').push(payload.item)
-      })
+      return state.merge({ key: new Date().getTime(), ...payload })
 
     default:
       return state

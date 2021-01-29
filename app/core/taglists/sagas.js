@@ -58,6 +58,7 @@ export function * postTagPending () {
 export function * deleteTagFailed () {
   yield put(notificationActions.show({
     text: 'Failed to remove tag',
+    severity: 'error',
     dismiss: 2000
   }))
 }
@@ -65,6 +66,7 @@ export function * deleteTagFailed () {
 export function * postTagFailed () {
   yield put(notificationActions.show({
     text: 'Failed to add tag',
+    severity: 'error',
     dismiss: 2000
   }))
 }

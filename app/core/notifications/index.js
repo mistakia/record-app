@@ -1,6 +1,6 @@
-export { notificationsReducer } from './reducer'
+export { notificationReducer } from './reducer'
 export { notificationSagas } from './sagas'
 export { notificationActions } from './actions'
 export {
-  getNotificationItem
+  getNotification
 } from './selectors'

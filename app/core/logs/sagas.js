@@ -32,6 +32,7 @@ export function * disconnectLog ({ payload }) {
 export function * deleteLogFailed () {
   yield put(notificationActions.show({
     text: 'Failed to delete library',
+    severity: 'error',
     dismiss: 2000
   }))
 }
@@ -39,6 +40,7 @@ export function * deleteLogFailed () {
 export function * connectLogFailed () {
   yield put(notificationActions.show({
     text: 'Could not connect to library',
+    severity: 'error',
     dismiss: 2000
   }))
 }
@@ -46,6 +48,7 @@ export function * connectLogFailed () {
 export function * disconnectLogFailed () {
   yield put(notificationActions.show({
     text: 'Could not disconnect from library',
+    severity: 'error',
     dismiss: 2000
   }))
 }

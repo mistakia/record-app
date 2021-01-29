@@ -46,6 +46,7 @@ export function * unlinkLog ({ payload }) {
 export function * postLogFailed () {
   yield put(notificationActions.show({
     text: 'Failed to link library',
+    severity: 'error',
     dismiss: 2000
   }))
 }
@@ -53,6 +54,7 @@ export function * postLogFailed () {
 export function * deleteLogLinkFailed () {
   yield put(notificationActions.show({
     text: 'Failed to remove library',
+    severity: 'error',
     dismiss: 2000
   }))
 }
