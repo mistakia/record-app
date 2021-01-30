@@ -33,20 +33,6 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         tracks.set(payload.data.id, createTrack(payload.data))
       })
 
-    case logActions.LOG_INDEX_UPDATED:
-      if (!payload.data || !payload.data.length) {
-        return state
-      }
-
-      return state.withMutations(tracks => {
-        payload.data.forEach(entry => {
-          if (entry.payload.value.type === 'track') {
-            const track = entry.payload.value
-            tracks.set(track.id, createTrack(track))
-          }
-        })
-      })
-
     case importerActions.IMPORTER_PROCESSED_FILE:
       return state.withMutations(tracks => {
         tracks.set(payload.track.id, createTrack(payload.track))
@@ -57,18 +43,13 @@ export function tracksReducer (state = new Map(), {payload, type}) {
         return state
       }
 
-      return state.withMutations(tracks => {
-        tracks.map(track => {
-          if (track.contentCID === payload.data.cid) {
-            tracks.updateIn([track.id], t => t.merge({ isUpdating: true }))
-          }
-        })
-      })
+      const track = state.find(t => t.contentCID === payload.data.cid)
+      return state.setIn([track.id, 'isUpdating'], true)
     }
 
     case tracklistActions.REMOVE_TRACK:
       return state.withMutations(tracks => {
-        tracks.updateIn([payload.data.trackId], t => t.merge({ isUpdating: true }))
+        tracks.setIn([payload.data.trackId, 'isUpdating'], true)
       })
 
     case taglistActions.POST_TAG_FULFILLED:
@@ -76,9 +57,9 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       const { id, tags } = payload.data
       return state.withMutations(tracks => {
         tracks.map(track => {
-          tracks.updateIn([id], t => t.merge({ tags: new List(tags) }))
+          tracks.setIn([id, 'tags'], new List(tags))
           if (type === taglistActions.POST_TAG_FULFILLED) {
-            tracks.updateIn([id], t => t.merge({ haveTrack: true }))
+            tracks.setIn([id, 'haveTrack'], true)
           }
         })
       })
@@ -91,10 +72,10 @@ export function tracksReducer (state = new Map(), {payload, type}) {
     }
 
     case tracklistActions.DELETE_TRACK_FULFILLED:
-      return state.updateIn([payload.data.trackId], t => t.merge({ isUpdating: false, haveTrack: false }))
+      return state.mergeIn([payload.data.trackId], { isUpdating: false, haveTrack: false })
 
     case tracklistActions.POST_TRACK_FULFILLED:
-      return state.updateIn([payload.data.id], t => t.merge({ isUpdating: false, haveTrack: true }))
+      return state.mergeIn([payload.data.id], { isUpdating: false, haveTrack: true })
 
     case listensActions.POST_LISTEN_FULFILLED: {
       const { trackId, timestamps } = payload.data
@@ -103,7 +84,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
       }
 
       return state.withMutations(tracks => {
-        tracks.updateIn([trackId], t => t.merge({ listens: new List(timestamps) }))
+        tracks.setIn([trackId, 'listens'], new List(timestamps))
       })
     }
 

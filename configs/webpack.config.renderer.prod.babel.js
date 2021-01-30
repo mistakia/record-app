@@ -28,7 +28,11 @@ export default merge.smart(baseConfig, {
 
   target: 'electron-preload',
 
-  entry: path.join(__dirname, '..', 'app/index.js'),
+  entry: [
+    'core-js',
+    'regenerator-runtime/runtime',
+    path.join(__dirname, '..', 'app/index.js')
+  ],
 
   output: {
     path: path.join(__dirname, '..', 'app/dist'),

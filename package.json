@@ -45,9 +45,7 @@
     "start:electron:dist": "cross-env NODE_ENV=production electron ./app/main.prod.js",
     "start:electron:dist:debug": "cross-env DEBUG_PROD=true NODE_ENV=production electron ./app/main.prod.js"
   },
-  "browserslist": [
-    "extends browserslist-config-erb"
-  ],
+  "browserslist": [],
   "build": {
     "productName": "Record",
     "appId": "org.TINT.Record",
@@ -167,6 +165,7 @@
     "redux": "^4.0.0",
     "redux-immutable": "^4.0.0",
     "redux-saga": "^1.0.0-beta.1",
+    "regenerator-runtime": "^0.13.7",
     "reselect": "4.0.0",
     "source-map-support": "^0.5.16",
     "timeago-react": "^3.0.0",
@@ -195,12 +194,12 @@
     "cross-env": "^7.0.2",
     "css-loader": "5.0.1",
     "debug-menu": "^0.6.1",
-    "electron": "9.3.2",
+    "electron": "8.5.5",
     "electron-builder": "22.9.1",
     "electron-debug": "^3.0.1",
     "electron-devtools-installer": "^2.2.4",
     "electron-icon-builder": "^1.0.2",
-    "electron-rebuild": "^1.10.1",
+    "electron-rebuild": "^2.0.0",
     "eslint-plugin-react": "^7.10.0",
     "metro-config": "^0.54.1",
     "metro-react-native-babel-preset": "^0.54.1",
