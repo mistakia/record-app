@@ -1,13 +1,13 @@
 'use strict'
 
+import 'core-js/stable'
+import 'regenerator-runtime/runtime'
 import 'v8-compile-cache'
-import electron from 'electron'
+import { BrowserWindow, app, ipcMain, globalShortcut } from 'electron'
 // import path from 'path'
 import fixpath from 'fix-path'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
-
-const { BrowserWindow, app, ipcMain: ipc, globalShortcut } = electron
 
 // Only one instance can run at a time
 if (!app.requestSingleInstanceLock()) {
@@ -42,9 +42,12 @@ const installExtensions = async () => {
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS
   const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS']
 
-  return Promise.all(
-    extensions.map(name => installer.default(installer[name], forceDownload))
-  ).catch(log.error)
+  return installer
+    .default(
+      extensions.map((name) => installer[name]),
+      forceDownload
+    )
+    .catch(log.error)
 }
 
 process.on('uncaughtException', error => {
@@ -57,7 +60,7 @@ process.on('unhandledRejection', error => {
   process.exit(1)
 })
 
-ipc.on('error', () => process.exit(1))
+ipcMain.on('error', () => process.exit(1))
 
 log.info(`Electron Node version: ${process.versions.node}`)
 log.info(`Development Mode: ${process.env.NODE_ENV}`)
@@ -82,7 +85,8 @@ const createMainWindow = async () => {
     show: false,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      enableRemoteModule: true
     }
     /* process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
      *   ? {
@@ -103,7 +107,7 @@ const createMainWindow = async () => {
     mainWindow = null
   })
 
-  ipc.on('redux', (event, data) => {
+  ipcMain.on('redux', (event, data) => {
     if (data.type === 'TRACK_ADDED') {
       app.dock.bounce()
     }
@@ -115,7 +119,7 @@ const createMainWindow = async () => {
   })
 
   const nodeReady = new Promise((resolve) => {
-    ipc.on('ready', (event, data) => resolve(data))
+    ipcMain.on('ready', (event, data) => resolve(data))
   })
 
   const [ data ] = await Promise.all([
@@ -137,7 +141,8 @@ const createBackgroundWindow = () => {
   backgroundWindow = new BrowserWindow({
     show: false,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      enableRemoteModule: true
     }
     /* process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
      *   ? {
