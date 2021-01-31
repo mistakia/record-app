@@ -1,13 +1,12 @@
 import { List } from 'immutable'
 
 import { ITEMS_PER_LOAD } from '@core/constants'
-import { trackActions } from '@core/tracks'
 import { tracklistActions } from './actions'
 import { Tracklist } from './tracklist'
 import { logActions } from '@core/logs'
 import { mergeList } from '@core/utils'
 import { listensActions } from '@core/listens'
-import { importerActions } from '@core/importer'
+import history from '@core/history'
 
 export function tracklistReducer (state = new Tracklist(), {payload, type}) {
   switch (type) {
@@ -54,30 +53,12 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         })
       })
 
-    case importerActions.IMPORTER_PROCESSED_FILE: {
-      if (!payload.track) {
+    case logActions.LOG_INDEX_UPDATED: {
+      if (!payload.data || !payload.data.length) {
         return state
       }
 
-      let isOutdated = false
-      for (const address of payload.addresses) {
-        if (state.addresses.includes(address)) {
-          isOutdated = true
-          break
-        }
-      }
-
-      return state.merge({ isOutdated: isOutdated || state.isOutdated })
-    }
-
-    case tracklistActions.POST_TRACK_FULFILLED:
-    case trackActions.TRACK_ADDED: {
-      const isOutdated = state.addresses.includes(payload.address)
-      return state.merge({ isOutdated: isOutdated || state.isOutdated })
-    }
-
-    case logActions.LOG_INDEX_UPDATED: {
-      if (!payload.data || !payload.data.length) {
+      if (history.location.pathname.substring(0, 7) !== '/tracks') {
         return state
       }
 

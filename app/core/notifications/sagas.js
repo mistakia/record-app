@@ -73,8 +73,6 @@ export function * watchTrackAdded () {
 export function * watchTracklistOutdated () {
   yield takeLatest([
     listensActions.POST_LISTEN_FULFILLED,
-    importerActions.IMPORTER_PROCESSED_FILE,
-    tracklistActions.POST_TRACK_FULFILLED,
     logActions.LOG_INDEX_UPDATED
   ], updateTracklist)
 }

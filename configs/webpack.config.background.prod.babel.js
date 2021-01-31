@@ -26,7 +26,11 @@ export default merge.smart(baseConfig, {
 
   target: 'node',
 
-  entry: './app/background.dev.js',
+  entry: [
+    'core-js',
+    'regenerator-runtime/runtime',
+    './app/background.dev.js'
+  ],
 
   output: {
     path: path.join(__dirname, '..'),

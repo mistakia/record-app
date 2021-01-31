@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { appActions, getApp } from '@core/app'
+import { getPlayerTrack } from '@core/player'
 
 import App from './app'
 
@@ -12,12 +13,17 @@ App.propTypes = {
 
 const mapStateToProps = createSelector(
   getApp,
-  (app) => ({app})
+  getPlayerTrack,
+  (app, track) => ({
+    app,
+    playerOpen: !!track
+  })
 )
 
-const mapDispatchToProps = {
-  init: appActions.initApp
-}
+const mapDispatchToProps = dispatch => ({
+  init: message => dispatch(appActions.initApp(message)),
+  dispatch
+})
 
 export default connect(
   mapStateToProps,

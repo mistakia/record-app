@@ -1,2 +1,6 @@
 .MuiSnackbar-root.MuiSnackbar-anchorOriginBottomCenter
   position absolute
+  left "calc(50% + (%s / 2))" % $menuWidth
+
+.player-open .MuiSnackbar-root
+  bottom 24px + $playerHeight

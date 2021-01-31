@@ -1,12 +1,11 @@
 import React from 'react'
 
-import Notification from '@components/notification'
 import IconButton from '@components/icon-button'
 import ImporterProgress from '@components/importer-progress'
 import './page.styl'
 
-export const PageLayout = ({ help, head, body, title, playerOpen, scroll, onHelpClose }) => (
-  <section className={'page' + (playerOpen ? ' player-open' : '')}>
+export const PageLayout = ({ help, head, body, title, scroll, onHelpClose }) => (
+  <section className='page'>
     { help &&
       <div className='page__help'>
         <div className='page__help-body'>
@@ -32,7 +31,6 @@ export const PageLayout = ({ help, head, body, title, playerOpen, scroll, onHelp
     <div className={'page__body' + (scroll ? ' scroll' : '')}>
       { body }
     </div>
-    <Notification />
     <ImporterProgress />
   </section>
 )
