@@ -3,6 +3,7 @@ import { Map, List } from 'immutable'
 import { loglistActions } from '@core/loglists'
 import { logActions } from './actions'
 import { createLog } from './log'
+import { aboutActions } from '@core/about'
 
 export function logsReducer (state = new Map(), {payload, type}) {
   switch (type) {
@@ -74,12 +75,17 @@ export function logsReducer (state = new Map(), {payload, type}) {
         logs.setIn([payload.address, 'isUpdating'], true)
       })
 
+    case loglistActions.POST_LOG_FULFILLED:
+      return state.withMutations(logs => {
+        logs.setIn([payload.address, 'isUpdating'], true)
+        logs.mergeIn([payload.data.content.address], createLog(payload.data))
+      })
+
     case logActions.DISCONNECT_LOG_FAILED:
     case logActions.DISCONNECT_LOG_FULFILLED:
     case logActions.CONNECT_LOG_FULFILLED:
     case logActions.CONNECT_LOG_FAILED:
     case loglistActions.POST_LOG_FAILED:
-    case loglistActions.POST_LOG_FULFILLED:
     case loglistActions.DELETE_LOG_LINK_FAILED:
       return state.withMutations(logs => {
         logs.setIn([payload.address, 'isUpdating'], false)
@@ -116,6 +122,9 @@ export function logsReducer (state = new Map(), {payload, type}) {
       return state.withMutations(logs => {
         logs.mergeIn([payload.address], item)
       })
+
+    case aboutActions.POST_ABOUT_FULFILLED:
+      return state.mergeIn([payload.address], createLog(payload.data))
 
     default:
       return state

@@ -31,7 +31,7 @@ export function * setIdentity ({ payload }) {
 }
 
 export function * goBack () {
-  yield call(history.goBack)
+  yield call(history.back)
 }
 
 export function * setIdentityFailed () {
