@@ -1,7 +1,5 @@
 import React from 'react'
 import hotkeys from 'hotkeys-js'
-import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
 import { push } from 'react-router-redux'
 
 import Menu from '@components/menu'
@@ -10,8 +8,8 @@ import Player from '@components/player'
 import Queue from '@components/queue'
 import ContextMenu from '@components/context-menu'
 import { contextMenuActions } from '@core/context-menu'
-import { getApp } from '@core/app'
 import Loading from '@components/loading'
+import Notification from '@components/notification'
 
 import 'normalize.css'
 import '@styles/normalize.css'
@@ -38,7 +36,7 @@ hotkeys.filter = (event) => {
   return flag
 }
 
-class App extends React.Component {
+export default class App extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -65,26 +63,23 @@ class App extends React.Component {
   }
 
   render () {
-    const { isPending } = this.props.app
-    if (isPending) {
-      return <Loading loading={isPending} />
+    const { app, playerOpen } = this.props
+    if (app.isPending) {
+      return <Loading loading={app.isPending} />
     }
 
+    const classNames = []
+    if (playerOpen) classNames.push('player-open')
+
     return (
-      <main>
+      <main className={classNames.join(' ')}>
         <Menu />
         <Routes />
         <Player />
         <Queue />
+        <Notification />
         <ContextMenu />
       </main>
     )
   }
 }
-
-const mapStateToProps = createSelector(
-  getApp,
-  (app) => ({ app })
-)
-
-export default connect(mapStateToProps)(App)

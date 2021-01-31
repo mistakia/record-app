@@ -1,3 +1,8 @@
+const log = require('electron-log')
+log.catchErrors()
+console.log = log.log
+Object.assign(console, log.functions)
+
 require('v8-compile-cache')
 
 const fs = require('fs')
@@ -5,16 +10,12 @@ const path = require('path')
 const jsonfile = require('jsonfile')
 const RecordNode = require('record-node')
 const electron = require('electron')
-const log = require('electron-log')
+
 const createIPFSDaemon = require('record-ipfsd')
 const ipc = electron.ipcRenderer
 const { app, dialog } = electron.remote
 const { chromaprintPath, ffmpegPath } = require('./binaries')
 const debug = require('debug')
-
-log.catchErrors()
-console.log = log.log
-Object.assign(console, log.functions)
 
 const getIpfsBinPath = () => require('go-ipfs')
   .path()
@@ -59,16 +60,6 @@ const main = async () => {
   if (isDev) {
     opts.api = { port: 3001 }
     opts.bitboot = { enabled: false }
-    opts.ipfs = {
-      config: {
-        Addresses: {
-          Swarm: [
-            '/ip4/0.0.0.0/tcp/0/ws',
-            '/ip4/206.189.77.125/tcp/5892/ws/p2p-stardust/p2p/QmPb9StGzfenPYnkyjpc5taLXwoC5hxdUgQub5LSi4AewA'
-          ]
-        }
-      }
-    }
   }
 
   if (id) {

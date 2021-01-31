@@ -8,6 +8,7 @@ import { BrowserWindow, app, ipcMain, globalShortcut } from 'electron'
 import fixpath from 'fix-path'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
+import path from 'path'
 
 // Only one instance can run at a time
 if (!app.requestSingleInstanceLock()) {
@@ -74,6 +75,10 @@ let mainWindow
 let backgroundWindow
 
 const createMainWindow = async () => {
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'resources')
+    : path.join(__dirname, '../resources')
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -84,6 +89,7 @@ const createMainWindow = async () => {
     maxHeight: 1000,
     show: false,
     titleBarStyle: 'hiddenInset',
+    icon: path.join(RESOURCES_PATH, 'icon.png'),
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true
