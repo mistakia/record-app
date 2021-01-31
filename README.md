@@ -1,3 +1,7 @@
+<a href="https://bafybeidk4zev2jlw2jijtdyufo3itspx45k4ynq634x4rjm6ycjfdvxfrq.ipfs.infura-ipfs.io/" title="Record">
+  <img src="resources/icon.png" alt="Record Logo" width="150" />
+</a>
+
 # Record App
 
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat)](https://github.com/RichardLitt/standard-readme)
@@ -32,7 +36,7 @@ At it's core, the application intends to be a media library management & playbac
 - Trustless timestamping / distributed copyrighting & distribution (OpenTimestamps, Nano, etc)
 
 ## More Info
-- Read the [wiki](https://bafybeih6r4ynrzoy6mfwe4bkbkksnlqfbl4r7cxqnev2tldj5tnenyjiru.ipfs.infura-ipfs.io/) for a primer.
+- Read the [wiki](https://bafybeidk4zev2jlw2jijtdyufo3itspx45k4ynq634x4rjm6ycjfdvxfrq.ipfs.infura-ipfs.io/) for a primer.
 - Check out [the roadmap](https://github.com/mistakia/record-app/projects/1) to view planned features.
 
 ## Install
