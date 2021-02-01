@@ -2,6 +2,7 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 
 import Log from '@components/log'
+import Status from '@components/status'
 import IconButton from '@components/icon-button'
 import history from '@core/history'
 
@@ -51,6 +52,7 @@ const Menu = ({ app, log, logs }) => (
         label='settings'
         navlink='/settings' />
     </div>
+    <Status />
   </div>
 )
 
