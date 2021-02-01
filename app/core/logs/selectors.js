@@ -16,6 +16,13 @@ export function getMyLog (state) {
   return getLogByAddress(state, address)
 }
 
+export function getAllPeers (state) {
+  const logs = getLogs(state)
+  const peers = logs.map(v => v.peers).toList().toJS().flat()
+  const dedupPeers = Array.from(new Set(peers))
+  return dedupPeers
+}
+
 export function getReplicationProgress (state) {
   const logs = getLogs(state)
   let result = {

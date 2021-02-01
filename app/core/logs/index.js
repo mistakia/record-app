@@ -3,7 +3,8 @@ export {
   getAllLogs,
   getLogByAddress,
   getMyLog,
-  getReplicationProgress
+  getReplicationProgress,
+  getAllPeers
 } from './selectors'
 export {
   logActions,
