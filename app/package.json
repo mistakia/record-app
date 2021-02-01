@@ -1,6 +1,6 @@
 {
-  "name": "record-electron-app",
-  "productName": "record-electron-app",
+  "name": "Record",
+  "productName": "Record",
   "version": "0.0.1",
   "description": "",
   "main": "./main.prod.js",
