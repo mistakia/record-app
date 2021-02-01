@@ -10,6 +10,8 @@ import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import path from 'path'
 
+import MenuBuilder from './menu'
+
 // Only one instance can run at a time
 if (!app.requestSingleInstanceLock()) {
   process.exit(0)
@@ -119,6 +121,9 @@ const createMainWindow = async () => {
     }
     if (mainWindow) mainWindow.webContents.send('redux', data)
   })
+
+  const menuBuilder = new MenuBuilder(mainWindow)
+  menuBuilder.buildMenu()
 
   const windowReady = new Promise((resolve) => {
     mainWindow.once('ready-to-show', resolve)
