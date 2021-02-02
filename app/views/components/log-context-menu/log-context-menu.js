@@ -2,11 +2,10 @@ import React from 'react'
 
 import { copyToClipboard } from '@core/utils'
 import history from '@core/history'
-import Confirm from '@components/confirm'
 
 export class LogContextMenu extends React.Component {
   render () {
-    const { unlinkLog, log, connect, disconnect, hide } = this.props
+    const { unlinkLog, log, connect, disconnect, hide, showDialog } = this.props
 
     const showEdit = log.isMe || log.isLinked
 
@@ -16,8 +15,7 @@ export class LogContextMenu extends React.Component {
 
     const unlink = (event) => {
       event && event.stopPropagation && event.stopPropagation()
-      Confirm({
-        title: 'Unsave',
+      showDialog({
         message: `Are you sure you want to unsave ${log.logName}`,
         detail: 'Unlinking this library will eventually remove its data from your device',
         onConfirm: () => unlinkLog(log.address)

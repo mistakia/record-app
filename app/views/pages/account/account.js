@@ -2,7 +2,6 @@ import React from 'react'
 import hashicon from 'hashicon'
 import { Link } from 'react-router-dom'
 
-import Confirm from '@components/confirm'
 import PageLayout from '@layouts/page'
 import Button from '@components/button'
 import CopyText from '@components/copy-text'
@@ -10,7 +9,7 @@ import CopyText from '@components/copy-text'
 import './account.styl'
 
 export default function () {
-  const { app, getPrivateKey, setIdentity } = this.props
+  const { app, getPrivateKey, setIdentity, showDialog } = this.props
 
   const showPrivateKey = (event) => {
     event && event.stopPropagation && event.stopPropagation()
@@ -19,8 +18,7 @@ export default function () {
 
   const generateIdentity = (event) => {
     event && event.stopPropagation && event.stopPropagation()
-    Confirm({
-      title: 'Generate New Account',
+    showDialog({
       message: 'Are you sure you want to generate a new account',
       detail: 'You will not be able to recover your current account if you do not have the secret key',
       onConfirm: () => setIdentity()

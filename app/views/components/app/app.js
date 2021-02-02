@@ -10,6 +10,7 @@ import ContextMenu from '@components/context-menu'
 import { contextMenuActions } from '@core/context-menu'
 import Loading from '@components/loading'
 import Notification from '@components/notification'
+import Dialog from '@components/dialog'
 
 import 'normalize.css'
 import '@styles/normalize.css'
@@ -79,6 +80,7 @@ export default class App extends React.Component {
         <Queue />
         <Notification />
         <ContextMenu />
+        <Dialog />
       </main>
     )
   }

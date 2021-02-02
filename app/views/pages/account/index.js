@@ -2,6 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
+import { dialogActions } from '@core/dialogs'
 import { getApp, appActions } from '@core/app'
 
 import render from './account'
@@ -19,7 +20,8 @@ const mapStateToProps = createSelector(
 
 const mapDispatchToProps = {
   getPrivateKey: appActions.getPrivateKey,
-  setIdentity: appActions.setIdentity
+  setIdentity: appActions.setIdentity,
+  showDialog: dialogActions.show
 }
 
 export default connect(

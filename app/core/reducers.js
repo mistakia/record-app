@@ -13,6 +13,7 @@ import { playerReducer, playerTimesReducer } from './player'
 import { taglistsReducer } from './taglists'
 import { tracklistsReducer } from './tracklists'
 import { tracksReducer } from './tracks'
+import { dialogReducer } from './dialogs'
 
 const rootReducer = asyncReducers => {
   return combineReducers({
@@ -30,6 +31,7 @@ const rootReducer = asyncReducers => {
     taglists: taglistsReducer,
     tracklists: tracklistsReducer,
     tracks: tracksReducer,
+    dialog: dialogReducer,
     ...asyncReducers
   })
 }
