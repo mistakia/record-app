@@ -5,20 +5,19 @@ import { createSelector } from 'reselect'
 import { contextMenuActions } from '@core/context-menu'
 import { tracklistActions } from '@core/tracklists'
 import { taglistActions } from '@core/taglists'
+import { dialogActions } from '@core/dialogs'
 import { getApp } from '@core/app'
 import Tag from '@components/tag'
 import history from '@core/history'
-import Confirm from '@components/confirm'
 
 import render from './tags'
 
 class Tags extends React.Component {
   remove (tag) {
-    const { track, app } = this.props
+    const { track, app, showDialog } = this.props
     const trackId = track.id
     tag = tag || track.tags[track.tags.length - 1]
-    Confirm({
-      title: 'Delete Tag',
+    showDialog({
       message: `Are you sure you want to delete the tag: ${tag}`,
       onConfirm: () => this.props.removeTag(app.address, { trackId, tag })
     })
@@ -71,7 +70,8 @@ const mapStateToProps = createSelector(
 const mapDispatchToProps = {
   toggleTag: tracklistActions.toggleTag,
   removeTag: taglistActions.removeTag,
-  showContext: contextMenuActions.show
+  showContext: contextMenuActions.show,
+  showDialog: dialogActions.show
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Tags)

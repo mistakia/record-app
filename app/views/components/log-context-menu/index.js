@@ -3,6 +3,7 @@ import { createSelector } from 'reselect'
 
 import { loglistActions } from '@core/loglists'
 import { logActions } from '@core/logs'
+import { dialogActions } from '@core/dialogs'
 import {
   contextMenuActions,
   getContextMenuLog
@@ -18,7 +19,8 @@ const mapDispatchToProps = {
   unlinkLog: loglistActions.unlinkLog,
   connect: logActions.connectLog,
   disconnect: logActions.disconnectLog,
-  hide: contextMenuActions.hide
+  hide: contextMenuActions.hide,
+  showDialog: dialogActions.show
 }
 
 export default connect(
