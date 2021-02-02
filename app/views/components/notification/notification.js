@@ -31,14 +31,15 @@ class Notification extends React.Component {
       return
     }
 
-    this.dismiss()
+    this.setState({ open: false })
   }
 
-  dismiss = () => {
-    if (this.state.notification.action) {
-      this.props.dispatch(this.state.notification.action.onclick())
-    }
+  handleClick = () => {
+    this.props.dispatch(this.state.notification.action.onclick())
+    this.setState({ open: false })
+  }
 
+  handleDismiss = () => {
     this.setState({ open: false })
   }
 
@@ -64,15 +65,18 @@ class Notification extends React.Component {
     if (notification.action) {
       action = (
         <React.Fragment>
-          <Button isText onClick={this.dismiss}>
+          <Button isText onClick={this.handleClick}>
             {notification.action.text}
+          </Button>
+          <Button isText onClick={this.handleDismiss}>
+            DISMISS
           </Button>
         </React.Fragment>
       )
     } else if (!notification.dismiss) {
       action = (
         <React.Fragment>
-          <Button isText onClick={this.dismiss}>
+          <Button isText onClick={this.handleDismiss}>
             DISMISS
           </Button>
         </React.Fragment>
