@@ -5,7 +5,6 @@ import { getApp } from '@core/app'
 import { importerActions } from '@core/importer'
 import { trackActions } from '@core/tracks'
 import { notificationActions } from './actions'
-import { listensActions } from '@core/listens'
 import { tracklistActions, getCurrentTracklist } from '@core/tracklists'
 import { logActions } from '@core/logs'
 
@@ -71,10 +70,7 @@ export function * watchTrackAdded () {
 }
 
 export function * watchTracklistOutdated () {
-  yield takeLatest([
-    listensActions.POST_LISTEN_FULFILLED,
-    logActions.LOG_INDEX_UPDATED
-  ], updateTracklist)
+  yield takeLatest(logActions.LOG_INDEX_UPDATED, updateTracklist)
 }
 
 //= ====================================

@@ -39,7 +39,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
         return state
       }
 
-      return state.merge({ isOutdated: true })
+      return state.updateIn(['trackIds'], t => t.unshift(payload.data.trackId))
     }
 
     case tracklistActions.TOGGLE_TAG:
