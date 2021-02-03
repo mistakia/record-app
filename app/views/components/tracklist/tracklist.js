@@ -59,9 +59,8 @@ const render = ({
       </div>}
       {!hideTaglist && <Taglist />}
       <div className='list__header track'>
-        <div className='track__index' />
-        <div className='track__save' />
         <div className='track__play' />
+        <div className='track__save' />
         <TracklistFilter type='title' className='track__body' />
         <TracklistFilter type='artist' className='track__artist' />
         <div className='track__tags-add' />

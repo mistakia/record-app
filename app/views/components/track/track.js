@@ -1,6 +1,5 @@
 import React from 'react'
 
-import Artwork from '@components/artwork'
 import IconButton from '@components/icon-button'
 import FormattedTime from '@components/formatted-time'
 import Tags from '@components/tags'
@@ -57,11 +56,6 @@ class Track extends React.Component {
 
     const { haveTrack } = track
 
-    let artwork = track.thumbnail
-    if (artwork && !haveTrack) {
-      artwork += '?localOnly=true'
-    }
-
     const classNames = ['track']
     if (isSelected) classNames.push('selected')
     if (contextMenuTrackId === track.id) classNames.push('context-menu-visible')
@@ -71,7 +65,14 @@ class Track extends React.Component {
         className={classNames.join(' ')}
         onContextMenu={this._handleContextMenu}
         style={style}>
-        <div className='track__index'>{index + 1}</div>
+        <div className='track__play' data-index={index + 1}>
+          <IconButton
+            icon={isPlaying ? 'pause' : 'play'}
+            label={isPlaying ? 'Pause' : 'Play'}
+            isLoading={isLoading}
+            onClick={isPlaying ? pause : play}
+          />
+        </div>
         <div className='track__save'>
           <IconButton
             icon={haveTrack ? 'star-solid' : 'star-outline'}
@@ -80,14 +81,6 @@ class Track extends React.Component {
             onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}
           />
         </div>
-        <Artwork className='track__play' url={artwork} background>
-          <IconButton
-            icon={isPlaying ? 'pause' : 'play'}
-            label={isPlaying ? 'Pause' : 'Play'}
-            isLoading={isLoading}
-            onClick={isPlaying ? pause : play}
-          />
-        </Artwork>
         <div className='track__body'>
           <div className={`track__title ${track.isLocal ? 'track__available' : ''}`}>{track.name}</div>
         </div>

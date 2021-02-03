@@ -16,18 +16,22 @@ $accentColorLight = lighten($accentColor, 92%)
     flex 0 0 58px
     position relative
     height 100%
+    &:before
+      absolute top 0 bottom 0
+      display flex
+      align-items center
+      vertical-align middle
+      content attr(data-index)
+      font-size 8px
+      padding 0 2px
+      font-family "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace
     button
       position absolute
       width 100%
       height 100%
-      background rgba(0,0,0,.5) !important
       display none
       border-radius 0
       padding 0
-      .icon
-        fill white
-        height 100%
-        width 100%
   .track__tags-add
     color $accentColor
     flex 0 0 40px
@@ -37,8 +41,11 @@ $accentColorLight = lighten($accentColor, 92%)
     opacity 0
   &:hover:not(.list__header)
     background #fbfbfb
-    .track__play button
-      display block
+    .track__play
+      &:before
+        display none
+      button
+        display block
     .track__tags-add
       opacity 1
     .track__tags:after
@@ -85,16 +92,13 @@ $accentColorLight = lighten($accentColor, 92%)
     text-overflow ellipsis
     overflow hidden
 
-  .track__index
-    flex 0 0 40px
-    font-size 8px
-    padding 0 2px
-    font-family "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace
-
   &.selected
     background-color $accentColorLight
-    .track__play button
-      display block
+    .track__play
+      &:before
+        display none
+      button
+        display block
     .track__tags:after
       background-image linear-gradient(to right, rgba($accentColorLight,0), rgba($accentColorLight,1))
 
