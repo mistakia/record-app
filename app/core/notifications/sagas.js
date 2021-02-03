@@ -42,7 +42,7 @@ export function * updateTracklist () {
     yield put(action)
   } else {
     yield put(notificationActions.show({
-      text: 'New tracks available.',
+      text: 'Library updated',
       action: {
         text: 'Refresh',
         onclick: () => action

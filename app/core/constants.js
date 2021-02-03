@@ -2,7 +2,7 @@
 //  GENERAL
 // -------------------------------------
 export const WIKI_URL = 'https://ipfs.infura.io/ipfs/Qmf4wAJLhU7jWjKbgZ7F1fe6iLARtbuvsHZugGxutxwSuk/'
-export const ITEMS_PER_LOAD = 500
+export const ITEMS_PER_LOAD = 200
 export const PEER_LOGLIST_ADDRESS = '/PEER_LOGLIST_ADDRESS'
 export const ALL_LOGLIST_ADDRESS = '/ALL_LOGLIST_ADDRESS'
 export const CURRENT_TRACKLIST_ADDRESS = '/CURRENT_TRACKLIST_ADDRESS'
