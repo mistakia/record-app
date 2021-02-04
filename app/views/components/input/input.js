@@ -1,6 +1,7 @@
 import React from 'react'
 
-import IconButton from '@components/icon-button'
+import IconButton from '@material-ui/core/IconButton'
+import ClearIcon from '@material-ui/icons/Clear'
 
 import './input.styl'
 
@@ -33,10 +34,9 @@ const input = ({
   return (
     <form onSubmit={handleSubmit} ref={formInput} className={classNames.join(' ')}>
       { showClear &&
-        <IconButton
-          icon='remove'
-          onClick={handleClear}
-          label='Clear Search' /> }
+        <IconButton onClick={handleClear}>
+          <ClearIcon />
+        </IconButton>}
       <input type='text' name='text' placeholder={label} defaultValue={defaultValue} />
     </form>
   )

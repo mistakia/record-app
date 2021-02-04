@@ -1,5 +1,8 @@
 $accentColorLight = lighten($accentColor, 92%)
 
+.track__star.MuiSvgIcon-root
+  fill $accentColor
+
 .track
   display flex
   border-bottom 1px solid $borderColor
@@ -53,10 +56,6 @@ $accentColorLight = lighten($accentColor, 92%)
 
   .track__save
     flex 0 0 4%
-    button
-      border none
-      &.button__star-solid
-        fill $accentColor
   .track__body
     flex 3 0 10%
     min-width 0px
@@ -141,7 +140,4 @@ $accentColorLight = lighten($accentColor, 92%)
     background-image linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1))
     width 45%
   .tag
-    margin-top 0
-    border 0
     font-size 10px
-    box-shadow none

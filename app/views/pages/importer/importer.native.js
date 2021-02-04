@@ -5,7 +5,6 @@ import {
   View
 } from 'react-native'
 
-import Button from '@components/button'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
 
@@ -45,10 +44,10 @@ export default class NewTrackPage extends React.Component {
           onChangeText={(url) => this.setState({url})}
           value={this.state.url}
         />
-        <Button
-          onClick={this.handleSubmit}>
-          <Text>Submit</Text>
-        </Button>
+        {/* <Button
+            onClick={this.handleSubmit}>
+            <Text>Submit</Text>
+            </Button> */}
       </View>
     )
 

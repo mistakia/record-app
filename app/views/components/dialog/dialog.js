@@ -1,12 +1,11 @@
 import React from 'react'
 
+import Button from '@material-ui/core/Button'
 import MuiDialog from '@material-ui/core/Dialog'
 import MuiDialogActions from '@material-ui/core/DialogActions'
 import MuiDialogContent from '@material-ui/core/DialogContent'
 import MuiDialogContentText from '@material-ui/core/DialogContentText'
 import MuiDialogTitle from '@material-ui/core/DialogTitle'
-
-import Button from '@components/button'
 
 export default class Dialog extends React.Component {
   handleClose = () => {
@@ -35,10 +34,10 @@ export default class Dialog extends React.Component {
           </MuiDialogContentText>
         </MuiDialogContent>}
         <MuiDialogActions>
-          <Button onClick={this.handleClose} isText>
+          <Button onClick={this.handleClose} size='small'>
             Cancel
           </Button>
-          <Button onClick={this.handleConfirm} isText>
+          <Button onClick={this.handleConfirm} size='small'>
             Ok
           </Button>
         </MuiDialogActions>

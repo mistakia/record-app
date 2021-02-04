@@ -1,70 +1,13 @@
-$height = 18px
-
 .tag
-  height $height
-  vertical-align middle
-  position relative
-  color rgba(0,0,0,0.9)
-  font-size 12px
-  font-weight 400
-  margin 4px 8px 0 0
-  padding 0
-  display inline-block
-  border-radius 3px
-  flex 0 0 auto
-  &.text-only
-    border 0
-    background transparent
-    font-size 9px
-    box-shadow none
-  &:hover
-    background rgba($accentColorRGB,.3)
-    .tag__remove
-      display inline-block
-  &.active
-    color rgba(255,255,255,1)
-    background rgba($accentColorRGB,.7)
-
-  a
-  .tag__remove
-  .tag__count
-    width auto
-    display inline-block
-    height $height
-    min-width 0
-    padding 0
-    .icon
-      width 13px
-      height 13px
-
-  a
-    padding 0 6px
-    background rgba($accentColorRGB,0.1)
-
-  a
-  .tag__count
-    line-height $height
-
-  .tag__count
-    color rgba(0,0,0,0.3)
-    padding 0 4px
-    font-family monospace
-
-  .tag__count
-  .tag__remove
-    border-radius 0 3px 3px 0
-    background rgba($accentColorRGB,0.06)
-
-  .tag__remove
-    display none
-    width $height
-    &:hover
-      background $failureColor
-
-  &.external
-    a
-      background rgba(0,0,0,0.08)
-    &:hover
-      background rgba(0,0,0,0.25)
-    .tag__count
-      background rgba(0,0,0,0.03)
+  &.MuiChip-clickable.selected
+  &.MuiChip-clickable.selected:focus
+    background-color #e0e0e0
+    border-color #e0e0e0
+  &.internal
+    color $accentColor
+    border-color $accentColor
+    &.selected
+    &.selected:focus
+      border-color $accentColor
+      color rgba(255,255,255,1)
+      background $accentColor

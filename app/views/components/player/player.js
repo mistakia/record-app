@@ -1,8 +1,23 @@
 import React from 'react'
 import hotkeys from 'hotkeys-js'
+import IconButton from '@material-ui/core/IconButton'
+import StarIcon from '@material-ui/icons/Star'
+import StarOutlineIcon from '@material-ui/icons/StarOutline'
+import RepeatIcon from '@material-ui/icons/Repeat'
+import RepeatOneIcon from '@material-ui/icons/RepeatOne'
+import ShuffleIcon from '@material-ui/icons/Shuffle'
+import SkipPreviousIcon from '@material-ui/icons/SkipPrevious'
+import PauseIcon from '@material-ui/icons/Pause'
+import PlayArrowIcon from '@material-ui/icons/PlayArrow'
+import CircularProgress from '@material-ui/core/CircularProgress'
+import SkipNextIcon from '@material-ui/icons/SkipNext'
+import PlaylistPlayIcon from '@material-ui/icons/PlaylistPlay'
+import HistoryIcon from '@material-ui/icons/History'
+import { NavLink } from 'react-router-dom'
+import Badge from '@material-ui/core/Badge'
+import Tooltip from '@material-ui/core/Tooltip'
 
 import Artwork from '@components/artwork'
-import IconButton from '@components/icon-button'
 import PlayerTimeline from '@components/player-timeline'
 import AudioCurrentTime from '@components/audio-current-time'
 import FormattedTime from '@components/formatted-time'
@@ -89,11 +104,13 @@ export default class Player extends React.Component {
       queue,
       app,
       isQueueVisible,
-      toggleQueue
+      toggleQueue,
+      trackId
     } = this.props
 
-    if (!track) return null
+    if (!trackId && !queue.size) return null
 
+    const HistoryNavLink = React.forwardRef((props, ref) => <div ref={ref}><NavLink {...props} /></div>)
     const artworkUrl = track.thumbnail && `${track.thumbnail}?trackId=${track.id}`
 
     const { haveTrack } = track
@@ -103,11 +120,10 @@ export default class Player extends React.Component {
         <div className='player__track'>
           <div className='player__track-actions'>
             <IconButton
-              icon={haveTrack ? 'star-solid' : 'star-outline'}
-              label={haveTrack ? 'Save' : 'Remove'}
-              isLoading={track.isUpdating}
-              onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}
-            />
+              disabled={track.isUpdating}
+              onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}>
+              {track.isUpdating ? <CircularProgress size={24} /> : (haveTrack ? <StarIcon className='track__star' /> : <StarOutlineIcon />)}
+            </IconButton>
           </div>
 
           <Artwork className='player__track-artwork' url={artworkUrl} background />
@@ -116,9 +132,9 @@ export default class Player extends React.Component {
             <div className='player__track-title'>{track.name}</div>
             <div className='player__track-artist'>{track.artist}</div>
             <div className='player__track-meta'>
-              {track.format && <small>{track.format}</small>}
+              {track.format && <span>{track.format}</span>}
               {track.format && <span> · </span>}
-              <small>{Math.round(track.bitrate / 1000)} kbps</small>
+              <span>{Math.round(track.bitrate / 1000)} kbps</span>
             </div>
             <div className='player__track-tags'>
               <Tags track={track} tracklistAddress={tracklistAddress} />
@@ -128,51 +144,46 @@ export default class Player extends React.Component {
 
         <div className='player__controls'>
           <div className='player__controls-actions'>
-            <IconButton
-              icon={repeat === 1 ? 'repeat-one' : 'repeat'}
-              isActive={repeat > 0}
-              label='repeat'
-              onClick={toggleRepeat} />
+            <IconButton className={repeat > 0 ? 'active' : undefined} onClick={toggleRepeat}>
+              {repeat === 1 ? <RepeatOneIcon /> : <RepeatIcon />}
+            </IconButton>
 
             <IconButton
-              icon='shuffle'
-              label='Shuffle'
-              isActive={isShuffling}
+              className={isShuffling ? 'active' : undefined}
               onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}
-            />
+            >
+              <ShuffleIcon />
+            </IconButton>
 
-            <IconButton
-              icon='skip-previous'
-              label='Skip to previous track'
-              onClick={previousTrack}
-              disabled={!previousTrack}
-            />
+            <IconButton onClick={previousTrack} disabled={!previousTrack}>
+              <SkipPreviousIcon />
+            </IconButton>
 
-            <IconButton
-              icon={isPlaying ? 'pause' : 'play'}
-              label={isPlaying ? 'Pause' : 'Play'}
-              isLoading={isLoading}
-              onClick={isPlaying ? pause : play}
-            />
+            <IconButton className='player__controls-play' disabled={isLoading} onClick={isPlaying ? pause : play}>
+              {isLoading
+                ? <CircularProgress size={24} />
+                : (isPlaying ? <PauseIcon /> : <PlayArrowIcon />)}
+            </IconButton>
 
-            <IconButton
-              icon='skip-next'
-              label='Skip to next track'
-              onClick={nextTrack}
-              disabled={!nextTrack}
-            />
+            <IconButton onClick={nextTrack} disabled={!nextTrack}>
+              <SkipNextIcon />
+            </IconButton>
 
-            <IconButton
-              icon='play-queue'
-              count={queue.size ? queue.size : undefined}
-              isActive={isQueueVisible}
-              onClick={toggleQueue}
-              label='play-queue' />
+            <Tooltip title='Play Queue'>
+              <IconButton
+                className={isQueueVisible ? 'active' : undefined}
+                onClick={toggleQueue}>
+                <Badge badgeContent={queue.size}>
+                  <PlaylistPlayIcon />
+                </Badge>
+              </IconButton>
+            </Tooltip>
 
-            <IconButton
-              icon='history'
-              label='history'
-              navlink='/listens' />
+            <Tooltip title='Listening History'>
+              <IconButton component={HistoryNavLink} to='/listens'>
+                <HistoryIcon />
+              </IconButton>
+            </Tooltip>
           </div>
 
           <div className='player__timeline'>
@@ -188,7 +199,7 @@ export default class Player extends React.Component {
 
         <div className='player__tracklist'>
           <div className='player__tracklist-info cursor' onClick={this._handleTracklistClick}>
-            <div className='player__tracklist-info-lead'>{tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}</div>
+            <div className='player__tracklist-info-lead'>{tracklistLog ? tracklistLog.displayName : (tracklist.path && tracklist.path.substring(1))}</div>
             <div className='player__tracklist-info-subtitle'>Playing from</div>
           </div>
           <Artwork

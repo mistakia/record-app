@@ -1,6 +1,6 @@
 import React from 'react'
-
-import Icon from '@components/icon'
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward'
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward'
 
 import './tracklist-filter.styl'
 
@@ -14,7 +14,7 @@ export default class TracklistFilter extends React.Component {
     return (
       <div className={classNames.join(' ')} onClick={() => reorder(type)}>
         {title || type}
-        {isActive && <Icon name='arrow-down' />}
+        {isActive && (order === 'asc' ? <ArrowUpwardIcon fontSize='small' /> : <ArrowDownwardIcon fontSize='small' />)}
       </div>
     )
   }

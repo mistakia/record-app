@@ -1,12 +1,10 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
-import { Link } from 'react-router-native'
-
-import Button from '@components/button'
+// import { Link } from 'react-router-native'
 
 const render = ({ logItems, loading, showAdd }) => (
   <View>
-    {showAdd && <Link style={styles.button} component={Button} to='/link-log' text='Link Log' />}
+    {/* {showAdd && <Link style={styles.button} component={Button} to='/link-log' text='Link Log' />} */}
     <View style={styles.loglist}>
       {logItems}
       {loading}

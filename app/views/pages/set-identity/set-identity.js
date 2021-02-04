@@ -1,7 +1,8 @@
 import React from 'react'
+import Button from '@material-ui/core/Button'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
 import PageLayout from '@layouts/page'
-import Button from '@components/button'
 
 import './set-identity.styl'
 
@@ -29,7 +30,9 @@ export default class SetIdentityPage extends React.Component {
           Secret Key
           <input type='area' name='privateKey' placeholder='Existing account secret key' required />
         </label>
-        <Button type='submit' isLoading={this.props.app.isPending}>Load</Button>
+        <Button type='submit' disabled={this.props.app.isPending}>
+          {this.props.app.isPending ? <CircularProgress size={24} /> : 'Load'}
+        </Button>
       </form>
     )
 

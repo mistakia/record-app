@@ -1,6 +1,6 @@
 import React from 'react'
 
-import LoadingIndicator from '@components/loading-indicator'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
 import './importer-progress.styl'
 
@@ -15,7 +15,7 @@ const ImporterProgress = ({
 
   return (
     <div id='importer-progress'>
-      <LoadingIndicator percent={completed / total} size={62} />
+      <CircularProgress variant='determinate' value={completed / total * 100} size={62} />
     </div>
   )
 }

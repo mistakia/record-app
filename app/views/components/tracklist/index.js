@@ -1,6 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
 import {
   getCurrentTracklist,
@@ -13,7 +14,6 @@ import {
 } from '@core/player'
 import { audio } from '@core/audio'
 import Track from '@components/track'
-import Loading from '@components/loading'
 
 import render from './tracklist'
 
@@ -43,7 +43,7 @@ const Tracklist = ({
 
   const Row = ({ style, index }) => {
     if (displayLoadingIndicator && (index + 1) === itemCount) {
-      return <div style={style}><Loading loading /></div>
+      return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', ...style }}><CircularProgress size={30} /></div>
     }
 
     const track = tracks.get(index)

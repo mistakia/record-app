@@ -48,6 +48,7 @@ const mapStateToProps = createShallowEqualSelector(
     play: audio.play,
     repeat: player.repeat,
     previousTrackId: cursor.previousTrackId,
+    trackId: player.trackId,
     track,
     isLoading: player.isLoading,
     tracklist: player.tracklist,

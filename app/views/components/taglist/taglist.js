@@ -2,12 +2,11 @@ import React from 'react'
 
 import './taglist.styl'
 
-const render = (tagItems, loading) => (
+const render = (tagItems) => (
   <div className='taglist'>
     <div className='tags'>
       {tagItems}
     </div>
-    {loading}
   </div>
 )
 

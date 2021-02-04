@@ -71,11 +71,6 @@ $textColorDark = rgb(0,0,0)
   font-weight 500
   margin-right 8px
 
-.player__queue-close
-  position absolute
-  left 8px
-  top 8px
-
 .queue__track
   cursor move
   background $backgroudColor
@@ -84,16 +79,13 @@ $textColorDark = rgb(0,0,0)
   border-bottom 1px solid rgba(0,0,0,0.12)
   display flex
   align-items center
-  .button__icon
+  .MuiButtonBase-root
     opacity 0
+  .queue__track-playing
+    opacity 1
   &:hover
-    .button__icon
+    .MuiButtonBase-root
       opacity 1
-
-.queue__track-play
-  flex 0 0 40px
-  height 40px
-  margin-right 16px
 
 .queue__track-body
   display flex
@@ -127,10 +119,6 @@ $textColorDark = rgb(0,0,0)
 
 .queue__track-artist
   padding-left 16px
-
-.queue__track-more
-  flex 0 0 auto
-  fill $textColorDark
 
 .queue__track-duration
   flex 0 0 40px

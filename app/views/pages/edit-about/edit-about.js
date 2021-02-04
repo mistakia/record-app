@@ -1,6 +1,7 @@
 import React from 'react'
+import Button from '@material-ui/core/Button'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
-import Button from '@components/button'
 import PageLayout from '@layouts/page'
 
 import './edit-about.styl'
@@ -58,7 +59,9 @@ export default class EditAboutPage extends React.Component {
             defaultValue={log.bio}
             placeholder='Bio' />
         </label>
-        <Button type='submit' isLoading={this.props.isUpdating}>Save</Button>
+        <Button type='submit' variant='outlined' disabled={this.props.isUpdating}>
+          {this.props.isUpdating ? <CircularProgress size={24} /> : 'Save'}
+        </Button>
       </form>
     )
 

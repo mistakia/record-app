@@ -2,6 +2,9 @@ import React from 'react'
 import { createSelector } from 'reselect'
 import { connect } from 'react-redux'
 import { shell } from 'electron'
+import Button from '@material-ui/core/Button'
+import SyncIcon from '@material-ui/icons/Sync'
+import LinkIcon from '@material-ui/icons/Link'
 
 import { getApp } from '@core/app'
 import {
@@ -14,9 +17,7 @@ import { logActions } from '@core/logs'
 import Loglist from '@components/loglist'
 import PageLayout from '@layouts/page'
 import Log from '@components/log'
-import Icon from '@components/icon'
 import { getHelp, helpActions } from '@core/help'
-import IconButton from '@components/icon-button'
 import { WIKI_URL } from '@core/constants'
 
 class SingleLogsPage extends React.Component {
@@ -55,18 +56,14 @@ class SingleLogsPage extends React.Component {
           <div className='page__help-lead'>Here you will see libraries you have linked to.</div>
         </div>
         <div className='page__help-row'>
-          <Icon name='sync' />
+          <SyncIcon />
           <div>To access a library you will first need to connect to it.</div>
         </div>
         <div className='page__help-row'>
-          <Icon name='link' />
+          <LinkIcon />
           <div>You should link to libraries you want to keep around.</div>
         </div>
-        <div className='page__help-row'>
-          <IconButton className='button__outline' icon='link' label='link' link='/link-log' />
-          <div>If you have a library's address, you can add it directly.</div>
-        </div>
-        <a onClick={shell.openExternal.bind(null, WIKI_URL)} className='button button__text page__help-link'>Learn more</a>
+        <Button onClick={shell.openExternal.bind(null, WIKI_URL)} size='medium'>Learn more</Button>
       </div>
     )
 

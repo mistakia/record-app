@@ -1,6 +1,11 @@
 import React from 'react'
+import CircularProgress from '@material-ui/core/CircularProgress'
+import PauseIcon from '@material-ui/icons/Pause'
+import PlayArrowIcon from '@material-ui/icons/PlayArrow'
+import StarIcon from '@material-ui/icons/Star'
+import StarOutlineIcon from '@material-ui/icons/StarOutline'
+import IconButton from '@material-ui/core/IconButton'
 
-import IconButton from '@components/icon-button'
 import FormattedTime from '@components/formatted-time'
 import Tags from '@components/tags'
 
@@ -66,20 +71,16 @@ class Track extends React.Component {
         onContextMenu={this._handleContextMenu}
         style={style}>
         <div className='track__play' data-index={index + 1}>
-          <IconButton
-            icon={isPlaying ? 'pause' : 'play'}
-            label={isPlaying ? 'Pause' : 'Play'}
-            isLoading={isLoading}
-            onClick={isPlaying ? pause : play}
-          />
+          <IconButton onClick={isPlaying ? pause : play} disabled={isLoading}>
+            {isLoading ? <CircularProgress size={24} /> : (isPlaying ? <PauseIcon /> : <PlayArrowIcon />)}
+          </IconButton>
         </div>
         <div className='track__save'>
           <IconButton
-            icon={haveTrack ? 'star-solid' : 'star-outline'}
-            label={haveTrack ? 'Save' : 'Remove'}
-            isLoading={track.isUpdating}
-            onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}
-          />
+            disabled={track.isUpdating}
+            onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}>
+            {track.isUpdating ? <CircularProgress size={18} /> : (haveTrack ? <StarIcon className='track__star' /> : <StarOutlineIcon />)}
+          </IconButton>
         </div>
         <div className='track__body'>
           <div className={`track__title ${track.isLocal ? 'track__available' : ''}`}>{track.name}</div>

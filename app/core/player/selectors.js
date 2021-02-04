@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect'
 
-import { getTracks, getTrackById } from '@core/tracks'
+import { getTracks, getTrackById, Track } from '@core/tracks'
 import { getLogByAddress } from '@core/logs'
 
 export function getPlayer (state) {
@@ -31,7 +31,7 @@ export function getPlayerTracklistAddress (state) {
 
 export function getPlayerTrack (state) {
   const { trackId } = getPlayer(state)
-  return getTrackById(state, trackId)
+  return getTrackById(state, trackId) || new Track()
 }
 
 export function getPlayerTracklist (state) {

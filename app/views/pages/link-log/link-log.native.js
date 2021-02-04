@@ -6,7 +6,6 @@ import {
 } from 'react-native'
 import queryString from 'query-string'
 
-import Button from '@components/button'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
 
@@ -50,10 +49,10 @@ export default class LinkLogPage extends React.Component {
           onChangeText={(linkAddress) => this.setState({linkAddress})}
           value={this.state.linkAddress}
         />
-        <Button
-          onClick={this.handleSubmit}>
-          <Text>Submit</Text>
-        </Button>
+        {/* <Button
+            onClick={this.handleSubmit}>
+            <Text>Submit</Text>
+            </Button> */}
       </View>
     )
 

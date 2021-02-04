@@ -1,7 +1,6 @@
 import React from 'react'
 import { Text, TextInput, View } from 'react-native'
 
-import Button from '@components/button'
 import PageLayout from '@layouts/page'
 import formStyles from '@styles/form'
 
@@ -54,10 +53,10 @@ export default class EditAboutPage extends React.Component {
           placeholder='Bio'
           onChangeText={(bio) => this.setState({ bio })}
           value={this.state.bio} />
-        <Button
-          onClick={this.handleSubmit}>
-          <Text>Submit</Text>
-        </Button>
+        {/* <Button
+            onClick={this.handleSubmit}>
+            <Text>Submit</Text>
+            </Button> */}
       </View>
     )
 

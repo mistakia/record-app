@@ -22,9 +22,6 @@
   animation-timing-function ease-in-out
   animation-duration 300ms
 
-  small
-    color $textColor
-
   .button__icon
     fill $textColor
 
@@ -54,8 +51,6 @@
 
 .player__track-actions
   flex 0 0 40px
-  .button__star-solid
-    fill $accentColor
 
 .player__controls
   flex 0 0 30%
@@ -70,12 +65,11 @@
   font-size rem(13px)
   margin-bottom 5px
 
-  .button
-    border 0
+  .MuiButtonBase-root.MuiIconButton-root
     flex 0 0 40px
+    padding 8px
 
-  .button__play
-  .button__pause
+  .player__controls-play
     border 1px solid $textColor
 
 .player__timeline
@@ -124,6 +118,7 @@
 .player__tracklist-info-lead
   flex 1
 
+.player__track-meta
 .player__tracklist-info-subtitle
   flex 1
   font-size 8px
@@ -138,6 +133,10 @@
 
 .player__track-tags
   position relative
+  margin-top 8px
+  .tag
+    font-size 8px
+    height 18px
   &:after
     content ""
     position absolute

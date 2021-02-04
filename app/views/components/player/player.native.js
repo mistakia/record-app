@@ -2,7 +2,6 @@ import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 
 import PlayerTimeline from '@components/player-timeline'
-import IconButton from '@components/icon-button'
 
 export default function Player ({
   decreaseVolume,
@@ -21,12 +20,12 @@ export default function Player ({
     <View style={styles.player}>
       <PlayerTimeline />
       <Text style={styles.text}>{track.title}</Text>
-      <IconButton
-        style={styles.playContainer}
-        iconStyle={styles.play}
-        icon={isPlaying ? 'ios-pause' : 'ios-play'}
-        onClick={isPlaying ? pause : play}
-      />
+      {/* <IconButton
+          style={styles.playContainer}
+          iconStyle={styles.play}
+          icon={isPlaying ? 'ios-pause' : 'ios-play'}
+          onClick={isPlaying ? pause : play}
+          /> */}
     </View>
   )
 }

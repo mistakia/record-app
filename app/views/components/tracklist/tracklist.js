@@ -2,9 +2,13 @@ import React from 'react'
 import { FixedSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import InfiniteLoader from 'react-window-infinite-loader'
+import Fab from '@material-ui/core/Fab'
+import AddIcon from '@material-ui/icons/Add'
+import { Link } from 'react-router-dom'
+import ShuffleIcon from '@material-ui/icons/Shuffle'
+import IconButton from '@material-ui/core/IconButton'
 
 import EmptyMessage from '@components/empty-message'
-import IconButton from '@components/icon-button'
 import Taglist from '@components/taglist'
 import Input from '@components/input'
 import TracklistFilter from '@components/tracklist-filter'
@@ -44,17 +48,14 @@ const render = ({
         />
         <div className='list__action'>
           {showAdd &&
-            <IconButton
-              className='action button__floating'
-              icon='add'
-              label='add tracks'
-              link='/importer' />}
+            <Fab component={Link} to='/importer'>
+              <AddIcon />
+            </Fab>}
           <IconButton
-            icon='shuffle'
-            label='Shuffle'
-            isActive={isShuffling}
-            onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}
-          />
+            className={isShuffling ? 'active' : undefined}
+            onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}>
+            <ShuffleIcon />
+          </IconButton>
         </div>
       </div>}
       {!hideTaglist && <Taglist />}

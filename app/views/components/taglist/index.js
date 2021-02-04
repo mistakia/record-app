@@ -7,13 +7,11 @@ import {
   getTagsForCurrentTaglist
 } from '@core/taglists'
 import { tracklistActions, getCurrentTracklist } from '@core/tracklists'
-import LoadingIndicator from '@components/loading-indicator'
 import Tag from '@components/tag'
 
 import render from './taglist'
 
 const Taglist = ({
-  displayLoadingIndicator,
   selectedTags,
   toggleTag,
   tags
@@ -34,9 +32,7 @@ const Taglist = ({
     )
   })
 
-  const loading = (displayLoadingIndicator && <LoadingIndicator />)
-
-  return render(tagItems, loading)
+  return render(tagItems)
 }
 
 const mapStateToProps = createSelector(

@@ -1,6 +1,6 @@
 import React from 'react'
+import Button from '@material-ui/core/Button'
 
-import Button from '@components/button'
 import PageLayout from '@layouts/page'
 
 import './importer.styl'
@@ -65,15 +65,8 @@ export class ImporterPage extends React.Component {
           </div>
         </div>
         <div className='importer-actions'>
-          <Button
-            onClick={this.showDialog.bind(this)}
-            className='button__text'
-          >Select Files</Button>
-
-          <Button
-            onClick={this.showPrompt.bind(this)}
-            className='button__text'
-          >Paste url</Button>
+          <Button onClick={this.showDialog.bind(this)}>Select Files</Button>
+          <Button onClick={this.showPrompt.bind(this)}>Paste url</Button>
         </div>
       </div>
     )

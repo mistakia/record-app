@@ -3,13 +3,16 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 import queryString from 'query-string'
 import { shell } from 'electron'
+import Button from '@material-ui/core/Button'
+import StarIcon from '@material-ui/icons/Star'
+import AddIcon from '@material-ui/icons/Add'
+import WebIcon from '@material-ui/icons/Web'
 
 import { tracklistActions, getCurrentTracklistLog } from '@core/tracklists'
 import { logActions } from '@core/logs'
 import { taglistActions } from '@core/taglists'
 import { getApp } from '@core/app'
 import { getHelp, helpActions } from '@core/help'
-import Icon from '@components/icon'
 import Tracklist from '@components/tracklist'
 import PageLayout from '@layouts/page'
 import Log from '@components/log'
@@ -54,18 +57,18 @@ export class SingleTracksPage extends React.Component {
           <div className='page__help-lead'>Here you will see tracks that you've added to your library.</div>
         </div>
         <div className='page__help-row'>
-          <Icon name='star-solid' />
+          <StarIcon />
           <div>Add tracks from other libraries to your own.</div>
         </div>
         <div className='page__help-row'>
-          <Icon name='add' />
+          <AddIcon />
           <div>Add tracks from your computer and from the internet.</div>
         </div>
         <div className='page__help-row'>
-          <Icon name='website' />
+          <WebIcon />
           <div>Add tracks from other websites using the chrome extension.</div>
         </div>
-        <a onClick={shell.openExternal.bind(null, WIKI_URL)} className='button button__text page__help-link'>Learn more</a>
+        <Button onClick={shell.openExternal.bind(null, WIKI_URL)} size='medium'>Learn more</Button>
       </div>
     )
 
