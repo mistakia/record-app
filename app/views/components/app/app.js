@@ -1,6 +1,7 @@
 import React from 'react'
 import hotkeys from 'hotkeys-js'
 import { push } from 'react-router-redux'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
 import Menu from '@components/menu'
 import Routes from '@views/routes'
@@ -8,7 +9,6 @@ import Player from '@components/player'
 import Queue from '@components/queue'
 import ContextMenu from '@components/context-menu'
 import { contextMenuActions } from '@core/context-menu'
-import Loading from '@components/loading'
 import Notification from '@components/notification'
 import Dialog from '@components/dialog'
 
@@ -66,7 +66,7 @@ export default class App extends React.Component {
   render () {
     const { app, playerOpen } = this.props
     if (app.isPending) {
-      return <Loading loading={app.isPending} />
+      return <div className='app-loading-container'><CircularProgress /></div>
     }
 
     const classNames = []

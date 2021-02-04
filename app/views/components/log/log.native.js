@@ -3,7 +3,6 @@ import { Image, Text, TouchableOpacity, View, StyleSheet } from 'react-native'
 import { Link } from 'react-router-native'
 
 import NavLink from '@components/nav-link'
-import Button from '@components/button'
 import TextStyles from '@styles/text'
 
 const Log = ({
@@ -16,33 +15,33 @@ const Log = ({
 }) => {
   const style = styles[type]
 
-  const connectAction = (
-    <Link
-      text='Link'
-      style={style.action}
-      component={Button}
-      to={`/link-log${log.address}?alias=${log.name || log.alias}`} />
-  )
+  /* const connectAction = (
+   *   <Link
+   *     text='Link'
+   *     style={style.action}
+   *     component={Button}
+   *     to={`/link-log${log.address}?alias=${log.name || log.alias}`} />
+   * )
 
-  const disconnectAction = (
-    <Button
-      text='Unlink'
-      style={style.action}
-      onClick={unlink} />
-  )
+   * const disconnectAction = (
+   *   <Button
+   *     text='Unlink'
+   *     style={style.action}
+   *     onClick={unlink} />
+   * )
 
-  const selfAction = (
-    <Link to='/edit-about' style={style.action} component={Button} text='Edit' />
-  )
+   * const selfAction = (
+   *   <Link to='/edit-about' style={style.action} component={Button} text='Edit' />
+   * )
 
-  const logAction = (log.isMe
-    ? selfAction
-    : (log.isLinked
-      ? disconnectAction
-      : connectAction
-    )
-  )
-
+   * const logAction = (log.isMe
+   *   ? selfAction
+   *   : (log.isLinked
+   *     ? disconnectAction
+   *     : connectAction
+   *   )
+   * )
+   */
   if (type !== 'profile') {
     return (
       <Link
@@ -57,7 +56,7 @@ const Log = ({
           {logLocation && <Text>{logLocation}</Text>}
         </View>
         {type === 'item' && <View style={style.actionContainer}>
-          {log.isLinked ? disconnectAction : connectAction}
+          {/* {log.isLinked ? disconnectAction : connectAction} */}
         </View>}
       </Link>
     )
@@ -72,7 +71,7 @@ const Log = ({
         <Text style={style.title}>{logName}</Text>
         {logLocation && <Text>{logLocation}</Text>}
         {logBio && <Text>{logBio}</Text>}
-        <View style={style.action}>{logAction}</View>
+        {/* <View style={style.action}>{logAction}</View> */}
       </View>
       <View style={style.menu}>
         <NavLink

@@ -1,5 +1,4 @@
 .tags
-  font-size 9px
   display flex
   flex-wrap nowrap
   align-items center
@@ -19,10 +18,8 @@
     &::placeholder
       color $accentColor
 
-  .tag:last-child:after
-    content ''
-    display block
-    position absolute
-    right -6rem
-    width 6rem
-    height 1px
+  .MuiBadge-root + .MuiBadge-root
+    margin-left 4px
+
+  .MuiBadge-root:last-child
+    padding-right 6rem

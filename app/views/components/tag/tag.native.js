@@ -1,20 +1,18 @@
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 
-import IconButton from '@components/icon-button'
-
 const Tag = ({ tag, onClick, remove, count, isSelected }) => (
   <TouchableOpacity
     style={[styles.tagContainer, isSelected ? styles.active : null]}
     onPress={onClick}>
     <Text style={[styles.tagItem, styles.tag]}>{tag}</Text>
     { count && <Text style={[styles.tagItem, styles.count]}>{count}</Text> }
-    { remove && <IconButton
-      icon='ios-close'
-      style={[styles.tagItem, styles.remove]}
-      iconStyle={styles.removeIcon}
-      onClick={remove}
-    /> }
+    {/* { remove && <IconButton
+        icon='ios-close'
+        style={[styles.tagItem, styles.remove]}
+        iconStyle={styles.removeIcon}
+        onClick={remove}
+        /> } */}
   </TouchableOpacity>
 )
 

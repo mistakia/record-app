@@ -1,9 +1,12 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
+import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore'
+import NavigateNextIcon from '@material-ui/icons/NavigateNext'
+import IconButton from '@material-ui/core/IconButton'
+import SettingsIcon from '@material-ui/icons/Settings'
 
 import Log from '@components/log'
 import Status from '@components/status'
-import IconButton from '@components/icon-button'
 import history from '@core/history'
 
 import './menu.styl'
@@ -11,16 +14,12 @@ import './menu.styl'
 const Menu = ({ app, log, logs }) => (
   <div id='menu' className='menu'>
     <div className='menu__top-section'>
-      <IconButton
-        icon='arrow-back'
-        label='go back'
-        onClick={history.back}
-      />
-      <IconButton
-        icon='arrow-forward'
-        label='go forward'
-        onClick={history.forward}
-      />
+      <IconButton onClick={history.back} size='small'>
+        <NavigateBeforeIcon />
+      </IconButton>
+      <IconButton onClick={history.forward} size='small'>
+        <NavigateNextIcon />
+      </IconButton>
     </div>
     <div className='menu__main-section'>
       <small>Record</small>
@@ -43,14 +42,13 @@ const Menu = ({ app, log, logs }) => (
     </div>
     <div className='menu__bottom-section'>
       { log &&
-        <NavLink className='menu__account' to='/account'>
+        <IconButton component={Link} className={history.location.pathname === '/account' ? 'active' : undefined} to='/account'>
           <img src={log.avatar} />
-        </NavLink>
+        </IconButton>
       }
-      <IconButton
-        icon='settings'
-        label='settings'
-        navlink='/settings' />
+      <IconButton component={Link} className={history.location.pathname === '/settings' ? 'active' : undefined} to='/settings'>
+        <SettingsIcon />
+      </IconButton>
     </div>
     <Status />
   </div>

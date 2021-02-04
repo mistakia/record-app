@@ -1,7 +1,13 @@
 import React from 'react'
 import { SortableContainer, SortableElement } from 'react-sortable-hoc'
+import IconButton from '@material-ui/core/IconButton'
+import PauseIcon from '@material-ui/icons/Pause'
+import PlayArrowIcon from '@material-ui/icons/PlayArrow'
+import CircularProgress from '@material-ui/core/CircularProgress'
+import MoreVertIcon from '@material-ui/icons/MoreVert'
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import CloseIcon from '@material-ui/icons/Close'
 
-import IconButton from '@components/icon-button'
 import FormattedTime from '@components/formatted-time'
 import Artwork from '@components/artwork'
 
@@ -63,24 +69,19 @@ class Queue extends React.Component {
         <article
           className={classNames.join(' ')}
           onContextMenu={(event) => this._handleClick(event, track.id)}>
-          <Artwork className='queue__track-play' url={artwork} background>
-            <IconButton
-              icon={isTrackPlaying ? 'pause' : 'play'}
-              label={isTrackPlaying ? 'Pause' : 'Play'}
-              isLoading={isTrackLoading}
-              onClick={isTrackPlaying ? pause : playTrack}
-            />
-          </Artwork>
+          <IconButton
+            onClick={isTrackPlaying ? pause : playTrack}
+            disabled={isTrackLoading}
+            className={isTrackPlaying ? 'queue__track-playing' : undefined}>
+            {isTrackLoading ? <CircularProgress size={24} /> : (isTrackPlaying ? <PauseIcon /> : <PlayArrowIcon />)}
+          </IconButton>
           <div className='queue__track-body'>
             <div className={`queue__track-title ${track.isLocal ? 'available' : ''}`}>{track.name}</div>
             <div className='queue__track-artist'>{track.artist}</div>
           </div>
-          <IconButton
-            label='more'
-            className='queue__track-more'
-            onClick={(event) => this._handleClick(event, track.id)}
-            icon='more'
-          />
+          <IconButton onClick={(event) => this._handleClick(event, track.id)}>
+            <MoreVertIcon />
+          </IconButton>
           <small className='queue__track-duration'>
             <FormattedTime value={track.duration} unit={'ms'} />
           </small>
@@ -100,12 +101,9 @@ class Queue extends React.Component {
 
     return (
       <div className='player__queue visible'>
-        <IconButton
-          className='player__queue-close'
-          label='close queue'
-          onClick={toggleQueue}
-          icon='down'
-        />
+        <IconButton onClick={toggleQueue}>
+          <ExpandMoreIcon />
+        </IconButton>
         <div className='player__queue-content'>
           <div className='player__queue-main'>
             <Artwork className='player__queue-artwork' url={track.thumbnail} background />
@@ -113,18 +111,17 @@ class Queue extends React.Component {
           <div className='player__queue-side'>
             <div className='player__queue-header'>
               <div className='player__queue-header-title'>Playing next</div>
-              {!!tracks.size && <IconButton
-                label='clear queue'
-                className='player__queue-clear'
-                disabled={!tracks.size}
-                onClick={clearQueue}
-                icon='remove' />}
+              {!!tracks.size &&
+                <IconButton disabled={!tracks.size} onClick={clearQueue}>
+                  <CloseIcon />
+                </IconButton>}
             </div>
             <div className='player__queue-tracks'>
               <SortableList
                 queue
                 items={tracks}
                 onSortEnd={reorderQueue}
+                distance={1}
                 helperClass='sortable__helper' />
               {!!playerTracklistTracks.size && !!tracks.size && <div className='player__queue-tracks-header'>
                 <div className='player__queue-tracks-header-title'>Back To:</div>
@@ -134,6 +131,7 @@ class Queue extends React.Component {
               <SortableList
                 items={playerTracklistTracks}
                 onSortEnd={reorderPlayerTracklist}
+                distance={1}
                 helperClass='sortable__helper' />
             </div>
           </div>

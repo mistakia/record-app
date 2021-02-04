@@ -1,6 +1,7 @@
 import React from 'react'
-
-import IconButton from '@components/icon-button'
+import SyncIcon from '@material-ui/icons/Sync'
+import IconButton from '@material-ui/core/IconButton'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
 const EmptyMessage = ({
   disconnect,
@@ -20,21 +21,14 @@ const EmptyMessage = ({
       : connect(log.address, log.id)
   }
 
-  const connectionStatusClassName = []
-  if (log.isReplicating) {
-    connectionStatusClassName.push('button__success')
-    if (log.length < log.max) {
-      connectionStatusClassName.push('spin')
-    }
-  }
-
   const connectionStatusAction = (
     <IconButton
-      label='status'
-      isLoading={log.isUpdating}
-      className={connectionStatusClassName.join(' ')}
+      className={log.length < log.max ? 'spin' : undefined}
       onClick={handleConnectClick}
-      icon='sync' />
+      disabled={log.isUpdating}
+    >
+      {log.isUpdating ? <CircularProgress size={24} /> : <SyncIcon />}
+    </IconButton>
   )
 
   return (

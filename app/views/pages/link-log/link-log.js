@@ -2,10 +2,10 @@ import React from 'react'
 import { connect } from 'react-redux'
 import hashicon from 'hashicon'
 import queryString from 'query-string'
+import Button from '@material-ui/core/Button'
 
 import { loglistActions } from '@core/loglists'
 import PageLayout from '@layouts/page'
-import Button from '@components/button'
 import CopyText from '@components/copy-text'
 
 import './link-log.styl'
@@ -58,7 +58,7 @@ export class LinkLogPage extends React.Component {
             <input type='text' name='address' defaultValue={address} placeholder='/orbitdb/Qm.../record' disabled={!!isLinked} required />
           </label>
         }
-        <Button type='submit'>{isLinked ? 'Save' : 'Link'}</Button>
+        <Button type='submit' variant='outlined'>{isLinked ? 'Save' : 'Link'}</Button>
         {<label>Note: linking a library adds it to your library, connects to it and saves the data.</label>}
       </form>
     )

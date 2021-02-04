@@ -1,8 +1,9 @@
 import React from 'react'
 import Snackbar from '@material-ui/core/Snackbar'
 import MuiAlert from '@material-ui/lab/Alert'
-
-import Button from '@components/button'
+import CloseIcon from '@material-ui/icons/Close'
+import IconButton from '@material-ui/core/IconButton'
+import Button from '@material-ui/core/Button'
 
 import './notification.styl'
 
@@ -65,19 +66,19 @@ class Notification extends React.Component {
     if (notification.action) {
       action = (
         <React.Fragment>
-          <Button isText onClick={this.handleClick}>
+          <Button onClick={this.handleClick} size='small' color='secondary'>
             {notification.action.text}
           </Button>
-          <Button isText onClick={this.handleDismiss}>
-            DISMISS
-          </Button>
+          <IconButton onClick={this.handleDismiss} size='small' color='secondary'>
+            <CloseIcon />
+          </IconButton>
         </React.Fragment>
       )
     } else if (!notification.dismiss) {
       action = (
         <React.Fragment>
-          <Button isText onClick={this.handleDismiss}>
-            DISMISS
+          <Button onClick={this.handleDismiss} size='small' color='secondary'>
+            <CloseIcon />
           </Button>
         </React.Fragment>
       )

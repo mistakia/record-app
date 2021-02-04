@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import { createSelector } from 'reselect'
 
 import { appActions, getApp } from '@core/app'
-import { getPlayerTrack } from '@core/player'
+import { getPlayer } from '@core/player'
 
 import App from './app'
 
@@ -13,10 +13,10 @@ App.propTypes = {
 
 const mapStateToProps = createSelector(
   getApp,
-  getPlayerTrack,
-  (app, track) => ({
+  getPlayer,
+  (app, player) => ({
     app,
-    playerOpen: !!track
+    playerOpen: player.trackId || player.queue.size
   })
 )
 

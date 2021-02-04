@@ -1,17 +1,17 @@
 import React from 'react'
+import LinkIcon from '@material-ui/icons/Link'
+import Fab from '@material-ui/core/Fab'
+import { Link } from 'react-router-dom'
 
 import EmptyMessage from '@components/empty-message'
-import IconButton from '@components/icon-button'
 
 const render = ({ logItems, loading, showAdd, log }) => (
   <div className='list'>
     <div className='list__head'>
       {showAdd &&
-        <IconButton
-          className='action button__floating'
-          icon='link'
-          label='link log'
-          link='/link-log' /> }
+        <Fab component={Link} to='/link-log'>
+          <LinkIcon />
+        </Fab>}
     </div>
     <div className='list__header log log__item'>
       <div className='log__main'>

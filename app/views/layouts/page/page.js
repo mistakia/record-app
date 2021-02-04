@@ -1,6 +1,7 @@
 import React from 'react'
+import IconButton from '@material-ui/core/IconButton'
+import CloseIcon from '@material-ui/icons/Close'
 
-import IconButton from '@components/icon-button'
 import ImporterProgress from '@components/importer-progress'
 import './page.styl'
 
@@ -11,12 +12,9 @@ export const PageLayout = ({ help, head, body, title, scroll, onHelpClose }) => 
         <div className='page__help-body'>
           {help}
         </div>
-        <IconButton
-          className='page__help-close'
-          onClick={onHelpClose}
-          icon='remove'
-          label='close'
-        />
+        <IconButton onClick={onHelpClose} style={{ position: 'absolute', top: '4px', right: '4px' }}>
+          <CloseIcon />
+        </IconButton>
       </div>
     }
     { (head || title) &&

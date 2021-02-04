@@ -1,10 +1,15 @@
 import React from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import TimeAgo from 'timeago-react'
+import LinkIcon from '@material-ui/icons/Link'
+import CircularProgress from '@material-ui/core/CircularProgress'
+import EditIcon from '@material-ui/icons/Edit'
+import SyncIcon from '@material-ui/icons/Sync'
+import MoreVertIcon from '@material-ui/icons/MoreVert'
+import IconButton from '@material-ui/core/IconButton'
+import Tooltip from '@material-ui/core/Tooltip'
 
 import history from '@core/history'
-import Icon from '@components/icon'
-import IconButton from '@components/icon-button'
 import Progress from '@components/progress'
 
 import './log.styl'
@@ -47,30 +52,43 @@ const Log = ({
   }
 
   const linkAction = (
-    <Link
-      className='button button__icon'
-      onClick={noPropagation}
-      to={`/link-log${log.address}?alias=${log.name || log.alias || ''}`}>
-      <Icon name='link' />
-    </Link>
+    <Tooltip title='Link Library'>
+      <IconButton
+        component={Link}
+        to={`/link-log${log.address}?alias=${log.name || log.alias || ''}`}>
+        <LinkIcon />
+      </IconButton>
+    </Tooltip>
   )
 
   const unlinkAction = (
-    <IconButton className='button__success' onClick={unlink} isLoading={log.isUpdating} label='unlink' icon='link' />
+    <Tooltip title='Unlink Library'>
+      <IconButton onClick={unlink} disabled={log.isUpdating} className='active'>
+        {log.isUpdating ? <CircularProgress size={24} /> : <LinkIcon />}
+      </IconButton>
+    </Tooltip>
   )
 
   const editLog = (
-    <Link
-      className='button__icon button log__edit-title'
-      to={`/link-log${log.address}?isLinked=true&alias=${log.alias || log.name || ''}`}
-      onClick={noPropagation}><Icon name='edit' /></Link>
+    <Tooltip title='edit'>
+      <IconButton
+        component={Link}
+        to={`/link-log${log.address}?isLinked=true&alias=${log.alias || log.name || ''}`}
+        onClick={noPropagation}>
+        <EditIcon />
+      </IconButton>
+    </Tooltip>
   )
 
   const editSelf = (
-    <Link
-      className='button__icon button log__edit-title' to='/edit-about'
-      onClick={noPropagation}>
-      <Icon name='edit' /></Link>
+    <Tooltip title='edit'>
+      <IconButton
+        component={Link}
+        to='/edit-about'
+        onClick={noPropagation}>
+        <EditIcon />
+      </IconButton>
+    </Tooltip>
   )
 
   const logAction = (log.isLinked
@@ -80,19 +98,22 @@ const Log = ({
 
   const connectionStatusClassName = []
   if (log.isReplicating) {
-    connectionStatusClassName.push('button__success')
+    connectionStatusClassName.push('active')
     if (log.length < log.max) {
       connectionStatusClassName.push('spin')
     }
   }
 
   const connectionStatusAction = (
-    <IconButton
-      label='status'
-      isLoading={log.isUpdating}
-      className={connectionStatusClassName.join(' ')}
-      onClick={handleConnectClick}
-      icon='sync' />
+    <Tooltip title={log.isReplicating ? 'Disconnect' : 'Connect'}>
+      <IconButton
+        className={connectionStatusClassName.join(' ')}
+        onClick={handleConnectClick}
+        disabled={log.isUpdaitng}
+      >
+        {log.isUpdating ? <CircularProgress size={24} /> : <SyncIcon />}
+      </IconButton>
+    </Tooltip>
   )
 
   const viewUser = () => {
@@ -101,19 +122,17 @@ const Log = ({
 
   const actions = (
     <div className='log__actions'>
-      <div>{!log.isMe && logAction}</div>
-      <div>{!log.isMe && connectionStatusAction}</div>
-      <div>{showEdit && (log.isMe ? editSelf : editLog)}</div>
+      {!log.isMe && logAction}
+      {!log.isMe && connectionStatusAction}
+      {showEdit && (log.isMe ? editSelf : editLog)}
     </div>
   )
 
   const more = (
     <div className='log__actions'>
-      <IconButton
-        label='more'
-        onClick={handleMoreClick}
-        icon='more'
-      />
+      <IconButton onClick={handleMoreClick} className='log__action-more' size='small'>
+        <MoreVertIcon />
+      </IconButton>
     </div>
   )
 

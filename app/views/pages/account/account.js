@@ -1,9 +1,10 @@
 import React from 'react'
 import hashicon from 'hashicon'
 import { Link } from 'react-router-dom'
+import Button from '@material-ui/core/Button'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
 import PageLayout from '@layouts/page'
-import Button from '@components/button'
 import CopyText from '@components/copy-text'
 
 import './account.styl'
@@ -48,13 +49,15 @@ export default function () {
           <small>
             { app.privateKey
               ? app.privateKey
-              : <button onClick={showPrivateKey}>Reveal Secret Key</button>
+              : <Button onClick={showPrivateKey}>Reveal Secret Key</Button>
             }
           </small>
         </CopyText>
         <div className='account__actions'>
-          <Link className='button' to='/set-identity'>Load Existing Account</Link>
-          <Button onClick={generateIdentity} isLoading={app.isPending}>Generate new Account</Button>
+          <Button component={Link} to='/set-identity' variant='outlined'>Load Existing Account</Button>
+          <Button onClick={generateIdentity} variant='outlined'>
+            {app.isPending ? <CircularProgress size={24} /> : 'Generate new Account'}
+          </Button>
         </div>
       </div>
     </div>

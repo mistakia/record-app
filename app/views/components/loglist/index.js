@@ -1,6 +1,6 @@
 import React from 'react'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
-import Loading from '@components/loading'
 import Log from '@components/log'
 
 import render from './loglist'
@@ -15,7 +15,15 @@ const Loglist = ({
     <Log type='item' log={log} key={index} />
   ))
 
-  const loading = (displayLoadingIndicator && <Loading loading />)
+  const loading = (displayLoadingIndicator &&
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: '32px' }}>
+      <CircularProgress />
+    </div>
+  )
 
   return render({ logItems, loading, showAdd, log })
 }
