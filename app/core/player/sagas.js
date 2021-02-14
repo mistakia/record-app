@@ -101,7 +101,7 @@ export function * playAudio () {
 
   // record listens only after track loads
   const [cancel] = yield race([
-    delay(10000),
+    delay(60000),
     take(playerActions.AUDIO_PLAYING)
   ])
 
