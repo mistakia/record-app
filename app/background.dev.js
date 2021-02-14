@@ -26,9 +26,6 @@ console.log(`process id: ${process.pid}, isDev: ${isDev}`)
 
 if (isDev || process.env.DEBUG_PROD === 'true') {
   debug.enable('record:*,knex:query,knex:bindings,ipfs:http-api:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap,ipfsd-ctl:daemon*')
-
-  const Logger = require('logplease')
-  Logger.setLogLevel(Logger.LogLevels.DEBUG)
 } else {
   debug.enable('record:*')
 }
@@ -101,7 +98,7 @@ const main = async () => {
       log: log.info,
       ipfsBin: getIpfsBinPath()
     })
-    await record.init(ipfsd.api)
+    await record.init(ipfsd)
   } catch (error) {
     log.error(error)
 
