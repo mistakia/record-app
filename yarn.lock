@@ -13234,17 +13234,17 @@ rechoir@^0.7.0:
   dependencies:
     resolve "^1.9.0"
 
-record-ipfsd@mistakia/record-ipfsd#2302cc0:
+record-ipfsd@mistakia/record-ipfsd#6162495:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-ipfsd/tar.gz/2302cc0ad78c88245fdaf59173c8ace161c2d04e"
+  resolved "https://codeload.github.com/mistakia/record-ipfsd/tar.gz/6162495d5bec389f8a5024b8c40cc026ebb182f0"
   dependencies:
     ipfs-http-client "47.0.1"
     ipfsd-ctl "7.2.0"
     jsonfile "^6.1.0"
 
-record-node@mistakia/record-node#aa0a367:
+record-node@mistakia/record-node#ccd85e3:
   version "0.0.1"
-  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/aa0a36769bcbea1c344ad97a703217e6a20e5a35"
+  resolved "https://codeload.github.com/mistakia/record-node/tar.gz/ccd85e333bf48eff83125f54c95c3dd19aacdfd5"
   dependencies:
     bitboot "^0.1.0"
     body-parser "^1.18.3"
