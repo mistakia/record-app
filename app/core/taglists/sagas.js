@@ -8,9 +8,9 @@ import { notificationActions } from '@core/notifications'
 import { tracklistActions, getCurrentTracklist } from '@core/tracklists'
 import { taglistActions } from './actions'
 
-export function * loadTags ({ payload }) {
-  const addresses = payload.addresses
-  const params = { addresses }
+export function * loadTags () {
+  const tracklist = yield select(getCurrentTracklist)
+  const params = { addresses: tracklist.addresses.toJS() }
   yield call(fetchTags, { params })
 }
 
