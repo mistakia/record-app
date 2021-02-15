@@ -25,7 +25,7 @@ const isDev = process.env.NODE_ENV === 'development'
 console.log(`process id: ${process.pid}, isDev: ${isDev}`)
 
 if (isDev || process.env.DEBUG_PROD === 'true') {
-  debug.enable('record:*,knex:query,knex:bindings,ipfs:http-api:*,ipfs,libp2p,libp2p:gossipsub,bitswap,ipfs:bitswap,ipfsd-ctl:daemon*')
+  debug.enable('record:*,ipfs*')
 } else {
   debug.enable('record:*')
 }
