@@ -224,9 +224,9 @@
     "stylus-loader": "4.3.3",
     "terser-webpack-plugin": "5.1.1",
     "url-loader": "4.1.1",
-    "webpack": "5.17.0",
+    "webpack": "5.22.0",
     "webpack-bundle-analyzer": "4.4.0",
-    "webpack-cli": "^4.4.0",
+    "webpack-cli": "4.5.0",
     "webpack-dev-server": "^3.10.3",
     "webpack-merge": "4.2.2"
   }
