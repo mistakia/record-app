@@ -35,6 +35,8 @@ At it's core, the application intends to be a media library management & playbac
 - Audio Scrobbling (last.fm, libre.fm, listenbrainz)
 - Trustless timestamping / distributed copyrighting & distribution (OpenTimestamps, Nano, etc)
 
+[![Record v0.0.1-alpha](resources/images/screenshot.png)](https://youtu.be/1cmxiwPBv7A)
+
 ## More Info
 - Read the [wiki](https://bafybeidk4zev2jlw2jijtdyufo3itspx45k4ynq634x4rjm6ycjfdvxfrq.ipfs.infura-ipfs.io/) for a primer.
 - Check out [the roadmap](https://github.com/mistakia/record-app/projects/1) to view planned features.
