@@ -4,6 +4,7 @@ import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore'
 import NavigateNextIcon from '@material-ui/icons/NavigateNext'
 import IconButton from '@material-ui/core/IconButton'
 import SettingsIcon from '@material-ui/icons/Settings'
+import LinkIcon from '@material-ui/icons/Link'
 
 import Log from '@components/log'
 import Status from '@components/status'
@@ -22,15 +23,24 @@ const Menu = ({ app, log, logs }) => (
       </IconButton>
     </div>
     <div className='menu__main-section'>
-      <small>Record</small>
+      <div className='menu__section-heading'>
+        <small>Record</small>
+      </div>
       <NavLink to='/tracks' exact>Tracks</NavLink>
       <NavLink to='/listens'>Recently Played</NavLink>
-      <small>My Library</small>
+      <div className='menu__section-heading'>
+        <small>My Library</small>
+      </div>
       <NavLink to={`/tracks${app.address}`}>Tracks</NavLink>
       <NavLink to={`/logs${app.address}`}>Libraries</NavLink>
     </div>
     <div className='menu__libraries-section'>
-      <small>Libraries</small>
+      <div className='menu__section-heading'>
+        <small>Libraries</small>
+        <IconButton component={Link} to='/link-log' size='small'>
+          <LinkIcon />
+        </IconButton>
+      </div>
       {logs.map((log, index) => (
         <Log
           type='menu-item'
