@@ -18,9 +18,9 @@ import Track from '@components/track'
 import render from './tracklist'
 
 const Tracklist = ({
-  displayLoadingIndicator,
+  isTracklistLoading,
   isPlaying,
-  isLoading,
+  isPlayerLoading,
   pause,
   play,
   selectedTrackId,
@@ -35,15 +35,25 @@ const Tracklist = ({
   ...props
 }) => {
   const isItemLoaded = index => tracks.has(index)
-  const itemCount = displayLoadingIndicator ? (tracks.size + 1) : (hasMore ? tracks.size + 1 : tracks.size)
   const load = async () => loadNext()
-  const loadMoreItems = displayLoadingIndicator ? () => {} : load
+  const loadMoreItems = isTracklistLoading ? () => {} : load
   const listRef = React.createRef()
-  const isEmpty = !displayLoadingIndicator && !itemCount
+  const isEmpty = !isTracklistLoading && !tracks.size
 
   const Row = ({ style, index }) => {
-    if (displayLoadingIndicator && (index + 1) === itemCount) {
-      return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', ...style }}><CircularProgress size={30} /></div>
+    if (isTracklistLoading && index === tracks.size) {
+      return (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            ...style
+          }}
+        >
+          <CircularProgress size={30} />
+        </div>
+      )
     }
 
     const track = tracks.get(index)
@@ -56,7 +66,7 @@ const Tracklist = ({
       <Track
         key={index}
         isPlaying={isSelected && isPlaying}
-        isLoading={isSelected && isLoading}
+        isLoading={isSelected && isPlayerLoading}
         play={isSelected ? play : selectTrack.bind(null, track.id, tracklistAddress)}
         {...{style, track, index, isSelected, pause, tracklistAddress}}
       />
@@ -67,13 +77,15 @@ const Tracklist = ({
   const onClear = () => clearSearch()
 
   return render({
-    loading: displayLoadingIndicator,
+    isLoading: isTracklistLoading,
     onSearch,
     isItemLoaded,
     tracklistAddress,
     query,
     onClear,
-    itemCount,
+    itemCount: isTracklistLoading
+      ? (tracks.size + 1)
+      : (hasMore ? tracks.size + 1 : tracks.size),
     isEmpty,
     loadMoreItems,
     Row,
@@ -87,10 +99,10 @@ const mapStateToProps = createSelector(
   getCurrentTracklist,
   getTracksForCurrentTracklist,
   (player, tracklist, tracks) => ({
-    displayLoadingIndicator: tracklist.isPending,
+    isTracklistLoading: tracklist.isPending,
     isPlaying: player.isPlaying,
     isShuffling: player.isShuffling && tracklist.path === player.tracklist.path,
-    isLoading: player.isLoading,
+    isPlayerLoading: player.isLoading,
     pause: audio.pause,
     play: audio.play,
     selectedTrackId: player.trackId,
