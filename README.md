@@ -41,6 +41,9 @@ At it's core, the application intends to be a media library management & playbac
 - Read the [wiki](https://bafybeidk4zev2jlw2jijtdyufo3itspx45k4ynq634x4rjm6ycjfdvxfrq.ipfs.infura-ipfs.io/) for a primer.
 - Check out [the roadmap](https://github.com/mistakia/record-app/projects/1) to view planned features.
 
+<details>
+  <summary>Installation & Usage (Development)</summary>
+
 ## Install
 ```
 yarn install
@@ -74,6 +77,7 @@ yarn start:ios // or open & build with xcode `open ios/Record.xcodeproj/`
 yarn build:android
 yarn start:android
 ```
+</details>
 
 ## License
 MIT
