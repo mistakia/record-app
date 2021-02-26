@@ -132,6 +132,10 @@ const handler = async () => {
   }
 }
 
+ipc.on('STOP_IPFS', async () => {
+  await ipfsd.stop()
+  ipc.send('IPFS_STOPPED')
+})
 window.addEventListener('online', handler)
 window.addEventListener('offline', handler)
 window.onbeforeunload = async (e) => {

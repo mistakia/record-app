@@ -6,23 +6,17 @@ import 'v8-compile-cache'
 import { BrowserWindow, app, ipcMain, globalShortcut } from 'electron'
 // import path from 'path'
 import fixpath from 'fix-path'
-import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import path from 'path'
 
 import MenuBuilder from './menu'
+import AppUpdater from './app-updater'
+
+const updater = new AppUpdater(log)
 
 // Only one instance can run at a time
 if (!app.requestSingleInstanceLock()) {
   process.exit(0)
-}
-
-export default class AppUpdater {
-  constructor () {
-    log.transports.file.level = 'info'
-    autoUpdater.logger = log
-    autoUpdater.checkForUpdatesAndNotify()
-  }
 }
 
 if (process.env.NODE_ENV === 'production') {
@@ -144,8 +138,7 @@ const createMainWindow = async () => {
     mainWindow.webContents.send('ready', data)
   })
 
-  // eslint-disable-next-line
-  // new AppUpdater()
+  updater.setup()
 }
 
 const createBackgroundWindow = () => {

@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-10.14, windows-2019, ubuntu-18.04]
+        os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
       - name: Check out Git repository
@@ -21,13 +21,13 @@ jobs:
 
       - name: yarn install
         run: |
-          yarn install
+          yarn install --frozen-lockfile --network-timeout 300000
 
       - name: yarn test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          yarn package:ci
+          yarn package
           yarn lint
 
 # Failing beacuse virtual framebuffer not installed
