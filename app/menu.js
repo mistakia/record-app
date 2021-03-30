@@ -1,8 +1,9 @@
 import { app, Menu, shell } from 'electron'
 
 export default class MenuBuilder {
-  constructor (mainWindow) {
+  constructor (mainWindow, appUpdater) {
     this.mainWindow = mainWindow
+    this.appUpdater = appUpdater
   }
 
   buildMenu () {
@@ -39,6 +40,20 @@ export default class MenuBuilder {
       submenu: [{
         label: 'About Record',
         selector: 'orderFrontStandardAboutPanel:'
+      }, {
+        type: 'separator'
+      }, {
+        id: 'checkForUpdates',
+        label: 'Check for Updates...',
+        click: () => this.appUpdater.manualCheck()
+      }, {
+        type: 'separator'
+      }, {
+        label: 'Show Logs Folder',
+        click: () => shell.openItem(app.getPath('logs')) // change to openPath in electron v9
+      }, {
+        label: 'Show Data Folder',
+        click: () => shell.openItem(app.getPath('userData')) // change to openPath in electron v9
       }, {
         type: 'separator'
       }, {
@@ -153,6 +168,11 @@ export default class MenuBuilder {
         label: 'Search Issues',
         click () {
           shell.openExternal('https://github.com/mistakia/record-app/issues')
+        }
+      }, {
+        label: 'Release Notes',
+        click () {
+          shell.openExternal('https://github.com/mistakia/record-app/releases/latest')
         }
       }]
     }

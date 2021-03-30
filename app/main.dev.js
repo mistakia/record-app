@@ -6,9 +6,9 @@ import 'v8-compile-cache'
 import { BrowserWindow, app, ipcMain, globalShortcut } from 'electron'
 // import path from 'path'
 import fixpath from 'fix-path'
-import log from 'electron-log'
 import path from 'path'
 
+import log from './logger'
 import MenuBuilder from './menu'
 import AppUpdater from './app-updater'
 
@@ -116,7 +116,7 @@ const createMainWindow = async () => {
     if (mainWindow) mainWindow.webContents.send('redux', data)
   })
 
-  const menuBuilder = new MenuBuilder(mainWindow)
+  const menuBuilder = new MenuBuilder(mainWindow, updater)
   menuBuilder.buildMenu()
 
   const windowReady = new Promise((resolve) => {
@@ -170,6 +170,11 @@ const registerGlobalShortcuts = () => {
 
   globalShortcut.register('MediaPreviousTrack', () => {
     if (mainWindow) mainWindow.webContents.send('redux', { type: 'MEDIA_PREVIOUS' })
+  })
+
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
+    if (mainWindow) mainWindow.webContents.toggleDevTools()
+    if (backgroundWindow) backgroundWindow.webContents.toggleDevTools()
   })
 }
 

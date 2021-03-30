@@ -14,8 +14,7 @@ const stopIpfs = () => new Promise((resolve, reject) => {
 export default class AppUpdater {
   constructor (log) {
     this.feedback = false
-    log.transports.file.level = 'info'
-    autoUpdater.logger = log
+    autoUpdater.log = log
     autoUpdater.autoDownload = false
     // applicable only on Windows and Linux.
     autoUpdater.autoInstallOnAppQuit = !IS_MAC
@@ -153,7 +152,7 @@ export default class AppUpdater {
     }
   }
 
-  async manual () {
+  async manualCheck () {
     if (!(IS_MAC || IS_WIN || IS_APPIMAGE)) {
       shell.openExternal('https://github.com/mistakia/record-app/releases/latest')
       return
