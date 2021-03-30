@@ -6,7 +6,6 @@ import fs from 'fs'
 import path from 'path'
 import webpack from 'webpack'
 import merge from 'webpack-merge'
-import TerserPlugin from 'terser-webpack-plugin'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 import baseConfig from './webpack.config.base'
 import CheckNodeEnv from '../internals/scripts/CheckNodeEnv'
@@ -15,12 +14,8 @@ import DeleteSourceMaps from '../internals/scripts/DeleteSourceMaps'
 CheckNodeEnv('production')
 DeleteSourceMaps()
 
-const devtoolsConfig = process.env.DEBUG_PROD === 'true' ? {
-  devtool: 'source-map'
-} : {}
-
 export default merge.smart(baseConfig, {
-  ...devtoolsConfig,
+  devtool: 'source-map',
 
   mode: 'production',
 
@@ -53,22 +48,7 @@ export default merge.smart(baseConfig, {
    */
 
   optimization: {
-    minimizer: process.env.E2E_BUILD
-      ? []
-      : [
-        new TerserPlugin({
-          parallel: true,
-          terserOptions: {
-            mangle: false,
-            compress: false,
-            keep_classnames: true,
-            keep_fnames: true,
-            output: {
-              comments: false,
-            }
-          }
-        })
-      ]
+      minimize: false
   },
 
   plugins: [

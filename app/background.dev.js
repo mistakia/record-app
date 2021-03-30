@@ -1,8 +1,3 @@
-const log = require('electron-log')
-log.catchErrors()
-console.log = log.log
-Object.assign(console, log.functions)
-
 require('v8-compile-cache')
 
 const fs = require('fs')
@@ -12,23 +7,19 @@ const RecordNode = require('record-node')
 const electron = require('electron')
 
 const createIPFSDaemon = require('record-ipfsd')
+
+const { chromaprintPath, ffmpegPath } = require('./binaries')
+const log = require('./logger')
+
 const ipc = electron.ipcRenderer
 const { app, dialog } = electron.remote
-const { chromaprintPath, ffmpegPath } = require('./binaries')
-const debug = require('debug')
 
 const getIpfsBinPath = () => require('go-ipfs')
   .path()
   .replace('app.asar', 'app.asar.unpacked')
 
 const isDev = process.env.NODE_ENV === 'development'
-console.log(`process id: ${process.pid}, isDev: ${isDev}`)
-
-if (isDev || process.env.DEBUG_PROD === 'true') {
-  debug.enable('record:*,ipfs*')
-} else {
-  debug.enable('record:*')
-}
+log.info(`process id: ${process.pid}, isDev: ${isDev}`)
 
 let record
 let ipfsd
@@ -41,12 +32,16 @@ const main = async () => {
   const info = (fs.existsSync(infoPath) && jsonfile.readFileSync(infoPath)) || {}
   const orbitAddress = info.address || 'record'
   const id = info.id
-  console.log(`ID: ${id}`)
-  console.log(`Orbit Address: ${orbitAddress}`)
+  log.info(`ID: ${id}`)
+  log.info(`Orbit Address: ${orbitAddress}`)
   let opts = {
     directory: recorddir,
     store: {
       replicationConcurrency: 240
+    },
+    logger: {
+      info: log.info.bind(log),
+      error: log.error.bind(log)
     },
     address: orbitAddress,
     api: true,
@@ -77,7 +72,7 @@ const main = async () => {
 
   record.on('ready', async (data) => {
     try {
-      console.log(data)
+      log.info(JSON.stringify(data, null, 2))
       ipc.send('ready', data)
       record.on('redux', data => ipc.send('redux', data))
 
@@ -95,7 +90,7 @@ const main = async () => {
   try {
     ipfsd = await createIPFSDaemon({
       repo: path.resolve(recorddir, 'ipfs'),
-      log: log.info,
+      log: log.info.bind(log),
       ipfsBin: getIpfsBinPath()
     })
     await record.init(ipfsd)
@@ -124,7 +119,7 @@ try {
 }
 
 const handler = async () => {
-  console.log(`Online: ${navigator.onLine}`)
+  log.info(`Online: ${navigator.onLine}`)
 
   if (ipfsd && navigator.onLine) {
     // await ipfsd.stop()
@@ -141,12 +136,12 @@ window.addEventListener('offline', handler)
 window.onbeforeunload = async (e) => {
   if (ipfsd) {
     await ipfsd.stop()
-    console.log('ipfs shutdown successfully')
+    log.info('ipfs shutdown successfully')
   }
 
   if (record) {
     await record.stop()
-    console.log('record shutdown successfully')
+    log.info('record shutdown successfully')
   }
   window.onbeforeunload = null
   app.exit()

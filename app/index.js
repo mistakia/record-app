@@ -7,11 +7,17 @@ import { AppContainer as ReactHotAppContainer } from 'react-hot-loader'
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import 'whatwg-fetch'
 
+import log from './logger'
 import Root from '@views/root'
 
 const { remote } = require('electron')
 const processId = remote.getCurrentWebContents().getOSProcessId()
-console.log(`process id: ${processId}`)
+log.info(`[app][ui] process id: ${processId}`)
+
+if (process.env.NODE_ENV === 'production') {
+  console.log = log.info.bind(log)
+  console.error = log.error.bind(log)
+}
 
 const AppContainer = process.env.PLAIN_HMR ? Fragment : ReactHotAppContainer
 
