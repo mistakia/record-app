@@ -137,7 +137,7 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         isPlayingFromQueue: fromQueue,
         queue: fromQueue ? state.queue.shift() : state.queue,
         isLoading: true
-      }).mergeIn(['tracklist', 'trackIds'], isShuffling
+      }).setIn(['tracklist', 'trackIds'], isShuffling
         ? state.get('tracklist').get('trackIds').shift()
         : new List()
       )

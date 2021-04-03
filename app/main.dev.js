@@ -44,6 +44,7 @@ const installExtensions = async () => {
       extensions.map((name) => installer[name]),
       forceDownload
     )
+    .then((name) => log.info(`Added Extension:  ${name}`))
     .catch(log.error)
 }
 
