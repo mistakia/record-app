@@ -42,6 +42,7 @@ const logger = createLogger({
     new transports.File({
       level: 'debug',
       maxsize: 20000000,
+      silent: process.env.NODE_ENV === 'development',
       maxFiles: 4,
       filename: join(logsPath, 'combined.log'),
       format: combine(
