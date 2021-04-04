@@ -27,11 +27,11 @@ export default merge.smart(baseConfig, {
   entry: [
     'core-js',
     'regenerator-runtime/runtime',
-    path.join(__dirname, '..', 'app/index.js')
+    path.join(__dirname, '..', 'src/index.js')
   ],
 
   output: {
-    path: path.join(__dirname, '..', 'app/dist'),
+    path: path.join(__dirname, '..', 'src/dist'),
     publicPath: './dist/',
     filename: 'renderer.prod.js'
   },
@@ -57,7 +57,7 @@ export default merge.smart(baseConfig, {
 	        use: [nib()],
 	        import: [
 	          '~nib/lib/nib/index.styl',
-	          path.resolve(__dirname, '../app/styles/variables.styl')
+	          path.resolve(__dirname, '../src/styles/variables.styl')
 	        ]
           }
 	    }
