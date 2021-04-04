@@ -32,12 +32,12 @@ module.exports = api => {
         require('babel-plugin-module-resolver'), {
           'root': ['./'],
           'alias': {
-            '@views': './app/views',
-            '@pages': './app/views/pages',
-            '@core': './app/core',
-            '@components': './app/views/components',
-            '@styles': './app/styles',
-            '@layouts': './app/views/layouts'
+            '@views': './src/views',
+            '@pages': './src/views/pages',
+            '@core': './src/core',
+            '@components': './src/views/components',
+            '@styles': './src/styles',
+            '@layouts': './src/views/layouts'
           }
         }
       ],

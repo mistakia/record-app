@@ -5,7 +5,7 @@
 import path from 'path'
 import webpack from 'webpack'
 import nib from 'nib'
-import { dependencies as externals } from '../app/package.json'
+import { dependencies as externals } from '../src/package.json'
 
 export default {
   externals: [...Object.keys(externals || {}), 'vertx', 'electron', 'mssql', 'mssql/lib/base', 'mssql/package.json', 'mysql', 'mysql2', 'oracledb', 'pg', 'pg-query-stream', 'tedious'],
@@ -44,7 +44,7 @@ export default {
 	          use: [nib()],
 	          import: [
 	            'nib',
-	            path.resolve(__dirname, '../app/styles/variables.styl')
+	            path.resolve(__dirname, '../src/styles/variables.styl')
 	          ],
               includeCSS: true
             }
@@ -67,7 +67,7 @@ export default {
   },
 
   output: {
-    path: path.join(__dirname, '..', 'app'),
+    path: path.join(__dirname, '..', 'src'),
     // https://github.com/webpack/webpack/issues/1114
     libraryTarget: 'commonjs2'
   },
@@ -78,7 +78,7 @@ export default {
   resolve: {
     mainFields: ['main', 'module'],
     extensions: ['.js', '.json'],
-    modules: [path.join(__dirname, '..', 'app'), 'node_modules']
+    modules: [path.join(__dirname, '..', 'src'), 'node_modules']
   },
 
   plugins: [

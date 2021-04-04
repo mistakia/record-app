@@ -3,5 +3,5 @@ import rimraf from 'rimraf'
 
 export default function deleteSourceMaps() {
   rimraf.sync(path.join(__dirname, '../../dist/*.js.map'))
-  rimraf.sync(path.join(__dirname, '../../app/*.js.map'))
+  rimraf.sync(path.join(__dirname, '../../src/*.js.map'))
 }

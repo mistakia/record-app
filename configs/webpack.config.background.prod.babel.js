@@ -24,12 +24,12 @@ export default merge.smart(baseConfig, {
   entry: [
     'core-js',
     'regenerator-runtime/runtime',
-    './app/background.dev.js'
+    './src/background.dev.js'
   ],
 
   output: {
     path: path.join(__dirname, '..'),
-    filename: './app/background.prod.js'
+    filename: './src/background.prod.js'
   },
 
   module: {
