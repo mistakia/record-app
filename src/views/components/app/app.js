@@ -1,6 +1,6 @@
 import React from 'react'
 import hotkeys from 'hotkeys-js'
-import { push } from 'react-router-redux'
+import { push } from 'connected-react-router'
 import CircularProgress from '@material-ui/core/CircularProgress'
 
 import Menu from '@components/menu'

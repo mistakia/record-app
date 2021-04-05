@@ -1,6 +1,6 @@
 import { race, call, put, take, cancelled } from 'redux-saga/effects'
 import { api, apiRequest } from '@core/api/service'
-import { LOCATION_CHANGE } from 'react-router-redux'
+import { LOCATION_CHANGE } from 'connected-react-router'
 
 import {
   setIdentityActions,

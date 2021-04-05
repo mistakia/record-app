@@ -1,7 +1,7 @@
 import { List } from 'immutable'
 import { eventChannel } from 'redux-saga'
 import { call, fork, put, select, take, takeLatest, race, delay } from 'redux-saga/effects'
-import { LOCATION_CHANGE } from 'react-router-redux'
+import { LOCATION_CHANGE } from 'connected-react-router'
 
 import { appActions, getApp } from '@core/app'
 import { fetchPlayerTracks, fetchShuffleTracks, postListen } from '@core/api'

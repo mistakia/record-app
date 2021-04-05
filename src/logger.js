@@ -52,12 +52,6 @@ const logger = createLogger({
         printf(info => `${info.timestamp} ${info.level}: ${info.message} ${info.ms}`)
       )
     })
-  ],
-  exceptionHandlers: [
-    new transports.File({ filename: errorPath, format: errors({ stack: true }) })
-  ],
-  rejectionHandlers: [
-    new transports.File({ filename: errorPath, format: errors({ stack: true }) })
   ]
 })
 

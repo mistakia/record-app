@@ -1,16 +1,14 @@
 import React from 'react'
-import { connect } from 'react-redux'
 import hashicon from 'hashicon'
 import queryString from 'query-string'
 import Button from '@material-ui/core/Button'
 
-import { loglistActions } from '@core/loglists'
 import PageLayout from '@layouts/page'
 import CopyText from '@components/copy-text'
 
 import './link-log.styl'
 
-export class LinkLogPage extends React.Component {
+export default class LinkLogPage extends React.Component {
   constructor (props) {
     super(props)
 
@@ -68,12 +66,3 @@ export class LinkLogPage extends React.Component {
     )
   }
 }
-
-const mapDispatchToProps = {
-  linkLog: loglistActions.linkLog
-}
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(LinkLogPage)

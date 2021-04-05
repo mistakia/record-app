@@ -1,4 +1,5 @@
 import { combineReducers } from 'redux-immutable'
+import { connectRouter } from 'connected-react-router/immutable'
 
 import { aboutReducer } from './about'
 import { appReducer } from './app'
@@ -15,7 +16,7 @@ import { tracklistsReducer } from './tracklists'
 import { tracksReducer } from './tracks'
 import { dialogReducer } from './dialogs'
 
-const rootReducer = asyncReducers => {
+const rootReducer = history => {
   return combineReducers({
     about: aboutReducer,
     app: appReducer,
@@ -28,11 +29,11 @@ const rootReducer = asyncReducers => {
     notification: notificationReducer,
     player: playerReducer,
     playerTimes: playerTimesReducer,
+    router: connectRouter(history),
     taglists: taglistsReducer,
     tracklists: tracklistsReducer,
     tracks: tracksReducer,
-    dialog: dialogReducer,
-    ...asyncReducers
+    dialog: dialogReducer
   })
 }
 
