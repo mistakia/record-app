@@ -41,14 +41,15 @@ const Menu = ({ app, log, logs }) => (
           <LinkIcon />
         </IconButton>
       </div>
-      {logs.map((log, index) => (
-        <Log
-          type='menu-item'
-          log={log}
-          key={index}
-          active={history.location.pathname.includes(log.address)}
-        />
-      ))}
+      {logs.filter(l => l.address !== app.address)
+        .map((log, index) => (
+          <Log
+            type='menu-item'
+            log={log}
+            key={index}
+            active={history.location.pathname.includes(log.address)}
+          />
+        ))}
     </div>
     <div className='menu__bottom-section'>
       { log &&
