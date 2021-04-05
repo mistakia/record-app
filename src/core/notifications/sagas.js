@@ -1,5 +1,5 @@
 import { fork, take, select, put, takeLatest } from 'redux-saga/effects'
-import { push } from 'react-router-redux'
+import { push } from 'connected-react-router'
 
 import { getApp } from '@core/app'
 import { importerActions } from '@core/importer'

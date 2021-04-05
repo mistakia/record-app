@@ -1,5 +1,5 @@
 import { call, take, fork, put, takeLatest } from 'redux-saga/effects'
-import { push } from 'react-router-redux'
+import { push } from 'connected-react-router'
 
 import { appActions } from './actions'
 import { logActions } from '@core/logs'
