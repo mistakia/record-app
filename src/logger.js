@@ -57,4 +57,10 @@ const logger = createLogger({
 
 logger.info(`[app] logs: ${logsPath}`)
 
-module.exports = logger
+//module.exports = logger
+
+module.exports = {
+  info: (...args) => console.log(...args),
+  debug: (...args) => console.log(...args),
+  error: (...args) => console.log(...args)
+}
