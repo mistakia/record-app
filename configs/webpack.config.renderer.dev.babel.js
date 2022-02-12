@@ -108,36 +108,43 @@ export default merge.smart(baseConfig, {
     __filename: false
   },
 
+  infrastructureLogging: {
+    // TODO
+  },
+
+  watchOptions: {
+    aggregateTimeout: 300,
+    ignored: /node_modules/,
+    poll: 100
+  },
+
   devServer: {
     port,
-    publicPath,
     compress: true,
-    noInfo: true,
-    stats: 'errors-only',
-    inline: true,
-    lazy: false,
     hot: true,
     headers: { 'Access-Control-Allow-Origin': '*' },
-    contentBase: path.join(__dirname, 'dist'),
-    watchOptions: {
-      aggregateTimeout: 300,
-      ignored: /node_modules/,
-      poll: 100
-    },
     historyApiFallback: {
       verbose: true,
       disableDotRule: false
     },
-    before() {
+    devMiddleware: {
+      stats: 'errors-only'
+    },
+    static: {
+      publicPath,
+      watch: true,
+      directory: path.join(__dirname, 'dist')
+    },
+    onBeforeSetupMiddleware() {
       if (process.env.START_HOT) {
-        console.log('Starting Main Process...')
+        console.log('Starting Main Process...');
         spawn('npm', ['run', 'start:electron:main'], {
           shell: true,
           env: process.env,
-          stdio: 'inherit'
+          stdio: 'inherit',
         })
-          .on('close', code => process.exit(code))
-          .on('error', spawnError => console.error(spawnError))
+          .on('close', (code) => process.exit(code))
+          .on('error', (spawnError) => console.error(spawnError));
       }
     }
   }
