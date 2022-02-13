@@ -37,7 +37,7 @@
     "start:rn": "REACT_DEBUGGER=\"open -g 'rndebugger://set-debugger-loc?port=8081' ||\" node node_modules/react-native/local-cli/cli.js start --reset-cache",
     "start:ios": "react-native run-ios",
     "start:android": "react-native bundle --entry-file src/index.android.js --bundle-output android/app/src/main/assets/index.android.bundle --platform android --dev true",
-    "start:electron": "cross-env START_HOT=1 NODE_ENV=development webpack serve --config configs/webpack.config.renderer.dev.babel.js",
+    "start:electron": "cross-env START_HOT=1 NODE_ENV=development NODE_OPTIONS='--trace-warnings' webpack serve --config configs/webpack.config.renderer.dev.babel.js",
     "start:electron:main": "cross-env START_HOT=1 NODE_ENV=development electron -r ./internals/scripts/BabelRegister ./src/main.dev.js",
     "start:electron:dist": "cross-env NODE_ENV=production electron ./src/main.prod.js",
     "start:electron:dist:debug": "cross-env DEBUG_PROD=true NODE_ENV=production electron ./src/main.prod.js"
@@ -129,6 +129,9 @@
   "standard": {
     "parser": "babel-eslint"
   },
+  "resolutions": {
+    "nib/stylus": "0.56.0"
+  },
   "dependencies": {
     "@material-ui/core": "^4.11.3",
     "@material-ui/icons": "^4.11.2",
@@ -190,7 +193,7 @@
     "chalk": "^4.0.0",
     "concurrently": "^5.1.0",
     "cross-env": "^7.0.2",
-    "css-loader": "5.0.1",
+    "css-loader": "6.6.0",
     "debug-menu": "^0.6.1",
     "electron": "8.5.5",
     "electron-builder": "22.14.13",
@@ -201,9 +204,9 @@
     "eslint-plugin-react": "^7.10.0",
     "metro-config": "^0.54.1",
     "metro-react-native-babel-preset": "^0.54.1",
-    "mini-css-extract-plugin": "^0.9.0",
+    "mini-css-extract-plugin": "2.5.3",
     "nib": "^1.1.2",
-    "node-loader": "1.0.2",
+    "node-loader": "2.0.0",
     "nodejs-mobile-react-native": "^0.4.1",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "react-native": "~0.59.8",
@@ -216,9 +219,9 @@
     "redbox-react": "^1.3.6",
     "rimraf": "^3.0.2",
     "standard": "^11.0.1",
-    "style-loader": "2.0.0",
-    "stylus": "~0.54.5",
-    "stylus-loader": "4.3.3",
+    "style-loader": "3.3.1",
+    "stylus": "0.56.0",
+    "stylus-loader": "6.2.0",
     "terser-webpack-plugin": "5.1.1",
     "url-loader": "4.1.1",
     "webpack": "5.68.0",
