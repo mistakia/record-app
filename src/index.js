@@ -1,9 +1,8 @@
 /* global process */
 
 import 'v8-compile-cache'
-import React, { Fragment } from 'react'
+import React from 'react'
 import { render } from 'react-dom'
-import { AppContainer as ReactHotAppContainer } from 'react-hot-loader'
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import 'whatwg-fetch'
 
@@ -19,13 +18,9 @@ if (process.env.NODE_ENV === 'production') {
   console.error = log.error.bind(log)
 }
 
-const AppContainer = process.env.PLAIN_HMR ? Fragment : ReactHotAppContainer
-
 document.addEventListener('DOMContentLoaded', () =>
   render(
-    <AppContainer>
-      <Root />
-    </AppContainer>,
+    <Root />,
     document.getElementById('root')
   )
 )

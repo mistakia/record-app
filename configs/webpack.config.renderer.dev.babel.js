@@ -13,6 +13,7 @@ import merge from 'webpack-merge'
 import { spawn, execSync } from 'child_process'
 import baseConfig from './webpack.config.base'
 import CheckNodeEnv from '../internals/scripts/CheckNodeEnv'
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin'
 
 // When an ESLint server is running, we can't set the NODE_ENV so we'll check if it's
 // at the dev webpack config is not accidentally run in a production environment
@@ -50,7 +51,6 @@ export default merge.smart(baseConfig, {
   entry: [
     'core-js',
     'regenerator-runtime/runtime',
-    ...(process.env.PLAIN_HMR ? [] : ['react-hot-loader/patch']),
     `webpack-dev-server/client?http://localhost:${port}/`,
     'webpack/hot/only-dev-server',
     require.resolve('../src/index.js')
@@ -61,12 +61,6 @@ export default merge.smart(baseConfig, {
     filename: 'renderer.dev.js'
   },
 
-  resolve: {
-    alias: {
-      'react-dom': '@hot-loader/react-dom'
-    }
-  },
-
   plugins: [
     requiredByDLLConfig
       ? null
@@ -75,10 +69,6 @@ export default merge.smart(baseConfig, {
         manifest: require(manifest),
         sourceType: 'var'
       }),
-
-    new webpack.HotModuleReplacementPlugin({
-      multiStep: true
-    }),
 
     new webpack.NoEmitOnErrorsPlugin(),
 
@@ -100,7 +90,9 @@ export default merge.smart(baseConfig, {
 
     new webpack.LoaderOptionsPlugin({
       debug: true
-    })
+    }),
+
+    new ReactRefreshWebpackPlugin()
   ],
 
   node: {
@@ -127,13 +119,8 @@ export default merge.smart(baseConfig, {
       verbose: true,
       disableDotRule: false
     },
-    devMiddleware: {
-      stats: 'errors-only'
-    },
     static: {
-      publicPath,
-      watch: true,
-      directory: path.join(__dirname, 'dist')
+      publicPath: '/'
     },
     onBeforeSetupMiddleware() {
       if (process.env.START_HOT) {
