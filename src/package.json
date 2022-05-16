@@ -18,7 +18,7 @@
     "fluent-ffmpeg": "2.1.2",
     "go-ipfs": "0.7.0",
     "leveldown": "6.0.2",
-    "sqlite3": "5.0.0",
+    "sqlite3": "5.0.3",
     "youtube-dl": "3.5.0"
   }
 }
