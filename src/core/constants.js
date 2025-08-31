@@ -1,7 +1,7 @@
 //= ====================================
 //  GENERAL
 // -------------------------------------
-export const WIKI_URL = 'http://docs.record.tint.space'
+export const WIKI_URL = 'http://record.tint.space'
 export const ITEMS_PER_LOAD = 200
 export const PEER_LOGLIST_ADDRESS = '/PEER_LOGLIST_ADDRESS'
 export const ALL_LOGLIST_ADDRESS = '/ALL_LOGLIST_ADDRESS'
