@@ -2,13 +2,13 @@
   "name": "Record",
   "version": "0.1.0-alpha",
   "description": "Desktop, mobile and web app for Record: a distributed system for audio files",
-  "author": "Mistakia <placeholder@email.com> (http://docs.record.tint.space/)",
+  "author": "Mistakia <placeholder@email.com> (http://record.tint.space/)",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/mistakia/record-app"
   },
-  "homepage": "http://docs.record.tint.space/",
+  "homepage": "http://record.tint.space/",
   "keywords": [],
   "scripts": {
     "prestart": "yarn build",

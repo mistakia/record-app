@@ -1,5 +1,5 @@
-<a href="https://bafybeidk4zev2jlw2jijtdyufo3itspx45k4ynq634x4rjm6ycjfdvxfrq.ipfs.infura-ipfs.io/" title="Record">
-  <img src="resources/icon.png" alt="Record Logo" width="150" />
+<a href="https://record.tint.space/" title="Record">
+  <img src="https://raw.githubusercontent.com/mistakia/record-app/master/resources/icon.png" alt="Record Logo" width="150" />
 </a>
 
 # Record App
@@ -35,10 +35,10 @@ At it's core, the application intends to be a media library management & playbac
 - Audio Scrobbling (last.fm, libre.fm, listenbrainz)
 - Trustless timestamping / distributed copyrighting & distribution (OpenTimestamps, Nano, etc)
 
-[![Record v0.0.1-alpha](resources/images/screenshot.png)](https://youtu.be/1cmxiwPBv7A)
+[![Record v0.0.1-alpha](https://raw.githubusercontent.com/mistakia/record-app/master/resources/images/screenshot.png)](https://youtu.be/1cmxiwPBv7A)
 
 ## More Info
-- Read the [wiki](https://bafybeidk4zev2jlw2jijtdyufo3itspx45k4ynq634x4rjm6ycjfdvxfrq.ipfs.infura-ipfs.io/) for a primer.
+- Read the [wiki](https://record.tint.space/) for a primer.
 - Check out [the roadmap](https://github.com/mistakia/record-app/projects/1) to view planned features.
 
 <details>
