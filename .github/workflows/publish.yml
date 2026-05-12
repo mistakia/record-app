@@ -5,9 +5,16 @@ on:
     branches:
       - master
 
+# Least-privilege at workflow level; jobs override per need.
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ${{ matrix.os }}
+    # action-electron-builder uses GITHUB_TOKEN to publish a draft release.
+    permissions:
+      contents: write
 
     strategy:
       matrix:
@@ -15,27 +22,25 @@ jobs:
 
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Install Node, NPM and Yarn
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 12.13.1
+          node-version: 20
 
       - name: Install dependencies
         run: |
-          yarn install
+          yarn install --frozen-lockfile
 
       - name: Postinstall
         run: |
           yarn postinstall
 
       - name: Publish releases
-        uses: samuelmeuli/action-electron-builder@v1
+        uses: samuelmeuli/action-electron-builder@64a87e93e190a5fd091d1ee13c1de92bafec65a8 # v1.6.0
         with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           mac_certs: ${{ secrets.mac_certs }}
           mac_certs_password: ${{ secrets.mac_certs_password }}
 
