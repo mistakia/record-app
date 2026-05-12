@@ -1,0 +1,37 @@
+name: Lockfile Age
+
+# Refuse lockfile changes that introduce a package@version published less
+# than 7 days ago. See user:guideline/npm-supply-chain-hygiene.md.
+
+on:
+  pull_request:
+    paths:
+      - 'yarn.lock'
+      - '.github/workflows/lockfile-age.yml'
+  push:
+    paths:
+      - 'yarn.lock'
+      - '.github/workflows/lockfile-age.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Check lockfile age
+        run: |
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="HEAD~1"
+          fi
+          node cli/check-lockfile-age.mjs yarn.lock --base "$base" --days 7
