@@ -29,8 +29,11 @@ jobs:
           node-version: 20
 
       - name: Check lockfile age
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
         run: |
-          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          base="${PR_BASE_SHA:-$PUSH_BEFORE_SHA}"
           if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
             base="HEAD~1"
           fi
