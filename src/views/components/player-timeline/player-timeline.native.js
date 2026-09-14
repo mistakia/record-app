@@ -21,7 +21,7 @@ export default class PlayerTimeline extends React.Component {
   }
 
   render () {
-    let { percentBuffered, percentCompleted } = this.props.times
+    const { percentBuffered, percentCompleted } = this.props.times
 
     return (
       <TouchableOpacity onPress={this.handleClick} style={styles.barContainer}>

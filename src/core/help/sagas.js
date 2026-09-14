@@ -31,7 +31,7 @@ export function * watchInitApp () {
 export function * watchToggleTracksHelp () {
   while (true) {
     yield take(helpActions.TOGGLE_TRACKS_HELP)
-    let help = yield select(getHelp)
+    const help = yield select(getHelp)
     // persist only when set to not visible
     if (!help.isTracksHelpVisible) yield fork(saveHelpToStorage)
   }
@@ -40,7 +40,7 @@ export function * watchToggleTracksHelp () {
 export function * watchToggleMyTracksHelp () {
   while (true) {
     yield take(helpActions.TOGGLE_MY_TRACKS_HELP)
-    let help = yield select(getHelp)
+    const help = yield select(getHelp)
     // persist only when set to not visible
     if (!help.isMyTracksTrackVisible) yield fork(saveHelpToStorage)
   }
@@ -49,7 +49,7 @@ export function * watchToggleMyTracksHelp () {
 export function * watchToggleMyLogsHelp () {
   while (true) {
     yield take(helpActions.TOGGLE_MY_LOGS_HELP)
-    let help = yield select(getHelp)
+    const help = yield select(getHelp)
     // persist only when set to not visible
     if (!help.isMyLogsTrackVisible) yield fork(saveHelpToStorage)
   }

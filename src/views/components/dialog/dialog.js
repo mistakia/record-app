@@ -28,11 +28,13 @@ export default class Dialog extends React.Component {
         aria-describedby='alert-dialog-description'
       >
         <MuiDialogTitle id='alert-dialog-title'>{message}</MuiDialogTitle>
-        {!!detail && <MuiDialogContent>
-          <MuiDialogContentText id='alert-dialog-description'>
-            {detail}
-          </MuiDialogContentText>
-        </MuiDialogContent>}
+        {!!detail && (
+          <MuiDialogContent>
+            <MuiDialogContentText id='alert-dialog-description'>
+              {detail}
+            </MuiDialogContentText>
+          </MuiDialogContent>
+        )}
         <MuiDialogActions>
           <Button onClick={this.handleClose} size='small'>
             Cancel

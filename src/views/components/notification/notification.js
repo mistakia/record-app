@@ -65,22 +65,22 @@ class Notification extends React.Component {
     let action
     if (notification.action) {
       action = (
-        <React.Fragment>
+        <>
           <Button onClick={this.handleClick} size='small' color='secondary'>
             {notification.action.text}
           </Button>
           <IconButton onClick={this.handleDismiss} size='small' color='secondary'>
             <CloseIcon />
           </IconButton>
-        </React.Fragment>
+        </>
       )
     } else if (!notification.dismiss) {
       action = (
-        <React.Fragment>
+        <>
           <Button onClick={this.handleDismiss} size='small' color='secondary'>
             <CloseIcon />
           </Button>
-        </React.Fragment>
+        </>
       )
     }
 

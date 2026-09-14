@@ -25,7 +25,7 @@ export function getAllPeers (state) {
 
 export function getReplicationProgress (state) {
   const logs = getLogs(state)
-  let result = {
+  const result = {
     progress: 0,
     total: 0
 

@@ -18,12 +18,12 @@ export default class PlayerTimeline extends React.Component {
   }
 
   render () {
-    let { bufferedTime, percentBuffered, percentCompleted } = this.props.times
+    const { bufferedTime, percentBuffered, percentCompleted } = this.props.times
 
     return (
       <div id='player-timeline' onClick={this.handleClick}>
-        <div className={'bar bar--buffered' + (bufferedTime > 0 && ' bar--animated')} style={{width: percentBuffered}} />
-        <div className='bar bar--completed' style={{width: percentCompleted}} />
+        <div className={'bar bar--buffered' + (bufferedTime > 0 && ' bar--animated')} style={{ width: percentBuffered }} />
+        <div className='bar bar--completed' style={{ width: percentCompleted }} />
       </div>
     )
   }

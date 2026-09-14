@@ -7,7 +7,7 @@ import './page.styl'
 
 export const PageLayout = ({ help, head, body, title, scroll, onHelpClose }) => (
   <section className='page'>
-    { help &&
+    {help &&
       <div className='page__help'>
         <div className='page__help-body'>
           {help}
@@ -15,19 +15,17 @@ export const PageLayout = ({ help, head, body, title, scroll, onHelpClose }) => 
         <IconButton onClick={onHelpClose} style={{ position: 'absolute', top: '4px', right: '4px' }}>
           <CloseIcon />
         </IconButton>
-      </div>
-    }
-    { (head || title) &&
+      </div>}
+    {(head || title) &&
       <div className='page__head'>
         <div className='page__container'>
           <div className='page__nav-info'>
-            { title ? <div className='page__title'>{title}</div> : head }
+            {title ? <div className='page__title'>{title}</div> : head}
           </div>
         </div>
-      </div>
-    }
+      </div>}
     <div className={'page__body' + (scroll ? ' scroll' : '')}>
-      { body }
+      {body}
     </div>
     <ImporterProgress />
   </section>

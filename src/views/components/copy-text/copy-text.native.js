@@ -14,10 +14,10 @@ export class CopyText extends React.Component {
       copied: false
     }
 
-    this.copyToClipboard = this.copyToClipboard.bind(this)
+    this.handleCopyToClipboard = this.handleCopyToClipboard.bind(this)
   }
 
-  copyToClipboard () {
+  handleCopyToClipboard () {
     const { text } = this.props
     Clipboard.setString(text)
 
@@ -31,12 +31,15 @@ export class CopyText extends React.Component {
     const { style } = this.props
 
     return (
-      <TouchableWithoutFeedback onPress={this.copyToClipboard}>
+      <TouchableWithoutFeedback onPress={this.handleCopyToClipboard}>
         <View style={style}>
           {(this.state.copied
-            ? <View style={styles.overlay}>
-              <Text style={styles.text}>Copied</Text>
-            </View> : null)}
+            ? (
+              <View style={styles.overlay}>
+                <Text style={styles.text}>Copied</Text>
+              </View>
+              )
+            : null)}
           {this.props.children}
         </View>
       </TouchableWithoutFeedback>

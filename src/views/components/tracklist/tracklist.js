@@ -56,7 +56,8 @@ const render = ({
       <InfiniteLoader
         isItemLoaded={isItemLoaded}
         itemCount={itemCount}
-        loadMoreItems={loadMoreItems}>
+        loadMoreItems={loadMoreItems}
+      >
         {({ onItemsRendered, ref }) => (
           <AutoSizer>
             {({ height, width }) => (
@@ -67,7 +68,8 @@ const render = ({
                 onItemsRendered={onItemsRendered}
                 ref={listRef}
                 itemSize={36}
-                width={width}>
+                width={width}
+              >
                 {Row}
               </List>
             )}
@@ -80,28 +82,31 @@ const render = ({
   return (
     <div className='list'>
       <div className='list__head'>
-        {!hideSearch && <div className='list__header-row'>
-          <Input
-            type='text'
-            onSubmit={onSearch}
-            showClear={!!query}
-            defaultValue={query}
-            onClear={onClear}
-            label='Click here to search'
-            className='list__search'
-          />
-          <div className='list__action'>
-            {showAdd &&
-              <Fab component={Link} to='/importer'>
-                <AddIcon />
-              </Fab>}
-            <IconButton
-              className={isShuffling ? 'active' : undefined}
-              onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}>
-              <ShuffleIcon />
-            </IconButton>
+        {!hideSearch && (
+          <div className='list__header-row'>
+            <Input
+              type='text'
+              onSubmit={onSearch}
+              showClear={!!query}
+              defaultValue={query}
+              onClear={onClear}
+              label='Click here to search'
+              className='list__search'
+            />
+            <div className='list__action'>
+              {showAdd &&
+                <Fab component={Link} to='/importer'>
+                  <AddIcon />
+                </Fab>}
+              <IconButton
+                className={isShuffling ? 'active' : undefined}
+                onClick={isShuffling ? stopShuffle : shuffle.bind(null, tracklistAddress)}
+              >
+                <ShuffleIcon />
+              </IconButton>
+            </div>
           </div>
-        </div>}
+        )}
         {!hideTaglist && <Taglist />}
         <div className='list__header track'>
           <div className='track__play' />

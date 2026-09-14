@@ -12,7 +12,7 @@ export default function PlayerTime ({
 
   return (
     <div id='player-time'>
-      <AudioCurrentTime /> / <FormattedTime value={track.duration} unit={'ms'} />
+      <AudioCurrentTime /> / <FormattedTime value={track.duration} unit='ms' />
     </div>
   )
 }

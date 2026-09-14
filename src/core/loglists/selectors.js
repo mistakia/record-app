@@ -16,12 +16,12 @@ export function getLoglistByAddress (state, address) {
 }
 
 export function getCurrentLoglistAddress (state) {
-  let loglists = getLoglists(state)
+  const loglists = getLoglists(state)
   return loglists.get('currentLoglistAddress')
 }
 
 export function getCurrentLoglist (state) {
-  let loglists = getLoglists(state)
+  const loglists = getLoglists(state)
   return loglists.get(loglists.get('currentLoglistAddress')) || new Loglist()
 }
 
@@ -34,12 +34,12 @@ export function getCurrentLoglistLog (state) {
 }
 
 export function getPeerLoglist (state) {
-  let loglists = getLoglists(state)
+  const loglists = getLoglists(state)
   return loglists.get(PEER_LOGLIST_ADDRESS) || new Loglist()
 }
 
 export function getAllLoglist (state) {
-  let loglists = getLoglists(state)
+  const loglists = getLoglists(state)
   return loglists.get(ALL_LOGLIST_ADDRESS) || new Loglist()
 }
 

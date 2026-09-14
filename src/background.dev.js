@@ -34,7 +34,7 @@ const main = async () => {
   const id = info.id
   log.info(`ID: ${id}`)
   log.info(`Orbit Address: ${orbitAddress}`)
-  let opts = {
+  const opts = {
     directory: recorddir,
     store: {
       replicationConcurrency: 240

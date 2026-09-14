@@ -32,22 +32,36 @@ export class LogContextMenu extends React.Component {
 
     return (
       <div>
-        {!log.isMe && <div
-          className='context-menu--option'
-          onClick={() => { handleConnectClick(); hide() }}>
-          {log.isReplicating ? 'Disconnect' : 'Connect'}</div>}
-        {!log.isMe && <div
-          className='context-menu--option'
-          onClick={(e) => { handleLinkClick(e); hide() }}>
-          {log.isLinked ? 'Unlink' : 'Link'}</div>}
-        {showEdit && <div
-          className='context-menu--option'
-          onClick={() => { handleEditClick(); hide() }}>
-          Edit</div>}
+        {!log.isMe && (
+          <div
+            className='context-menu--option'
+            onClick={() => { handleConnectClick(); hide() }}
+          >
+            {log.isReplicating ? 'Disconnect' : 'Connect'}
+          </div>
+        )}
+        {!log.isMe && (
+          <div
+            className='context-menu--option'
+            onClick={(e) => { handleLinkClick(e); hide() }}
+          >
+            {log.isLinked ? 'Unlink' : 'Link'}
+          </div>
+        )}
+        {showEdit && (
+          <div
+            className='context-menu--option'
+            onClick={() => { handleEditClick(); hide() }}
+          >
+            Edit
+          </div>
+        )}
         <div
           className='context-menu--option'
-          onClick={() => { copyToClipboard(log.address); hide() }}>
-          Copy Address</div>
+          onClick={() => { copyToClipboard(log.address); hide() }}
+        >
+          Copy Address
+        </div>
       </div>
     )
   }

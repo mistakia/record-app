@@ -22,7 +22,7 @@ export const PlayerState = new Record({
   volume: PLAYER_INITIAL_VOLUME
 })
 
-export function playerReducer (state = new PlayerState(), {payload, type}) {
+export function playerReducer (state = new PlayerState(), { payload, type }) {
   switch (type) {
     case playerActions.AUDIO_CANCELLED:
       return state.set('isLoading', false)
@@ -37,11 +37,12 @@ export function playerReducer (state = new PlayerState(), {payload, type}) {
         isLoading: false
       })
 
-    case playerActions.TOGGLE_PLAY_REPEAT:
+    case playerActions.TOGGLE_PLAY_REPEAT: {
       const repeat = state.repeat + 1
       return state.merge({
         repeat: repeat > 2 ? 0 : repeat
       })
+    }
 
     case playerActions.TOGGLE_QUEUE:
       return state.merge({

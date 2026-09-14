@@ -45,19 +45,22 @@ export default class LinkLogPage extends React.Component {
           Alias
           <input type='text' name='alias' defaultValue={alias} placeholder='Library Nickname' />
         </label>
-        { address
-          ? <CopyText text={address}>
-            <label>Library Address</label>
-            <img src={addressIcon && addressIcon.toDataURL()} />
-            <small>{address}</small>
-          </CopyText>
-          : <label>
-            Address
-            <input type='text' name='address' defaultValue={address} placeholder='/orbitdb/Qm.../record' disabled={!!isLinked} required />
-          </label>
-        }
+        {address
+          ? (
+            <CopyText text={address}>
+              <label>Library Address</label>
+              <img src={addressIcon && addressIcon.toDataURL()} />
+              <small>{address}</small>
+            </CopyText>
+            )
+          : (
+            <label>
+              Address
+              <input type='text' name='address' defaultValue={address} placeholder='/orbitdb/Qm.../record' disabled={!!isLinked} required />
+            </label>
+            )}
         <Button type='submit' variant='outlined'>{isLinked ? 'Save' : 'Link'}</Button>
-        {<label>Note: linking a library adds it to your library, connects to it and saves the data.</label>}
+        <label>Note: linking a library adds it to your library, connects to it and saves the data.</label>
       </form>
     )
 

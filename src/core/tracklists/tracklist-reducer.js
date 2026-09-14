@@ -8,7 +8,7 @@ import { mergeList } from '@core/utils'
 import { listensActions } from '@core/listens'
 import history from '@core/history'
 
-export function tracklistReducer (state = new Tracklist(), {payload, type}) {
+export function tracklistReducer (state = new Tracklist(), { payload, type }) {
   switch (type) {
     case tracklistActions.CLEAR_SEARCH:
       return state.withMutations(tracklist => {
@@ -42,7 +42,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
       return state.updateIn(['trackIds'], t => t.unshift(payload.data.trackId))
     }
 
-    case tracklistActions.TOGGLE_TAG:
+    case tracklistActions.TOGGLE_TAG: {
       const { tag } = payload
       return state.withMutations(tracklist => {
         tracklist.merge({
@@ -52,6 +52,7 @@ export function tracklistReducer (state = new Tracklist(), {payload, type}) {
             : state.tags.push(tag)
         })
       })
+    }
 
     case logActions.LOG_INDEX_UPDATED: {
       if (!payload.data || !payload.data.length) {

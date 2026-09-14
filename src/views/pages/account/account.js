@@ -47,10 +47,9 @@ export default function () {
           <label>Account Secret Key</label>
           <img src={keyIcon && keyIcon.toDataURL()} />
           <small>
-            { app.privateKey
+            {app.privateKey
               ? app.privateKey
-              : <Button onClick={showPrivateKey}>Reveal Secret Key</Button>
-            }
+              : <Button onClick={showPrivateKey}>Reveal Secret Key</Button>}
           </small>
         </CopyText>
         <div className='account__actions'>

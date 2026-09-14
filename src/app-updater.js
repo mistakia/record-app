@@ -31,7 +31,7 @@ export default class AppUpdater {
         title: 'Could not download update',
         message: 'Failed to download the update. Please check your Internet connection and try again.',
         type: 'error',
-        buttons: [ 'Close' ]
+        buttons: ['Close']
       })
     })
 
@@ -80,7 +80,7 @@ export default class AppUpdater {
         title: 'Update not available',
         message: `You are on the latest version of IPFS Desktop (${version})`,
         type: 'info',
-        buttons: [ 'Close' ]
+        buttons: ['Close']
       })
     })
 

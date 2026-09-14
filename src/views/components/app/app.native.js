@@ -14,7 +14,7 @@ import Routes from '@views/routes'
 import Player from '@components/player'
 import ReplicationProgress from '@components/replication-progress'
 
-const AppStatusBar = ({backgroundColor, ...props}) => (
+const AppStatusBar = ({ backgroundColor, ...props }) => (
   <View style={[styles.statusBar, { backgroundColor }]}>
     <StatusBar translucent backgroundColor={backgroundColor} {...props} barStyle='default' />
   </View>

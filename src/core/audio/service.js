@@ -39,12 +39,12 @@ export function setVolume (volume) {
 
 export const audio = {
   decreaseVolume () {
-    let volume = getVolume() - PLAYER_VOLUME_INCREMENT
+    const volume = getVolume() - PLAYER_VOLUME_INCREMENT
     if (volume >= 0) setVolume(volume)
   },
 
   increaseVolume () {
-    let volume = getVolume() + PLAYER_VOLUME_INCREMENT
+    const volume = getVolume() + PLAYER_VOLUME_INCREMENT
     if (volume <= PLAYER_MAX_VOLUME) setVolume(volume)
   },
 
@@ -61,7 +61,7 @@ export const audio = {
   },
 
   play () {
-    let promise = _audio.play()
+    const promise = _audio.play()
     if (promise && promise.catch) promise.catch(() => {})
   },
 

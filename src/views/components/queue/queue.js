@@ -68,11 +68,13 @@ class Queue extends React.Component {
       return (
         <article
           className={classNames.join(' ')}
-          onContextMenu={(event) => this._handleClick(event, track.id)}>
+          onContextMenu={(event) => this._handleClick(event, track.id)}
+        >
           <IconButton
             onClick={isTrackPlaying ? pause : playTrack}
             disabled={isTrackLoading}
-            className={isTrackPlaying ? 'queue__track-playing' : undefined}>
+            className={isTrackPlaying ? 'queue__track-playing' : undefined}
+          >
             {isTrackLoading ? <CircularProgress size={24} /> : (isTrackPlaying ? <PauseIcon /> : <PlayArrowIcon />)}
           </IconButton>
           <div className='queue__track-body'>
@@ -83,7 +85,7 @@ class Queue extends React.Component {
             <MoreVertIcon />
           </IconButton>
           <small className='queue__track-duration'>
-            <FormattedTime value={track.duration} unit={'ms'} />
+            <FormattedTime value={track.duration} unit='ms' />
           </small>
         </article>
       )
@@ -122,17 +124,21 @@ class Queue extends React.Component {
                 items={tracks}
                 onSortEnd={reorderQueue}
                 distance={1}
-                helperClass='sortable__helper' />
-              {!!playerTracklistTracks.size && !!tracks.size && <div className='player__queue-tracks-header'>
-                <div className='player__queue-tracks-header-title'>Back To:</div>
-                {isShuffling && 'Shuffling '}
-                {tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}
-              </div>}
+                helperClass='sortable__helper'
+              />
+              {!!playerTracklistTracks.size && !!tracks.size && (
+                <div className='player__queue-tracks-header'>
+                  <div className='player__queue-tracks-header-title'>Back To:</div>
+                  {isShuffling && 'Shuffling '}
+                  {tracklistLog ? tracklistLog.displayName : tracklist.path.substring(1)}
+                </div>
+              )}
               <SortableList
                 items={playerTracklistTracks}
                 onSortEnd={reorderPlayerTracklist}
                 distance={1}
-                helperClass='sortable__helper' />
+                helperClass='sortable__helper'
+              />
             </div>
           </div>
         </div>

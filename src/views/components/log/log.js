@@ -55,7 +55,8 @@ const Log = ({
     <Tooltip title='Link Library'>
       <IconButton
         component={Link}
-        to={`/link-log${log.address}?alias=${log.name || log.alias || ''}`}>
+        to={`/link-log${log.address}?alias=${log.name || log.alias || ''}`}
+      >
         <LinkIcon />
       </IconButton>
     </Tooltip>
@@ -74,7 +75,8 @@ const Log = ({
       <IconButton
         component={Link}
         to={`/link-log${log.address}?isLinked=true&alias=${log.alias || log.name || ''}`}
-        onClick={noPropagation}>
+        onClick={noPropagation}
+      >
         <EditIcon />
       </IconButton>
     </Tooltip>
@@ -85,7 +87,8 @@ const Log = ({
       <IconButton
         component={Link}
         to='/edit-about'
-        onClick={noPropagation}>
+        onClick={noPropagation}
+      >
         <EditIcon />
       </IconButton>
     </Tooltip>
@@ -146,7 +149,8 @@ const Log = ({
     <article
       className={classNames.join(' ')}
       style={style}
-      onClick={type !== 'profile' ? viewUser : null}>
+      onClick={type !== 'profile' ? viewUser : null}
+    >
       <div className='log__main'>
         <div className='log__avatar'>
           <img src={log.avatar} />
@@ -157,25 +161,29 @@ const Log = ({
         </div>
         {type === 'menu-item' ? more : actions}
       </div>
-      {type === 'profile' && <div className='log__menu menu'>
-        <NavLink activeClassName='active' to={tracksPath}>Tracks</NavLink>
-        <NavLink activeClassName='active' to={logsPath}>Libraries</NavLink>
-      </div>}
-      {type !== 'menu-item' && <div className='log__side'>
-        <div className='log__updated'>
-          {log.latestHeadTimestamp && <TimeAgo datetime={log.latestHeadTimestamp} />}
+      {type === 'profile' && (
+        <div className='log__menu menu'>
+          <NavLink activeClassName='active' to={tracksPath}>Tracks</NavLink>
+          <NavLink activeClassName='active' to={logsPath}>Libraries</NavLink>
         </div>
-        <div className='log__metadata' data-label='entries'>
-          {log.length < log.max && <Progress progress={(log.length / log.max) * 100} />}
-          {log.length >= log.max
-            ? (log.max > 0 && log.max)
-            : (
-              `${log.length}/${log.max}`
-            )}
+      )}
+      {type !== 'menu-item' && (
+        <div className='log__side'>
+          <div className='log__updated'>
+            {log.latestHeadTimestamp && <TimeAgo datetime={log.latestHeadTimestamp} />}
+          </div>
+          <div className='log__metadata' data-label='entries'>
+            {log.length < log.max && <Progress progress={(log.length / log.max) * 100} />}
+            {log.length >= log.max
+              ? (log.max > 0 && log.max)
+              : (
+                `${log.length}/${log.max}`
+                )}
+          </div>
+          {type === 'profile' && <div className={'log__metadata' + (loading ? ' blink' : '')} data-label='tracks'>{log.trackCount}</div>}
+          {type === 'profile' && <div className={'log__metadata' + (loading ? ' blink' : '')} data-label='libraries'>{log.logCount}</div>}
         </div>
-        {type === 'profile' && <div className={'log__metadata' + (loading ? ' blink' : '')} data-label='tracks'>{log.trackCount}</div>}
-        {type === 'profile' && <div className={'log__metadata' + (loading ? ' blink' : '')} data-label='libraries'>{log.logCount}</div>}
-      </div>}
+      )}
     </article>
   )
 }

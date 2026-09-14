@@ -21,9 +21,9 @@ const NavLink = ({
   }
 
   return (
-    <Route
-      path={escapedPath}
-      children={getChildren} />
+    <Route path={escapedPath}>
+      {getChildren}
+    </Route>
   )
 }
 

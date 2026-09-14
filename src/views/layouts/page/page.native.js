@@ -5,10 +5,10 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 export const PageLayout = ({ head, body, title }) => (
   <KeyboardAwareScrollView>
     <View style={styles.head}>
-      { title ? <Text style={styles.title}>{title}</Text> : head }
+      {title ? <Text style={styles.title}>{title}</Text> : head}
     </View>
     <View style={styles.body}>
-      { body }
+      {body}
     </View>
   </KeyboardAwareScrollView>
 )

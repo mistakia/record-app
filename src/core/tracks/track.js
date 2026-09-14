@@ -57,9 +57,9 @@ const getUrl = (content) => {
 }
 
 const getInfo = (content) => {
-  let artist = content.tags.artist
+  const artist = content.tags.artist
   let name = content.tags.title
-  let remixer = null
+  const remixer = null
 
   if (!name) {
     name = getFromResolver(content.resolver, 'fulltitle')

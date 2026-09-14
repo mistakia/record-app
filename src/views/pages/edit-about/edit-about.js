@@ -42,7 +42,8 @@ export default class EditAboutPage extends React.Component {
             type='text'
             name='name'
             defaultValue={log.name}
-            placeholder='Name' />
+            placeholder='Name'
+          />
         </label>
         <label>
           Location
@@ -50,14 +51,16 @@ export default class EditAboutPage extends React.Component {
             type='text'
             name='location'
             defaultValue={log.location}
-            placeholder='Location' />
+            placeholder='Location'
+          />
         </label>
         <label>
           Bio
           <textarea
             name='bio'
             defaultValue={log.bio}
-            placeholder='Bio' />
+            placeholder='Bio'
+          />
         </label>
         <Button type='submit' variant='outlined' disabled={this.props.isUpdating}>
           {this.props.isUpdating ? <CircularProgress size={24} /> : 'Save'}

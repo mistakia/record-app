@@ -5,7 +5,7 @@ import { logActions } from './actions'
 import { createLog } from './log'
 import { aboutActions } from '@core/about'
 
-export function logsReducer (state = new Map(), {payload, type}) {
+export function logsReducer (state = new Map(), { payload, type }) {
   switch (type) {
     case loglistActions.FETCH_LOGS_FULFILLED:
     case loglistActions.FETCH_PEER_LOGS_FULFILLED:
@@ -102,13 +102,13 @@ export function logsReducer (state = new Map(), {payload, type}) {
 
     case logActions.RECORD_PEER_LEFT:
       return state.withMutations(logs => {
-        logs.map((log) => {
+        logs.forEach((log) => {
           const idx = log.peers.indexOf(payload.peerId)
           if (idx > 0) log.peers.delete(idx)
         })
       })
 
-    case logActions.LOG_INDEX_UPDATED:
+    case logActions.LOG_INDEX_UPDATED: {
       if (!state.get(payload.address)) {
         return state
       }
@@ -122,6 +122,7 @@ export function logsReducer (state = new Map(), {payload, type}) {
       return state.withMutations(logs => {
         logs.mergeIn([payload.address], item)
       })
+    }
 
     case aboutActions.POST_ABOUT_FULFILLED:
       return state.mergeIn([payload.address], createLog(payload.data))
@@ -132,8 +133,8 @@ export function logsReducer (state = new Map(), {payload, type}) {
 }
 
 function mergePeers (peerList, collection) {
-  let peers = peerList.toJS()
-  let newPeers = collection.reduce((list, peer) => {
+  const peers = peerList.toJS()
+  const newPeers = collection.reduce((list, peer) => {
     if (peers.indexOf(peer) === -1) list.push(peer)
     return list
   }, [])

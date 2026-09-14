@@ -32,7 +32,7 @@ export function * checkSelectedTags ({ payload }) {
 
   if (history.location.pathname !== tracklist.path) return
 
-  let selectedTags = tracklist.tags.toJS()
+  const selectedTags = tracklist.tags.toJS()
   let shouldClear = false
   for (const tag of selectedTags) {
     if (!existingTags.includes(tag)) {

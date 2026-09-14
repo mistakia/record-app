@@ -48,7 +48,7 @@ export class ImporterPage extends React.Component {
     const items = files.map((i, index) => (
       <article key={index}>
         <div>{i.file}</div>
-        { i.error && <small>{i.error.message}</small> }
+        {i.error && <small>{i.error.message}</small>}
       </article>
     ))
 
@@ -57,10 +57,9 @@ export class ImporterPage extends React.Component {
         <div className='importer-files'>
           <div className='list'>
             <div className='list__body'>
-              { items.length
+              {items.length
                 ? items
-                : <div className='list__body-empty'>Select files to import</div>
-              }
+                : <div className='list__body-empty'>Select files to import</div>}
             </div>
           </div>
         </div>

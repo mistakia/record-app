@@ -7,12 +7,12 @@ import { logActions } from '@core/logs'
 import { Loglist } from './loglist'
 import { mergeList } from '@core/utils'
 
-export function loglistReducer (state = new Loglist(), {payload, type}) {
+export function loglistReducer (state = new Loglist(), { payload, type }) {
   switch (type) {
     case loglistActions.FETCH_LOGS_FULFILLED:
     case loglistActions.FETCH_PEER_LOGS_FULFILLED:
     case loglistActions.FETCH_ALL_LOGS_FULFILLED:
-    case logActions.LOG_LOADED:
+    case logActions.LOG_LOADED: {
       const data = Array.isArray(payload.data) ? payload.data : [payload.data]
       return state.withMutations(loglist => {
         loglist.merge({
@@ -20,6 +20,7 @@ export function loglistReducer (state = new Loglist(), {payload, type}) {
           addresses: mergeList(loglist.addresses, data, 'content.address')
         })
       })
+    }
 
     case loglistActions.FETCH_LOGS_PENDING:
     case loglistActions.FETCH_PEER_LOGS_PENDING:

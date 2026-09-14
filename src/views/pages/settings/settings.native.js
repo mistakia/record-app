@@ -13,7 +13,7 @@ export default function () {
   const { info } = this.props
 
   const body = (
-    <View style={{margin: 20}}>
+    <View style={{ margin: 20 }}>
       <Text style={ItemStyles.label}>State</Text>
       <View style={ItemStyles.container}>
         <Text style={TextStyles.small}>{info.state}</Text>

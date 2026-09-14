@@ -36,17 +36,18 @@ export default class LinkLogPage extends React.Component {
 
   render () {
     const body = (
-      <View style={{margin: 20}}>
+      <View style={{ margin: 20 }}>
         <Text style={formStyles.label}>Alias</Text>
         <TextInput
           style={formStyles.input}
           placeholder='Log Nickname'
-          onChangeText={(alias) => this.setState({alias})} value={this.state.alias} />
+          onChangeText={(alias) => this.setState({ alias })} value={this.state.alias}
+        />
         <Text style={formStyles.label}>Address</Text>
         <TextInput
           style={formStyles.input}
           placeholder='/orbitdb/Qm.../record'
-          onChangeText={(linkAddress) => this.setState({linkAddress})}
+          onChangeText={(linkAddress) => this.setState({ linkAddress })}
           value={this.state.linkAddress}
         />
         {/* <Button

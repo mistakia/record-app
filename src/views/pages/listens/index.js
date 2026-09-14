@@ -18,7 +18,8 @@ export class ListensPage extends React.Component {
       <PageLayout
         title='Listening History'
         body={body}
-        scroll />
+        scroll
+      />
     )
   }
 }

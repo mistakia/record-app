@@ -54,8 +54,9 @@ export class TagContextMenu extends React.Component {
         <div
           key={idx}
           className='context-menu--option'
-          onClick={() => this.add({ tag })}>
-          { tag }
+          onClick={() => this.add({ tag })}
+        >
+          {tag}
         </div>
       )
     })

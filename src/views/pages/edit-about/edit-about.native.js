@@ -33,26 +33,29 @@ export default class EditAboutPage extends React.Component {
 
   render () {
     const body = (
-      <View style={{margin: 20}}>
+      <View style={{ margin: 20 }}>
         <Text style={formStyles.label}>Name</Text>
         <TextInput
           style={formStyles.input}
           placeholder='Name'
           onChangeText={(name) => this.setState({ name })}
-          value={this.state.name} />
+          value={this.state.name}
+        />
         <Text style={formStyles.label}>Name</Text>
         <TextInput
           style={formStyles.input}
           placeholder='Location'
           onChangeText={(location) => this.setState({ location })}
-          value={this.state.location} />
+          value={this.state.location}
+        />
         <Text style={formStyles.label}>Bio</Text>
         <TextInput
           style={formStyles.input}
           multiline
           placeholder='Bio'
           onChangeText={(bio) => this.setState({ bio })}
-          value={this.state.bio} />
+          value={this.state.bio}
+        />
         {/* <Button
             onClick={this.handleSubmit}>
             <Text>Submit</Text>

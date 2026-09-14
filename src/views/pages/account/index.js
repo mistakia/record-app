@@ -15,7 +15,7 @@ class AccountPage extends React.Component {
 
 const mapStateToProps = createSelector(
   getApp,
-  (app) => ({app})
+  (app) => ({ app })
 )
 
 const mapDispatchToProps = {

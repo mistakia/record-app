@@ -15,10 +15,10 @@ import './menu.styl'
 const Menu = ({ app, log, logs }) => (
   <div id='menu' className='menu'>
     <div className='menu__top-section'>
-      <IconButton onClick={history.back} size='small'>
+      <IconButton onClick={() => history.back()} size='small'>
         <NavigateBeforeIcon />
       </IconButton>
-      <IconButton onClick={history.forward} size='small'>
+      <IconButton onClick={() => history.forward()} size='small'>
         <NavigateNextIcon />
       </IconButton>
     </div>
@@ -52,11 +52,10 @@ const Menu = ({ app, log, logs }) => (
         ))}
     </div>
     <div className='menu__bottom-section'>
-      { log &&
+      {log &&
         <IconButton component={Link} className={history.location.pathname === '/account' ? 'active' : undefined} to='/account'>
           <img src={log.avatar} />
-        </IconButton>
-      }
+        </IconButton>}
       <IconButton component={Link} className={history.location.pathname === '/settings' ? 'active' : undefined} to='/settings'>
         <SettingsIcon />
       </IconButton>

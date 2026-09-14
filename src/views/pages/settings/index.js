@@ -19,7 +19,7 @@ class SettingsPage extends React.Component {
 
 const mapStateToProps = createSelector(
   getInfo,
-  (info) => ({info})
+  (info) => ({ info })
 )
 
 const mapDispatchToProps = {

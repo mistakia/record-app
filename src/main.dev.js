@@ -100,7 +100,7 @@ const createMainWindow = async () => {
      *   } */
   })
 
-  mainWindow.loadURL(`file://${__dirname}/index.html`)
+  mainWindow.loadURL(`file://${path.join(__dirname, 'index.html')}`)
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
@@ -128,7 +128,7 @@ const createMainWindow = async () => {
     ipcMain.on('ready', (event, data) => resolve(data))
   })
 
-  const [ data ] = await Promise.all([
+  const [data] = await Promise.all([
     nodeReady,
     windowReady
   ])
@@ -157,7 +157,7 @@ const createBackgroundWindow = () => {
      *     preload: path.join(__dirname, 'background.prod.js')
      *   } */
   })
-  backgroundWindow.loadURL(`file://${__dirname}/background.html`)
+  backgroundWindow.loadURL(`file://${path.join(__dirname, 'background.html')}`)
 }
 
 const registerGlobalShortcuts = () => {

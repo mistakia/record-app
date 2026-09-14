@@ -11,7 +11,7 @@ const ContextMenuState = new Record({
 
 export function contextMenuReducer (state = new ContextMenuState(), { payload, type }) {
   switch (type) {
-    case contextMenuActions.SHOW_CONTEXT_MENU:
+    case contextMenuActions.SHOW_CONTEXT_MENU: {
       const { id, data, clickX, clickY } = payload
       return state.merge({
         id,
@@ -20,6 +20,7 @@ export function contextMenuReducer (state = new ContextMenuState(), { payload, t
         clickY,
         visible: true
       })
+    }
 
     case contextMenuActions.HIDE_CONTEXT_MENU:
       return new ContextMenuState()

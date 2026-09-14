@@ -18,20 +18,28 @@ export class TrackContextMenu extends React.Component {
       <div>
         <div
           className='context-menu--option'
-          onClick={() => queueTrack({ trackId, playNext: true }) && hide()}>
-          Play next</div>
+          onClick={() => queueTrack({ trackId, playNext: true }) && hide()}
+        >
+          Play next
+        </div>
         <div
           className='context-menu--option'
-          onClick={() => queueTrack({ trackId }) && hide()}>
-          Add to queue</div>
+          onClick={() => queueTrack({ trackId }) && hide()}
+        >
+          Add to queue
+        </div>
         <div
           className={'context-menu--option' + (!isQueued ? ' disabled' : '')}
-          onClick={isQueued ? () => unqueueTrack({ trackId }) && hide() : null}>
-          Remove from queue</div>
+          onClick={isQueued ? () => unqueueTrack({ trackId }) && hide() : null}
+        >
+          Remove from queue
+        </div>
         <div
-          className={'context-menu--option'}
-          onClick={() => setImmediate(() => showContext({ id: 'tag', data: { trackId }, clickX, clickY }))}>
-          Add Tag</div>
+          className='context-menu--option'
+          onClick={() => setImmediate(() => showContext({ id: 'tag', data: { trackId }, clickX, clickY }))}
+        >
+          Add Tag
+        </div>
       </div>
     )
   }

@@ -13,7 +13,7 @@ const input = ({
   defaultValue,
   className
 }) => {
-  let formInput = React.createRef()
+  const formInput = React.createRef()
 
   const handleSubmit = (event) => {
     const text = event.target.text.value
@@ -33,7 +33,7 @@ const input = ({
 
   return (
     <form onSubmit={handleSubmit} ref={formInput} className={classNames.join(' ')}>
-      { showClear &&
+      {showClear &&
         <IconButton onClick={handleClear}>
           <ClearIcon />
         </IconButton>}

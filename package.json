@@ -4,6 +4,7 @@
   "description": "Desktop, mobile and web app for Record: a distributed system for audio files",
   "author": "Mistakia <placeholder@email.com> (http://record.tint.space/)",
   "license": "MIT",
+  "packageManager": "yarn@1.22.22",
   "repository": {
     "type": "git",
     "url": "https://github.com/mistakia/record-app"
@@ -17,6 +18,7 @@
     "clean": "rm -rf $TMPDIR/react-* && watchman watch-del-all && npm cache clean --force",
     "lint": "standard 'src/**/*.js' && standard 'nodejs-assets/nodejs-project/main.js' && standard '*.js' ",
     "lint:fix": "standard --fix 'src/**/*.js'",
+    "verify": "yarn lint",
     "package": "yarn build && electron-builder build --publish never",
     "package:all": "yarn build && electron-builder build -mwl",
     "package:ci": "yarn postinstall && yarn build && electron-builder --publish always",

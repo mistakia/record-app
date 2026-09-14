@@ -31,7 +31,8 @@ let record
 try {
   const orbitAddressPath = path.resolve(recorddir, 'address.txt')
   const orbitAddress = fs.existsSync(orbitAddressPath)
-    ? fs.readFileSync(orbitAddressPath, 'utf8') : 'record'
+    ? fs.readFileSync(orbitAddressPath, 'utf8')
+    : 'record'
 
   const opts = {
     address: orbitAddress,

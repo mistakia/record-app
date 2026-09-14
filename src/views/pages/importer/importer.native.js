@@ -31,17 +31,18 @@ export default class NewTrackPage extends React.Component {
 
   render () {
     const body = (
-      <View style={{margin: 20}}>
+      <View style={{ margin: 20 }}>
         <Text style={formStyles.label}>Title</Text>
         <TextInput
           style={formStyles.input}
           placeholder='Track Title'
-          onChangeText={(title) => this.setState({title})} value={this.state.title} />
+          onChangeText={(title) => this.setState({ title })} value={this.state.title}
+        />
         <Text style={formStyles.label}>Url</Text>
         <TextInput
           style={formStyles.input}
           placeholder='http://example.com/example'
-          onChangeText={(url) => this.setState({url})}
+          onChangeText={(url) => this.setState({ url })}
           value={this.state.url}
         />
         {/* <Button

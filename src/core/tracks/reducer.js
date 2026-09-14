@@ -8,7 +8,7 @@ import { playerActions } from '@core/player'
 import { listensActions } from '@core/listens'
 import { importerActions } from '@core/importer'
 
-export function tracksReducer (state = new Map(), {payload, type}) {
+export function tracksReducer (state = new Map(), { payload, type }) {
   switch (type) {
     case trackActions.CLEAR:
       return state.filter((value, key) => payload.trackIds ? payload.trackIds.contains(key) : false)
@@ -55,7 +55,7 @@ export function tracksReducer (state = new Map(), {payload, type}) {
     case taglistActions.DELETE_TAG_FULFILLED: {
       const { id, tags } = payload.data
       return state.withMutations(tracks => {
-        tracks.map(track => {
+        tracks.forEach(track => {
           tracks.setIn([id, 'tags'], new List(tags))
           if (type === taglistActions.POST_TAG_FULFILLED) {
             tracks.setIn([id, 'haveTrack'], true)

@@ -9,7 +9,7 @@ export const PlayerTimesState = new Record({
   percentCompleted: '0%'
 })
 
-export function playerTimesReducer (state = new PlayerTimesState(), {payload, type}) {
+export function playerTimesReducer (state = new PlayerTimesState(), { payload, type }) {
   switch (type) {
     case playerActions.AUDIO_ENDED:
     case playerActions.PLAY_SELECTED_TRACK:

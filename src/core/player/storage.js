@@ -19,7 +19,7 @@ export const playerStorage = {
   },
 
   setVolume (value) {
-    let prefs = playerStorage.getPrefs()
+    const prefs = playerStorage.getPrefs()
     prefs.volume = value
     playerStorage.setPrefs(prefs)
   }

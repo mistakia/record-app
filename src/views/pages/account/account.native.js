@@ -13,7 +13,7 @@ export default function () {
   const { app } = this.props
 
   const body = (
-    <View style={{margin: 20}}>
+    <View style={{ margin: 20 }}>
       <Text style={ItemStyles.label}>State</Text>
       <Text style={ItemStyles.label}>Address</Text>
       <CopyText style={ItemStyles.container} text={app.orbitdb.address}>

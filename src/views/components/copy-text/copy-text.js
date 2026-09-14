@@ -10,10 +10,10 @@ export class CopyText extends React.Component {
       copied: false
     }
 
-    this.copyToClipboard = this.copyToClipboard.bind(this)
+    this.handleCopyToClipboard = this.handleCopyToClipboard.bind(this)
   }
 
-  copyToClipboard () {
+  handleCopyToClipboard () {
     const { text } = this.props
 
     copyToClipboard(text)
@@ -35,7 +35,7 @@ export class CopyText extends React.Component {
     }
 
     return (
-      <div className='copyTextContainer cursor' onClick={this.copyToClipboard}>
+      <div className='copyTextContainer cursor' onClick={this.handleCopyToClipboard}>
         {(this.state.copied
           ? <div className='copyTextOverlay' style={{ opacity: 1 }}>Copied</div>
           : <div className='copyTextOverlay'>Click to Copy</div>)}

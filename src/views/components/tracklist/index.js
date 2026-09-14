@@ -68,7 +68,7 @@ const Tracklist = ({
         isPlaying={isSelected && isPlaying}
         isLoading={isSelected && isPlayerLoading}
         play={isSelected ? play : selectTrack.bind(null, track.id, tracklistAddress)}
-        {...{style, track, index, isSelected, pause, tracklistAddress}}
+        {...{ style, track, index, isSelected, pause, tracklistAddress }}
       />
     )
   }

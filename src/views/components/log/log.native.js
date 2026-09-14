@@ -47,17 +47,21 @@ const Log = ({
       <Link
         to={`/tracks${log.address}`}
         component={TouchableOpacity}
-        style={style.log}>
+        style={style.log}
+      >
         <Image
           style={style.avatar}
-          source={{ uri: log.avatar }} />
+          source={{ uri: log.avatar }}
+        />
         <View style={style.body}>
           <Text style={TextStyles.title}>{logName}</Text>
           {logLocation && <Text>{logLocation}</Text>}
         </View>
-        {type === 'item' && <View style={style.actionContainer}>
-          {/* {log.isLinked ? disconnectAction : connectAction} */}
-        </View>}
+        {type === 'item' && (
+          <View style={style.actionContainer}>
+            {/* {log.isLinked ? disconnectAction : connectAction} */}
+          </View>
+        )}
       </Link>
     )
   }
@@ -67,7 +71,8 @@ const Log = ({
       <View style={style.body}>
         <Image
           style={style.avatar}
-          source={{ uri: log.avatar }} />
+          source={{ uri: log.avatar }}
+        />
         <Text style={style.title}>{logName}</Text>
         {logLocation && <Text>{logLocation}</Text>}
         {logBio && <Text>{logBio}</Text>}
@@ -77,13 +82,15 @@ const Log = ({
         <NavLink
           style={style.menuItem}
           active={style.menuItemActive}
-          to={`/tracks${log.address}`}>
+          to={`/tracks${log.address}`}
+        >
           <Text>Tracks</Text>
         </NavLink>
         <NavLink
           style={style.menuItem}
           active={style.menuItemActive}
-          to={`/logs${log.address}`}>
+          to={`/logs${log.address}`}
+        >
           <Text>Logs</Text>
         </NavLink>
       </View>

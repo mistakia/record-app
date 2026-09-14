@@ -4,9 +4,10 @@ import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 const Tag = ({ tag, onClick, remove, count, isSelected }) => (
   <TouchableOpacity
     style={[styles.tagContainer, isSelected ? styles.active : null]}
-    onPress={onClick}>
+    onPress={onClick}
+  >
     <Text style={[styles.tagItem, styles.tag]}>{tag}</Text>
-    { count && <Text style={[styles.tagItem, styles.count]}>{count}</Text> }
+    {count && <Text style={[styles.tagItem, styles.count]}>{count}</Text>}
     {/* { remove && <IconButton
         icon='ios-close'
         style={[styles.tagItem, styles.remove]}

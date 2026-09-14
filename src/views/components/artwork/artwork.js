@@ -15,7 +15,7 @@ export default function Artwork ({ className, children, background, url, onClick
         <div className='disc-label' />
       </div>
       <div className='children' style={style}>
-        { (url && !background) && <img src={url} /> }
+        {(url && !background) && <img src={url} />}
         {children}
       </div>
     </div>

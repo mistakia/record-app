@@ -14,11 +14,11 @@ import './track.styl'
 class Track extends React.Component {
   constructor () {
     super()
-    this._handleContextMenu = this._handleContextMenu.bind(this)
-    this._handleClick = this._handleClick.bind(this)
+    this.handleContextMenu = this.handleContextMenu.bind(this)
+    this.handleClick = this.handleClick.bind(this)
   }
 
-  _handleContextMenu (event) {
+  handleContextMenu (event) {
     const { track, showContext } = this.props
     showContext({
       id: 'track',
@@ -28,7 +28,7 @@ class Track extends React.Component {
     })
   }
 
-  _handleClick (event) {
+  handleClick (event) {
     const { track, showContext } = this.props
     showContext({
       id: 'tag',
@@ -68,8 +68,9 @@ class Track extends React.Component {
     return (
       <article
         className={classNames.join(' ')}
-        onContextMenu={this._handleContextMenu}
-        style={style}>
+        onContextMenu={this.handleContextMenu}
+        style={style}
+      >
         <div className='track__play' data-index={index + 1}>
           <IconButton onClick={isPlaying ? pause : play} disabled={isLoading}>
             {isLoading ? <CircularProgress size={24} /> : (isPlaying ? <PauseIcon /> : <PlayArrowIcon />)}
@@ -78,7 +79,8 @@ class Track extends React.Component {
         <div className='track__save'>
           <IconButton
             disabled={track.isUpdating}
-            onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}>
+            onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}
+          >
             {track.isUpdating ? <CircularProgress size={18} /> : (haveTrack ? <StarIcon className='track__star' /> : <StarOutlineIcon />)}
           </IconButton>
         </div>
@@ -86,13 +88,13 @@ class Track extends React.Component {
           <div className={`track__title ${track.isLocal ? 'track__available' : ''}`}>{track.name}</div>
         </div>
         <div className='track__artist'>{track.artist}</div>
-        <div className='track__tags-add cursor' onClick={this._handleClick}>+Tag</div>
+        <div className='track__tags-add cursor' onClick={this.handleClick}>+Tag</div>
         <div className='track__tags'>
           <Tags track={track} tracklistAddress={tracklistAddress} />
         </div>
         <small className='track__bitrate'>{track.bitrate ? Math.round(parseInt(track.bitrate) / 1000) : 'Nan'}</small>
         <small className='track__duration'>
-          <FormattedTime value={track.duration} unit={'ms'} />
+          <FormattedTime value={track.duration} unit='ms' />
         </small>
         <small className='track__format'>{track.format}</small>
         <small className='track__listens'>{track.listens.size || null}</small>

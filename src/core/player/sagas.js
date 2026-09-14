@@ -134,7 +134,7 @@ export function * playAudio () {
   })
 }
 
-export function * saveVolumeToStorage ({volume}) {
+export function * saveVolumeToStorage ({ volume }) {
   yield call(playerStorage.setVolume, volume)
 }
 
@@ -147,7 +147,7 @@ export function * setVolumeFromStorage () {
 export function * subscribeToAudio () {
   const channel = yield call(eventChannel, initAudio)
   while (true) {
-    let action = yield take(channel)
+    const action = yield take(channel)
     yield put(action)
   }
 }

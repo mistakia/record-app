@@ -11,7 +11,7 @@ const mapStateToProps = createSelector(
   getApp,
   getMyLog,
   getAllLogs,
-  (app, log, logs) => ({app, log, logs})
+  (app, log, logs) => ({ app, log, logs })
 )
 
 export default withRouter(connect(

@@ -74,7 +74,8 @@ export class TracksPage extends React.Component {
         help={isTracksHelpVisible && help}
         onHelpClose={toggleTracksHelp}
         title='Tracks'
-        body={body} />
+        body={body}
+      />
     )
   }
 }

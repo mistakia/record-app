@@ -30,8 +30,8 @@ import './player.styl'
 export default class Player extends React.Component {
   constructor () {
     super()
-    this._handleContextMenu = this._handleContextMenu.bind(this)
-    this._handleTracklistClick = this._handleTracklistClick.bind(this)
+    this.handleContextMenu = this.handleContextMenu.bind(this)
+    this.handleTracklistClick = this.handleTracklistClick.bind(this)
   }
 
   componentDidMount () {
@@ -51,7 +51,7 @@ export default class Player extends React.Component {
     })
   }
 
-  _handleContextMenu (event) {
+  handleContextMenu (event) {
     const { track, showContext } = this.props
     showContext({
       id: 'track',
@@ -61,7 +61,7 @@ export default class Player extends React.Component {
     })
   }
 
-  _handleTracklistClick () {
+  handleTracklistClick () {
     const currentPath = history.location.pathname
     if (currentPath === '/listens') {
       return
@@ -121,14 +121,15 @@ export default class Player extends React.Component {
           <div className='player__track-actions'>
             <IconButton
               disabled={track.isUpdating}
-              onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}>
+              onClick={haveTrack ? remove.bind(null, app.address, { trackId: track.id }) : add.bind(null, app.address, { cid: track.contentCID })}
+            >
               {track.isUpdating ? <CircularProgress size={24} /> : (haveTrack ? <StarIcon className='track__star' /> : <StarOutlineIcon />)}
             </IconButton>
           </div>
 
           <Artwork className='player__track-artwork' url={artworkUrl} background />
 
-          <div className='player__track-info' onContextMenu={this._handleContextMenu}>
+          <div className='player__track-info' onContextMenu={this.handleContextMenu}>
             <div className='player__track-title'>{track.name}</div>
             <div className='player__track-artist'>{track.artist}</div>
             <div className='player__track-meta'>
@@ -172,7 +173,8 @@ export default class Player extends React.Component {
             <Tooltip title='Play Queue'>
               <IconButton
                 className={isQueueVisible ? 'active' : undefined}
-                onClick={toggleQueue}>
+                onClick={toggleQueue}
+              >
                 <Badge badgeContent={queue.size}>
                   <PlaylistPlayIcon />
                 </Badge>
@@ -192,18 +194,18 @@ export default class Player extends React.Component {
             </div>
             <PlayerTimeline />
             <div className='player__timeline-duration'>
-              <FormattedTime value={track.duration} unit={'ms'} />
+              <FormattedTime value={track.duration} unit='ms' />
             </div>
           </div>
         </div>
 
         <div className='player__tracklist'>
-          <div className='player__tracklist-info cursor' onClick={this._handleTracklistClick}>
+          <div className='player__tracklist-info cursor' onClick={this.handleTracklistClick}>
             <div className='player__tracklist-info-lead'>{tracklistLog ? tracklistLog.displayName : (tracklist.path && tracklist.path.substring(1))}</div>
             <div className='player__tracklist-info-subtitle'>Playing from</div>
           </div>
           <Artwork
-            onClick={this._handleTracklistClick}
+            onClick={this.handleTracklistClick}
             className='player__tracklist-artwork cursor'
             url={tracklistLog && tracklistLog.avatar}
             background

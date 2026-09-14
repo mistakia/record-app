@@ -20,7 +20,9 @@ const Loglist = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: '32px' }}>
+      marginTop: '32px'
+    }}
+    >
       <CircularProgress />
     </div>
   )
