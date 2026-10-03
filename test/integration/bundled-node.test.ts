@@ -305,6 +305,36 @@ describe('bundled node manager', () => {
     await manager.stop()
   }, 30_000)
 
+  test('a stop force-kills a child that reports its exit while its OS process still runs', async () => {
+    // Electron's utilityProcess can fire 'exit' before the OS child's SIGTERM
+    // shutdown finishes (Linux). The manager must then wait and SIGKILL, not
+    // declare the stop clean while a process of ours still answers. Drive the
+    // same shape with a real process and a handle that reports exit at once.
+    const sleeper = spawn('sleep', ['60'], { stdio: 'ignore' })
+    const pid = sleeper.pid as number
+    const resilient: ChildHandle = {
+      stdout: null,
+      stderr: null,
+      spawned: Promise.resolve(pid),
+      exited: Promise.resolve(),
+      alive: () => true,
+      terminate: () => {},
+      kill: () => {},
+      on_exit: () => {}
+    }
+    const { manager } = await setup({
+      spawn_child: () => resilient,
+      health: async () => null,
+      shutdown_timeout_ms: 500
+    })
+    await manager.start()
+    const started = Date.now()
+    await manager.stop()
+    expect(Date.now() - started).toBeLessThan(5_000)
+    await wait_for(() => !is_alive(pid), 'the lingering child is gone', 2_000)
+    try { process.kill(pid, 'SIGKILL') } catch {}
+  }, 30_000)
+
   test('stops restarting after five failed restarts in a row', async () => {
     const { root } = await setup()
     const crashing = join(root, 'crash.mjs')

@@ -15,6 +15,7 @@ import { MAX_FAILED_RESTARTS } from '#shared/bundled.ts'
 import { build_child_env } from './child-env.ts'
 import type { ChildHandle, SpawnChild } from './child-handle.ts'
 import type { create_node_lock } from './node-lock.ts'
+import { is_alive } from './process-probe.ts'
 import type { create_node_log } from './node-log.ts'
 import { read_pin, write_pin, type NodePin } from './node-pin.ts'
 
@@ -293,9 +294,28 @@ export const create_node_manager = ({
     await launch(started_generation)
   }
 
+  // Electron can report a utility child's exit while the OS child is still
+  // finishing its SIGTERM shutdown (Linux), so a stop is not clean until
+  // nothing answers the child's pid. Wait that out, then force-kill a child
+  // that never finishes; without this, a hung shutdown survives a stop.
+  const ensure_gone = async (pid: number | null): Promise<void> => {
+    if (pid === null) return
+    const wait = async (ms: number): Promise<void> => {
+      const deadline = Date.now() + ms
+      while (is_alive(pid) && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 25))
+      }
+    }
+    await wait(shutdown_timeout_ms)
+    if (!is_alive(pid)) return
+    try { process.kill(pid, 'SIGKILL') } catch {}
+    await wait(1_000)
+  }
+
   const stop_now = async (): Promise<void> => {
     clear_timers()
     const current = child
+    const pid = state.pid
     child = null
     if (current !== null && current.alive()) {
       current.terminate()
@@ -303,6 +323,7 @@ export const create_node_manager = ({
       await current.exited
       clearTimeout(forced)
     }
+    await ensure_gone(pid)
     await lock.release()
     set_state({ status: 'stopped', url: null, pid: null, retry_at_ms: null, started_at_ms: null })
   }
