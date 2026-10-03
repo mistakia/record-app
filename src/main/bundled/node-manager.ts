@@ -23,6 +23,11 @@ const RESTART_MAX_DELAY_MS = 30_000
 const INGEST_DISABLED = /ingest disabled: (.*)/
 const LISTENING = /listening on http:\/\/127\.0\.0\.1:(\d+)\//
 // Launches on a fresh port after another process held the chosen one.
+// The bundled node ships no yt-dlp, so URL import and resolve stay off: this
+// path cannot exist (/dev/null is a file), so record-resolver never falls back
+// to a yt-dlp on PATH or in YTDLP_PATH.
+export const YTDLP_DISABLED_PATH = '/dev/null/yt-dlp-disabled'
+
 export const MAX_PORT_RETRIES = 3
 
 export { MAX_FAILED_RESTARTS }
@@ -236,7 +241,7 @@ export const create_node_manager = ({
     await mkdir(data_dir, { recursive: true })
     // Loopback only and no browser origins (spec §8.4.2, §8.7.5): record-node
     // binds 127.0.0.1 by default, and this config pins it.
-    await writeFile(config_path, `${JSON.stringify({ host: '127.0.0.1', port, cors_origins: [], ...toolchain })}\n`, { mode: 0o600 })
+    await writeFile(config_path, `${JSON.stringify({ host: '127.0.0.1', port, cors_origins: [], ytdlp_path: YTDLP_DISABLED_PATH, ...toolchain })}\n`, { mode: 0o600 })
     await checkpoint('config')
     if (stale()) return
     const listening = { port: null as number | null }

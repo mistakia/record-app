@@ -2,8 +2,9 @@
 // yaml (build_api_path), except the identity routes. Those carry the private
 // key, so they go only through main's own identity channels, which confirm
 // an export with the user in a native dialog and send an import only to the
-// bundled node (spec §8.10.1, §8.5.3, §8.5.4). URL import is refused in
-// bundled mode, which ships no yt-dlp. Imports nothing from Electron.
+// bundled node (spec §8.10.1, §8.5.3, §8.5.4). URL import and URL resolve,
+// the two routes that run yt-dlp, are refused in bundled mode, which ships no
+// yt-dlp. Imports nothing from Electron.
 
 import { API_ROUTES } from '#shared/api-routes.ts'
 import type { ConnectionMode, NodeRequest, NodeResult } from '#shared/bridge.ts'
@@ -34,8 +35,10 @@ export const refused_on_generic_channel = (request: Pick<NodeRequest, 'method' |
     ? 'Identity export and import go through their own confirmed actions, not a plain request.'
     : null
 
+const YTDLP_ROUTES = new Set(['post /import/url', 'get /resolve'])
+
 export const refused_in_mode = (request: Pick<NodeRequest, 'method' | 'path_template'>, mode: ConnectionMode): string | null =>
-  mode === 'bundled' && request.method === 'post' && request.path_template === '/import/url' ? URL_IMPORT_OFF_IN_BUNDLED : null
+  mode === 'bundled' && YTDLP_ROUTES.has(`${request.method} ${request.path_template}`) ? URL_IMPORT_OFF_IN_BUNDLED : null
 
 export const serve_generic_request = async ({ input, node_url, mode, call = request_node }: {
   input: unknown

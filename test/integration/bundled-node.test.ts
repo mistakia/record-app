@@ -18,7 +18,7 @@ import electron_path from 'electron'
 import { spawn_node_process, type ChildHandle, type SpawnChild } from '#main/bundled/child-handle.ts'
 import { create_node_lock, LOCK_FILE } from '#main/bundled/node-lock.ts'
 import { create_node_log } from '#main/bundled/node-log.ts'
-import { choose_port, create_node_manager, MAX_FAILED_RESTARTS, MAX_PORT_RETRIES, restart_delay_ms } from '#main/bundled/node-manager.ts'
+import { choose_port, create_node_manager, MAX_FAILED_RESTARTS, MAX_PORT_RETRIES, restart_delay_ms, YTDLP_DISABLED_PATH } from '#main/bundled/node-manager.ts'
 import { PIN_FILE } from '#main/bundled/node-pin.ts'
 import { is_alive, os_process_probe } from '#main/bundled/process-probe.ts'
 import type { BundledState } from '#shared/bridge.ts'
@@ -180,7 +180,7 @@ describe('bundled node manager', () => {
     const { manager, log } = await setup({
       cli_path: dump,
       startup_timeout_ms: 1_500,
-      env: { ...process.env, NODE_OPTIONS: '--inspect=9229', NODE_DEBUG: 'net', ELECTRON_ENABLE_LOGGING: '1', RECORD_CONFIG: '/tmp/x.json', LC_ALL: 'C', PATH: process.env.PATH ?? '' }
+      env: { ...process.env, NODE_OPTIONS: '--inspect=9229', NODE_DEBUG: 'net', ELECTRON_ENABLE_LOGGING: '1', RECORD_CONFIG: '/tmp/x.json', YTDLP_PATH: '/tmp/yt-dlp', LC_ALL: 'C', PATH: process.env.PATH ?? '' }
     })
     await manager.start()
     await wait_for(() => manager.get_state().status === 'failed', 'the dump to time out')
@@ -190,7 +190,29 @@ describe('bundled node manager', () => {
     expect(child_env.NODE_DEBUG).toBeUndefined()
     expect(child_env.ELECTRON_ENABLE_LOGGING).toBeUndefined()
     expect(child_env.RECORD_CONFIG).toBeUndefined()
+    expect(child_env.YTDLP_PATH).toBeUndefined()
     expect(child_env).toMatchObject({ PATH: process.env.PATH, LC_ALL: 'C' })
+    await manager.stop()
+  }, 30_000)
+
+  test('the bundled node never runs a yt-dlp, even one on PATH or in YTDLP_PATH', async () => {
+    const { root } = await setup()
+    const fake_bin = join(root, 'fake-bin')
+    const marker = join(root, 'yt-dlp-ran')
+    await mkdir(fake_bin)
+    await writeFile(join(fake_bin, 'yt-dlp'), `#!/bin/sh\ntouch '${marker}'\necho '{}'\n`, { mode: 0o755 })
+    const { manager, root: node_root, log } = await setup({ env: { ...process.env, PATH: `${fake_bin}:${process.env.PATH ?? ''}`, YTDLP_PATH: join(fake_bin, 'yt-dlp') } })
+    await manager.start()
+    await wait_for(() => manager.get_state().status === 'running', 'running')
+    const { url } = manager.get_state()
+    expect(JSON.parse(await readFile(join(node_root, 'bundled-node.json'), 'utf8'))).toMatchObject({ ytdlp_path: YTDLP_DISABLED_PATH })
+    // A public address literal, so the destination check passes without DNS and only yt-dlp could answer.
+    const target = 'https://93.184.215.14/track'
+    const resolved = await fetch(`${url}/api/resolve?url=${encodeURIComponent(target)}`)
+    await fetch(`${url}/api/import/url`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: target }) })
+    await new Promise((resolve) => setTimeout(resolve, 2_000))
+    expect({ resolve_ok: resolved.ok, ran: await Bun.file(marker).exists() }).toEqual({ resolve_ok: false, ran: false })
+    expect(await readFile(log.path, 'utf8')).not.toContain(fake_bin)
     await manager.stop()
   }, 30_000)
 
