@@ -1,0 +1,33 @@
+.shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+}
+
+.nav {
+  display: flex;
+  gap: 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.65;
+}
+
+.nav a[aria-current='page'] {
+  opacity: 1;
+  font-weight: 600;
+}
+
+.content {
+  overflow: auto;
+  padding: 16px;
+}
+
+.loading {
+  padding: 16px;
+  color: var(--muted);
+}
