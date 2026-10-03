@@ -40,7 +40,8 @@ export const head_check = ({ extra = [] }: { extra?: Array<{ type: 'tracks', id:
       dispatch(node_api.endpoints.get_libraries.initiate(undefined, { forceRefetch: true, subscribe: false })),
       dispatch(node_api.endpoints.get_identity_heads.initiate(undefined, { forceRefetch: true, subscribe: false }))
     ])
-    if (libraries.data === undefined) return { moved: null }
+    // A failed refetch keeps the old data in the cache; compare nothing then.
+    if (libraries.isError || libraries.data === undefined) return { moved: null }
     // A node without the meta-log endpoint (404) has no identity heads to compare.
     const identity_heads = identity.data?.heads ?? null
     const after = mark_libraries(libraries.data)
@@ -52,7 +53,17 @@ export const head_check = ({ extra = [] }: { extra?: Array<{ type: 'tracks', id:
     const moved = moved_libraries({ before: known.libraries, after })
     const identity_moved = identity_heads !== null && !same_heads(known.identity_heads, identity_heads)
     const tags = [...tags_for_moved({ moved, identity_moved }), ...extra]
-    if (tags.length > 0) dispatch(node_api.util.invalidateTags(tags))
+    if (tags.length > 0) {
+      dispatch(node_api.util.invalidateTags(tags))
+      // The baseline moves on only once what it staled has refetched, so a
+      // refetch that fails is found again by the next check.
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      for (let running = dispatch(node_api.util.getRunningQueriesThunk()); running.length > 0; running = dispatch(node_api.util.getRunningQueriesThunk())) {
+        await Promise.all(running)
+      }
+      const failed = Object.values(get_state().node_api.queries).some((entry) => entry?.status === 'rejected' && entry.endpointName !== 'get_identity_heads')
+      if (failed) return { moved: moved.length + (identity_moved ? 1 : 0) }
+    }
     baseline = { node_key, libraries: after, identity_heads }
     return { moved: moved.length + (identity_moved ? 1 : 0) }
   }
