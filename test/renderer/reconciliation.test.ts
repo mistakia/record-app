@@ -6,7 +6,7 @@ import { events_state_changed, node_switch_started, select_writes_allowed } from
 import { create_invalidation_batcher, tags_for_event } from '#renderer/store/event-invalidation.ts'
 import { store } from '#renderer/store/index.ts'
 import { reconcile, reconcile_retry_delay_ms } from '#renderer/store/reconcile.ts'
-import { moved_libraries, tags_for_moved } from '#renderer/store/head-check.ts'
+import { moved_libraries, tags_for_moved } from '#renderer/store/library-heads.ts'
 import { track_page_args } from '#renderer/store/api.ts'
 import { mark_restored_page } from '#renderer/snapshot/restored.ts'
 import type { Library } from '#renderer/api/types.ts'

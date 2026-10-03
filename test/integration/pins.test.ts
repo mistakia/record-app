@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { request_node } from '#main/node-client.ts'
 import { open_node_events, type NodeEvents } from '#main/node-events.ts'
-import { moved_libraries } from '#renderer/store/head-check.ts'
+import { moved_libraries } from '#renderer/store/library-heads.ts'
 import type { Library, Track, TrackList } from '#renderer/api/types.ts'
 import type { NodeEventMessage, NodeRequest, NodeResult } from '#shared/bridge.ts'
 import { start_test_node, type TestNode } from './node-fixture.ts'
