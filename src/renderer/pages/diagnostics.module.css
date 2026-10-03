@@ -1,0 +1,39 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.page h2 {
+  margin: 8px 0 0;
+  font-size: 15px;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.details dt {
+  font-weight: 600;
+}
+
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.details code {
+  font-size: 12px;
+}
+
+.row {
+  display: contents;
+}

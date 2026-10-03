@@ -11,8 +11,9 @@
 // empties; record-node always exits explicitly, on SIGTERM and on error.
 
 import { randomUUID } from 'node:crypto'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
+import { isAbsolute, join } from 'node:path'
 
 import { app, utilityProcess } from 'electron'
 
@@ -77,19 +78,48 @@ export const spawn_utility_process: SpawnChild = ({ cli_path, args, env }) => {
   }
 }
 
+// Where the bundled node keeps its data (spec §8.4.1): under userData by
+// default, or where the user moved it, recorded in bundled-settings.json.
+export const default_data_dir = (user_data: string): string => join(user_data, 'node-data')
+const settings_path = (user_data: string): string => join(user_data, 'bundled-settings.json')
+
+export const read_data_dir = (user_data: string): string => {
+  const chosen = read_json(settings_path(user_data))?.data_dir
+  return typeof chosen === 'string' && isAbsolute(chosen) ? chosen : default_data_dir(user_data)
+}
+
+export const save_data_dir = async (user_data: string, data_dir: string): Promise<void> => {
+  await writeFile(settings_path(user_data), `${JSON.stringify({ data_dir })}\n`, { mode: 0o600 })
+}
+
+// The app's logs directory, except under a --user-data-dir profile (the
+// smokes), whose node.log stays inside that profile.
+export const logs_dir = (user_data: string): string =>
+  app.commandLine.hasSwitch('user-data-dir') ? join(user_data, 'logs') : app.getPath('logs')
+
+// The pinned ffmpeg and fpcalc (cli/build-toolchain.sh): Resources/bin in a
+// packaged app, toolchain/bin in a checkout that has built them; otherwise
+// none, and record-node looks on PATH (spec §8.2.6).
+export const bundled_toolchain = (app_root: string): { ffmpeg_path: string, fpcalc_path: string } | null => {
+  const bin = app.isPackaged ? join(process.resourcesPath, 'bin') : join(app_root, 'toolchain', 'bin')
+  const paths = { ffmpeg_path: join(bin, 'ffmpeg'), fpcalc_path: join(bin, 'fpcalc') }
+  return existsSync(paths.ffmpeg_path) && existsSync(paths.fpcalc_path) ? paths : null
+}
+
 export const create_bundled_node = ({ user_data, on_state }: { user_data: string, on_state: (state: BundledState) => void }) => {
   const app_root = app.getAppPath()
-  const data_dir = join(user_data, 'node-data')
   const config_path = join(user_data, 'bundled-node.json')
+  const owner = randomUUID()
   return create_node_manager({
     spawn_child: spawn_utility_process,
     cli_path: join(app_root, CLI_RELATIVE),
-    data_dir,
+    data_dir: read_data_dir(user_data),
     config_path,
     version: pinned_version(app_root),
     env: process.env,
-    lock: create_node_lock({ data_dir, app_pid: process.pid, owner: randomUUID(), probe: os_process_probe, node_marker: CLI_RELATIVE, app_marker: process.execPath }),
-    log: create_node_log({ log_dir: app.getPath('logs') }),
+    toolchain: bundled_toolchain(app_root),
+    lock_for: (data_dir) => create_node_lock({ data_dir, app_pid: process.pid, owner, probe: os_process_probe, app_marker: process.execPath }),
+    log: create_node_log({ log_dir: logs_dir(user_data) }),
     // The last port, so the node's URL stays the same across launches when it can.
     preferred_port: async () => {
       const port = read_json(config_path)?.port

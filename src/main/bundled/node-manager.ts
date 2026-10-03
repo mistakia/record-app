@@ -22,6 +22,13 @@ const RESTART_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000]
 const RESTART_MAX_DELAY_MS = 30_000
 const INGEST_DISABLED = /ingest disabled: (.*)/
 const LISTENING = /listening on http:\/\/127\.0\.0\.1:(\d+)\//
+// Launches on a fresh port after another process held the chosen one.
+// The bundled node ships no yt-dlp, so URL import and resolve stay off: this
+// path cannot exist (/dev/null is a file), so record-resolver never falls back
+// to a yt-dlp on PATH or in YTDLP_PATH.
+export const YTDLP_DISABLED_PATH = '/dev/null/yt-dlp-disabled'
+
+export const MAX_PORT_RETRIES = 3
 
 export { MAX_FAILED_RESTARTS }
 
@@ -58,7 +65,7 @@ export const probe_health = async (url: string): Promise<Health | null> => {
 }
 
 export const create_node_manager = ({
-  spawn_child, cli_path, data_dir, config_path, version, env, lock, log, on_state,
+  spawn_child, cli_path, data_dir: initial_data_dir, config_path, version, env, toolchain = null, lock_for, log, on_state,
   preferred_port = async () => null,
   pick_port = choose_port,
   health = probe_health,
@@ -73,9 +80,12 @@ export const create_node_manager = ({
   cli_path: string
   data_dir: string
   config_path: string
+  // The bundled ffmpeg and fpcalc; null leaves record-node to find them on PATH.
+  toolchain?: { ffmpeg_path: string, fpcalc_path: string } | null
   version: string
   env: NodeJS.ProcessEnv
-  lock: ReturnType<typeof create_node_lock>
+  // The data-directory lock for a directory; a new one after a relocation.
+  lock_for: (data_dir: string) => ReturnType<typeof create_node_lock>
   log: ReturnType<typeof create_node_log>
   on_state: (state: BundledState) => void
   preferred_port?: () => Promise<number | null>
@@ -89,6 +99,8 @@ export const create_node_manager = ({
   shutdown_timeout_ms?: number
   stable_after_ms?: number
 }) => {
+  let data_dir = initial_data_dir
+  let lock = lock_for(data_dir)
   let state: BundledState = {
     status: 'stopped',
     url: null,
@@ -102,11 +114,16 @@ export const create_node_manager = ({
     error: null,
     stderr_tail: null,
     ingest_disabled: null,
-    node_key_pin: read_pin(data_dir)
+    node_key_pin: read_pin(data_dir),
+    started_at_ms: null
   }
   let child: ChildHandle | null = null
   // Bumped by every stop; a start that sees it change gives up.
   let generation = 0
+  // Fresh-port relaunches since the node last came up; and whether the next
+  // launch must skip the remembered port because something else holds it.
+  let port_retries = 0
+  let avoid_port: number | null = null
   let queue: Promise<unknown> = Promise.resolve()
   const timers = new Set<ReturnType<typeof setTimeout>>()
 
@@ -128,7 +145,7 @@ export const create_node_manager = ({
     return await run
   }
   const fail = (error: string): void => {
-    set_state({ status: 'failed', url: null, pid: null, retry_at_ms: null, error, stderr_tail: log.stderr_tail() || null })
+    set_state({ status: 'failed', url: null, pid: null, retry_at_ms: null, started_at_ms: null, error, stderr_tail: log.stderr_tail() || null })
   }
 
   // Healthy means: our child, still running, announced it listens on this
@@ -145,14 +162,23 @@ export const create_node_manager = ({
         if (answer !== null && pin !== null && answer.peer_id !== pin.peer_id) {
           child = null
           current.kill()
-          fail(`Another node answered on the bundled node's port (peer ${answer.peer_id}, expected ${pin.peer_id}). It was not used.`)
+          // Before our child announced the port, the answer came from another
+          // process holding it: try a fresh port. After, the data directory
+          // itself holds a different node than the one pinned.
+          if (listening.port === port) {
+            fail(`The data directory holds a different node than before (peer ${answer.peer_id}, expected ${pin.peer_id}). It was not used.`)
+          } else {
+            relaunch_on_fresh_port(port, `Another process answered on port ${port} (peer ${answer.peer_id}).`)
+          }
           return
         }
         if (answer !== null && listening.port === port && current.alive()) {
           const next_pin: NodePin = { peer_id: answer.peer_id, own_library_address: answer.own_library_address }
           if (pin === null || pin.own_library_address !== next_pin.own_library_address) await write_pin(data_dir, next_pin)
           if (child !== current) return
-          set_state({ status: 'running', url, retry_at_ms: null, error: null, node_key_pin: next_pin })
+          port_retries = 0
+          avoid_port = null
+          set_state({ status: 'running', url, retry_at_ms: null, error: null, node_key_pin: next_pin, started_at_ms: Date.now() })
           // A node that stays up this long has recovered; count from zero again.
           later(stable_after_ms, () => { if (child === current) set_state({ failed_restarts: 0 }) })
         } else if (Date.now() >= deadline) {
@@ -167,11 +193,27 @@ export const create_node_manager = ({
     check()
   }
 
-  const on_exit = (current: ChildHandle) => (code: number | null, signal: string | null): void => {
+  const relaunch_on_fresh_port = (taken_port: number, reason: string): void => {
+    port_retries++
+    if (port_retries > MAX_PORT_RETRIES) {
+      fail(`${reason} The bundled node could not get a port of its own after ${MAX_PORT_RETRIES} tries.`)
+      return
+    }
+    avoid_port = taken_port
+    const relaunch_generation = generation
+    set_state({ status: 'starting', url: null, pid: null, started_at_ms: null, error: reason })
+    serialize(async () => { if (generation === relaunch_generation && child === null) await launch(relaunch_generation) })
+      .catch((error: unknown) => { fail(String(error)) })
+  }
+
+  const on_exit = (current: ChildHandle, listening: { port: number | null }, port: number) => (code: number | null, signal: string | null): void => {
     lock.record_child(null).catch(() => {})
     if (child !== current) return
     child = null
     clear_timers()
+    // It never got as far as listening: likely the port was taken. Next time,
+    // a fresh one.
+    if (listening.port === null) avoid_port = port
     const failed_restarts = state.failed_restarts + 1
     const how = signal === null ? `exit code ${code ?? 'unknown'}` : `signal ${signal}`
     if (failed_restarts > MAX_FAILED_RESTARTS) {
@@ -180,7 +222,7 @@ export const create_node_manager = ({
     }
     const delay = delay_for(failed_restarts - 1)
     const restart_generation = generation
-    set_state({ status: 'restarting', url: null, pid: null, failed_restarts, retry_at_ms: Date.now() + delay, error: `The bundled node stopped (${how}).` })
+    set_state({ status: 'restarting', url: null, pid: null, started_at_ms: null, failed_restarts, retry_at_ms: Date.now() + delay, error: `The bundled node stopped (${how}).` })
     later(delay, () => {
       serialize(async () => { if (generation === restart_generation && child === null) await launch(restart_generation) })
         .catch((error: unknown) => { fail(String(error)) })
@@ -192,19 +234,20 @@ export const create_node_manager = ({
   async function launch (started_generation: number): Promise<void> {
     const stale = (): boolean => started_generation !== generation
     log.clear_tail()
-    const port = await pick_port(state.port ?? await preferred_port())
+    const remembered = state.port ?? await preferred_port()
+    const port = await pick_port(remembered !== null && remembered === avoid_port ? null : remembered)
     await checkpoint('port')
     if (stale()) return
     await mkdir(data_dir, { recursive: true })
     // Loopback only and no browser origins (spec §8.4.2, §8.7.5): record-node
     // binds 127.0.0.1 by default, and this config pins it.
-    await writeFile(config_path, `${JSON.stringify({ host: '127.0.0.1', port, cors_origins: [] })}\n`, { mode: 0o600 })
+    await writeFile(config_path, `${JSON.stringify({ host: '127.0.0.1', port, cors_origins: [], ytdlp_path: YTDLP_DISABLED_PATH, ...toolchain })}\n`, { mode: 0o600 })
     await checkpoint('config')
     if (stale()) return
     const listening = { port: null as number | null }
     const current = spawn_child({ cli_path, args: ['--port', String(port), '--data-dir', data_dir, '--config', config_path], env: build_child_env(env) })
     child = current
-    current.on_exit(on_exit(current))
+    current.on_exit(on_exit(current, listening, port))
     current.stdout?.on('data', (data: Buffer) => {
       const text = String(data)
       log.append('out', text)
@@ -261,11 +304,26 @@ export const create_node_manager = ({
       clearTimeout(forced)
     }
     await lock.release()
-    set_state({ status: 'stopped', url: null, pid: null, retry_at_ms: null })
+    set_state({ status: 'stopped', url: null, pid: null, retry_at_ms: null, started_at_ms: null })
   }
 
   return {
     get_state: (): BundledState => state,
+    // Moves to another data directory (spec §8.4.1): stops the node, takes
+    // the new directory's lock and pin, and starts again when asked.
+    relocate: async ({ next_data_dir, start }: { next_data_dir: string, start: boolean }): Promise<void> => {
+      generation++
+      const relocate_generation = generation
+      await serialize(async () => {
+        await stop_now()
+        data_dir = next_data_dir
+        lock = lock_for(data_dir)
+        port_retries = 0
+        avoid_port = null
+        set_state({ data_dir, node_key_pin: read_pin(data_dir), port: null, failed_restarts: 0, error: null, stderr_tail: null })
+        if (start) await start_now(relocate_generation)
+      })
+    },
     start: async (): Promise<void> => {
       const started_generation = generation
       await serialize(async () => {

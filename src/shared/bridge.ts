@@ -95,6 +95,30 @@ export interface BundledState {
   ingest_disabled: string | null
   // The node and identity the data directory holds, once it has answered.
   node_key_pin: { peer_id: string, own_library_address: string | null } | null
+  // When the running node last came up, for its uptime.
+  started_at_ms: number | null
+}
+
+// The diagnostics surface (spec §8.9.1), as main collects it.
+export interface Diagnostics {
+  app_version: string
+  electron_version: string
+  chrome_version: string
+  node_version: string
+  platform: string
+  mode: ConnectionMode
+  node_url: string | null
+  node_key: string | null
+  user_data: string
+  logs_dir: string
+  bundled: BundledState
+  // Spec §8.2.5; off until a release feed exists.
+  updates: { status: string, detail: string | null }
+  memory: {
+    main_rss_bytes: number
+    total_working_set_bytes: number
+    processes: Array<{ type: string, pid: number, working_set_bytes: number }>
+  }
 }
 
 export interface ImportAck {
@@ -148,6 +172,12 @@ export interface RecordBridge {
     restart: () => Promise<NodeResult<null>>
     open_data_dir: () => Promise<void>
     open_log: () => Promise<void>
+    // Main's folder picker and confirmation, then a restart there; the new
+    // path, or null when the user cancels.
+    choose_data_dir: () => Promise<NodeResult<string | null>>
+  }
+  diagnostics: {
+    get: () => Promise<Diagnostics>
   }
   snapshot: {
     // The snapshot for the configured node, or null.
@@ -184,6 +214,8 @@ export const IPC_CHANNELS = {
   bundled_restart: 'record:bundled:restart',
   bundled_open_data_dir: 'record:bundled:open-data-dir',
   bundled_open_log: 'record:bundled:open-log',
+  bundled_choose_data_dir: 'record:bundled:choose-data-dir',
+  diagnostics_get: 'record:diagnostics:get',
   snapshot_load: 'record:snapshot:load',
   snapshot_update: 'record:snapshot:update',
   snapshot_get_info: 'record:snapshot:get-info',

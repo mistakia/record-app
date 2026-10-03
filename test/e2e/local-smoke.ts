@@ -4,7 +4,8 @@
 // drop, a URL, add by CID), libraries (link, disconnect, connect, unlink,
 // the own about), identity (public key, export, and no trace of the key in
 // any file the app wrote), listens, peers, a hotkey, and gapless playback
-// with its listen and Media Session. Needs ffmpeg and fpcalc; set
+// with its listen and Media Session, and that the app:// scheme serves only
+// the renderer. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
 // record-node's pins. Runs under Node: node test/e2e/local-smoke.ts
 
@@ -50,11 +51,23 @@ const files_containing = async (directory: string, needle: string): Promise<stri
 let private_key = ''
 try {
   const window = await app.firstWindow()
+  // The renderer comes from app://record/, which serves only its own files. The
+  // probes' 404s are expected, so they run before console errors are collected.
+  const served = await window.evaluate(async () => ({
+    origin: location.origin,
+    outside: (await fetch('app://record/..%2fmain%2findex.js')).status,
+    missing: (await fetch('app://record/no-such-file.js')).status,
+    malformed: (await fetch('app://record/%E0%A4%A.js')).status,
+    other_host: (await fetch('app://other/index.html').catch(() => null))?.status ?? 'refused'
+  }))
+  step('app scheme', served)
+  if (served.origin !== 'app://record' || served.outside !== 404 || served.missing !== 404 || served.malformed !== 404 || served.other_host === 200) throw new Error('the app scheme served outside the renderer')
   const console_errors: string[] = []
   window.on('console', (message) => { if (message.type() === 'error') console_errors.push(message.text()) })
   // A fresh profile starts in bundled mode; check it, then switch to the
-  // in-process node, which holds the tracks the rest of the walk uses.
-  await run_bundled_checks({ app, window, step, remote_url: node.node_url })
+  // in-process node, which holds the tracks the rest of the walk uses. The
+  // smoke's dialog stubs below replace the ones the bundled checks set.
+  await run_bundled_checks({ app, window, step, remote_url: node.node_url, user_data_dir, audio_path: node.make_audio({ name: 'Smoke Bundled.flac', seed: 9 }) })
   await nav(window, 'Tracks')
   await settled(window)
 

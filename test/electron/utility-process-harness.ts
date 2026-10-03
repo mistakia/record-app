@@ -47,7 +47,7 @@ const make_manager = async (root: string, options: Partial<Parameters<typeof cre
     config_path: join(root, 'bundled-node.json'),
     version: 'test',
     env: { ...process.env, NODE_OPTIONS: '--inspect=0' },
-    lock: create_node_lock({ data_dir, app_pid: process.pid, owner: `harness-${Math.random()}`, probe: os_process_probe, node_marker: 'record-node/dist/cli.js', app_marker: process.execPath }),
+    lock_for: (dir) => create_node_lock({ data_dir: dir, app_pid: process.pid, owner: `harness-${Math.random()}`, probe: os_process_probe, app_marker: process.execPath }),
     log: create_node_log({ log_dir: join(root, 'logs') }),
     on_state: () => {},
     ...options

@@ -15,6 +15,7 @@ import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/st
 import { notified } from '#renderer/store/notifications.ts'
 import { report_write } from '#renderer/store/write.ts'
 import type { ImportAck, NodeResult } from '#shared/bridge.ts'
+import { URL_IMPORT_OFF_IN_BUNDLED } from '#shared/bundled.ts'
 
 const is_web_url = (value: string): boolean => {
   try {
@@ -29,7 +30,8 @@ export const Importer = () => {
   const dispatch = use_app_dispatch()
   const store = useStore<RootState>()
   const writes_allowed = use_app_selector(select_writes_allowed)
-  const ingest_disabled = use_app_selector((state) => state.connection.config?.mode === 'bundled' ? state.bundled.state?.ingest_disabled ?? null : null)
+  const bundled = use_app_selector((state) => state.connection.config?.mode === 'bundled')
+  const ingest_disabled = use_app_selector((state) => bundled ? state.bundled.state?.ingest_disabled ?? null : null)
   const imports = use_app_selector((state) => state.imports.items)
   const [url, set_url] = useState('')
   const [cid, set_cid] = useState('')
@@ -96,8 +98,7 @@ export const Importer = () => {
       {!writes_allowed && <p className={styles.muted}>Imports are paused until the app has caught up with the node.</p>}
       {ingest_disabled !== null && (
         <p className={styles.error} data-testid='ingest-disabled'>
-          The bundled node cannot ingest yet: {ingest_disabled}. Adding by CID still works; file and URL imports will fail until the pinned
-          tools ship with the app.
+          The bundled node cannot ingest files: {ingest_disabled}. Adding by CID still works.
         </p>
       )}
       <div
@@ -112,10 +113,14 @@ export const Importer = () => {
           {uploading ? 'Uploading' : 'Choose files'}
         </button>
       </div>
-      <form className={styles.row} onSubmit={(event) => { import_url(event).catch(() => {}) }}>
-        <input aria-label='Import from URL' placeholder='https://...' spellCheck={false} value={url} onChange={(event) => { set_url(event.target.value) }} />
-        <button type='submit' disabled={!writes_allowed || !is_web_url(url.trim())}>Import URL</button>
-      </form>
+      {bundled
+        ? <p className={styles.muted} data-testid='url-import-off'>{URL_IMPORT_OFF_IN_BUNDLED}</p>
+        : (
+          <form className={styles.row} onSubmit={(event) => { import_url(event).catch(() => {}) }}>
+            <input aria-label='Import from URL' placeholder='https://...' spellCheck={false} value={url} onChange={(event) => { set_url(event.target.value) }} />
+            <button type='submit' disabled={!writes_allowed || !is_web_url(url.trim())}>Import URL</button>
+          </form>
+          )}
       <form className={styles.row} onSubmit={(event) => { add_by_cid(event).catch(() => {}) }}>
         <input aria-label='Add by content CID' placeholder='Content CID of a track already on the network' spellCheck={false} value={cid} onChange={(event) => { set_cid(event.target.value) }} />
         <button type='submit' disabled={!writes_allowed || !is_cid(cid.trim())}>Add track</button>

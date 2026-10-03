@@ -1,0 +1,26 @@
+[
+  {
+    "advisory": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "version": "3.0.3",
+    "scope": "shipped",
+    "justification": "No fixed release exists; reached only through record-node's blockstore-fs and datastore-fs, via it-glob and micromatch, which expand fixed internal patterns, never user input.",
+    "review_by": "2027-01-01"
+  },
+  {
+    "advisory": "GHSA-86w9-cpqp-85rv",
+    "package": "node-forge",
+    "version": "1.4.0",
+    "scope": "shipped",
+    "justification": "No fixed release exists; reached only through @helia/libp2p's autoTLS (acme-client), which record-node imports but never configures, so no RSA signature is verified with it.",
+    "review_by": "2027-01-01"
+  },
+  {
+    "advisory": "GHSA-ch52-4w7c-c8xp",
+    "package": "http-cache-semantics",
+    "version": "4.2.0",
+    "scope": "build",
+    "justification": "No fixed release exists; reached only through electron-builder's @electron/get (got, cacheable-request), which downloads Electron and build tools while packaging, never in the shipped app.",
+    "review_by": "2027-01-01"
+  }
+]

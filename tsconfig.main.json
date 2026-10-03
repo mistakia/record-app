@@ -13,7 +13,8 @@
     "src/main",
     "src/shared",
     "test",
-    "electron.vite.config.ts"
+    "electron.vite.config.ts",
+    "cli/**/*.ts"
   ],
   "exclude": [
     "test/renderer",

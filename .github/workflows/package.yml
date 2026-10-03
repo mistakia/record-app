@@ -1,0 +1,65 @@
+name: Package
+
+# The release path on macOS: the audit gate, the pinned toolchain, the
+# unsigned universal app, and the packaged smoke on both slices. macOS runner
+# minutes are metered, so this runs by hand and on version tags only, never on
+# every push. Nothing is signed or published yet.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Download the Electron binary
+        run: bun run setup:electron
+
+      # The smoke seeds its data directory with an in-process record-node and
+      # makes its test audio with these; the app itself ships its own pinned
+      # ffmpeg and fpcalc. gpg verifies the FFmpeg tarball's signature, and
+      # Rosetta runs the Intel slice.
+      - name: Install test tools and Rosetta
+        run: |
+          brew install ffmpeg chromaprint gnupg
+          sudo softwareupdate --install-rosetta --agree-to-license
+
+      # package:mac runs the audit gate and builds the toolchain first.
+      - name: Package the release build
+        run: bun run package:mac
+
+      - name: Package the test build
+        run: bun run package:mac:test
+
+      - name: Packaged smoke (Apple Silicon)
+        env:
+          RECORD_TOOLCHAIN_PREFLIGHT: bypass
+        run: bun run smoke:packaged
+
+      - name: Packaged smoke (Intel, under Rosetta)
+        env:
+          RECORD_TOOLCHAIN_PREFLIGHT: bypass
+          RECORD_PACKAGED_ARCH: x86_64
+        run: bun run smoke:packaged

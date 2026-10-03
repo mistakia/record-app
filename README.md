@@ -22,7 +22,7 @@ updated_at: '2026-10-03T08:17:19.158Z'
 
 The app is an Electron client of [record-node](https://github.com/mistakia/record-node). It holds no protocol logic: it talks to one node at a time over the node's HTTP and WebSocket API. The application contract is chapter 8 of the [Record protocol specification](https://github.com/mistakia/record-docs).
 
-**Status:** early rebuild. The app runs its own record-node by default (bundled mode) or connects to one you run elsewhere (remote mode). It browses, searches, and tags libraries over a virtualized list, plays a queue gaplessly with listen recording and macOS media controls, imports files and URLs, links and follows other libraries, edits the library profile, and shows and exports the node's identity. The track list updates live, the app shows when the node is unreachable, and it reopens on the last-viewed view from a local snapshot. Until the packaging phase ships the pinned ffmpeg and fpcalc, the bundled node cannot ingest files or URLs; adding a track by CID works. Diagnostics, packaging, and updates come next.
+**Status:** early rebuild. The app runs its own record-node by default (bundled mode) or connects to one you run elsewhere (remote mode). It browses, searches, and tags libraries over a virtualized list, plays a queue gaplessly with listen recording and macOS media controls, imports files and URLs, links and follows other libraries, edits the library profile, and shows and exports the node's identity. The track list updates live, the app shows when the node is unreachable, and it reopens on the last-viewed view from a local snapshot. It builds as an unsigned universal macOS app. The bundled node imports files with the pinned ffmpeg and fpcalc the app ships. URL import works with a remote node only, since the app ships no downloader. Signing, notarization, release publishing, and auto-update wait on a Developer ID identity and a release feed.
 
 ## Requirements
 
@@ -45,9 +45,16 @@ Dependency install scripts never run: `package.json` pins exact versions with an
 bun run dev      # development, with hot reload
 bun run build    # production build into out/
 bun run start    # run the production build
+bun run build:toolchain   # the pinned ffmpeg and fpcalc into toolchain/ (macOS)
+bun run package:mac   # unsigned universal .dmg and update .zip into release/
+bun run package:mac:test   # the same app, built to accept remote debugging, into release-test/
 ```
 
-On first launch the app starts its own record-node in bundled mode, with its data in the app's Application Support directory and its log in `~/Library/Logs`. To use a node you run elsewhere, choose Remote node on the Connection page, enter its URL (`http://127.0.0.1:3000` for a local record-node on its default port), test the connection, and save.
+`build:toolchain` (`cli/build-toolchain.sh`) builds ffmpeg 7.1.1 from FFmpeg's release tarball for both architectures. It is LGPL, with only the containers the app imports, and comes out at about 5.6 MB universal. It also fetches chromaprint's universal fpcalc 1.5.1. Every download is pinned by SHA-256. The same commit and Xcode give the same bytes, and `toolchain/BUILD-INFO.txt` records the configure line and output hashes. The packaged app carries both tools in `Resources/bin` and their notices in `Resources/licenses`. A development run uses `toolchain/bin` when it exists. `test/toolchain/compare-ffmpeg.sh` checks that this ffmpeg tag-strips every importable container to the same bytes as a default-configured 7.1.1 build. Those bytes are what the content CID hashes.
+
+`package:mac` first runs `bun run audit`, the dependency audit gate. It audits the whole lockfile and classifies each advisory as shipped or build-only from the dependency graph. Every devDependency must be classified in `package.json` `auditRoles`: the renderer libraries count as shipped because vite bundles them, and so does Electron itself. A high or critical advisory fails unless `audit-allowlist.json` justifies it for that scope, and each entry expires on its review-by date. It then builds the ingest toolchain, and installs the macOS optional dependencies for both architectures, so the universal app carries node-datachannel's Intel and Apple Silicon binaries.
+
+On first launch the app starts its own record-node in bundled mode, with its data in the app's Application Support directory and its log in `~/Library/Logs`. To keep the node's data elsewhere, choose Change beside the data directory on the Connection page. The node keeps its data in a `Record Node Data` subfolder of the folder you choose, made private to your account; the chosen folder itself is left as it is. The app asks first, does not move existing data, and restarts the node there. The Diagnostics page lists versions, paths, the node process, the event connection, and memory use for a bug report. To use a node you run elsewhere, choose Remote node on the Connection page, enter its URL (`http://127.0.0.1:3000` for a local record-node on its default port), test the connection, and save.
 
 ## Test
 
@@ -60,11 +67,13 @@ The integration test starts record-node in process and ingests a fixture, which 
 
 `bun run smoke:remote` launches the built app against a running node, finds a track, and plays it, then relaunches from the offline snapshot and checks the unreachable state. Set `RECORD_NODE_URL`, `RECORD_SMOKE_TITLE`, and `RECORD_SMOKE_ARTIST` to choose the node and the track. The script header documents the optional live-update and offline-relaunch checks. The remote smoke stays read-only: it never plays long enough to record a listen.
 
-`bun run smoke:local` starts its own record-node in process and walks every write in the built app against it: search, sort, and the tag filter; tagging; import by file picker, drop, URL, and CID; linking, connecting, and unlinking a library; the library profile; identity export (then checks no file in the app profile holds the key); listens, peers, a hotkey, and a gapless transition with its listen and Media Session. It needs `ffmpeg` and `fpcalc`, like the integration test.
+`bun run smoke:local` starts its own record-node in process and walks every write in the built app against it: search, sort, and the tag filter; tagging; import by file picker, drop, URL, and CID; linking, connecting, and unlinking a library; the library profile; identity export (then checks no file in the app profile holds the key); listens, peers, a hotkey, and a gapless transition with its listen and Media Session. In bundled mode it ingests a dropped file through the pinned toolchain, which on macOS must be built first (`bun run build:toolchain`). It needs `ffmpeg` and `fpcalc` for the in-process node, like the integration test. CI runs it under `xvfb-run`.
+
+`bun run smoke:packaged` mounts both packaged `.dmg` files. It reads every fuse back from both and expects an exact match, and checks that the release build exits rather than run with `--remote-debugging-port`. It then drives the test build, the only one that accepts remote debugging, which is baked in at build time. It checks that `ELECTRON_RUN_AS_NODE` stays off and that the bundled node runs as a utility process loading its own architecture's native binary. It then plays a track from a data directory seeded in process, and ingests a file through the packaged ffmpeg and fpcalc. Set `RECORD_PACKAGED_ARCH=x86_64` to run the Intel slice under Rosetta. The Package workflow runs both packages and both slices on macOS, by hand or on a `v*` tag.
 
 ## Security
 
-The renderer never talks to the node. The main process makes every request with Node's built-in `fetch`, accepting only a method and path template from the API definition, and the renderer reaches it through a narrow preload bridge. The renderer runs sandboxed with context isolation and a strict Content Security Policy.
+The renderer never talks to the node. The main process makes every request with Node's built-in `fetch`, accepting only a method and path template from the API definition, and the renderer reaches it through a narrow preload bridge. The renderer runs sandboxed with context isolation and a strict Content Security Policy, served from an `app://` scheme rather than `file://`. Packaged builds set Electron's recommended fuses: no `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS`, or inspect arguments, cookie encryption on, and the app loaded only from its integrity-checked asar.
 
 ## License
 

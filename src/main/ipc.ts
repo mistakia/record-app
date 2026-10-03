@@ -7,6 +7,7 @@ import { BrowserWindow, clipboard, dialog, ipcMain, shell, type IpcMainInvokeEve
 import { IPC_CHANNELS, type NodeResult } from '#shared/bridge.ts'
 import { create_audio_downloads } from './audio-downloads.ts'
 import type { create_node_manager } from './bundled/node-manager.ts'
+import type { create_diagnostics } from './diagnostics.ts'
 import { create_secret_clipboard } from './clipboard-expiry.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
@@ -25,12 +26,13 @@ const refuse = (message: string): NodeResult<never> => ({ ok: false, failure: { 
 const is_plain_object = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-export const register_ipc = ({ store, connection, manager, session, snapshots, is_app_frame }: {
+export const register_ipc = ({ store, connection, manager, session, snapshots, diagnostics, is_app_frame }: {
   store: ConnectionStore
   connection: ReturnType<typeof create_node_connection>
   manager: ReturnType<typeof create_node_manager>
   session: NodeSession
   snapshots: SnapshotStore
+  diagnostics: ReturnType<typeof create_diagnostics>
   is_app_frame: (url: string) => boolean
 }): { forget_identity: () => void } => {
   const node_url = (): string | null => connection.node_url()
@@ -81,7 +83,7 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, i
     }
     return await test_connection({ node_url: checked.data.node_url as string })
   })
-  handle(IPC_CHANNELS.request, async (input) => await serve_generic_request({ input, node_url: node_url() }))
+  handle(IPC_CHANNELS.request, async (input) => await serve_generic_request({ input, node_url: node_url(), mode: store.get().mode }))
   const audio_downloads = create_audio_downloads({ download: async ({ cid, signal }) => await get_audio({ node_url: node_url(), cid, signal }) })
   handle(IPC_CHANNELS.get_audio, async (input) => {
     const { cid, request_id } = is_plain_object(input) ? input : {}
@@ -128,6 +130,8 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, i
     return { ok: true, data: null }
   })
   handle(IPC_CHANNELS.bundled_open_data_dir, async () => { await shell.openPath(manager.get_state().data_dir) })
+  handle(IPC_CHANNELS.bundled_choose_data_dir, async () => await diagnostics.choose_data_dir())
+  handle(IPC_CHANNELS.diagnostics_get, async () => diagnostics.collect())
   handle(IPC_CHANNELS.bundled_open_log, async () => { shell.showItemInFolder(manager.get_state().log_path) })
 
   handle(IPC_CHANNELS.events_get_state, async () => session.get_state())
