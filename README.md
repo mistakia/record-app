@@ -48,7 +48,7 @@ bun run start    # run the production build
 bun run package:mac   # unsigned universal .dmg and update .zip into release/
 ```
 
-`package:mac` first installs the macOS optional dependencies for both architectures, so the universal app carries node-datachannel's Intel and Apple Silicon binaries.
+`package:mac` first runs `bun run audit`, the dependency audit gate: a high or critical advisory in the shipped dependencies fails the build unless `audit-allowlist.json` justifies it, and each entry expires on its review-by date. It then installs the macOS optional dependencies for both architectures, so the universal app carries node-datachannel's Intel and Apple Silicon binaries.
 
 On first launch the app starts its own record-node in bundled mode, with its data in the app's Application Support directory and its log in `~/Library/Logs`. To keep the node's data elsewhere, choose Change beside the data directory on the Connection page. The app asks first, does not move existing data, and restarts the node in the new folder. The Diagnostics page lists versions, paths, the node process, the event connection, and memory use for a bug report. To use a node you run elsewhere, choose Remote node on the Connection page, enter its URL (`http://127.0.0.1:3000` for a local record-node on its default port), test the connection, and save.
 

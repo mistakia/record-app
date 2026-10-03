@@ -42,6 +42,11 @@ jobs:
       - name: Install ffmpeg and fpcalc
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg libchromaprint-tools xvfb
 
+      # Spec 8.10.8: high and critical advisories in the shipped closure fail
+      # unless audit-allowlist.json justifies them, until their review date.
+      - name: Dependency audit
+        run: bun run audit
+
       - name: Verify (lint and typecheck)
         run: bun run verify
 
