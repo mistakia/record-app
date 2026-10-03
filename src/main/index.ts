@@ -4,7 +4,7 @@
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { app, BrowserWindow, session } from 'electron'
+import { app, BrowserWindow, powerMonitor, session } from 'electron'
 
 import { open_connection_store } from './connection-store.ts'
 import { register_ipc } from './ipc.ts'
@@ -52,6 +52,8 @@ const start = async (): Promise<void> => {
     node_session.stop()
     snapshots.flush_sync()
   })
+  // A socket that looked open before sleep is usually dead after it.
+  powerMonitor.on('resume', () => { node_session.force_reconnect('Reconnecting after the computer woke.') })
   node_session.start(store.get().node_url)
   open_window()
   app.on('activate', () => {

@@ -2,12 +2,17 @@
 // process with the built-in WebSocket, which sends no Origin header. It
 // reconnects with exponential backoff from 1 s to 30 s with jitter, and
 // reports its state so the renderer can show it and reconcile on reconnect.
+// The node sends no pings and the built-in WebSocket cannot send one, so
+// while open a cheap probe runs every 15 s; a failed probe treats the socket
+// as dead (a half-open socket after sleep, a network change, or a tunnel
+// that died silently) and reconnects.
 // Imports nothing from Electron, so the integration tests drive it directly.
 
 import type { EventsState, NodeEventMessage } from '#shared/bridge.ts'
 
 export const RECONNECT_MIN_MS = 1_000
 export const RECONNECT_MAX_MS = 30_000
+export const PROBE_INTERVAL_MS = 15_000
 // A message larger than this is dropped rather than parsed and forwarded.
 const MAX_MESSAGE_CHARS = 1_000_000
 
@@ -37,6 +42,9 @@ export interface NodeEvents {
   get_state: () => EventsState
   // Skips the remaining backoff wait and dials now.
   reconnect_now: () => void
+  // Drops the socket, even one that looks open, and dials again at once, as
+  // after the machine wakes from sleep.
+  force_reconnect: (reason: string) => void
   close: () => void
 }
 
@@ -46,6 +54,8 @@ export const open_node_events = ({
   on_state,
   create_socket = (url) => new WebSocket(url),
   delay_ms = (attempt) => reconnect_delay_ms({ attempt }),
+  probe,
+  probe_interval_ms = PROBE_INTERVAL_MS,
   now = Date.now
 }: {
   node_url: string
@@ -53,11 +63,15 @@ export const open_node_events = ({
   on_state: (state: EventsState) => void
   create_socket?: (url: string) => WebSocket
   delay_ms?: (attempt: number) => number
+  // Resolves false when the node is out of reach.
+  probe?: () => Promise<boolean>
+  probe_interval_ms?: number
   now?: () => number
 }): NodeEvents => {
   let state: EventsState = { status: 'connecting', node_url, connection_id: 0, attempt: 0, retry_at_ms: null, last_error: null }
   let socket: WebSocket | null = null
   let retry_timer: ReturnType<typeof setTimeout> | null = null
+  let probe_timer: ReturnType<typeof setInterval> | null = null
   let closed = false
 
   const set_state = (patch: Partial<EventsState>): void => {
@@ -70,6 +84,46 @@ export const open_node_events = ({
     const delay = delay_ms(state.attempt)
     set_state({ status: 'reconnecting', attempt: state.attempt + 1, retry_at_ms: now() + delay, last_error: error })
     retry_timer = setTimeout(connect, delay)
+  }
+
+  const stop_probe = (): void => {
+    if (probe_timer !== null) clearInterval(probe_timer)
+    probe_timer = null
+  }
+
+  // Abandons the current socket without waiting for its close handshake,
+  // which a dead peer never completes.
+  const drop_socket = (): void => {
+    stop_probe()
+    const current = socket
+    socket = null
+    if (current === null) return
+    current.onopen = null
+    current.onmessage = null
+    current.onerror = null
+    current.onclose = null
+    try {
+      current.close()
+    } catch {}
+  }
+
+  const start_probe = (current: WebSocket): void => {
+    stop_probe()
+    if (probe === undefined) return
+    let probing = false
+    probe_timer = setInterval(() => {
+      if (probing || socket !== current) return
+      probing = true
+      probe()
+        .catch(() => false)
+        .then((alive) => {
+          probing = false
+          if (alive || socket !== current || closed) return
+          drop_socket()
+          schedule_retry('The node stopped answering.')
+        })
+        .catch(() => {})
+    }, probe_interval_ms)
   }
 
   function connect (): void {
@@ -89,6 +143,7 @@ export const open_node_events = ({
       if (socket !== current) return
       // A new connection_id tells the renderer to reconcile (spec §8.7.7).
       set_state({ status: 'open', connection_id: state.connection_id + 1, attempt: 0, retry_at_ms: null, last_error: null })
+      start_probe(current)
     }
     current.onmessage = (event) => {
       if (socket !== current) return
@@ -101,6 +156,7 @@ export const open_node_events = ({
     }
     current.onclose = (event) => {
       if (socket !== current) return
+      stop_probe()
       socket = null
       schedule_retry(event.code === 1000 || event.code === 1005 ? failure : `${failure} (close code ${event.code})`)
     }
@@ -118,13 +174,19 @@ export const open_node_events = ({
       clearTimeout(retry_timer)
       connect()
     },
+    force_reconnect: (reason) => {
+      if (closed) return
+      if (retry_timer !== null) clearTimeout(retry_timer)
+      retry_timer = null
+      drop_socket()
+      set_state({ status: 'connecting', attempt: 0, retry_at_ms: null, last_error: reason })
+      connect()
+    },
     close: () => {
       closed = true
       if (retry_timer !== null) clearTimeout(retry_timer)
       retry_timer = null
-      const current = socket
-      socket = null
-      current?.close()
+      drop_socket()
       set_state({ status: 'closed', retry_at_ms: null })
     }
   }

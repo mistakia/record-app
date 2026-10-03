@@ -118,13 +118,59 @@ describe('open_node_events', () => {
   })
 })
 
+describe('liveness', () => {
+  test('a failed probe drops an open socket that never closed and reconnects; a passing probe leaves it open', async () => {
+    const { sockets, create_socket } = create_fake_sockets()
+    let alive = true
+    const connection = open_node_events({
+      node_url: 'http://127.0.0.1:3000',
+      on_event: () => {},
+      on_state: () => {},
+      create_socket,
+      delay_ms: () => 5,
+      probe: async () => alive,
+      probe_interval_ms: 5
+    })
+    sockets[0]?.onopen?.()
+    await tick(30)
+    expect(connection.get_state().status).toBe('open')
+    expect(sockets).toHaveLength(1)
+
+    alive = false
+    await tick(30)
+    expect(sockets[0]?.closed).toBe(true)
+    expect(sockets[0]?.onclose).toBeNull()
+    expect(sockets.length).toBeGreaterThan(1)
+    expect(connection.get_state().last_error).toBe('The node stopped answering.')
+    alive = true
+    sockets.at(-1)?.onopen?.()
+    expect(connection.get_state()).toMatchObject({ status: 'open', connection_id: 2 })
+    connection.close()
+  })
+
+  test('force_reconnect abandons a socket that looks open and dials again at once', () => {
+    const { sockets, create_socket } = create_fake_sockets()
+    const states: string[] = []
+    const connection = open_node_events({ node_url: 'http://127.0.0.1:3000', on_event: () => {}, on_state: ({ status }) => { states.push(status) }, create_socket, delay_ms: () => 60_000 })
+    sockets[0]?.onopen?.()
+    connection.force_reconnect('woke from sleep')
+    expect(sockets[0]?.closed).toBe(true)
+    expect(sockets).toHaveLength(2)
+    expect(connection.get_state()).toMatchObject({ status: 'connecting', last_error: 'woke from sleep' })
+    sockets[1]?.onopen?.()
+    expect(connection.get_state()).toMatchObject({ status: 'open', connection_id: 2 })
+    expect(states).toEqual(['connecting', 'open', 'connecting', 'open'])
+    connection.close()
+  })
+})
+
 describe('create_node_session', () => {
   test('restarts on each start, keeps connection_id rising, and drops a replaced connection\'s callbacks', async () => {
     const { sockets, create_socket } = create_fake_sockets()
     const sent: Array<{ channel: string, payload: unknown }> = []
     const session = create_node_session({
       broadcast: (channel, payload) => { sent.push({ channel, payload }) },
-      open_events: (options) => open_node_events({ ...options, create_socket, delay_ms: () => 5 })
+      open_events: (options) => open_node_events({ ...options, create_socket, delay_ms: () => 5, probe: async () => true })
     })
     session.start('http://127.0.0.1:3000')
     sockets[0]?.onopen?.()
