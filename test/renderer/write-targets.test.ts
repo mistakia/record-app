@@ -98,10 +98,14 @@ describe('write targets', () => {
     const targets = write_targets({ libraries: LIBRARIES, held: [capability({})], action: 'library.append_track' })
     expect(default_target({ targets, recent: null })?.library_address).toBe('/record/z/own')
     expect(default_target({ targets, recent: '/record/z/own2' })?.library_address).toBe('/record/z/own2')
-    expect(default_target({ targets, recent: '/record/z/own2', preferred: ['/record/z/shared'] })?.library_address).toBe('/record/z/shared')
+    expect(default_target({ targets, recent: '/record/z/own2', preferred: '/record/z/shared' })?.library_address).toBe('/record/z/shared')
     // A preferred library that is not writable falls through.
-    // The first preferred address that is a target wins.
-    expect(default_target({ targets, recent: '/record/z/gone', preferred: ['/record/z/linked', '/record/z/own2'] })?.library_address).toBe('/record/z/own2')
+    expect(default_target({ targets, recent: '/record/z/gone', preferred: '/record/z/linked' })?.library_address).toBe('/record/z/own')
+    // Among the track's holders, the one written to last, else the first writable one.
+    const holders = ['/record/z/linked', '/record/z/own', '/record/z/own2']
+    expect(default_target({ targets, recent: '/record/z/own2', holders })?.library_address).toBe('/record/z/own2')
+    expect(default_target({ targets, recent: '/record/z/shared', holders })?.library_address).toBe('/record/z/own')
+    expect(default_target({ targets, recent: null, preferred: '/record/z/shared', holders })?.library_address).toBe('/record/z/shared')
     expect(default_target({ targets: [], recent: null })).toBeNull()
   })
 
@@ -116,6 +120,8 @@ describe('holders', () => {
     expect(describe_holders({ addresses: ['/record/z/own', '/record/z/own2', '/record/z/shared', '/record/z/linked', '/record/z/unknown'], libraries: LIBRARIES }))
       .toBe('2 own, 1 shared, 1 linked, 1 discovered')
     expect(describe_holders({ addresses: [], libraries: LIBRARIES })).toBeNull()
+    // Not before the library list loads, when every holder would read as discovered.
+    expect(describe_holders({ addresses: ['/record/z/own'], libraries: undefined })).toBeNull()
   })
 
   test('a track can be removed only from own active recordstores holding it', () => {

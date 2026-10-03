@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import { readFile } from 'node:fs/promises'
 
+import { parse as parse_yaml } from 'yaml'
+
 import { build_api_path } from '#main/api-path.ts'
+import { TARGETED_WRITES } from '#main/write-target.ts'
 import { API_ROUTES } from '#shared/api-routes.ts'
 // @ts-expect-error -- plain JavaScript CLI module without type declarations
 import { list_api_routes } from '../../cli/generate-api-routes.mjs'
@@ -82,5 +85,30 @@ describe('API_ROUTES', () => {
   test('matches the pinned record-node yaml (run `bun run gen:api` when it does not)', async () => {
     const yaml = await readFile(new URL('../../node_modules/record-node/dist/api/7-http-api.yaml', import.meta.url), 'utf8')
     expect(list_api_routes(yaml)).toEqual(API_ROUTES)
+  })
+})
+
+describe('targeted writes', () => {
+  // Every route the pinned yaml gives a write target (the WriteTarget query
+  // parameter or a WriteTargetAddress body field) must be one main refuses
+  // without a target, except those with a dedicated channel.
+  test('main checks a target on every targeted write in the yaml', async () => {
+    const document = parse_yaml(await readFile(new URL('../../node_modules/record-node/dist/api/7-http-api.yaml', import.meta.url), 'utf8')) as {
+      paths: Record<string, Record<string, { parameters?: Array<{ $ref?: string }>, requestBody?: { content?: Record<string, { schema?: { properties?: Record<string, { $ref?: string }> } }> } }>>
+    }
+    const targeted: Record<string, 'body' | 'query'> = {}
+    for (const [path, operations] of Object.entries(document.paths)) {
+      for (const [method, operation] of Object.entries(operations)) {
+        if (operation === null || typeof operation !== 'object' || !('responses' in operation)) continue
+        const key = `${method} ${path}`
+        const built = build_api_path({ method, path_template: path, params: {} })
+        if (!built.ok && built.reason.includes('dedicated channel')) continue
+        if ((operation.parameters ?? []).some(({ $ref }) => $ref === '#/components/parameters/WriteTarget')) targeted[key] = 'query'
+        const bodies = Object.values(operation.requestBody?.content ?? {})
+        if (bodies.some(({ schema }) => schema?.properties?.library_address?.$ref === '#/components/schemas/WriteTargetAddress')) targeted[key] = 'body'
+      }
+    }
+    expect(Object.keys(targeted).length).toBeGreaterThan(3)
+    expect(TARGETED_WRITES).toEqual(targeted)
   })
 })

@@ -66,8 +66,8 @@ export const track_view = (track: Track, library_address: string): Record<string
 
 export interface StorageEstimate {
   bytes: number
-  // Whether bytes is the node's own total (full mode) rather than scaled
-  // from the sample.
+  // Whether bytes is the node's own total (full mode, or none kept) rather
+  // than scaled from the sample.
   exact: boolean
   // How many sampled tracks the estimate rests on, and how many matched.
   sampled: number
@@ -77,19 +77,22 @@ export interface StorageEstimate {
 // Audio a policy keeps for a library: the node's total (Library.
 // audio_size_bytes) for full; for selective, that total scaled by the
 // matching share of a sample's bytes; none for index_only (audio played is
-// cached, then evicted). A node without the total falls back to scaling the
-// sample's mean size by track_count. Null without a sample to go on.
+// cached, then evicted). Without a complete total (an older node, or a
+// library still replicating, whose total counts only the tracks arrived so
+// far), the sample's mean size scaled by track_count. Null while there is
+// no sample to go on.
 export const estimate_storage = ({ mode, filter, sample, track_count, total_bytes, library_address }: {
   mode: 'full' | 'selective' | 'index_only'
   filter: unknown
-  sample: readonly Track[]
+  sample: readonly Track[] | undefined
   track_count: number
   total_bytes?: number | undefined
   library_address: string
 }): StorageEstimate | null => {
-  if (mode === 'index_only') return { bytes: 0, exact: true, sampled: sample.length, matched: 0 }
+  if (mode === 'index_only') return { bytes: 0, exact: true, sampled: sample?.length ?? 0, matched: 0 }
   if (mode === 'full' && total_bytes !== undefined) return { bytes: total_bytes, exact: true, sampled: 0, matched: 0 }
-  if (sample.length === 0) return track_count === 0 || total_bytes === 0 ? { bytes: 0, exact: true, sampled: 0, matched: 0 } : null
+  if (sample === undefined) return null
+  if (sample.length === 0) return track_count === 0 ? { bytes: 0, exact: true, sampled: 0, matched: 0 } : null
   const kept = mode === 'full' ? sample : sample.filter((track) => evaluate_filter(filter, track_view(track, library_address)))
   const kept_bytes = kept.reduce((sum, track) => sum + track.audio_size_bytes, 0)
   const sample_bytes = sample.reduce((sum, track) => sum + track.audio_size_bytes, 0)

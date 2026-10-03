@@ -66,6 +66,20 @@ describe('storage estimate', () => {
     expect(estimate_storage({ mode: 'selective', filter: { type: 'match', fields: { tags: 'keep' } }, sample, track_count: 100, total_bytes: 4_000_000_000, library_address })?.bytes).toBe(1_000_000_000)
     expect(estimate_storage({ mode: 'index_only', filter: null, sample, track_count: 100, library_address })?.bytes).toBe(0)
     expect(estimate_storage({ mode: 'full', filter: null, sample: [], track_count: 5, library_address })).toBeNull()
+  })
+
+  test('edges: no sample yet, an empty page of a non-empty library, a zero-byte sample, a full match', () => {
+    const keep = { type: 'match', fields: { tags: 'keep' } }
+    // Full with the total needs no sample; anything else waits for one.
+    expect(estimate_storage({ mode: 'full', filter: null, sample: undefined, track_count: 5, total_bytes: 7, library_address })).toEqual({ bytes: 7, exact: true, sampled: 0, matched: 0 })
+    expect(estimate_storage({ mode: 'selective', filter: keep, sample: undefined, track_count: 5, total_bytes: 7, library_address })).toBeNull()
+    // A total of zero while tracks exist is not taken as exactly nothing.
+    expect(estimate_storage({ mode: 'selective', filter: keep, sample: [], track_count: 5, total_bytes: 0, library_address })).toBeNull()
+    expect(estimate_storage({ mode: 'selective', filter: keep, sample: [], track_count: 0, total_bytes: 0, library_address })).toEqual({ bytes: 0, exact: true, sampled: 0, matched: 0 })
+    const silent = sample.map((track) => ({ ...track, audio_size_bytes: 0 }))
+    expect(estimate_storage({ mode: 'selective', filter: keep, sample: silent, track_count: 100, total_bytes: 10, library_address })?.bytes).toBe(0)
+    expect(estimate_storage({ mode: 'selective', filter: { type: 'not', filter: { type: 'match', fields: { tags: 'absent' } } }, sample, track_count: 100, total_bytes: 4_000_000_000, library_address }))
+      .toEqual({ bytes: 4_000_000_000, exact: false, sampled: 2, matched: 2 })
     expect(format_bytes(2_000_000_000)).toBe('2.0 GB')
     expect(format_bytes(512)).toBe('512 B')
   })
