@@ -1,7 +1,8 @@
 // Adoption (spec §8.6.7, §8.9.1): copy a track's entry into a chosen
 // writable library, an own one or a shared one whose capability grants
-// library.append_track, by its content CID (POST /tracks). Libraries that
-// already hold the track (Track.library_addresses) are not offered.
+// library.append_track, by its content CID (POST /tracks). Libraries known
+// to hold the track are not offered: Track.library_addresses, which names
+// holders only among the libraries the view asked for, and the viewed one.
 
 import { useState } from 'react'
 

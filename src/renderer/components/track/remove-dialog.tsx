@@ -32,7 +32,8 @@ export const RemoveDialog = ({ track, viewed_library, on_close }: { track: Track
     set_busy(true)
     const removed = await report_write({
       dispatch,
-      write: dispatch(node_api.endpoints.remove_track.initiate({ track_id: track.id, library_address: target.address })),
+      // DELETE answers with no body, so success is the absence of an error.
+      write: dispatch(node_api.endpoints.remove_track.initiate({ track_id: track.id, library_address: target.address })).then(({ error }) => ({ error, data: true })),
       success: `Removed from ${library_name(target)}.`
     })
     set_busy(false)
