@@ -88,14 +88,32 @@ const packuments = new Map()
 function packument(name) {
   if (!packuments.has(name)) {
     const url = `https://registry.npmjs.org/${name.replace('/', '%2f')}`
-    packuments.set(
-      name,
-      fetch(url, { headers: { accept: 'application/json' } })
-        .then((r) => (r.ok ? r.json() : { error: `HTTP ${r.status}` }))
-        .catch((err) => ({ error: err.message }))
-    )
+    packuments.set(name, fetchPackument(url))
   }
   return packuments.get(name)
+}
+
+// A single transient `fetch failed` used to fail the whole check closed, so a
+// network error, 429 or 5xx is retried with backoff. A 404 or other 4xx is an
+// answer, not a transient, and fails at once.
+const ATTEMPTS = 3
+async function fetchPackument(url) {
+  let error
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+    if (attempt > 1)
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000 * 2 ** (attempt - 2))
+      )
+    try {
+      const r = await fetch(url, { headers: { accept: 'application/json' } })
+      if (r.ok) return await r.json()
+      error = `HTTP ${r.status}`
+      if (r.status !== 429 && r.status < 500) break
+    } catch (err) {
+      error = err.message
+    }
+  }
+  return { error }
 }
 
 const queue = [...candidates]
