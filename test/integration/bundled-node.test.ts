@@ -90,7 +90,7 @@ describe('bundled node manager', () => {
     const { url, pid, node_key_pin } = manager.get_state()
     expect(url).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/)
     const settings = await (await fetch(`${url}/api/settings`)).json() as { peer_id: string }
-    expect(node_key_pin).toMatchObject({ peer_id: settings.peer_id, own_library_address: expect.stringMatching(/^\/record\//) })
+    expect(node_key_pin).toMatchObject({ peer_id: settings.peer_id, identity_address: expect.stringMatching(/^\/record\//) })
     expect(JSON.parse(await readFile(join(data_dir, PIN_FILE), 'utf8'))).toEqual(node_key_pin)
     expect(JSON.parse(await readFile(join(data_dir, LOCK_FILE), 'utf8'))).toMatchObject({ app_pid: process.pid, child_pid: pid })
     expect(JSON.parse(await readFile(join(root, 'bundled-node.json'), 'utf8'))).toMatchObject({ host: '127.0.0.1', cors_origins: [] })
@@ -148,7 +148,7 @@ describe('bundled node manager', () => {
     expect(is_alive(old_pid)).toBe(false)
     expect(await Bun.file(join(data_dir, LOCK_FILE)).exists()).toBe(false)
     expect(JSON.parse(await readFile(join(next_dir, LOCK_FILE), 'utf8'))).toMatchObject({ child_pid: moved.pid })
-    expect(moved.node_key_pin?.own_library_address).not.toBe(old_pin?.own_library_address)
+    expect(moved.node_key_pin?.identity_address).not.toBe(old_pin?.identity_address)
 
     // Moving back finds the first node's pin, and with start false leaves it stopped.
     await manager.relocate({ next_data_dir: data_dir, start: false })
@@ -263,7 +263,7 @@ describe('bundled node manager', () => {
     await wait_for(() => manager.get_state().status === 'running', 'pinned')
     await manager.stop()
     // The pin now names a different peer than the data directory holds.
-    await writeFile(join(data_dir, PIN_FILE), JSON.stringify({ peer_id: '12D3KooWSomeoneElse', own_library_address: null }))
+    await writeFile(join(data_dir, PIN_FILE), JSON.stringify({ peer_id: '12D3KooWSomeoneElse', identity_address: null }))
     const again = await setup({ data_dir, owner: 'again' })
     await again.manager.start()
     await wait_for(() => again.manager.get_state().status === 'failed', 'refused')

@@ -46,15 +46,15 @@ describe('node connection', () => {
       expect(connection.node_url()).toBeNull()
       // No key until the bundled node first answers and is pinned.
       expect(connection.view()).toEqual({ mode: 'bundled', node_url: null, node_key: null, auth: { status: 'none', persistent: false } })
-      const pin = { peer_id: '12D3KooWPeer', own_library_address: '/record/z1/record' }
+      const pin = { peer_id: '12D3KooWPeer', identity_address: '/record/z1/identity' }
       fake.set({ status: 'running', url: 'http://127.0.0.1:41000', node_key_pin: pin })
       connection.sync()
-      expect(connection.node_key()).toBe('bundled:12D3KooWPeer:/record/z1/record')
-      expect(views).toEqual(['bundled:12D3KooWPeer:/record/z1/record'])
+      expect(connection.node_key()).toBe('bundled:12D3KooWPeer:/record/z1/identity')
+      expect(views).toEqual(['bundled:12D3KooWPeer:/record/z1/identity'])
       // An imported identity changes the own library, so the key changes too.
-      fake.set({ status: 'running', url: 'http://127.0.0.1:41000', node_key_pin: { ...pin, own_library_address: '/record/z2/record' } })
+      fake.set({ status: 'running', url: 'http://127.0.0.1:41000', node_key_pin: { ...pin, identity_address: '/record/z2/identity' } })
       connection.sync()
-      expect(views.at(-1)).toBe('bundled:12D3KooWPeer:/record/z2/record')
+      expect(views.at(-1)).toBe('bundled:12D3KooWPeer:/record/z2/identity')
       expect(connection.node_url()).toBe('http://127.0.0.1:41000')
       expect(sessions).toEqual([null, 'http://127.0.0.1:41000'])
 

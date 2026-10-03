@@ -17,6 +17,23 @@ export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address'
 export const own_library_address = (libraries: readonly Library[] | undefined): string | null =>
   libraries?.find(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore')?.address ?? null
 
+// The own libraries: from GET /identity/libraries when the node serves it,
+// else from GET /libraries, which lists own libraries too (an older node, a
+// query still loading, or a hibernation restore that holds only the latter).
+export const own_libraries_of = ({ own, libraries }: {
+  own: readonly Library[] | undefined
+  libraries: readonly Library[] | undefined
+}): Library[] => [...(own ?? libraries?.filter(({ is_own }) => is_own) ?? [])]
+
+// A profile is edited on an active recordstore: the node refuses writes to a
+// retired library, and the listens library holds listens only.
+export const has_profile = (library: Pick<Library, 'is_retired' | 'library_type'>): boolean =>
+  !library.is_retired && library.library_type === 'recordstore'
+
+// Retirement is permanent, and the listens library is never retired (§4.8.3).
+export const can_retire = (library: Pick<Library, 'is_retired' | 'library_type'>): boolean =>
+  !library.is_retired && library.library_type !== 'listens'
+
 // How long a fresh link counts as replicating while the node reports
 // nothing for it, so it is never shown as simply empty (spec §8.6.5) but
 // also never as replicating forever.

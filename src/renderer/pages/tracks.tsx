@@ -64,7 +64,7 @@ export const Tracks = () => {
           <option value=''>All libraries</option>
           {libraries.data?.map((library) => (
             <option key={library.id} value={library.address}>
-              {library_name(library)} ({library_category(library)}, {library.track_count} tracks)
+              {library_name(library)} ({library_category(library)}{library.is_retired ? ', retired' : ''}, {library.track_count} tracks)
             </option>
           ))}
         </select>

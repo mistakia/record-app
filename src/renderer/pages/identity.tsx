@@ -6,13 +6,14 @@ import { useState } from 'react'
 import styles from './identity.module.css'
 import { ExportDialog } from '#renderer/components/identity/export-dialog.tsx'
 import { ImportForm } from '#renderer/components/identity/import-form.tsx'
-import { library_name } from '#renderer/components/library/library-category.ts'
+import { library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
 import { compressed_public_key, read_last_export, truncate_key } from '#renderer/identity/identity.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
 export const Identity = () => {
   const config = use_app_selector((state) => state.connection.config)
+  const own_libraries = node_api.endpoints.get_own_libraries.useQuery()
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const [public_key, set_public_key] = useState<string | null>(null)
   const [key_error, set_key_error] = useState<string | null>(null)
@@ -22,7 +23,7 @@ export const Identity = () => {
   const node_key = config?.node_key ?? ''
   const mode = config?.mode ?? 'remote'
   const last_export = read_last_export(node_key)
-  const own = libraries.data?.filter(({ is_own }) => is_own) ?? []
+  const own = own_libraries_of({ own: own_libraries.data, libraries: libraries.data })
 
   // Chapter 7 serves the public key only together with the private key, so
   // it is read on request, in main, which passes on the public half alone.
@@ -50,7 +51,16 @@ export const Identity = () => {
           {key_error !== null && <span className={styles.error}>{key_error}</span>}
         </dd>
         <dt>Own libraries</dt>
-        <dd>{own.length === 0 ? 'None' : own.map((library) => <span key={library.id} className={styles.library}>{library_name(library)}</span>)}</dd>
+        <dd>{own.length === 0
+          ? 'None'
+          : own.map((library) => (
+            <span key={library.id} className={styles.library} data-testid='identity-own-library'>
+              {library_name(library)}
+              {library.library_type === 'listens' && ' (listens)'}
+              {library.is_retired && ' (retired)'}
+            </span>
+          ))}
+        </dd>
         <dt>Last export</dt>
         <dd data-testid='last-export'>{last_export === null ? 'Never from this app' : new Date(last_export).toLocaleString()}</dd>
       </dl>

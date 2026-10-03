@@ -38,6 +38,8 @@ interface NodeEventPayloads {
   }
   'library:peer-joined': LibraryAddressPayload & { peer_id: string }
   'library:peer-left': LibraryAddressPayload & { peer_id: string }
+  'identity:library-created': { library: Library }
+  'identity:library-retired': LibraryAddressPayload
   'peer:joined': { peer_id: string, peer_count: number }
   'peer:left': { peer_id: string, peer_count: number }
   'import:starting': { import_id: string, source: 'file' | 'url', file_count: number }

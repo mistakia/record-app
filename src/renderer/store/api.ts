@@ -78,6 +78,11 @@ export const node_api = createApi({
       query: () => ({ method: 'get', path_template: '/libraries' }),
       providesTags: ['libraries']
     }),
+    // Every own library, active and retired, the listens library included.
+    get_own_libraries: build.query<Library[], void>({
+      query: () => ({ method: 'get', path_template: '/identity/libraries' }),
+      providesTags: ['libraries']
+    }),
     get_tracks: build.query<TrackList, GetTracksArgs>({
       query: (args) => ({ method: 'get', path_template: '/tracks', query: { ...args } }),
       providesTags: ['tracks']
@@ -132,6 +137,14 @@ export const node_api = createApi({
     }),
     disconnect_library: build.mutation<unknown, string>({
       query: (address) => ({ method: 'post', path_template: '/libraries/{address}/disconnect', params: encode(address) }),
+      invalidatesTags: ['libraries']
+    }),
+    create_own_library: build.mutation<Library, { discriminator?: string, about?: { name: string } }>({
+      query: (body) => ({ method: 'post', path_template: '/identity/libraries', body }),
+      invalidatesTags: ['libraries', 'about']
+    }),
+    retire_own_library: build.mutation<unknown, string>({
+      query: (address) => ({ method: 'delete', path_template: '/identity/libraries/{address}', params: encode(address) }),
       invalidatesTags: ['libraries']
     }),
     // The key goes to main's identity channel, not the generic request, so
