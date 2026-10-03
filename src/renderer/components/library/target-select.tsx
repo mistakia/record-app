@@ -37,7 +37,8 @@ export const use_write_target = ({ action, preferred = null, exclude = [] }: {
   const recent = use_app_selector((state) => state.ui.recent_write_target)
   const [chosen, set_chosen] = useState<string | null>(null)
   // Shared libraries the user left are not offered (§8.6.4).
-  const left = use_left_libraries(use_app_selector((state) => state.connection.config?.node_key ?? null))
+  const node_key = use_app_selector((state) => state.connection.config?.node_key ?? null)
+  const left = use_left_libraries(node_key)
   const targets = write_targets({ libraries: libraries.data ?? [], held: held.data ?? [], action })
     .filter(({ library_address, category }) => !exclude.includes(library_address) && !(category === 'shared' && left.includes(library_address)))
   // A 404 from an older node settles the capability list as empty (§8.7.6).

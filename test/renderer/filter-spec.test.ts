@@ -4,14 +4,18 @@
 
 import { describe, expect, test } from 'bun:test'
 
-import { blank_filter, describe_filter, filter_problems, FILTER_TYPES } from '#renderer/filter/filter-spec.ts'
+import { blank_draft, from_draft, to_draft } from '#renderer/filter/filter-draft.ts'
+import { CAPABILITY_FIELDS, describe_filter, filter_problems, FILTER_TYPES, REPLICATION_FIELDS, type FilterSpec } from '#renderer/filter/filter-spec.ts'
 import { describe_action, describe_conditions, describe_grantee, describe_scope, parse_grantee_keys } from '#renderer/library/capabilities.ts'
 
 const KEY = `02${'ab'.repeat(32)}`
 
 describe('filter problems', () => {
-  test('a blank node of every type is sound', () => {
-    for (const type of FILTER_TYPES) expect(filter_problems(blank_filter(type))).toEqual([])
+  test('a blank draft of every type converts to a sound filter', () => {
+    for (const type of FILTER_TYPES) {
+      const result = from_draft(blank_draft(type), CAPABILITY_FIELDS)
+      expect(result.ok && filter_problems(result.spec)).toEqual([])
+    }
   })
 
   test('catches what the node would refuse or what would match nothing', () => {
@@ -29,8 +33,31 @@ describe('filter problems', () => {
     ]
     for (const spec of cases) expect(filter_problems(spec).length).toBeGreaterThan(0)
     let deep: unknown = { type: 'match', fields: { tags: 'a' } }
-    for (let level = 0; level < 16; level++) deep = { type: 'not', filter: deep }
-    expect(filter_problems(deep).some((problem) => problem.includes('nested more than 16'))).toBe(true)
+    for (let level = 0; level < 15; level++) deep = { type: 'not', filter: deep }
+    // Sixteen levels pass; seventeen do not.
+    expect(filter_problems(deep)).toEqual([])
+    expect(filter_problems({ type: 'not', filter: deep }).some((problem) => problem.includes('nested more than 16'))).toBe(true)
+  })
+})
+
+describe('filter drafts', () => {
+  test('keep typed text, and read as a filter only when every part does', () => {
+    const draft = blank_draft('and', 'tags')
+    if (draft.type !== 'and') throw new Error('expected and')
+    const rows = { type: 'match' as const, rows: [{ path: 'artist', text: 'Daft Punk, Live' }, { path: 'duration_seconds', text: '1.' }] }
+    expect(from_draft({ ...draft, children: [rows] }, REPLICATION_FIELDS)).toEqual({
+      ok: true,
+      spec: { type: 'and', filters: [{ type: 'match', fields: { artist: 'Daft Punk, Live', duration_seconds: 1 } }] }
+    })
+    expect(from_draft({ type: 'match', rows: [{ path: 'tags', text: 'a' }, { path: 'tags', text: 'b' }] }, CAPABILITY_FIELDS)).toEqual({ ok: false, reason: 'The field tags is listed twice.' })
+    expect(from_draft({ type: 'match', rows: [{ path: '', text: 'a' }] }, CAPABILITY_FIELDS).ok).toBe(false)
+    expect(from_draft({ type: 'range', field: 'added_at', bounds: { gte: '-', gt: '', lte: '', lt: '' } }, REPLICATION_FIELDS).ok).toBe(false)
+    expect(from_draft({ type: 'range', field: 'added_at', bounds: { gte: '-2.5', gt: '', lte: '', lt: '' } }, REPLICATION_FIELDS)).toEqual({ ok: true, spec: { type: 'range', field: 'added_at', gte: -2.5 } })
+  })
+
+  test('round-trip a sound filter', () => {
+    const spec: FilterSpec = { type: 'or', filters: [{ type: 'any_of', field: 'tags', values: ['a', 'b c'] }, { type: 'not', filter: { type: 'range', field: 'timestamp', lt: 5 } }] }
+    expect(from_draft(to_draft(spec), CAPABILITY_FIELDS)).toEqual({ ok: true, spec })
   })
 })
 
@@ -49,6 +76,10 @@ describe('descriptions', () => {
     expect(describe_grantee({ type: 'key_set', keys: [KEY, KEY] })).toContain('2 identities')
     expect(describe_grantee({ type: 'group', id: 'x' })).toBe('(unknown grantee: group)')
     expect(describe_conditions([{ type: 'max_uses', n: 3 }])).toEqual(['(unknown condition: max_uses)'])
+    // A known type carrying a field it does not define fails closed (§3.5.5).
+    expect(describe_grantee({ type: 'key', key: KEY, scope: 'x' })).toContain('(unknown fields: scope)')
+    expect(describe_conditions([{ type: 'expires_at', at: 5, tz: 'utc' }])[0]).toContain('(unknown fields: tz)')
+    expect(describe_conditions([{ type: 'expires_at', at: 'soon' }])).toEqual(['(malformed expires_at)'])
     expect(describe_scope({ actions: ['library.append_tag', 'x.y'], filter: { type: 'match', fields: { tags: 'a' } }, conditions: [] }))
       .toBe('Add tags, (unknown action: x.y); only tags is "a"')
   })

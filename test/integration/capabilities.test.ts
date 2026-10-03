@@ -2,7 +2,7 @@
 // issue a filtered, expiring capability on the own library, see it listed
 // active, revoke it and see it revoked; the node refuses an unknown action;
 // a capability granted to the identity's own key appears among the held
-// ones and makes its library a shared write target only when not own.
+// ones the node lists (the Identity page then leaves out own libraries).
 
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 

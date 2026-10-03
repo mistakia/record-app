@@ -137,15 +137,3 @@ export const REPLICATION_FIELDS: readonly FilterField[] = [
   { path: 'library_address', label: 'Library address', kind: 'text' },
   { path: 'cid', label: 'Audio CID', kind: 'text' }
 ]
-
-// A fresh node of a type, as the editor starts it.
-export const blank_filter = (type: FilterType, field = 'tags'): FilterSpec => {
-  switch (type) {
-    case 'match': return { type, fields: { [field]: '' } }
-    case 'any_of': return { type, field, values: [''] }
-    case 'range': return { type, field, gte: 0 }
-    case 'and':
-    case 'or': return { type, filters: [blank_filter('match', field)] }
-    case 'not': return { type, filter: blank_filter('match', field) }
-  }
-}

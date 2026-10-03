@@ -40,7 +40,7 @@ const IssueForm = ({ address }: { address: string }) => {
   const [busy, set_busy] = useState(false)
   const grantee = parse_grantee_keys(keys)
   const expires_at = expires === '' ? null : new Date(expires).getTime()
-  const filter_ok = filter === null || filter_problems(filter).length === 0
+  const filter_ok = filter === null || (filter !== undefined && filter_problems(filter).length === 0)
   const expiry_ok = expires_at === null || (Number.isFinite(expires_at) && expires_at > Date.now())
   const ready = grantee.ok && actions.length > 0 && filter_ok && expiry_ok
 
