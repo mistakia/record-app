@@ -57,10 +57,11 @@ try {
     origin: location.origin,
     outside: (await fetch('app://record/..%2fmain%2findex.js')).status,
     missing: (await fetch('app://record/no-such-file.js')).status,
+    malformed: (await fetch('app://record/%E0%A4%A.js')).status,
     other_host: (await fetch('app://other/index.html').catch(() => null))?.status ?? 'refused'
   }))
   step('app scheme', served)
-  if (served.origin !== 'app://record' || served.outside !== 404 || served.missing !== 404 || served.other_host === 200) throw new Error('the app scheme served outside the renderer')
+  if (served.origin !== 'app://record' || served.outside !== 404 || served.missing !== 404 || served.malformed !== 404 || served.other_host === 200) throw new Error('the app scheme served outside the renderer')
   const console_errors: string[] = []
   window.on('console', (message) => { if (message.type() === 'error') console_errors.push(message.text()) })
   // A fresh profile starts in bundled mode; check it, then switch to the

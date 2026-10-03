@@ -22,12 +22,13 @@ export const register_app_scheme = (): void => {
 
 export const serve_app_files = (root: string): void => {
   protocol.handle(SCHEME, async (request) => {
-    const url = new URL(request.url)
-    if (url.host !== HOST) return new Response(null, { status: 404 })
-    const path = join(root, decodeURIComponent(url.pathname))
-    const inside = relative(root, path)
-    if (inside === '' || inside.startsWith('..') || isAbsolute(inside)) return new Response(null, { status: 404 })
+    // A malformed escape, a path outside the root, and a missing file are all 404.
     try {
+      const url = new URL(request.url)
+      if (url.host !== HOST) return new Response(null, { status: 404 })
+      const path = join(root, decodeURIComponent(url.pathname))
+      const inside = relative(root, path)
+      if (inside === '' || inside.startsWith('..') || isAbsolute(inside)) return new Response(null, { status: 404 })
       return await net.fetch(pathToFileURL(path).href)
     } catch {
       return new Response(null, { status: 404 })
