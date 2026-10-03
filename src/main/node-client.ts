@@ -161,6 +161,11 @@ export const test_connection = async ({ node_url, token }: { node_url: string, t
   }
 }
 
+export interface ImportTarget {
+  library_address: string
+  capability_id?: string
+}
+
 export interface ImportAck {
   import_id: string
   file_count?: number
@@ -169,13 +174,19 @@ export interface ImportAck {
 // POST /api/import/file as multipart `files` parts. Each file's name only
 // tells the node the container by its extension; progress arrives as
 // import:* events.
-export const import_files = async ({ node_url, token, files }: {
+export const import_files = async ({ node_url, token, files, target }: {
   node_url: string | null
   token?: string | null | undefined
   files: Array<{ name: string, blob: Blob }>
+  // The library to ingest into and the capability authorising it.
+  target?: ImportTarget | undefined
 }): Promise<NodeResult<ImportAck>> => {
   if (node_url === null) return not_configured
   const form = new FormData()
+  if (target !== undefined) {
+    form.append('library_address', target.library_address)
+    if (target.capability_id !== undefined) form.append('capability_id', target.capability_id)
+  }
   for (const { name, blob } of files) form.append('files', blob, name)
   const result = await fetch_node({ url: `${node_url}/api/import/file`, init: { method: 'POST', body: form, headers: { accept: 'application/json', ...auth_headers(token) } }, timeout_ms: IMPORT_TIMEOUT_MS })
   if (!result.ok) return result

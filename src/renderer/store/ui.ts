@@ -9,9 +9,11 @@ interface UiState {
   // The library the track list shows; '' is all libraries.
   library_address: string
   filters: TrackFilters
+  // The library last written to, the default write target (spec §8.6.3).
+  recent_write_target: string | null
 }
 
-const initial_state: UiState = { library_address: '', filters: DEFAULT_TRACK_FILTERS }
+const initial_state: UiState = { library_address: '', filters: DEFAULT_TRACK_FILTERS, recent_write_target: null }
 
 export const ui_slice = createSlice({
   name: 'ui',
@@ -33,10 +35,13 @@ export const ui_slice = createSlice({
       const { tags } = state.filters
       state.filters.tags = tags.includes(action.payload) ? tags.filter((tag) => tag !== action.payload) : [...tags, action.payload]
     },
+    write_target_used: (state, action: PayloadAction<string>) => {
+      state.recent_write_target = action.payload
+    },
     filters_cleared: (state) => {
       state.filters = { ...DEFAULT_TRACK_FILTERS, sort: state.filters.sort, order: state.filters.order }
     }
   }
 })
 
-export const { library_selected, query_changed, sort_changed, tag_toggled, filters_cleared } = ui_slice.actions
+export const { library_selected, query_changed, sort_changed, tag_toggled, write_target_used, filters_cleared } = ui_slice.actions

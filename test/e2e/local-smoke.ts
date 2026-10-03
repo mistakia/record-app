@@ -86,7 +86,7 @@ try {
 
   // Tagging through the context menu, then the tag filter.
   await rows(window).filter({ hasText: 'Smoke Alpha' }).click({ button: 'right' })
-  await window.getByRole('menuitem', { name: 'Edit tags' }).click()
+  await window.getByRole('menuitem', { name: 'Tags' }).click()
   await window.getByLabel('New tag').fill('smoke-tag')
   await window.getByRole('button', { name: 'Add', exact: true }).click()
   await window.getByTestId('tag-editor').getByText('smoke-tag').waitFor()

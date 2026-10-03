@@ -4,7 +4,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 
-import { IPC_CHANNELS, type BundledState, type ConnectionSave, type ConnectionView, type EventsState, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
+import { IPC_CHANNELS, type BundledState, type ConnectionSave, type ConnectionView, type EventsState, type ImportTarget, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
 import type { HibernationSnapshot } from '#shared/snapshot.ts'
 
 const require_object = (value: unknown, name: string): void => {
@@ -19,6 +19,9 @@ const subscribe = <T>(channel: string, listener: (payload: T) => void): () => vo
   ipcRenderer.on(channel, forward)
   return () => { ipcRenderer.removeListener(channel, forward) }
 }
+
+const copy_target = (target: ImportTarget | undefined): ImportTarget | undefined =>
+  target === undefined ? undefined : { library_address: target.library_address, ...(target.capability_id === undefined ? {} : { capability_id: target.capability_id }) }
 
 const bridge: RecordBridge = {
   connection: {
@@ -55,10 +58,10 @@ const bridge: RecordBridge = {
     on_state: (listener: (state: EventsState) => void) => subscribe(IPC_CHANNELS.events_state, listener)
   },
   import: {
-    choose_files: async () => await ipcRenderer.invoke(IPC_CHANNELS.import_choose_files),
-    upload_files: async (files: Array<{ name: string, data: ArrayBuffer }>) => {
+    choose_files: async ({ target }: { target?: ImportTarget }) => await ipcRenderer.invoke(IPC_CHANNELS.import_choose_files, { target: copy_target(target) }),
+    upload_files: async ({ files, target }: { files: Array<{ name: string, data: ArrayBuffer }>, target?: ImportTarget }) => {
       if (!Array.isArray(files)) throw new TypeError('files must be an array')
-      return await ipcRenderer.invoke(IPC_CHANNELS.import_upload_files, files.map(({ name, data }) => ({ name, data })))
+      return await ipcRenderer.invoke(IPC_CHANNELS.import_upload_files, { files: files.map(({ name, data }) => ({ name, data })), target: copy_target(target) })
     }
   },
   identity: {

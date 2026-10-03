@@ -1,0 +1,15 @@
+.select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.select select {
+  font: inherit;
+  max-width: 320px;
+}
+
+.single,
+.none {
+  color: var(--muted);
+}

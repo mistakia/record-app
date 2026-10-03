@@ -2,7 +2,7 @@
 // updates). Events may repeat or go missing (§8.7.7), so they only ever mark
 // data for refetch; nothing is patched from an event payload.
 
-export const NODE_API_TAGS = ['settings', 'libraries', 'tracks', 'tags', 'about', 'listens', 'peers'] as const
+export const NODE_API_TAGS = ['settings', 'libraries', 'tracks', 'tags', 'about', 'listens', 'peers', 'capabilities'] as const
 export type NodeApiTag = typeof NODE_API_TAGS[number]
 
 export const tags_for_event = (type: string): NodeApiTag[] => {
@@ -16,6 +16,8 @@ export const tags_for_event = (type: string): NodeApiTag[] => {
   // devices (§4.8.5).
   if (type === 'identity:library-created' || type === 'identity:library-retired') return ['libraries', 'about']
   if (type.startsWith('peer:')) return ['peers']
+  // A capability issued or revoked changes which libraries are writable.
+  if (type === 'capability:issued' || type === 'capability:revoked') return ['capabilities', 'libraries']
   // import:* drives the importer's progress list, not the cache; the tracks
   // an import adds arrive as track:added.
   return []

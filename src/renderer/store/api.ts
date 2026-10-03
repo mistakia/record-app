@@ -4,7 +4,7 @@
 import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react'
 
 import type { NodeFailure, NodeRequest } from '#shared/bridge.ts'
-import { TRACK_PAGE_SIZE, type About, type ImportAck, type Library, type Peer, type Settings, type TagCount, type Track, type TrackList } from '#renderer/api/types.ts'
+import { TRACK_PAGE_SIZE, type About, type Capability, type ImportAck, type Library, type Peer, type Settings, type TagCount, type Track, type TrackList } from '#renderer/api/types.ts'
 import { select_writes_allowed, type ConnectionState } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
 
@@ -63,6 +63,8 @@ export const track_page_args = ({ library_address, page, filters = DEFAULT_TRACK
 
 const encode = (address: string) => ({ address })
 
+interface TargetFields { library_address: string, capability_id?: string }
+
 export const node_api = createApi({
   reducerPath: 'node_api',
   baseQuery: node_base_query,
@@ -82,6 +84,11 @@ export const node_api = createApi({
     get_own_libraries: build.query<Library[], void>({
       query: () => ({ method: 'get', path_template: '/identity/libraries' }),
       providesTags: ['libraries']
+    }),
+    // Capabilities other identities granted this one, in every known library.
+    get_held_capabilities: build.query<Capability[], void>({
+      query: () => ({ method: 'get', path_template: '/identity/capabilities' }),
+      providesTags: ['capabilities']
     }),
     get_tracks: build.query<TrackList, GetTracksArgs>({
       query: (args) => ({ method: 'get', path_template: '/tracks', query: { ...args } }),
@@ -108,20 +115,25 @@ export const node_api = createApi({
       query: ({ track_id, library_address }) => ({ method: 'post', path_template: '/listens', body: { track_id, library_address } }),
       invalidatesTags: ['listens']
     }),
-    add_tag: build.mutation<Track, { track_id: string, tag: string }>({
-      query: ({ track_id, tag }) => ({ method: 'post', path_template: '/tags', body: { track_id, tag } }),
+    // Every write that appends to a library names its target (chapter 7
+    // write targets) and, for a library another identity owns, the
+    // capability authorising it.
+    add_tag: build.mutation<Track, { track_id: string, tag: string } & TargetFields>({
+      query: (body) => ({ method: 'post', path_template: '/tags', body }),
       invalidatesTags: ['tracks', 'tags']
     }),
-    remove_tag: build.mutation<Track, { track_id: string, tag: string }>({
-      query: ({ track_id, tag }) => ({ method: 'delete', path_template: '/tags', query: { track_id, tag } }),
+    // Only an own library: no capability authorises dropping a tag (§3.5.6).
+    remove_tag: build.mutation<Track, { track_id: string, tag: string, library_address: string }>({
+      query: (query) => ({ method: 'delete', path_template: '/tags', query }),
       invalidatesTags: ['tracks', 'tags']
     }),
-    add_track_by_cid: build.mutation<Track, { content_cid: string }>({
-      query: ({ content_cid }) => ({ method: 'post', path_template: '/tracks', body: { content_cid } }),
+    // Ingest by CID, and adoption of a track from another library (§8.6.7).
+    add_track_by_cid: build.mutation<Track, { content_cid: string } & TargetFields>({
+      query: (body) => ({ method: 'post', path_template: '/tracks', body }),
       invalidatesTags: ['tracks', 'tags', 'libraries']
     }),
-    import_url: build.mutation<ImportAck, { url: string }>({
-      query: ({ url }) => ({ method: 'post', path_template: '/import/url', body: { url } })
+    import_url: build.mutation<ImportAck, { url: string } & TargetFields>({
+      query: (body) => ({ method: 'post', path_template: '/import/url', body })
     }),
     link_library: build.mutation<Library, { library_address: string, alias: string | null }>({
       query: ({ library_address, alias }) => ({ method: 'post', path_template: '/libraries', body: { library_address, alias } }),

@@ -9,7 +9,7 @@ import { create_audio_downloads } from './audio-downloads.ts'
 import type { create_node_manager } from './bundled/node-manager.ts'
 import type { create_diagnostics } from './diagnostics.ts'
 import { create_secret_clipboard } from './clipboard-expiry.ts'
-import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
+import { AUDIO_EXTENSIONS, check_import_target, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { get_audio, request_node, test_connection } from './node-client.ts'
 import type { create_node_connection } from './node-connection.ts'
@@ -146,14 +146,21 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     if (typeof request_id === 'string') audio_downloads.cancel(request_id)
   })
 
-  handle(IPC_CHANNELS.import_choose_files, async (_input, event) => {
+  handle(IPC_CHANNELS.import_choose_files, async (input, event) => {
+    const checked = check_import_target(is_plain_object(input) ? input.target : undefined)
+    if (!checked.ok) return refuse('Malformed import target.')
     const window = BrowserWindow.fromWebContents(event.sender)
     const options = { title: 'Import audio files', properties: ['openFile', 'multiSelections'] as Array<'openFile' | 'multiSelections'>, filters: [{ name: 'Audio', extensions: AUDIO_EXTENSIONS }] }
     const chosen = window === null ? await dialog.showOpenDialog(options) : await dialog.showOpenDialog(window, options)
     if (chosen.canceled || chosen.filePaths.length === 0) return { ok: true, data: null }
-    return await authed(async ({ node_url, token }) => await import_chosen_paths({ node_url, token, paths: chosen.filePaths }))
+    return await authed(async ({ node_url, token }) => await import_chosen_paths({ node_url, token, paths: chosen.filePaths, target: checked.target }))
   })
-  handle(IPC_CHANNELS.import_upload_files, async (input) => await authed(async ({ node_url, token }) => await import_dropped_files({ node_url, token, input })))
+  handle(IPC_CHANNELS.import_upload_files, async (input) => {
+    const { files, target } = is_plain_object(input) ? input : { files: undefined, target: undefined }
+    const checked = check_import_target(target)
+    if (!checked.ok) return refuse('Malformed import target.')
+    return await authed(async ({ node_url, token }) => await import_dropped_files({ node_url, token, input: files, target: checked.target }))
+  })
   handle(IPC_CHANNELS.identity_export, async () => await identity.export_identity())
   const secret_clipboard = create_secret_clipboard({
     clipboard: { readText: async () => await clipboard.readText(), writeText: async (text) => { await clipboard.writeText(text) }, clear: () => { clipboard.clear() } }
