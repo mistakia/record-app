@@ -44,10 +44,15 @@ CHROMAPRINT_SOURCE_SHA256=a1aad8fa3b8b18b78d3755b3767faff9abb67242e01b478ec9a64e
 MACOS_MIN=12.0
 
 DEMUXERS=mp3,mov,aac,flac,ogg,wav,aiff,asf,matroska
-MUXERS=mp3,ipod,mp4,adts,flac,ogg,oga,opus,wav,aiff,asf,webm
+MUXERS=mp3,ipod,mp4,adts,flac,ogg,oga,opus,wav,aiff,asf,webm,pcm_s16le
 PARSERS=mpegaudio,aac,flac,vorbis,opus
 DECODERS=mp3,mp3float,aac,aac_fixed,alac,flac,vorbis,opus,wmav1,wmav2,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_f64be,pcm_u8,pcm_s8
 BSFS=aac_adtstoasc
+# record-node decodes every file to mono 16-bit PCM on a pipe to measure its
+# duration (-ac 1 -c:a pcm_s16le -f s16le), which needs the encoder, the raw
+# muxer, and the filters ffmpeg inserts to downmix and convert.
+ENCODERS=pcm_s16le
+FILTERS=aresample,aformat,anull
 
 # Reproducible across checkouts: no build path reaches the binary.
 CONFIGURE_FLAGS=(
@@ -59,6 +64,7 @@ CONFIGURE_FLAGS=(
   --enable-protocol=file,pipe
   --enable-demuxer="$DEMUXERS" --enable-muxer="$MUXERS" --enable-parser="$PARSERS"
   --enable-decoder="$DECODERS" --enable-bsf="$BSFS"
+  --enable-encoder="$ENCODERS" --enable-filter="$FILTERS"
 )
 
 fetch() {
