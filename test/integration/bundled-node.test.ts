@@ -22,7 +22,7 @@ import { create_node_log } from '#main/bundled/node-log.ts'
 import { choose_port, create_node_manager, MAX_FAILED_RESTARTS, MAX_PORT_RETRIES, restart_delay_ms, YTDLP_DISABLED_PATH } from '#main/bundled/node-manager.ts'
 import { CHILD_FILE } from '#main/bundled/node-orphan.ts'
 import { PIN_FILE } from '#main/bundled/node-pin.ts'
-import { is_alive } from '#main/bundled/process-probe.ts'
+import { describe_process, is_alive } from '#main/bundled/process-probe.ts'
 import type { BundledState } from '#shared/bridge.ts'
 
 const CLI_PATH = fileURLToPath(new URL('../../node_modules/record-node/dist/cli.js', import.meta.url))
@@ -93,7 +93,7 @@ describe('bundled node manager', () => {
     const settings = await (await fetch(`${url}/api/settings`)).json() as { peer_id: string }
     expect(node_key_pin).toMatchObject({ peer_id: settings.peer_id, identity_address: expect.stringMatching(/^\/record\//) })
     expect(JSON.parse(await readFile(join(data_dir, PIN_FILE), 'utf8'))).toEqual(node_key_pin)
-    expect(JSON.parse(await readFile(join(data_dir, CHILD_FILE), 'utf8'))).toEqual({ pid })
+    expect(JSON.parse(await readFile(join(data_dir, CHILD_FILE), 'utf8'))).toEqual({ pid, started: (await describe_process(pid as number))?.started })
     expect(JSON.parse(await readFile(join(root, 'bundled-node.json'), 'utf8'))).toMatchObject({ host: '127.0.0.1', cors_origins: [] })
     expect((await fetch(`${url}/api/settings`, { headers: { origin: 'http://localhost:5173' } })).status).toBe(403)
     expect((await readFile(log.path, 'utf8')).length).toBeGreaterThan(0)
@@ -104,7 +104,7 @@ describe('bundled node manager', () => {
     await wait_for(() => manager.get_state().status === 'running', 'running again')
     expect(manager.get_state()).toMatchObject({ url, node_key_pin })
     expect(manager.get_state().pid).not.toBe(pid)
-    expect(JSON.parse(await readFile(join(data_dir, CHILD_FILE), 'utf8'))).toEqual({ pid: manager.get_state().pid })
+    expect(JSON.parse(await readFile(join(data_dir, CHILD_FILE), 'utf8'))).toMatchObject({ pid: manager.get_state().pid })
 
     // A second manager's node exits 75 on record-node's lock. The holder is
     // a child of this process, not an orphan, so it is left running.
@@ -153,7 +153,7 @@ describe('bundled node manager', () => {
     expect(moved.data_dir).toBe(next_dir)
     expect(moved.started_at_ms).toBeNumber()
     expect(is_alive(old_pid)).toBe(false)
-    expect(JSON.parse(await readFile(join(next_dir, CHILD_FILE), 'utf8'))).toEqual({ pid: moved.pid })
+    expect(JSON.parse(await readFile(join(next_dir, CHILD_FILE), 'utf8'))).toMatchObject({ pid: moved.pid })
     expect(moved.node_key_pin?.identity_address).not.toBe(old_pin?.identity_address)
 
     // Moving back finds the first node's pin, and with start false leaves it stopped.
@@ -301,7 +301,7 @@ describe('bundled node manager', () => {
       expect(manager.get_state().error).toContain('not one this app left running')
       expect(is_alive(orphan)).toBe(true)
       // Recorded: ended, and the app's own node takes the directory.
-      await writeFile(join(data_dir, CHILD_FILE), JSON.stringify({ pid: orphan }))
+      await writeFile(join(data_dir, CHILD_FILE), JSON.stringify({ pid: orphan, started: (await describe_process(orphan))?.started }))
       await manager.restart()
       await wait_for(() => manager.get_state().status === 'running', 'running after ending the orphan')
       expect(is_alive(orphan)).toBe(false)
@@ -311,6 +311,69 @@ describe('bundled node manager', () => {
       try { process.kill(orphan, 'SIGKILL') } catch {}
     }
   }, 90_000)
+
+  // A child that record-node always refuses (exit 75), beside a stand-in
+  // holder: a sleep whose shell has exited, so its parent is gone.
+  const refused_setup = async (options: Partial<Parameters<typeof setup>[0]> = {}) => {
+    const { root } = await setup()
+    const refused = join(root, 'refused.mjs')
+    await writeFile(refused, 'process.exit(75)\n')
+    const shell = spawn('sh', ['-c', 'sleep 60 >/dev/null 2>&1 & echo $!'], { stdio: ['ignore', 'pipe', 'ignore'] })
+    let output = ''
+    shell.stdout.on('data', (data: Buffer) => { output += String(data) })
+    await new Promise((resolve) => shell.once('exit', resolve))
+    const holder = Number(output.trim())
+    const made = await setup({ cli_path: refused, ...options })
+    await mkdir(made.data_dir, { recursive: true })
+    const record = async (started?: string) => {
+      await writeFile(join(made.data_dir, CHILD_FILE), JSON.stringify({ pid: holder, started: started ?? (await describe_process(holder))?.started }))
+    }
+    return { ...made, holder, record, end: () => { try { process.kill(holder, 'SIGKILL') } catch {} } }
+  }
+
+  test('a recorded PID that is not an orphan of this app is never signalled', async () => {
+    // Its command line lacks the app's marker.
+    const unmarked = await refused_setup()
+    try {
+      await unmarked.record()
+      await unmarked.manager.start()
+      await wait_for(() => unmarked.manager.get_state().status === 'failed', 'refused')
+      expect(is_alive(unmarked.holder)).toBe(true)
+    } finally { unmarked.end() }
+    // The PID now belongs to a process started at another time.
+    const reused = await refused_setup({ orphan_marker: 'sleep 60' })
+    try {
+      await reused.record('Thu Jan  1 00:00:00 1970')
+      await reused.manager.start()
+      await wait_for(() => reused.manager.get_state().status === 'failed', 'refused')
+      expect(is_alive(reused.holder)).toBe(true)
+    } finally { reused.end() }
+  }, 30_000)
+
+  test('an orphan is ended once per start: a second refusal fails, and a stop during the lookup signals nothing', async () => {
+    let stop: (() => Promise<void>) | null = null
+    const stopped: Array<Promise<void>> = []
+    const interrupted = await refused_setup({ orphan_marker: 'sleep 60', checkpoint: async (at) => { if (at === 'orphan' && stop !== null) stopped.push(stop()) } })
+    try {
+      stop = interrupted.manager.stop
+      await interrupted.record()
+      await interrupted.manager.start()
+      await wait_for(() => stopped.length === 1, 'the stop during the lookup')
+      await Promise.all(stopped)
+      expect(interrupted.manager.get_state().status).toBe('stopped')
+      expect(is_alive(interrupted.holder)).toBe(true)
+    } finally { interrupted.end() }
+
+    const once = await refused_setup({ orphan_marker: 'sleep 60' })
+    try {
+      await once.record()
+      await once.manager.start()
+      await wait_for(() => once.manager.get_state().status === 'failed', 'failed after one relaunch')
+      expect(is_alive(once.holder)).toBe(false)
+      expect(once.children).toHaveLength(2)
+      expect(once.manager.get_state().error).toContain('not one this app left running')
+    } finally { once.end() }
+  }, 30_000)
 
   test('a node that never answers fails with its stderr tail', async () => {
     const { root } = await setup()

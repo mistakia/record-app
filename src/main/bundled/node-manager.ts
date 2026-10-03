@@ -130,9 +130,11 @@ export const create_node_manager = ({
   let avoid_port: number | null = null
   // Whether this start already ended an orphan; a second refusal fails.
   let orphan_ended = false
-  // The last child's PID: a launch waits (up to the shutdown timeout, and
-  // never signals it, as the PID may since belong to another program) until
-  // it is gone, since it holds record-node's lock until the OS process ends.
+  // The last child's PID. It holds record-node's lock until its OS process
+  // ends, so a launch waits until it is gone (up to the shutdown timeout).
+  // The wait never signals it: unlike a stop, which kills the child it was
+  // just running, a launch can come long after, when the PID may belong to
+  // another program.
   let previous_pid: number | null = null
   let queue: Promise<unknown> = Promise.resolve()
   const timers = new Set<ReturnType<typeof setTimeout>>()
@@ -188,6 +190,7 @@ export const create_node_manager = ({
           // Recorded only now that it holds the data directory's lock, so a
           // child refused on the lock never overwrites the holder's record.
           const pid = await current.spawned
+          if (child !== current) return
           if (pid !== null) await record_child(data_dir, pid)
           if (child !== current) return
           port_retries = 0
@@ -229,6 +232,8 @@ export const create_node_manager = ({
     serialize(async () => {
       if (generation !== locked_generation || child !== null) return
       const orphan = orphan_ended ? null : await find_orphan({ data_dir: dir, marker: orphan_marker })
+      await checkpoint('orphan')
+      if (generation !== locked_generation) return
       if (orphan === null) {
         fail(`Another record-node is using the data directory ${dir}, and it is not one this app left running. Quit it, then retry.`)
         return
@@ -352,7 +357,6 @@ export const create_node_manager = ({
       clearTimeout(forced)
     }
     await ensure_gone(pid)
-    previous_pid = null
     set_state({ status: 'stopped', url: null, pid: null, retry_at_ms: null, started_at_ms: null })
   }
 
