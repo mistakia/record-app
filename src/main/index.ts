@@ -34,10 +34,10 @@ const broadcast = (channel: string, payload: unknown): void => {
 // Started from whenReady rather than a top-level await, which would hold the
 // module's evaluation open and stall tooling that waits for it to finish.
 const start = async (): Promise<void> => {
-  // The renderer needs no browser permission (camera, notifications, ...)
-  // except writing to the clipboard, for the identity export's copy action.
-  // Reading the clipboard stays denied.
-  session.defaultSession.setPermissionRequestHandler((_contents, permission, callback) => { callback(permission === 'clipboard-sanitized-write') })
+  // The renderer needs no browser permission (camera, clipboard,
+  // notifications, ...); copying the exported key goes through main.
+  // eslint-disable-next-line n/no-callback-literal -- Electron's callback takes the grant as a boolean
+  session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => { callback(false) })
   const user_data = app.getPath('userData')
   const store = await open_connection_store({ file_path: join(user_data, 'connection.json') })
   const snapshots = await open_snapshot_store({

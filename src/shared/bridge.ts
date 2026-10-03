@@ -101,6 +101,9 @@ export interface RecordBridge {
     export: () => Promise<NodeResult<{ public_key: string, private_key: string }>>
     // Bundled node only (spec §8.5.4).
     import: (input: { private_key: string }) => Promise<NodeResult<unknown>>
+    // Copies the exported key; main clears the clipboard after a minute if
+    // it still holds exactly that text.
+    copy_key: (input: { text: string }) => Promise<NodeResult<{ clears_in_ms: number }>>
     // The node's public key alone. Chapter 7 serves it only with the private
     // key (GET /identity/export), so main reads it and keeps only this half.
     public_key: () => Promise<NodeResult<{ public_key: string }>>
@@ -133,6 +136,7 @@ export const IPC_CHANNELS = {
   identity_public_key: 'record:identity:public-key',
   identity_export: 'record:identity:export',
   identity_import: 'record:identity:import',
+  identity_copy_key: 'record:identity:copy-key',
   snapshot_load: 'record:snapshot:load',
   snapshot_update: 'record:snapshot:update',
   snapshot_get_info: 'record:snapshot:get-info',

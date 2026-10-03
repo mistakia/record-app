@@ -49,11 +49,16 @@ export const ExportDialog = ({ node_url, on_close }: { node_url: string, on_clos
             )
           : (
             <>
+              {copied && <p className={styles.muted} data-testid='clipboard-note'>Copied. The clipboard is cleared in 60 seconds if it still holds the key.</p>}
               <textarea className={styles.key} readOnly aria-label='Private key' value={identity.private_key} rows={4} data-testid='exported-key' />
               <div className={styles.actions}>
                 <button
                   type='button'
-                  onClick={() => { navigator.clipboard.writeText(identity.private_key).then(() => { set_copied(true) }).catch(() => { set_error('Copying failed; select the text instead.') }) }}
+                  onClick={() => {
+                    window.record.identity.copy_key({ text: identity.private_key })
+                      .then((result) => { if (result.ok) set_copied(true); else set_error(result.failure.message) })
+                      .catch(() => { set_error('Copying failed; select the text instead.') })
+                  }}
                 >
                   {copied ? 'Copied' : 'Copy'}
                 </button>

@@ -65,6 +65,10 @@ const bridge: RecordBridge = {
       if (typeof private_key !== 'string') throw new TypeError('private_key must be a string')
       return await ipcRenderer.invoke(IPC_CHANNELS.identity_import, { private_key })
     },
+    copy_key: async ({ text }: { text: string }) => {
+      if (typeof text !== 'string') throw new TypeError('text must be a string')
+      return await ipcRenderer.invoke(IPC_CHANNELS.identity_copy_key, { text })
+    },
     public_key: async () => await ipcRenderer.invoke(IPC_CHANNELS.identity_public_key)
   },
   snapshot: {

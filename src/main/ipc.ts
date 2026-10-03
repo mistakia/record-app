@@ -2,10 +2,11 @@
 // untrusted and re-validated here (spec §8.10.3), and only the app's own
 // window may call.
 
-import { BrowserWindow, dialog, ipcMain, type IpcMainInvokeEvent } from 'electron'
+import { BrowserWindow, clipboard, dialog, ipcMain, type IpcMainInvokeEvent } from 'electron'
 
 import { IPC_CHANNELS, type NodeResult } from '#shared/bridge.ts'
 import { create_audio_downloads } from './audio-downloads.ts'
+import { create_secret_clipboard } from './clipboard-expiry.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { get_audio, test_connection } from './node-client.ts'
@@ -92,6 +93,14 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
   })
   handle(IPC_CHANNELS.import_upload_files, async (input) => await import_dropped_files({ node_url: store.get().node_url, input }))
   handle(IPC_CHANNELS.identity_export, async () => await identity.export_identity())
+  const secret_clipboard = create_secret_clipboard({
+    clipboard: { readText: async () => await clipboard.readText(), writeText: async (text) => { await clipboard.writeText(text) }, clear: () => { clipboard.clear() } }
+  })
+  handle(IPC_CHANNELS.identity_copy_key, async (input) => {
+    const text = is_plain_object(input) ? input.text : undefined
+    if (typeof text !== 'string' || text === '' || text.length > 10_000) return refuse('Nothing to copy.')
+    return { ok: true, data: await secret_clipboard.copy(text) }
+  })
   handle(IPC_CHANNELS.identity_import, async (input) => await identity.import_identity(input))
   handle(IPC_CHANNELS.identity_public_key, async () => await identity.public_key())
 
