@@ -1,0 +1,57 @@
+{
+  "name": "record-app",
+  "productName": "Record",
+  "version": "1.0.0-alpha.0",
+  "description": "Desktop application for Record: an Electron client of record-node",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "./out/main/index.js",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "imports": {
+    "#main/*": "./src/main/*",
+    "#preload/*": "./src/preload/*",
+    "#renderer/*": "./src/renderer/*",
+    "#shared/*": "./src/shared/*",
+    "#test/*": "./test/*"
+  },
+  "scripts": {
+    "setup:electron": "node node_modules/electron/install.js",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "test": "bun test",
+    "typecheck": "tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json",
+    "lint": "eslint .",
+    "verify": "bun run lint && bun run typecheck",
+    "gen:api": "openapi-typescript node_modules/record-node/dist/api/7-http-api.yaml -o src/renderer/api/generated-types.ts && node cli/generate-api-routes.mjs",
+    "smoke:remote": "node test/e2e/remote-smoke.ts"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "2.12.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-redux": "9.3.0",
+    "react-router": "8.4.0",
+    "record-node": "git+https://github.com/mistakia/record-node.git#80e40a1278bac1203a333a0e05c1d44a279655f5"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "@types/node": "24.13.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "electron": "44.4.5",
+    "electron-vite": "5.0.0",
+    "eslint": "9.39.5",
+    "neostandard": "0.13.0",
+    "openapi-typescript": "7.13.0",
+    "playwright-core": "1.63.0",
+    "typescript": "6.0.3",
+    "vite": "7.3.6",
+    "yaml": "2.9.1"
+  },
+  "trustedDependencies": []
+}
