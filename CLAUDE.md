@@ -2,57 +2,56 @@
 
 Guidance for Claude Code working in this repository.
 
-For graph context (sibling repos in the Record ecosystem, task directory, protocol spec), see [ABOUT.md](ABOUT.md). For public overview, see [README.md](README.md).
+For graph context (sibling Record repos, task directory, protocol spec), see [ABOUT.md](ABOUT.md). For the public overview, see [README.md](README.md).
 
 ## Project Overview
 
-Desktop, mobile, and web application for **Record** — a distributed peer-to-peer audio file management system built on IPFS. This repo is the application layer (UI, app-level state, importer, player). Protocol and node implementation live in sibling repos `record-node` and `record-docs`.
+Desktop application for **Record**: an Electron + React 19 client of `record-node`. The app holds no protocol logic; it talks to one node at a time over the chapter 7 HTTP and WebSocket API. Spec chapter 8 (`record-docs/spec/8-client-application.md`) is the contract. The rebuild plan is `task/record/record-app-rebuild.md` in user-base.
 
-React 16 + Redux + redux-saga. Electron (desktop), React Native (iOS / Android), web. Material-UI 4. Webpack 5 + Babel 7.
+Stack: Bun (install, tests), electron-vite (build), Electron (runtime), React 19, React Router, Redux Toolkit with RTK Query, CSS Modules.
 
-## Build / Run
+## Commands
 
 ```bash
-yarn install
-
-# Desktop (Electron)
-yarn start:electron
-yarn package:mac     # or :linux, :win
-
-# Mobile (React Native + nodejs-mobile)
-yarn install:nodejs-mobile
-yarn start:rn
-yarn build:ios
-yarn start:android
-
-# Lint / format
-yarn lint:fix
+bun install --frozen-lockfile --ignore-scripts
+bun run setup:electron      # Electron binary; its postinstall never runs
+bun run dev                 # electron-vite dev
+bun run build               # production build into out/, no source maps
+bun run verify              # eslint + three tsc projects
+bun test                    # RECORD_TOOLCHAIN_PREFLIGHT=bypass when ffmpeg/fpcalc differ from record-node's pins
+bun run gen:api             # regenerate API types and the route allowlist after bumping record-node
+bun run smoke:remote        # built app against a running node (RECORD_NODE_URL)
 ```
 
 ## Architecture
 
 ```
 src/
-  core/                    # 25 subsystems (tracks, player, loglists, importer, dialogs, audio, utils, …)
-  views/                   # React component tree
-nodejs-assets/             # Node.js backend for mobile (via nodejs-mobile)
-ios/, android/             # Native platform code
-cli/                       # Command-line entry points
-configs/                   # Webpack and build configs (main / renderer / background)
-resources/                 # Icons and assets
+  main/        Electron main: window.ts (hardening), ipc.ts, connection-store.ts,
+               node-client.ts, api-path.ts. All node traffic leaves from here.
+  preload/     index.ts: the window.record bridge, nothing else
+  shared/      bridge.ts (IPC types and channels), node-url.ts, api-routes.ts (generated)
+  renderer/    React app: api/ (generated-types.ts, types.ts), store/, pages/,
+               components/, player/ (audio-engine.ts, player-controller.ts)
+test/          unit/, integration/ (in-process record-node), e2e/ (Playwright Electron)
+cli/           generate-api-routes.mjs, check-lockfile-age.mjs (vendored from base)
 ```
 
-State: Redux with redux-saga side effects.
-Audio: `music-metadata` for parsing, Chromaprint fingerprinting, polyfilled playback on RN.
+- **Transport.** The renderer never talks to the node. Main uses Node's `fetch`, which sends no `Origin`; nodes run `cors_origins: []` and refuse any request carrying one. The renderer CSP is `connect-src 'self'`.
+- **Request allowlist.** `request` accepts only a method and path template listed in `src/shared/api-routes.ts`, generated from record-node's `dist/api/7-http-api.yaml`; params go through `encodeURIComponent`. Audio has its own `get_audio` channel.
+- **Electron-free modules.** `node-client.ts`, `api-path.ts`, and `connection-store.ts` import nothing from Electron, so tests drive them under Bun.
+- **State.** Server data lives only in the RTK Query cache; slices hold client state (`connection`, `player`).
 
-## Distributed Layer
+## Conventions
 
-Persistence is IPFS + OrbitDB + IPFS-Log. The local node lives in the sibling `record-node` repo and is the canonical source for protocol behavior — coordinate any protocol-affecting change there first.
+- snake_case, functions over classes, named parameters, `#` import aliases (`#main/*`, `#renderer/*`, `#shared/*`, `#test/*`), explicit `.ts`/`.tsx` extensions, no barrel files, about 200 lines per file.
+- Supply chain: exact versions only, `trustedDependencies: []`, and the 7-day `minimumReleaseAge` in `bunfig.toml`. Never weaken the floor; pick an older version instead.
+- record-node is a git dependency pinned by commit. Bumping it means `bun run gen:api` and committing the regenerated files; a unit test fails when the route list drifts from the yaml.
+- Render every value from a node as plain text (spec §8.10.6).
 
 ## Related Repos
 
-- `repository/active/record-docs/` — protocol specification (18KB README)
-- `repository/active/record-node/` — node implementation, networking, storage, indexing
-- `repository/active/record-ipfsd/` — IPFS daemon wrapper
+- `repository/active/record-docs/` — protocol specification (canonical)
+- `repository/active/record-node/` — the node this app connects to
 - `repository/active/record-chrome-extension/` — web import tool
-- `repository/active/record-resolver/` — IPFS resolution layer
+- `repository/active/record-resolver/` — URL resolution for ingest

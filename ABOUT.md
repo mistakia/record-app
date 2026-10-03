@@ -19,26 +19,28 @@ updated_at: '2026-05-13T18:03:58.003Z'
 
 ## Purpose
 
-Application layer (desktop / mobile / web UI) for **Record** — a distributed peer-to-peer audio file management system built on IPFS. This repo holds the React app, Electron and React Native shells, importer, and player. Protocol semantics and node behavior live in sibling repos.
+Desktop application for **Record** — a distributed peer-to-peer system for audio libraries. An Electron + React client of `record-node` that holds no protocol logic: it talks to one node at a time over the chapter 7 HTTP and WebSocket API, under the contract in spec chapter 8.
 
 For public overview, see [[README.md]]. For build, run, and architecture, see [[CLAUDE.md]].
 
 ## Context
 
-The Record ecosystem spans several repos. This one is the user-facing app; coordinated changes that touch protocol or node behavior land in the relevant sibling first.
+The Record ecosystem spans several repos. This one is the user-facing desktop app. Protocol semantics live in `record-docs`, and node behavior in `record-node`, which this app installs as a git dependency pinned by commit. The legacy React Native / OrbitDB app is preserved at the `legacy-v0` tag.
 
 ## Notable Context
 
 **Tag**: [[user:tag/record-project.md]] — entities across the Record ecosystem.
 
+**Rebuild plan**: [[user:task/record/record-app-rebuild.md]] — phases, scope, and what waits on record-docs v1.1.0.
+
 **Sibling repositories**:
 
 - [[user:repository/active/record-docs/ABOUT.md]] — protocol specification (canonical for protocol semantics)
-- `repository/active/record-node/` — core node implementation (networking, storage, indexing, sync)
+- `repository/active/record-node/` — node implementation (networking, storage, indexing, the HTTP API)
 - `repository/active/record-chrome-extension/` — web import tool
-- `repository/active/record-resolver/` — IPFS resolution layer
+- `repository/active/record-resolver/` — URL resolution for ingest
 
-**Task directory**: [[user:task/record/]] — open work across the ecosystem (app rebuild, chrome extension rebuild, node API server, ipfsd exclusion, deduplication).
+**Task directory**: [[user:task/record/]] — open work across the ecosystem.
 
 **Governing guidelines**:
 
@@ -47,10 +49,10 @@ The Record ecosystem spans several repos. This one is the user-facing app; coord
 
 ## Scope
 
-**Belongs in this repo**: React app, Electron and RN shells, application state, importer/player UI, app-level CLI.
+**Belongs in this repo**: the Electron main process (window, IPC, node client), the preload bridge, the React renderer (pages, player, state), and app-level tests and CLI scripts.
 
 **Belongs elsewhere**:
 
 - Protocol specification → `record-docs/`
-- Node behavior, networking, storage, indexing → `record-node/`
+- Node behavior, the HTTP and WebSocket API → `record-node/`
 - Open work, planned features → `task/record/`
