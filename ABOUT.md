@@ -3,7 +3,8 @@ title: record-app Repository Graph Entry
 type: text
 description: >-
   Graph entry for record-app, the Electron and React 19 client of record-node per spec chapter 8.
-  Remote mode against the canonical node works. Bundled mode and the v1.1.0 surfaces are pending.
+  Both operating modes and the record-docs v1.1 surfaces work; a signed release waits on operator
+  credentials.
 base_uri: user:repository/active/record-app/ABOUT.md
 created_at: '2026-05-13T18:03:58.003Z'
 entity_id: 3f6fd760-c279-487e-aa92-b7ba7455869b
@@ -13,7 +14,7 @@ relations:
   - follows [[user:guideline/directory-markdown-standards.md]]
 tags:
   - user:tag/record-project.md
-updated_at: '2026-10-03T08:17:19.393Z'
+updated_at: '2026-10-03T22:30:36.710Z'
 ---
 
 ## Purpose
@@ -30,7 +31,7 @@ The Record ecosystem spans several repos. This one is the user-facing desktop ap
 
 **Tag**: [[user:tag/record-project.md]] — entities across the Record ecosystem.
 
-**Rebuild plan**: [[user:task/record/record-app-rebuild.md]] — phases, scope, and what waits on record-docs v1.1.0.
+**Rebuild plan**: [[user:task/record/record-app-rebuild.md]] — phases, scope, and what waits on a signed release.
 
 **Sibling repositories**:
 
