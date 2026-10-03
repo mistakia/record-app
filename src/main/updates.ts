@@ -31,16 +31,44 @@ export type UpdateStatus =
   | { status: 'major_available', version: string }
   | { status: 'error', message: string }
 
-const major = (version: string): number => Number.parseInt(version.split('.')[0] ?? '', 10)
-
-const newer = (a: string, b: string): boolean => {
-  const [left, right] = [a, b].map((version) => version.split(/[.-]/).slice(0, 3).map((part) => Number.parseInt(part, 10)))
-  for (let index = 0; index < 3; index++) {
-    const difference = (left?.[index] ?? 0) - (right?.[index] ?? 0)
-    if (difference !== 0) return difference > 0
-  }
-  return false
+// Semantic Versioning 2.0.0 §11 precedence: build metadata is ignored; the
+// core compares numerically; a release outranks its own prereleases; and
+// prerelease identifiers compare left to right, numeric ones numerically and
+// below alphanumeric ones, which compare in ASCII order, with a shorter
+// equal-prefix list lower.
+const parse_version = (version: string): { core: number[], prerelease: string[] } => {
+  const [without_build = ''] = version.trim().replace(/^v/, '').split('+')
+  const dash = without_build.indexOf('-')
+  const core = (dash === -1 ? without_build : without_build.slice(0, dash)).split('.').map((part) => Number.parseInt(part, 10) || 0)
+  return { core, prerelease: dash === -1 ? [] : without_build.slice(dash + 1).split('.') }
 }
+
+const NUMERIC = /^\d+$/
+
+const compare_identifiers = (a: string, b: string): number => {
+  const [a_numeric, b_numeric] = [NUMERIC.test(a), NUMERIC.test(b)]
+  if (a_numeric && b_numeric) return Number(a) - Number(b)
+  if (a_numeric !== b_numeric) return a_numeric ? -1 : 1
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
+export const compare_versions = (a: string, b: string): number => {
+  const [left, right] = [parse_version(a), parse_version(b)]
+  for (let index = 0; index < 3; index++) {
+    const difference = (left.core[index] ?? 0) - (right.core[index] ?? 0)
+    if (difference !== 0) return Math.sign(difference)
+  }
+  if (left.prerelease.length === 0 || right.prerelease.length === 0) return Math.sign(right.prerelease.length - left.prerelease.length)
+  for (let index = 0; index < Math.min(left.prerelease.length, right.prerelease.length); index++) {
+    const order = compare_identifiers(left.prerelease[index] as string, right.prerelease[index] as string)
+    if (order !== 0) return Math.sign(order)
+  }
+  return Math.sign(left.prerelease.length - right.prerelease.length)
+}
+
+const major = (version: string): number => parse_version(version).core[0] ?? 0
+
+const newer = (a: string, b: string): boolean => compare_versions(a, b) > 0
 
 export const create_update_service = ({ feed_url, channel, current_version, create_backend, now = Date.now, set_interval = setInterval, clear_interval = clearInterval }: {
   feed_url: string | null

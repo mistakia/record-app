@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { CHECK_INTERVAL_MS, create_update_service, type UpdateBackend } from '#main/updates.ts'
+import { CHECK_INTERVAL_MS, compare_versions, create_update_service, type UpdateBackend } from '#main/updates.ts'
 
 const fake_backend = (releases: Array<string | null>) => {
   const calls = { checks: 0, downloads: 0 }
@@ -68,5 +68,39 @@ describe('update service', () => {
     expect(next_major.calls.downloads).toBe(0)
     await service.accept_major()
     expect(service.get_state()).toEqual({ status: 'ready', version: '2.0.0' })
+  })
+
+  test('orders versions by semver precedence, prereleases included', () => {
+    const ordered = ['1.0.0-alpha', '1.0.0-alpha.1', '1.0.0-alpha.beta', '1.0.0-beta', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0', '1.0.1', '1.1.0', '2.0.0']
+    for (let index = 1; index < ordered.length; index++) {
+      expect([ordered[index - 1], compare_versions(ordered[index - 1] as string, ordered[index] as string)]).toEqual([ordered[index - 1], -1])
+      expect(compare_versions(ordered[index] as string, ordered[index - 1] as string)).toBe(1)
+    }
+    expect(compare_versions('1.0.0+build.5', '1.0.0')).toBe(0)
+  })
+
+  test('takes 1.0.0-alpha.0 to 1.0.0, beta.1 to beta.2, and beta.9 to beta.10', async () => {
+    for (const [current, release] of [['1.0.0-alpha.0', '1.0.0'], ['1.2.0-beta.1', '1.2.0-beta.2'], ['1.2.0-beta.9', '1.2.0-beta.10']] as const) {
+      const { backend, calls } = fake_backend([release])
+      const service = create_update_service({ feed_url: 'https://updates.example.test', channel: 'beta', current_version: current, create_backend: () => backend, set_interval: manual_interval().set_interval })
+      service.start()
+      await settle()
+      expect([current, service.get_state()]).toEqual([current, { status: 'ready', version: release }])
+      expect(calls.downloads).toBe(1)
+    }
+    const { backend } = fake_backend(['1.2.0-beta.9'])
+    const older = create_update_service({ feed_url: 'https://updates.example.test', channel: 'beta', current_version: '1.2.0-beta.10', create_backend: () => backend, set_interval: manual_interval().set_interval })
+    older.start()
+    await settle()
+    expect(older.get_state().status).toBe('idle')
+  })
+
+  test('a prerelease of the next major still waits for opt-in', async () => {
+    const { backend, calls } = fake_backend(['2.0.0-beta.1'])
+    const service = create_update_service({ feed_url: 'https://updates.example.test', channel: 'beta', current_version: '1.9.0', create_backend: () => backend, set_interval: manual_interval().set_interval })
+    service.start()
+    await settle()
+    expect(service.get_state()).toEqual({ status: 'major_available', version: '2.0.0-beta.1' })
+    expect(calls.downloads).toBe(0)
   })
 })
