@@ -2,7 +2,8 @@
 // walking the record-docs v1.1 surfaces: own-library management (create,
 // the listens library, retire, profile choice) and write targets (the
 // importer's selector, adoption into a chosen library, tagging into it),
-// and capability management (issue with a filter, revoke, the held list). Writes stay on the
+// capability management (issue with a filter, revoke, the held list), and
+// pinning from the track menu. Writes stay on the
 // in-process node. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
 // record-node's pins. Runs under Node: node test/e2e/v1-1-smoke.ts
@@ -82,6 +83,15 @@ try {
   await editor.getByRole('button', { name: 'Remove tag v11-tag' }).waitFor()
   step('tagged', (await editor.locator('li').allInnerTexts()).join(' | '))
   await editor.getByRole('button', { name: 'Done' }).click()
+  await row.click({ button: 'right' })
+  await window.getByRole('menuitem', { name: 'Pin', exact: true }).click()
+  await toast(window, 'Pinned: kept on all your devices.')
+  await row.getByTestId('pinned').waitFor()
+  await row.click({ button: 'right' })
+  await window.getByRole('menuitem', { name: 'Unpin' }).click()
+  await toast(window, 'Unpinned.')
+  await row.getByTestId('pinned').waitFor({ state: 'detached' })
+  step('pin', 'pinned, then unpinned, from the track menu')
   await nav(window, 'Libraries')
 
   // Capability management on the new library: issue with a filter, revoke.
