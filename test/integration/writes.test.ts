@@ -15,7 +15,8 @@ import { open_connection_store } from '#main/connection-store.ts'
 import { import_chosen_paths, import_dropped_files } from '#main/import-files.ts'
 import { request_node } from '#main/node-client.ts'
 import { open_node_events, type NodeEvents } from '#main/node-events.ts'
-import { refused_by_policy } from '#main/request-policy.ts'
+import { create_identity_access } from '#main/identity-access.ts'
+import { serve_generic_request } from '#main/request-policy.ts'
 import { open_snapshot_store } from '#main/snapshot-store.ts'
 import type { About, Library, Track, TrackList } from '#renderer/api/types.ts'
 import type { NodeEventMessage, NodeRequest } from '#shared/bridge.ts'
@@ -152,10 +153,31 @@ describe('identity', () => {
     expect(imported).toMatchObject({ public_key: exported.public_key, own_library_address: node.peer.identity().own_address })
   })
 
-  test('main refuses identity import in remote mode, and allows it only for the bundled node', () => {
-    expect(refused_by_policy({ request: { method: 'post', path_template: '/identity/import' }, mode: 'remote' })).not.toBeNull()
-    expect(refused_by_policy({ request: { method: 'post', path_template: '/identity/import' }, mode: 'bundled' })).toBeNull()
-    expect(refused_by_policy({ request: { method: 'get', path_template: '/identity/export' }, mode: 'remote' })).toBeNull()
+  test('the generic request channel refuses both identity routes', async () => {
+    for (const input of [{ method: 'get', path_template: '/identity/export' }, { method: 'post', path_template: '/identity/import', body: { private_key: 'ab' } }]) {
+      const result = await serve_generic_request({ input, node_url: node.node_url })
+      expect(!result.ok && result.failure.kind).toBe('refused')
+    }
+    expect((await serve_generic_request({ input: { method: 'get', path_template: '/settings' }, node_url: node.node_url })).ok).toBe(true)
+  })
+
+  test('main\'s identity channel returns the key only after the user confirms, and imports only into a bundled node', async () => {
+    const asked: Array<{ node_url: string, cleartext: boolean }> = []
+    let answer = false
+    let mode: 'remote' | 'bundled' = 'remote'
+    const identity = create_identity_access({
+      get_connection: () => ({ mode, node_url: node.node_url }),
+      confirm_export: async (input) => { asked.push(input); return answer }
+    })
+    expect(await identity.export_identity()).toMatchObject({ ok: false, failure: { kind: 'aborted' } })
+    answer = true
+    const exported = await identity.export_identity()
+    if (!exported.ok) throw new Error(exported.failure.message)
+    expect(asked).toEqual([{ node_url: node.node_url, cleartext: false }, { node_url: node.node_url, cleartext: false }])
+    expect(await identity.import_identity({ private_key: exported.data.private_key })).toMatchObject({ ok: false, failure: { kind: 'refused' } })
+    mode = 'bundled'
+    expect(await identity.import_identity({ private_key: 'not hex' })).toMatchObject({ ok: false, failure: { kind: 'refused' } })
+    expect(await identity.import_identity({ private_key: exported.data.private_key })).toMatchObject({ ok: true, data: { public_key: exported.data.public_key } })
   })
 
   test('an export through main leaves no trace in any file main writes', async () => {

@@ -1,7 +1,8 @@
-// Identity actions (spec §8.5). Export goes straight through the preload
-// bridge, never through RTK Query, so the private key is never held in the
-// store (and so never in the hibernation snapshot or any file); the caller
-// keeps it in one component's state for the one display, then drops it.
+// Identity actions (spec §8.5). Export goes through main's own channel,
+// which asks the user in a native dialog before it returns the key, and
+// never through RTK Query, so the private key is never held in the store
+// (and so never in the hibernation snapshot or any file); the caller keeps
+// it in one component's state for the one display, then drops it.
 
 import type { NodeResult } from '#shared/bridge.ts'
 
@@ -10,15 +11,7 @@ export interface ExportedIdentity {
   private_key: string
 }
 
-export const export_identity = async (): Promise<NodeResult<ExportedIdentity>> => {
-  const result = await window.record.request({ method: 'get', path_template: '/identity/export' })
-  if (!result.ok) return result
-  const { public_key, private_key } = (result.data ?? {}) as { public_key?: unknown, private_key?: unknown }
-  if (typeof public_key !== 'string' || typeof private_key !== 'string') {
-    return { ok: false, failure: { kind: 'http', status: 200, code: null, message: 'The node returned no identity.' } }
-  }
-  return { ok: true, data: { public_key, private_key } }
-}
+export const export_identity = async (): Promise<NodeResult<ExportedIdentity>> => await window.record.identity.export()
 
 // Spec §8.5.4: importing replaces the node's identity, so it needs this
 // phrase typed out, not just a click.
@@ -29,7 +22,7 @@ export const import_identity = async ({ private_key, confirmation }: { private_k
     return { ok: false, failure: { kind: 'refused', message: `Type "${IMPORT_CONFIRMATION_PHRASE}" to confirm.` } }
   }
   if (!/^[0-9a-f]+$/i.test(private_key.trim())) return { ok: false, failure: { kind: 'refused', message: 'The key must be the hex text an export produced.' } }
-  return await window.record.request({ method: 'post', path_template: '/identity/import', body: { private_key: private_key.trim() } })
+  return await window.record.identity.import({ private_key: private_key.trim() })
 }
 
 // The node returns keys libp2p-marshaled: a protobuf header (key type 2,

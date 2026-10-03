@@ -60,6 +60,11 @@ const bridge: RecordBridge = {
     }
   },
   identity: {
+    export: async () => await ipcRenderer.invoke(IPC_CHANNELS.identity_export),
+    import: async ({ private_key }: { private_key: string }) => {
+      if (typeof private_key !== 'string') throw new TypeError('private_key must be a string')
+      return await ipcRenderer.invoke(IPC_CHANNELS.identity_import, { private_key })
+    },
     public_key: async () => await ipcRenderer.invoke(IPC_CHANNELS.identity_public_key)
   },
   snapshot: {

@@ -4,17 +4,16 @@
 
 import { BrowserWindow, dialog, ipcMain, type IpcMainInvokeEvent } from 'electron'
 
-import { API_ROUTES } from '#shared/api-routes.ts'
-import { IPC_CHANNELS, type NodeRequest, type NodeResult } from '#shared/bridge.ts'
+import { IPC_CHANNELS, type NodeResult } from '#shared/bridge.ts'
 import { create_audio_downloads } from './audio-downloads.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { get_audio, request_node, test_connection } from './node-client.ts'
 import type { NodeSession } from './node-session.ts'
-import { refused_by_policy } from './request-policy.ts'
+import { serve_generic_request } from './request-policy.ts'
+import { create_identity_access } from './identity-access.ts'
 import type { SnapshotStore } from './snapshot-store.ts'
 
-const METHODS = new Set<string>(API_ROUTES.map(({ method }) => method))
 const CID = /^[A-Za-z0-9]{1,128}$/
 const REQUEST_ID = /^[A-Za-z0-9-]{1,64}$/
 
@@ -22,17 +21,6 @@ const refuse = (message: string): NodeResult<never> => ({ ok: false, failure: { 
 
 const is_plain_object = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
-
-// The shape of a NodeRequest; build_api_path then checks the route itself,
-// the parameter names, and the query values.
-const check_node_request = (input: unknown): NodeRequest | null => {
-  if (!is_plain_object(input)) return null
-  const { method, path_template, params, query, body } = input
-  if (typeof method !== 'string' || !METHODS.has(method) || typeof path_template !== 'string') return null
-  if (params !== undefined && !(is_plain_object(params) && Object.values(params).every((value) => typeof value === 'string'))) return null
-  if (query !== undefined && !is_plain_object(query)) return null
-  return { method, path_template, params, query, body } as NodeRequest
-}
 
 export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
   store: ConnectionStore
@@ -64,13 +52,7 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
     if (!checked.ok) return checked
     return await test_connection({ node_url: checked.data.node_url as string })
   })
-  handle(IPC_CHANNELS.request, async (input) => {
-    const request = check_node_request(input)
-    if (request === null) return refuse('Malformed node request.')
-    const refusal = refused_by_policy({ request, mode: store.get().mode })
-    if (refusal !== null) return refuse(refusal)
-    return await request_node({ node_url: store.get().node_url, request })
-  })
+  handle(IPC_CHANNELS.request, async (input) => await serve_generic_request({ input, node_url: store.get().node_url }))
   const audio_downloads = create_audio_downloads({ download: async ({ cid, signal }) => await get_audio({ node_url: store.get().node_url, cid, signal }) })
   handle(IPC_CHANNELS.get_audio, async (input) => {
     const { cid, request_id } = is_plain_object(input) ? input : {}
@@ -91,6 +73,25 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
     return await import_chosen_paths({ node_url: store.get().node_url, paths: chosen.filePaths })
   })
   handle(IPC_CHANNELS.import_upload_files, async (input) => await import_dropped_files({ node_url: store.get().node_url, input }))
+  const identity = create_identity_access({
+    get_connection: () => store.get(),
+    confirm_export: async ({ node_url, cleartext }) => {
+      const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+      const options = {
+        type: 'warning' as const,
+        buttons: ['Cancel', 'Show private key'],
+        defaultId: 0,
+        cancelId: 0,
+        message: 'Show this identity\'s private key?',
+        detail: `Anyone with the private key controls the library it writes and can write as you. The node at ${node_url} will send it to this app` +
+          (cleartext ? ' unencrypted over plain http, readable by anyone on the network path.' : '.')
+      }
+      const { response } = window === undefined ? await dialog.showMessageBox(options) : await dialog.showMessageBox(window, options)
+      return response === 1
+    }
+  })
+  handle(IPC_CHANNELS.identity_export, async () => await identity.export_identity())
+  handle(IPC_CHANNELS.identity_import, async (input) => await identity.import_identity(input))
   handle(IPC_CHANNELS.identity_public_key, async () => {
     const exported = await request_node({ node_url: store.get().node_url, request: { method: 'get', path_template: '/identity/export' } })
     if (!exported.ok) return exported

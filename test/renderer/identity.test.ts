@@ -9,6 +9,7 @@ import type { NodeRequest, NodeResult } from '#shared/bridge.ts'
 const PRIVATE_KEY = '08021220' + 'ab'.repeat(32)
 const PUBLIC_KEY = '0802122103' + 'cd'.repeat(32)
 const requests: NodeRequest[] = []
+const imports: Array<{ private_key: string }> = []
 
 beforeAll(() => {
   Object.assign(globalThis, {
@@ -16,8 +17,14 @@ beforeAll(() => {
       record: {
         request: async (request: NodeRequest): Promise<NodeResult<unknown>> => {
           requests.push(request)
-          if (request.path_template === '/identity/export') return { ok: true, data: { public_key: PUBLIC_KEY, private_key: PRIVATE_KEY } }
-          return { ok: true, data: { id: 'x', public_key: PUBLIC_KEY, own_library_address: '/record/z/record' } }
+          return { ok: true, data: null }
+        },
+        identity: {
+          export: async () => ({ ok: true, data: { public_key: PUBLIC_KEY, private_key: PRIVATE_KEY } }),
+          import: async (input: { private_key: string }): Promise<NodeResult<unknown>> => {
+            imports.push(input)
+            return { ok: true, data: { id: 'x', public_key: PUBLIC_KEY, own_library_address: '/record/z/record' } }
+          }
         }
       },
       localStorage: (() => {
@@ -53,12 +60,12 @@ describe('identity export', () => {
 
   test('import needs the typed phrase and hex key before anything is sent', async () => {
     const { import_identity, IMPORT_CONFIRMATION_PHRASE, truncate_key } = await import('#renderer/identity/identity.ts')
-    const before = requests.length
     expect((await import_identity({ private_key: PRIVATE_KEY, confirmation: 'yes' })).ok).toBe(false)
     expect((await import_identity({ private_key: 'not hex!', confirmation: IMPORT_CONFIRMATION_PHRASE })).ok).toBe(false)
-    expect(requests.length).toBe(before)
+    expect(imports).toHaveLength(0)
     expect((await import_identity({ private_key: PRIVATE_KEY, confirmation: ` ${IMPORT_CONFIRMATION_PHRASE.toUpperCase()} ` })).ok).toBe(true)
-    expect(requests.at(-1)).toEqual({ method: 'post', path_template: '/identity/import', body: { private_key: PRIVATE_KEY } })
+    expect(imports).toEqual([{ private_key: PRIVATE_KEY }])
+    expect(requests).toHaveLength(0)
     expect(truncate_key(PUBLIC_KEY)).toBe(`${PUBLIC_KEY.slice(0, 6)}…${PUBLIC_KEY.slice(-6)}`)
   })
 

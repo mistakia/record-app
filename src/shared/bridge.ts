@@ -96,6 +96,11 @@ export interface RecordBridge {
     upload_files: (files: Array<{ name: string, data: ArrayBuffer }>) => Promise<NodeResult<ImportAck>>
   }
   identity: {
+    // The key pair, after the user confirms in main's native dialog. The
+    // generic request refuses the identity routes.
+    export: () => Promise<NodeResult<{ public_key: string, private_key: string }>>
+    // Bundled node only (spec §8.5.4).
+    import: (input: { private_key: string }) => Promise<NodeResult<unknown>>
     // The node's public key alone. Chapter 7 serves it only with the private
     // key (GET /identity/export), so main reads it and keeps only this half.
     public_key: () => Promise<NodeResult<{ public_key: string }>>
@@ -126,6 +131,8 @@ export const IPC_CHANNELS = {
   import_choose_files: 'record:import:choose-files',
   import_upload_files: 'record:import:upload-files',
   identity_public_key: 'record:identity:public-key',
+  identity_export: 'record:identity:export',
+  identity_import: 'record:identity:import',
   snapshot_load: 'record:snapshot:load',
   snapshot_update: 'record:snapshot:update',
   snapshot_get_info: 'record:snapshot:get-info',

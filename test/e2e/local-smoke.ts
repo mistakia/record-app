@@ -152,9 +152,29 @@ try {
   await window.getByRole('button', { name: 'Show public key' }).click()
   step('public key', await window.getByTestId('public-key').getAttribute('title'))
   private_key = (await node.peer.export_identity()).private_key
+  // The generic request channel must refuse the export outright.
+  const generic = await window.evaluate(async () => await (window as unknown as { record: { request: (request: unknown) => Promise<{ ok: boolean, failure?: { kind: string } }> } }).record.request({ method: 'get', path_template: '/identity/export' }))
+  step('export through the generic request channel', generic)
+  if (generic.ok || generic.failure?.kind !== 'refused') throw new Error('the generic channel served the private key')
+  // Main's native confirmation, answered first with Cancel, then with Show.
+  const answer_export_dialog = async (response: number) => {
+    await app.evaluate(({ dialog }, choice) => {
+      if (!('export_dialogs' in globalThis)) Object.assign(globalThis, { export_dialogs: 0 })
+      dialog.showMessageBox = async () => {
+        Object.assign(globalThis, { export_dialogs: (globalThis as unknown as { export_dialogs: number }).export_dialogs + 1 })
+        return { response: choice, checkboxChecked: false }
+      }
+    }, response)
+  }
   await window.getByRole('button', { name: 'Export identity' }).click()
-  await window.getByRole('checkbox').check()
+  await answer_export_dialog(0)
   await window.getByRole('button', { name: 'Show private key' }).click()
+  await window.waitForTimeout(500)
+  if (await window.getByTestId('exported-key').count() !== 0) throw new Error('the key was shown after Cancel')
+  await answer_export_dialog(1)
+  await window.getByRole('button', { name: 'Show private key' }).click()
+  await window.getByTestId('exported-key').waitFor()
+  step('native confirmations shown', await app.evaluate(() => (globalThis as unknown as { export_dialogs: number }).export_dialogs))
   if (await window.getByTestId('exported-key').inputValue() !== private_key) throw new Error('the export did not show the node key')
   await window.getByRole('button', { name: 'Done' }).click()
   await window.getByTestId('exported-key').waitFor({ state: 'detached' })
