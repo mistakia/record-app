@@ -37,8 +37,12 @@ export const player_slice = createSlice({
       state.queue = queue
       state.position_seconds = position_seconds
       state.duration_seconds = queue.entries[queue.index]?.duration_seconds ?? 0
+    },
+    // A seek before the cued track has loaded: where play will start.
+    cued_position_changed: (state, action: PayloadAction<number>) => {
+      state.position_seconds = Math.min(Math.max(action.payload, 0), state.duration_seconds)
     }
   }
 })
 
-export const { engine_updated, queue_changed, player_restored } = player_slice.actions
+export const { cued_position_changed, engine_updated, queue_changed, player_restored } = player_slice.actions

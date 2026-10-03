@@ -146,4 +146,22 @@ describe('player controller', () => {
     expect(player().queue).toMatchObject({ entries: [], index: -1, repeat: 'one' })
     expect(player().state).toBe('idle')
   })
+
+  test('a seek on a restored track that has not loaded sets where play starts', async () => {
+    const { player_restored } = await import('#renderer/store/player.ts')
+    const { EMPTY_QUEUE } = await import('#renderer/player/queue-manager.ts')
+    const entry = { queue_id: 'restored', track_id: 'r', audio_cid: 'r-100', title: 'Restored', artist: null, duration_seconds: 100, library_address: LIBRARY }
+    store.dispatch(player_restored({ queue: { ...EMPTY_QUEUE, entries: [entry], index: 0 }, position_seconds: 3 }))
+    expect(player().state).toBe('idle')
+    controller.seek_playback(42)
+    expect(player().position_seconds).toBe(42)
+    controller.seek_playback(500)
+    expect(player().position_seconds).toBe(100)
+    controller.seek_playback(42)
+    controller.toggle_playback()
+    await sleep()
+    expect(player().state).toBe('playing')
+    expect(mock.sources.at(-1)?.start_offset).toBe(42)
+    controller.stop_playback()
+  })
 })

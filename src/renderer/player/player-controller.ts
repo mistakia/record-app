@@ -25,7 +25,7 @@ import type { Track } from '#renderer/api/types.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { store } from '#renderer/store/index.ts'
-import { engine_updated, queue_changed } from '#renderer/store/player.ts'
+import { cued_position_changed, engine_updated, queue_changed } from '#renderer/store/player.ts'
 
 // Previous restarts the current track instead when this far into it.
 const RESTART_THRESHOLD_SECONDS = 3
@@ -199,7 +199,13 @@ export const set_repeat_mode = (repeat: RepeatMode): void => { commit_queue(set_
 
 export const toggle_shuffle_mode = (): void => { commit_queue(toggle_shuffle({ queue: queue() })) }
 
-export const seek_playback = (position_seconds: number): void => { engine.seek(position_seconds) }
+// With nothing loaded (a restored or failed track) there is no buffer to
+// seek in, so the position is kept as the offset the next play starts at.
+export const seek_playback = (position_seconds: number): void => {
+  const { state } = store.getState().player
+  if ((state === 'idle' || state === 'error') && current_entry(queue()) !== null) store.dispatch(cued_position_changed(position_seconds))
+  else engine.seek(position_seconds)
+}
 
 export const set_playback_volume = (volume: number): void => { engine.set_volume(volume) }
 
