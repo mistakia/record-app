@@ -43,9 +43,12 @@ export const to_draft = (spec: FilterSpec): FilterDraft => {
 
 const kind_of = (fields: readonly FilterField[], path: string): FieldKind | undefined => fields.find((field) => field.path === path)?.kind
 
+// A plain decimal number, as typed: no hex, no exponent, no blanks.
+const DECIMAL = /^-?(\d+\.?\d*|\.\d+)$/
+
 // Text for a numeric field becomes a number when it reads as one.
 const to_scalar = (text: string, kind: FieldKind | undefined): Scalar =>
-  kind === 'number' && text.trim() !== '' && Number.isFinite(Number(text)) ? Number(text) : text
+  kind === 'number' && DECIMAL.test(text.trim()) ? Number(text) : text
 
 export type DraftResult = { ok: true, spec: FilterSpec } | { ok: false, reason: string }
 
@@ -67,9 +70,8 @@ export const from_draft = (draft: FilterDraft, fields: readonly FilterField[]): 
       for (const key of BOUND_KEYS) {
         const text = draft.bounds[key].trim()
         if (text === '') continue
-        const value = Number(text)
-        if (!Number.isFinite(value)) return { ok: false, reason: `The bound "${text}" is not a number.` }
-        spec[key] = value
+        if (!DECIMAL.test(text)) return { ok: false, reason: `The bound "${text}" is not a number.` }
+        spec[key] = Number(text)
       }
       return { ok: true, spec }
     }
@@ -90,6 +92,14 @@ export const from_draft = (draft: FilterDraft, fields: readonly FilterField[]): 
   }
 }
 
-// Whether the structured editor can show a filter: a sound one only, since a
-// malformed node of a known type has nothing it could render.
-export const can_draft = (value: unknown): value is FilterSpec => filter_problems(value).length === 0
+const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b)
+
+// Whether the structured editor can show a filter without changing it: a
+// sound one whose draft converts back to exactly the same filter. Anything
+// else (a null or boolean value, a number where the field reads text, a path
+// with spaces) stays in JSON mode, so an edit elsewhere never rewrites it.
+export const can_draft = (value: unknown, fields: readonly FilterField[]): value is FilterSpec => {
+  if (filter_problems(value).length > 0) return false
+  const back = from_draft(to_draft(value as FilterSpec), fields)
+  return back.ok && same(back.spec, value)
+}

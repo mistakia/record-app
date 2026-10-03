@@ -31,7 +31,7 @@ export const describe_grantee = (grantee: unknown): string => {
   const record = as_record(grantee)
   const { type, key, keys } = record
   if (type === 'key' && typeof key === 'string') return short_key(key) + extra_fields(record, ['type', 'key'])
-  if (type === 'key_set' && Array.isArray(keys)) return `${keys.length} identities: ${keys.map((each) => short_key(String(each))).join(', ')}${extra_fields(record, ['type', 'keys'])}`
+  if (type === 'key_set' && Array.isArray(keys) && keys.length > 0 && keys.every((each) => typeof each === 'string')) return `${keys.length} identities: ${keys.map((each) => short_key(String(each))).join(', ')}${extra_fields(record, ['type', 'keys'])}`
   if (type === 'key' || type === 'key_set') return `(malformed ${type} grantee)`
   return `(unknown grantee: ${String(type)})`
 }
