@@ -67,6 +67,26 @@ export interface NodeEventMessage {
   payload: Record<string, unknown>
 }
 
+// The bundled node (spec §8.4), as main manages it.
+export interface BundledState {
+  status: 'stopped' | 'starting' | 'running' | 'restarting' | 'failed'
+  // Set while the node answers its health check.
+  url: string | null
+  port: number | null
+  pid: number | null
+  data_dir: string
+  log_path: string
+  // The pinned record-node version (spec §8.2.7).
+  version: string
+  // Restarts in a row that have not stayed up; auto-restart stops past five.
+  failed_restarts: number
+  retry_at_ms: number | null
+  error: string | null
+  stderr_tail: string | null
+  // Why ingest is off (the pinned ffmpeg and fpcalc are not bundled yet).
+  ingest_disabled: string | null
+}
+
 export interface ImportAck {
   import_id: string
   file_count?: number
@@ -108,6 +128,14 @@ export interface RecordBridge {
     // key (GET /identity/export), so main reads it and keeps only this half.
     public_key: () => Promise<NodeResult<{ public_key: string }>>
   }
+  bundled: {
+    get_state: () => Promise<BundledState>
+    on_state: (listener: (state: BundledState) => void) => () => void
+    // A manual restart, as after the automatic restarts gave up.
+    restart: () => Promise<void>
+    open_data_dir: () => Promise<void>
+    open_log: () => Promise<void>
+  }
   snapshot: {
     // The snapshot for the configured node, or null.
     load: () => Promise<HibernationSnapshot | null>
@@ -137,6 +165,11 @@ export const IPC_CHANNELS = {
   identity_export: 'record:identity:export',
   identity_import: 'record:identity:import',
   identity_copy_key: 'record:identity:copy-key',
+  bundled_get_state: 'record:bundled:get-state',
+  bundled_state: 'record:bundled:state',
+  bundled_restart: 'record:bundled:restart',
+  bundled_open_data_dir: 'record:bundled:open-data-dir',
+  bundled_open_log: 'record:bundled:open-log',
   snapshot_load: 'record:snapshot:load',
   snapshot_update: 'record:snapshot:update',
   snapshot_get_info: 'record:snapshot:get-info',

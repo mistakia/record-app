@@ -4,7 +4,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 
-import { IPC_CHANNELS, type ConnectionConfig, type EventsState, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
+import { IPC_CHANNELS, type BundledState, type ConnectionConfig, type EventsState, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
 import type { HibernationSnapshot } from '#shared/snapshot.ts'
 
 const require_object = (value: unknown, name: string): void => {
@@ -70,6 +70,13 @@ const bridge: RecordBridge = {
       return await ipcRenderer.invoke(IPC_CHANNELS.identity_copy_key, { text })
     },
     public_key: async () => await ipcRenderer.invoke(IPC_CHANNELS.identity_public_key)
+  },
+  bundled: {
+    get_state: async () => await ipcRenderer.invoke(IPC_CHANNELS.bundled_get_state),
+    on_state: (listener: (state: BundledState) => void) => subscribe(IPC_CHANNELS.bundled_state, listener),
+    restart: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_restart) },
+    open_data_dir: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_data_dir) },
+    open_log: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_log) }
   },
   snapshot: {
     load: async () => await ipcRenderer.invoke(IPC_CHANNELS.snapshot_load),
