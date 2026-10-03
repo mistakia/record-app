@@ -1,5 +1,5 @@
 // OS process checks: whether a PID is alive, and its parent, start time,
-// and command line. Imports nothing from Electron.
+// command line, and (on Linux) executable. Imports nothing from Electron.
 
 import { execFile } from 'node:child_process'
 import { readlink } from 'node:fs/promises'

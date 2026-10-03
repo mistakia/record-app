@@ -92,8 +92,8 @@ const run = async () => {
     const first = manager.get_state()
     const settings = await (await fetch(`${first.url}/api/settings`)).json() as { peer_id: string }
     check('healthy and pinned', settings.peer_id === first.node_key_pin?.peer_id, { url: first.url, pid: first.pid, peer_id: settings.peer_id })
-    // An orphan is found by its recorded PID and the app's marker in its
-    // command line, which a utility child's must therefore carry.
+    // An orphan is found by its recorded PID and the app's marker, in its
+    // command line or (Linux) its executable, which a utility child must carry.
     const recorded = JSON.parse(await readFile(join(root, 'node-data', CHILD_FILE), 'utf8')) as { pid: number }
     const info = await describe_process(first.pid as number)
     check('child recorded, carrying the app marker', recorded.pid === first.pid && info !== null && carries_marker(info, app_marker(process.execPath)), { recorded, marker: app_marker(process.execPath), executable: info?.executable, command: info?.command.slice(0, 200) })
