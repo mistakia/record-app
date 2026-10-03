@@ -1,0 +1,65 @@
+# Packaging for macOS (spec §8.10.7): one universal app, as a .dmg to install
+# and a .zip for updates. Unsigned until the operator supplies a Developer ID
+# identity; publish stays off until a release target and feed URL exist.
+appId: org.record.app
+productName: Record
+copyright: Copyright © Record contributors
+
+directories:
+  output: release
+  buildResources: resources
+
+# Main, preload, and the renderer are bundled by electron-vite into out/;
+# the only runtime dependency is record-node, which the bundled node runs
+# from inside the asar through utilityProcess.
+files:
+  - out/**
+  - package.json
+  - '!node_modules/record-node/{src,test,cli}/**'
+  - '!node_modules/**/*.{md,map,d.ts,ts}'
+  - '!node_modules/**/{test,tests,__tests__,docs,example,examples}/**'
+asar: true
+
+npmRebuild: false
+nodeGypRebuild: false
+buildDependenciesFromSource: false
+
+mac:
+  target:
+    - target: dmg
+      arch: universal
+    - target: zip
+      arch: universal
+  category: public.app-category.music
+  icon: resources/icon.png
+  # Unsigned: no Developer ID identity yet, so no hardened-runtime signature
+  # and no notarization. The fuses below still apply.
+  identity: null
+  minimumSystemVersion: '12.0'
+  # libp2p's WebRTC transport loads node-datachannel's prebuilt binary when
+  # record-node starts, picking @node-datachannel/darwin-<arch> at runtime.
+  # Both arch packages are installed (package:mac), so both slices carry
+  # both, identical; the universal merge keeps them as they are.
+  x64ArchFiles: Contents/Resources/app.asar.unpacked/node_modules/@node-datachannel/**
+
+dmg:
+  writeUpdateInfo: false
+
+# Electron's recommended fuse settings (https://www.electronjs.org/docs/latest/tutorial/fuses).
+# The bundled node runs through utilityProcess, so RunAsNode can be off.
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+  loadBrowserProcessSpecificV8Snapshot: false
+  grantFileProtocolExtraPrivileges: false
+  # Flipping a fuse breaks the ad-hoc signature; arm64 refuses to launch an
+  # app without one, so it is re-applied.
+  resetAdHocDarwinSignature: true
+
+# No release target or update feed yet: nothing is published and no
+# app-update.yml is written into the app.
+publish: null

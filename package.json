@@ -28,18 +28,16 @@
     "verify": "bun run lint && bun run typecheck",
     "gen:api": "openapi-typescript node_modules/record-node/dist/api/7-http-api.yaml -o src/renderer/api/generated-types.ts && node cli/generate-api-routes.mjs",
     "smoke:remote": "node test/e2e/remote-smoke.ts",
-    "smoke:local": "node test/e2e/local-smoke.ts"
+    "smoke:local": "node test/e2e/local-smoke.ts",
+    "package:mac": "bun install --frozen-lockfile --ignore-scripts --os=darwin --cpu='*' && electron-vite build && electron-builder --mac --publish never",
+    "smoke:packaged": "node test/e2e/packaged-smoke.ts"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "2.12.0",
-    "@tanstack/react-virtual": "3.14.13",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-redux": "9.3.0",
-    "react-router": "8.4.0",
     "record-node": "git+https://github.com/mistakia/record-node.git#80e40a1278bac1203a333a0e05c1d44a279655f5"
   },
   "devDependencies": {
+    "@reduxjs/toolkit": "2.12.0",
+    "@tanstack/react-virtual": "3.14.13",
     "@types/bun": "1.4.2",
     "@types/node": "24.13.6",
     "@types/react": "19.3.0",
@@ -47,11 +45,16 @@
     "@vitejs/plugin-react": "5.2.0",
     "ajv": "8.20.0",
     "electron": "44.4.5",
+    "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
     "eslint": "9.39.5",
     "neostandard": "0.13.0",
     "openapi-typescript": "7.13.0",
     "playwright-core": "1.63.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-redux": "9.3.0",
+    "react-router": "8.4.0",
     "typescript": "6.0.3",
     "vite": "7.3.6",
     "yaml": "2.9.1"
