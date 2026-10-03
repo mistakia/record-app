@@ -52,3 +52,11 @@
 .warning {
   color: var(--warning);
 }
+
+.token_status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--muted);
+}

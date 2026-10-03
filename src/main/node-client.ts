@@ -63,7 +63,15 @@ const fetch_node = async ({ url, init, timeout_ms, signal }: {
 
 const not_configured: NodeResult<never> = { ok: false, failure: { kind: 'not_configured', message: 'No node URL is configured.' } }
 
-export const request_node = async ({ node_url, request }: { node_url: string | null, request: NodeRequest }): Promise<NodeResult<unknown>> => {
+// A remote node's bearer token (spec §8.7.3); the bundled node takes none.
+const auth_headers = (token: string | null | undefined): Record<string, string> =>
+  token === null || token === undefined ? {} : { authorization: `Bearer ${token}` }
+
+export const request_node = async ({ node_url, token, request }: {
+  node_url: string | null
+  token?: string | null | undefined
+  request: NodeRequest
+}): Promise<NodeResult<unknown>> => {
   if (node_url === null) return not_configured
   const path = build_api_path(request)
   if (!path.ok) return { ok: false, failure: { kind: 'refused', message: path.reason } }
@@ -72,7 +80,7 @@ export const request_node = async ({ node_url, request }: { node_url: string | n
     url: `${node_url}${path.path}`,
     init: {
       method: request.method.toUpperCase(),
-      headers: has_body ? { accept: 'application/json', 'content-type': 'application/json' } : { accept: 'application/json' },
+      headers: { accept: 'application/json', ...(has_body ? { 'content-type': 'application/json' } : {}), ...auth_headers(token) },
       ...(has_body ? { body: JSON.stringify(request.body) } : {})
     },
     timeout_ms: REQUEST_TIMEOUT_MS
@@ -122,14 +130,15 @@ const read_capped = async ({ response, max_bytes }: { response: Response, max_by
 // The whole audio blob, which the renderer decodes with decodeAudioData.
 // signal cancels the download, as when the track it was pre-buffering for is
 // no longer next.
-export const get_audio = async ({ node_url, cid, max_bytes = MAX_AUDIO_BYTES, signal }: {
+export const get_audio = async ({ node_url, token, cid, max_bytes = MAX_AUDIO_BYTES, signal }: {
   node_url: string | null
+  token?: string | null | undefined
   cid: string
   max_bytes?: number
   signal?: AbortSignal
 }): Promise<NodeResult<ArrayBuffer>> => {
   if (node_url === null) return not_configured
-  const result = await fetch_node({ url: `${node_url}/api/audio/${encodeURIComponent(cid)}`, init: { method: 'GET' }, timeout_ms: AUDIO_TIMEOUT_MS, signal })
+  const result = await fetch_node({ url: `${node_url}/api/audio/${encodeURIComponent(cid)}`, init: { method: 'GET', headers: auth_headers(token) }, timeout_ms: AUDIO_TIMEOUT_MS, signal })
   if (!result.ok) return result
   try {
     return await read_capped({ response: result.data, max_bytes })
@@ -140,8 +149,8 @@ export const get_audio = async ({ node_url, cid, max_bytes = MAX_AUDIO_BYTES, si
 
 // Spec §8.3.5: GET /settings against a candidate node, reporting its peer_id
 // or the specific failure.
-export const test_connection = async ({ node_url }: { node_url: string }): Promise<NodeResult<ConnectionTest>> => {
-  const result = await fetch_node({ url: `${node_url}/api/settings`, init: { method: 'GET', headers: { accept: 'application/json' } }, timeout_ms: TEST_TIMEOUT_MS })
+export const test_connection = async ({ node_url, token }: { node_url: string, token?: string | null | undefined }): Promise<NodeResult<ConnectionTest>> => {
+  const result = await fetch_node({ url: `${node_url}/api/settings`, init: { method: 'GET', headers: { accept: 'application/json', ...auth_headers(token) } }, timeout_ms: TEST_TIMEOUT_MS })
   if (!result.ok) return result
   try {
     const settings = await result.data.json() as { peer_id?: unknown, version?: unknown }
@@ -160,14 +169,15 @@ export interface ImportAck {
 // POST /api/import/file as multipart `files` parts. Each file's name only
 // tells the node the container by its extension; progress arrives as
 // import:* events.
-export const import_files = async ({ node_url, files }: {
+export const import_files = async ({ node_url, token, files }: {
   node_url: string | null
+  token?: string | null | undefined
   files: Array<{ name: string, blob: Blob }>
 }): Promise<NodeResult<ImportAck>> => {
   if (node_url === null) return not_configured
   const form = new FormData()
   for (const { name, blob } of files) form.append('files', blob, name)
-  const result = await fetch_node({ url: `${node_url}/api/import/file`, init: { method: 'POST', body: form, headers: { accept: 'application/json' } }, timeout_ms: IMPORT_TIMEOUT_MS })
+  const result = await fetch_node({ url: `${node_url}/api/import/file`, init: { method: 'POST', body: form, headers: { accept: 'application/json', ...auth_headers(token) } }, timeout_ms: IMPORT_TIMEOUT_MS })
   if (!result.ok) return result
   try {
     const ack = await result.data.json() as { import_id?: unknown, file_count?: unknown }

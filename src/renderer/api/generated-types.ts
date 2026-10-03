@@ -1275,7 +1275,8 @@ export interface paths {
                             /**
                              * @description The identity's default own recordstore library: its
                              *     only active one, or else the one with discriminator
-                             *     `library`. `GET /identity/libraries` lists them all.
+                             *     `record`, record-node's v1.0 own library (spec
+                             *     §3.6.1). `GET /identity/libraries` lists them all.
                              */
                             own_library_address: string;
                             /** @description Address of the identity library (spec §3.6.2). */
@@ -1630,6 +1631,7 @@ export interface paths {
                 403: components["responses"]["Forbidden"];
                 409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
+                502: components["responses"]["ResolverFailed"];
             };
         };
         delete?: never;
@@ -1785,6 +1787,7 @@ export interface paths {
                 400: components["responses"]["ValidationError"];
                 401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
+                502: components["responses"]["ResolverFailed"];
             };
         };
         put?: never;
@@ -1803,9 +1806,14 @@ export interface components {
         Error: {
             error: {
                 /** @enum {string} */
-                code: "VALIDATION_ERROR" | "NOT_FOUND" | "CONFLICT" | "UNAUTHORIZED" | "FORBIDDEN" | "CAPABILITY_EXPIRED" | "CAPABILITY_REVOKED" | "TRACK_ID_COLLISION" | "DEGENERATE_FINGERPRINT" | "INTERNAL_ERROR";
+                code: "VALIDATION_ERROR" | "NOT_FOUND" | "CONFLICT" | "UNAUTHORIZED" | "FORBIDDEN" | "CAPABILITY_EXPIRED" | "CAPABILITY_REVOKED" | "TRACK_ID_COLLISION" | "DEGENERATE_FINGERPRINT" | "RESOLVER_FAILED" | "INTERNAL_ERROR";
                 /** @description Human-readable message suitable for UI display. */
                 message: string;
+                /**
+                 * @description With `RESOLVER_FAILED` only: the resolver's own error code,
+                 *     e.g. `YTDLP_NOT_FOUND`, `YTDLP_FAILED`, `YTDLP_TIMEOUT`.
+                 */
+                resolver_code?: string;
                 /** @description Optional structured per-field errors (validation). */
                 details?: {
                     field?: string;
@@ -2102,7 +2110,8 @@ export interface components {
             meta_log_address: string;
             /**
              * @description The identity's default own recordstore library: its only
-             *     active one, or else the one with discriminator `library`.
+             *     active one, or else the one with discriminator `record`,
+             *     record-node's v1.0 own library (spec §3.6.1).
              */
             own_library_address: string;
         };
@@ -2189,6 +2198,18 @@ export interface components {
         };
         /** @description Unhandled exception. */
         InternalError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /**
+         * @description The resolver could not resolve a URL it accepted as input. The
+         *     error carries `RESOLVER_FAILED` and `resolver_code`.
+         */
+        ResolverFailed: {
             headers: {
                 [name: string]: unknown;
             };

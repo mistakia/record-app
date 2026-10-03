@@ -31,7 +31,11 @@ export const clean_upload_name = (name: unknown): string | null => {
   return base
 }
 
-export const import_chosen_paths = async ({ node_url, paths }: { node_url: string | null, paths: string[] }): Promise<NodeResult<ImportAck>> => {
+export const import_chosen_paths = async ({ node_url, token, paths }: {
+  node_url: string | null
+  token?: string | null | undefined
+  paths: string[]
+}): Promise<NodeResult<ImportAck>> => {
   if (paths.length === 0 || paths.length > MAX_IMPORT_FILES) return refuse(`Choose between 1 and ${MAX_IMPORT_FILES} files.`)
   const files: Array<{ name: string, blob: Blob }> = []
   for (const path of paths) {
@@ -42,11 +46,12 @@ export const import_chosen_paths = async ({ node_url, paths }: { node_url: strin
     // A file-backed blob, streamed into the upload rather than read whole.
     files.push({ name, blob: await openAsBlob(path) })
   }
-  return await import_files({ node_url, files })
+  return await import_files({ node_url, token, files })
 }
 
-export const import_dropped_files = async ({ node_url, input, max_call_bytes = MAX_DROP_CALL_BYTES }: {
+export const import_dropped_files = async ({ node_url, token, input, max_call_bytes = MAX_DROP_CALL_BYTES }: {
   node_url: string | null
+  token?: string | null | undefined
   input: unknown
   max_call_bytes?: number
 }): Promise<NodeResult<ImportAck>> => {
@@ -62,5 +67,5 @@ export const import_dropped_files = async ({ node_url, input, max_call_bytes = M
     if (total_bytes > max_call_bytes) return refuse(`Dropped files are uploaded one at a time; this upload is over ${max_call_bytes} bytes.`)
     files.push({ name: clean, blob: new Blob([data]) })
   }
-  return await import_files({ node_url, files })
+  return await import_files({ node_url, token, files })
 }

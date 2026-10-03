@@ -19,7 +19,8 @@ export interface TestNode {
   stop: () => Promise<void>
 }
 
-export const start_test_node = async (): Promise<TestNode> => {
+// authenticate makes it a hosted node that requires a bearer token.
+export const start_test_node = async ({ authenticate }: { authenticate?: (token: string | undefined) => boolean } = {}): Promise<TestNode> => {
   const work_dir = await mkdtemp(join(tmpdir(), 'record-app-test-node-'))
   const make_audio = ({ name, seed, seconds = 6 }: { name: string, seed: number, seconds?: number }): string => {
     const path = join(work_dir, name)
@@ -35,7 +36,7 @@ export const start_test_node = async (): Promise<TestNode> => {
     }
   })
   await start_peer(peer)
-  const server = await create_api_server({ peer, resolve: as_api_resolver(peer.context.resolve), port: 0, cors_origins: [], log: false, validate_responses: true })
+  const server = await create_api_server({ peer, resolve: as_api_resolver(peer.context.resolve), port: 0, cors_origins: [], log: false, validate_responses: true, ...(authenticate === undefined ? {} : { authenticate }) })
   return {
     peer,
     server,

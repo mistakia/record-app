@@ -2,6 +2,7 @@
 // (§8.8.3), shown across every page while they hold.
 
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 
 import styles from './connection-banner.module.css'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -22,6 +23,19 @@ export const ConnectionBanner = () => {
   }, [retrying])
 
   if (events === null || events.status === 'idle' || events.status === 'closed') return null
+
+  // Spec §8.7.3: a refused token is forgotten, and nothing is sent until
+  // the user enters a new one.
+  if (events.status === 'unauthorized') {
+    return (
+      <div className={styles.unreachable} role='alert' data-testid='node-unauthorized'>
+        <span>
+          The node at {events.node_url} refused this app's access. It needs a valid access token, and nothing is sent to it until you enter one.
+        </span>
+        <Link to='/connection'>Enter a token</Link>
+      </div>
+    )
+  }
 
   if (retrying) {
     return (
@@ -50,6 +64,7 @@ const STATUS_LABELS = {
   connecting: 'Connecting',
   open: 'Live',
   reconnecting: 'Unreachable',
+  unauthorized: 'Sign-in needed',
   closed: 'Disconnected'
 } as const
 

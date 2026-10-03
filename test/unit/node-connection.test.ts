@@ -4,7 +4,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { open_connection_store } from '#main/connection-store.ts'
+import { create_node_auth } from '#main/node-auth.ts'
 import { create_node_connection, node_key_of } from '#main/node-connection.ts'
+import { create_memory_token_store } from '#main/token-store.ts'
 import type { BundledState } from '#shared/bridge.ts'
 
 const create_fake_manager = () => {
@@ -32,8 +34,9 @@ describe('node connection', () => {
       const views: Array<string | null> = []
       const connection = create_node_connection({
         store,
+        auth: create_node_auth({ tokens: create_memory_token_store() }),
         manager: fake.manager,
-        session: { start: (url) => { sessions.push(url) } },
+        session: { start: (target) => { sessions.push(target?.node_url ?? null) } },
         on_node_changed: () => { changes++ },
         on_view_changed: (view) => { views.push(view.node_key) }
       })
@@ -42,7 +45,7 @@ describe('node connection', () => {
       expect(fake.calls).toEqual(['start'])
       expect(connection.node_url()).toBeNull()
       // No key until the bundled node first answers and is pinned.
-      expect(connection.view()).toEqual({ mode: 'bundled', node_url: null, node_key: null })
+      expect(connection.view()).toEqual({ mode: 'bundled', node_url: null, node_key: null, auth: { status: 'none', persistent: false } })
       const pin = { peer_id: '12D3KooWPeer', own_library_address: '/record/z1/record' }
       fake.set({ status: 'running', url: 'http://127.0.0.1:41000', node_key_pin: pin })
       connection.sync()
