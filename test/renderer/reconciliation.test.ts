@@ -5,7 +5,7 @@ import { node_api } from '#renderer/store/api.ts'
 import { events_state_changed, node_switch_started, select_writes_allowed } from '#renderer/store/connection.ts'
 import { create_invalidation_batcher, tags_for_event } from '#renderer/store/event-invalidation.ts'
 import { store } from '#renderer/store/index.ts'
-import { reconcile } from '#renderer/store/reconcile.ts'
+import { reconcile, reconcile_retry_delay_ms } from '#renderer/store/reconcile.ts'
 
 const open_state = (connection_id: number): EventsState =>
   ({ status: 'open', node_url: 'http://127.0.0.1:3000', connection_id, attempt: 0, retry_at_ms: null, last_error: null })
@@ -85,11 +85,23 @@ describe('reconcile and the write gate', () => {
     await subscription
 
     store.dispatch(events_state_changed(open_state(2)))
-    const failing = store.dispatch(reconcile({ connection_id: 2 }))
+    let freshness_before_retry: string | null = null
+    const failing = store.dispatch(reconcile({
+      connection_id: 2,
+      // Instead of retrying, the connection drops while it waits.
+      wait: async (ms) => {
+        if (ms > 0) {
+          freshness_before_retry = store.getState().connection.freshness
+          store.dispatch(events_state_changed({ ...open_state(2), status: 'reconnecting' }))
+        }
+        await settle()
+      }
+    }))
     await settle()
     answer_all({ ok: false, failure: { kind: 'network', message: 'down' } })
     await failing
-    expect(store.getState().connection.freshness).toBe('stale')
+    expect(freshness_before_retry).toBe('stale')
+    store.dispatch(events_state_changed(open_state(2)))
 
     const replaced = store.dispatch(reconcile({ connection_id: 2 }))
     await settle()
@@ -147,5 +159,64 @@ describe('reconcile and the write gate', () => {
     store.dispatch(events_state_changed({ ...open_state(11), node_url: 'http://127.0.0.1:3001' }))
     expect(select_writes_allowed(store.getState())).toBe(false)
     subscription.unsubscribe()
+  })
+
+  test('a failed reconcile retries with backoff while the connection stays open, and recovers to fresh', async () => {
+    const subscription = store.dispatch(node_api.endpoints.get_libraries.initiate())
+    await settle()
+    answer_all({ ok: true, data: [] })
+    await subscription
+    store.dispatch(events_state_changed(open_state(20)))
+    const waits: number[] = []
+    const reconciling = store.dispatch(reconcile({ connection_id: 20, wait: async (ms) => { if (ms > 0) waits.push(ms); await settle() } }))
+    // Each refetch is answered as it arrives: two failures, then success.
+    const results: Array<NodeResult<unknown>> = [
+      { ok: false, failure: { kind: 'network', message: 'down' } },
+      { ok: false, failure: { kind: 'network', message: 'down' } },
+      { ok: true, data: [] }
+    ]
+    let done = false
+    reconciling.then(() => { done = true }).catch(() => { done = true })
+    while (!done) {
+      await settle()
+      const result = results[0]
+      if (requests.length > 0 && result !== undefined) {
+        if (results.length > 1) results.shift()
+        answer_all(result)
+      }
+    }
+    expect(waits).toEqual([1000, 2000])
+    expect(store.getState().connection.freshness).toBe('fresh')
+    expect(select_writes_allowed(store.getState())).toBe(true)
+    subscription.unsubscribe()
+  })
+
+  test('retries stop once the connection drops', async () => {
+    const subscription = store.dispatch(node_api.endpoints.get_libraries.initiate())
+    await settle()
+    answer_all({ ok: true, data: [] })
+    await subscription
+    store.dispatch(events_state_changed(open_state(30)))
+    let attempts = 0
+    const reconciling = store.dispatch(reconcile({
+      connection_id: 30,
+      wait: async (ms) => {
+        if (ms > 0) {
+          attempts++
+          store.dispatch(events_state_changed({ ...open_state(30), status: 'reconnecting' }))
+        }
+        await settle()
+      }
+    }))
+    await settle(); await settle()
+    answer_all({ ok: false, failure: { kind: 'network', message: 'down' } })
+    await reconciling
+    expect(attempts).toBe(1)
+    expect(requests).toHaveLength(0)
+    subscription.unsubscribe()
+  })
+
+  test('the retry delay doubles from 1 s and caps at 30 s', () => {
+    expect([0, 1, 2, 3, 4, 5, 9].map(reconcile_retry_delay_ms)).toEqual([1000, 2000, 4000, 8000, 16000, 30000, 30000])
   })
 })
