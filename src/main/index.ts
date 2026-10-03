@@ -10,6 +10,7 @@ import { IPC_CHANNELS } from '#shared/bridge.ts'
 import { open_connection_store } from './connection-store.ts'
 import { register_ipc } from './ipc.ts'
 import { create_bundled_node } from './bundled/bundled-node.ts'
+import { create_diagnostics } from './diagnostics.ts'
 import { create_node_connection } from './node-connection.ts'
 import { create_node_session } from './node-session.ts'
 import { open_snapshot_store } from './snapshot-store.ts'
@@ -63,7 +64,8 @@ const start = async (): Promise<void> => {
     on_node_changed: () => { forget_identity() },
     on_view_changed: (view) => { broadcast(IPC_CHANNELS.connection_view, view) }
   })
-  forget_identity = register_ipc({ store, connection, manager, session: node_session, snapshots, is_app_frame }).forget_identity
+  const diagnostics = create_diagnostics({ user_data, store, manager, connection })
+  forget_identity = register_ipc({ store, connection, manager, session: node_session, snapshots, diagnostics, is_app_frame }).forget_identity
   // Spec §8.8.3: written every 30 s when it changed, and on clean shutdown.
   const snapshot_timer = setInterval(() => { snapshots.flush().catch(() => {}) }, SNAPSHOT_WRITE_INTERVAL_MS)
   app.on('before-quit', () => {

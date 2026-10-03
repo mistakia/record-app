@@ -1,5 +1,6 @@
-// The bundled node, read-only (spec §8.3.5): its port, data directory, and
-// pinned version, with its state and the actions a failure needs.
+// The bundled node (spec §8.3.5): its port, data directory, and pinned
+// version, with its state and the actions a failure needs. The data directory
+// is the one setting (spec §8.4.1); main asks before moving it.
 
 import styles from './bundled-details.module.css'
 import type { BundledState } from '#shared/bridge.ts'
@@ -23,7 +24,8 @@ export const BundledDetails = ({ state }: { state: BundledState | null }) => {
       <dt>Data directory</dt>
       <dd>
         <code>{state.data_dir}</code>{' '}
-        <button type='button' onClick={() => { window.record.bundled.open_data_dir().catch(() => {}) }}>Open</button>
+        <button type='button' onClick={() => { window.record.bundled.open_data_dir().catch(() => {}) }}>Open</button>{' '}
+        <button type='button' onClick={() => { window.record.bundled.choose_data_dir().catch(() => {}) }}>Change</button>
       </dd>
       <dt>record-node</dt>
       <dd data-testid='bundled-version'>{state.version}</dd>

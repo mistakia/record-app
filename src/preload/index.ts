@@ -77,7 +77,11 @@ const bridge: RecordBridge = {
     on_state: (listener: (state: BundledState) => void) => subscribe(IPC_CHANNELS.bundled_state, listener),
     restart: async () => await ipcRenderer.invoke(IPC_CHANNELS.bundled_restart),
     open_data_dir: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_data_dir) },
-    open_log: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_log) }
+    open_log: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_log) },
+    choose_data_dir: async () => await ipcRenderer.invoke(IPC_CHANNELS.bundled_choose_data_dir)
+  },
+  diagnostics: {
+    get: async () => await ipcRenderer.invoke(IPC_CHANNELS.diagnostics_get)
   },
   snapshot: {
     load: async () => await ipcRenderer.invoke(IPC_CHANNELS.snapshot_load),

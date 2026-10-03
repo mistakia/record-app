@@ -13,6 +13,7 @@ import { use_hotkeys } from '#renderer/hooks/use-hotkeys.ts'
 import { use_node_events } from '#renderer/hooks/use-node-events.ts'
 import { use_media_session } from '#renderer/hooks/use-player.ts'
 import { ConnectionSettings } from '#renderer/pages/connection-settings.tsx'
+import { Diagnostics } from '#renderer/pages/diagnostics.tsx'
 import { Identity } from '#renderer/pages/identity.tsx'
 import { Importer } from '#renderer/pages/importer.tsx'
 import { Libraries } from '#renderer/pages/libraries.tsx'
@@ -23,7 +24,7 @@ import { connection_loaded } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { restore_snapshot } from '#renderer/snapshot/hibernation.ts'
 
-const RESTORABLE_ROUTES = new Set(['/tracks', '/libraries', '/import', '/listens', '/peers', '/identity', '/connection'])
+const RESTORABLE_ROUTES = new Set(['/tracks', '/libraries', '/import', '/listens', '/peers', '/identity', '/connection', '/diagnostics'])
 
 export const App = () => {
   const dispatch = use_app_dispatch()
@@ -72,6 +73,7 @@ const Shell = ({ configured }: { configured: boolean }) => {
       <nav className={styles.nav}>
         {NODE_PAGES.map(({ path, label }) => <NavLink key={path} to={path}>{label}</NavLink>)}
         <NavLink to='/connection'>Connection</NavLink>
+        <NavLink to='/diagnostics'>Diagnostics</NavLink>
         <ConnectionStatus />
       </nav>
       <ConnectionBanner />
@@ -80,6 +82,7 @@ const Shell = ({ configured }: { configured: boolean }) => {
       <main className={styles.content}>
         <Routes>
           <Route path='/connection' element={<ConnectionSettings />} />
+          <Route path='/diagnostics' element={<Diagnostics />} />
           {NODE_PAGES.map(({ path, element }) => (
             <Route key={path} path={path} element={configured ? element : <Navigate to='/connection' replace />} />
           ))}

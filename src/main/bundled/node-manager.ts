@@ -60,7 +60,7 @@ export const probe_health = async (url: string): Promise<Health | null> => {
 }
 
 export const create_node_manager = ({
-  spawn_child, cli_path, data_dir, config_path, version, env, lock, log, on_state,
+  spawn_child, cli_path, data_dir: initial_data_dir, config_path, version, env, lock_for, log, on_state,
   preferred_port = async () => null,
   pick_port = choose_port,
   health = probe_health,
@@ -77,7 +77,8 @@ export const create_node_manager = ({
   config_path: string
   version: string
   env: NodeJS.ProcessEnv
-  lock: ReturnType<typeof create_node_lock>
+  // The data-directory lock for a directory; a new one after a relocation.
+  lock_for: (data_dir: string) => ReturnType<typeof create_node_lock>
   log: ReturnType<typeof create_node_log>
   on_state: (state: BundledState) => void
   preferred_port?: () => Promise<number | null>
@@ -91,6 +92,8 @@ export const create_node_manager = ({
   shutdown_timeout_ms?: number
   stable_after_ms?: number
 }) => {
+  let data_dir = initial_data_dir
+  let lock = lock_for(data_dir)
   let state: BundledState = {
     status: 'stopped',
     url: null,
@@ -104,7 +107,8 @@ export const create_node_manager = ({
     error: null,
     stderr_tail: null,
     ingest_disabled: null,
-    node_key_pin: read_pin(data_dir)
+    node_key_pin: read_pin(data_dir),
+    started_at_ms: null
   }
   let child: ChildHandle | null = null
   // Bumped by every stop; a start that sees it change gives up.
@@ -134,7 +138,7 @@ export const create_node_manager = ({
     return await run
   }
   const fail = (error: string): void => {
-    set_state({ status: 'failed', url: null, pid: null, retry_at_ms: null, error, stderr_tail: log.stderr_tail() || null })
+    set_state({ status: 'failed', url: null, pid: null, retry_at_ms: null, started_at_ms: null, error, stderr_tail: log.stderr_tail() || null })
   }
 
   // Healthy means: our child, still running, announced it listens on this
@@ -167,7 +171,7 @@ export const create_node_manager = ({
           if (child !== current) return
           port_retries = 0
           avoid_port = null
-          set_state({ status: 'running', url, retry_at_ms: null, error: null, node_key_pin: next_pin })
+          set_state({ status: 'running', url, retry_at_ms: null, error: null, node_key_pin: next_pin, started_at_ms: Date.now() })
           // A node that stays up this long has recovered; count from zero again.
           later(stable_after_ms, () => { if (child === current) set_state({ failed_restarts: 0 }) })
         } else if (Date.now() >= deadline) {
@@ -190,7 +194,7 @@ export const create_node_manager = ({
     }
     avoid_port = taken_port
     const relaunch_generation = generation
-    set_state({ status: 'starting', url: null, pid: null, error: reason })
+    set_state({ status: 'starting', url: null, pid: null, started_at_ms: null, error: reason })
     serialize(async () => { if (generation === relaunch_generation && child === null) await launch(relaunch_generation) })
       .catch((error: unknown) => { fail(String(error)) })
   }
@@ -211,7 +215,7 @@ export const create_node_manager = ({
     }
     const delay = delay_for(failed_restarts - 1)
     const restart_generation = generation
-    set_state({ status: 'restarting', url: null, pid: null, failed_restarts, retry_at_ms: Date.now() + delay, error: `The bundled node stopped (${how}).` })
+    set_state({ status: 'restarting', url: null, pid: null, started_at_ms: null, failed_restarts, retry_at_ms: Date.now() + delay, error: `The bundled node stopped (${how}).` })
     later(delay, () => {
       serialize(async () => { if (generation === restart_generation && child === null) await launch(restart_generation) })
         .catch((error: unknown) => { fail(String(error)) })
@@ -293,11 +297,26 @@ export const create_node_manager = ({
       clearTimeout(forced)
     }
     await lock.release()
-    set_state({ status: 'stopped', url: null, pid: null, retry_at_ms: null })
+    set_state({ status: 'stopped', url: null, pid: null, retry_at_ms: null, started_at_ms: null })
   }
 
   return {
     get_state: (): BundledState => state,
+    // Moves to another data directory (spec §8.4.1): stops the node, takes
+    // the new directory's lock and pin, and starts again when asked.
+    relocate: async ({ next_data_dir, start }: { next_data_dir: string, start: boolean }): Promise<void> => {
+      generation++
+      const relocate_generation = generation
+      await serialize(async () => {
+        await stop_now()
+        data_dir = next_data_dir
+        lock = lock_for(data_dir)
+        port_retries = 0
+        avoid_port = null
+        set_state({ data_dir, node_key_pin: read_pin(data_dir), port: null, failed_restarts: 0, error: null, stderr_tail: null })
+        if (start) await start_now(relocate_generation)
+      })
+    },
     start: async (): Promise<void> => {
       const started_generation = generation
       await serialize(async () => {

@@ -73,7 +73,7 @@ const setup = async ({ cli_path = CLI_PATH, owner = 'test-owner', data_dir: shar
     config_path: join(root, 'bundled-node.json'),
     version: 'test',
     env: process.env,
-    lock: create_node_lock({ data_dir, app_pid: process.pid, owner, probe: os_process_probe, app_marker: APP_MARKER }),
+    lock_for: (dir) => create_node_lock({ data_dir: dir, app_pid: process.pid, owner, probe: os_process_probe, app_marker: APP_MARKER }),
     log,
     on_state: (state) => { states.push(state) },
     ...options
@@ -131,6 +131,29 @@ describe('bundled node manager', () => {
       expect({ step, alive: children.filter((child) => child.alive()).length, status: manager.get_state().status }).toEqual({ step, alive: 0, status: 'stopped' })
     }
   }, 60_000)
+
+  test('relocating moves the node to a new data directory: the old lock is released and the new directory gets its own node', async () => {
+    const { manager, data_dir, root } = await setup()
+    await manager.start()
+    await wait_for(() => manager.get_state().status === 'running', 'running')
+    const old_pin = manager.get_state().node_key_pin
+    const old_pid = manager.get_state().pid as number
+    const next_dir = join(root, 'moved')
+    await mkdir(next_dir)
+    await manager.relocate({ next_data_dir: next_dir, start: true })
+    await wait_for(() => manager.get_state().status === 'running', 'running in the new directory')
+    const moved = manager.get_state()
+    expect(moved.data_dir).toBe(next_dir)
+    expect(moved.started_at_ms).toBeNumber()
+    expect(is_alive(old_pid)).toBe(false)
+    expect(await Bun.file(join(data_dir, LOCK_FILE)).exists()).toBe(false)
+    expect(JSON.parse(await readFile(join(next_dir, LOCK_FILE), 'utf8'))).toMatchObject({ child_pid: moved.pid })
+    expect(moved.node_key_pin?.own_library_address).not.toBe(old_pin?.own_library_address)
+
+    // Moving back finds the first node's pin, and with start false leaves it stopped.
+    await manager.relocate({ next_data_dir: data_dir, start: false })
+    expect(manager.get_state()).toMatchObject({ status: 'stopped', data_dir, node_key_pin: old_pin, pid: null, started_at_ms: null })
+  }, 90_000)
 
   test('two retries at once start one node, and a retry never runs beside a running one', async () => {
     const first = await setup()

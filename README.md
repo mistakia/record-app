@@ -22,7 +22,7 @@ updated_at: '2026-10-03T08:17:19.158Z'
 
 The app is an Electron client of [record-node](https://github.com/mistakia/record-node). It holds no protocol logic: it talks to one node at a time over the node's HTTP and WebSocket API. The application contract is chapter 8 of the [Record protocol specification](https://github.com/mistakia/record-docs).
 
-**Status:** early rebuild. The app runs its own record-node by default (bundled mode) or connects to one you run elsewhere (remote mode). It browses, searches, and tags libraries over a virtualized list, plays a queue gaplessly with listen recording and macOS media controls, imports files and URLs, links and follows other libraries, edits the library profile, and shows and exports the node's identity. The track list updates live, the app shows when the node is unreachable, and it reopens on the last-viewed view from a local snapshot. Until the packaging phase ships the pinned ffmpeg and fpcalc, the bundled node cannot ingest files or URLs; adding a track by CID works. Diagnostics, packaging, and updates come next.
+**Status:** early rebuild. The app runs its own record-node by default (bundled mode) or connects to one you run elsewhere (remote mode). It browses, searches, and tags libraries over a virtualized list, plays a queue gaplessly with listen recording and macOS media controls, imports files and URLs, links and follows other libraries, edits the library profile, and shows and exports the node's identity. The track list updates live, the app shows when the node is unreachable, and it reopens on the last-viewed view from a local snapshot. Until the packaging phase ships the pinned ffmpeg and fpcalc, the bundled node cannot ingest files or URLs; adding a track by CID works. Packaging and updates come next.
 
 ## Requirements
 
@@ -47,7 +47,7 @@ bun run build    # production build into out/
 bun run start    # run the production build
 ```
 
-On first launch the app starts its own record-node in bundled mode, with its data in the app's Application Support directory and its log in `~/Library/Logs`. To use a node you run elsewhere, choose Remote node on the Connection page, enter its URL (`http://127.0.0.1:3000` for a local record-node on its default port), test the connection, and save.
+On first launch the app starts its own record-node in bundled mode, with its data in the app's Application Support directory and its log in `~/Library/Logs`. To keep the node's data elsewhere, choose Change beside the data directory on the Connection page. The app asks first, does not move existing data, and restarts the node in the new folder. The Diagnostics page lists versions, paths, the node process, the event connection, and memory use for a bug report. To use a node you run elsewhere, choose Remote node on the Connection page, enter its URL (`http://127.0.0.1:3000` for a local record-node on its default port), test the connection, and save.
 
 ## Test
 

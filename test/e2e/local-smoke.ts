@@ -53,8 +53,9 @@ try {
   const console_errors: string[] = []
   window.on('console', (message) => { if (message.type() === 'error') console_errors.push(message.text()) })
   // A fresh profile starts in bundled mode; check it, then switch to the
-  // in-process node, which holds the tracks the rest of the walk uses.
-  await run_bundled_checks({ app, window, step, remote_url: node.node_url })
+  // in-process node, which holds the tracks the rest of the walk uses. The
+  // smoke's dialog stubs below replace the ones the bundled checks set.
+  await run_bundled_checks({ app, window, step, remote_url: node.node_url, user_data_dir })
   await nav(window, 'Tracks')
   await settled(window)
 
