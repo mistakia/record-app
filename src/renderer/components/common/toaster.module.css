@@ -1,0 +1,26 @@
+.toaster {
+  position: fixed;
+  right: 16px;
+  bottom: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 20;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 420px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: Canvas;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+  overflow-wrap: anywhere;
+}
+
+.error {
+  border-color: var(--danger);
+}
