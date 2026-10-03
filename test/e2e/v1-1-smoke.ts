@@ -2,8 +2,9 @@
 // walking the record-docs v1.1 surfaces: own-library management (create,
 // the listens library, retire, profile choice) and write targets (the
 // importer's selector, adoption into a chosen library, tagging into it),
-// capability management (issue with a filter, revoke, the held list), and
-// pinning from the track menu. Writes stay on the
+// capability management (issue with a filter, revoke, the held list),
+// pinning from the track menu, and the replication-policy editor on a
+// linked library. Writes stay on the
 // in-process node. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
 // record-node's pins. Runs under Node: node test/e2e/v1-1-smoke.ts
@@ -14,12 +15,16 @@ import { fileURLToPath } from 'node:url'
 
 import { _electron as electron, type Page } from 'playwright-core'
 
+import { create_peer, start_peer, stop_peer } from 'record-node'
+
 import { start_test_node } from '../integration/node-fixture.ts'
 
 const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
 
 const node = await start_test_node()
 await node.peer.ingest_file(node.make_audio({ name: 'V11 Alpha.flac', seed: 11 }))
+const other = await create_peer({ config: { network: false, allow_toolchain_mismatch: true } })
+await start_peer(other)
 const user_data_dir = join(node.work_dir, 'profile')
 // Start in remote mode against the in-process node, so no bundled node runs.
 await mkdir(user_data_dir, { recursive: true })
@@ -124,6 +129,28 @@ try {
   await window.getByTestId('library-capabilities').getByText('This library is retired').waitFor()
   if (await window.getByTestId('issue-capability').count() !== 0) throw new Error('a retired library offers issuing')
   step('retired', 'marked retired; capabilities read-only')
+
+  // Replication policy on a linked library: full by default, then selective
+  // with a filter and an estimate, then index only.
+  await window.getByLabel('Library address').fill(other.identity().own_address)
+  await window.getByLabel('Alias').fill('Smoke Linked')
+  await window.getByRole('button', { name: 'Link', exact: true }).click()
+  const linked_row = window.getByTestId('library-row').filter({ hasText: 'Smoke Linked' })
+  await linked_row.getByTestId('replication-mode').filter({ hasText: 'Full' }).waitFor()
+  await linked_row.getByRole('button', { name: 'Change' }).click()
+  const policy = window.getByTestId('replication-policy')
+  await policy.getByLabel(/Selective/).check()
+  await policy.getByLabel('Use a filter').check()
+  await policy.getByTestId('filter-editor').getByLabel('Value').fill('keep')
+  step('estimate', await policy.getByTestId('storage-estimate').innerText())
+  await policy.getByRole('button', { name: 'Save' }).click()
+  await toast(window, /set to selective/)
+  await linked_row.getByTestId('replication-mode').filter({ hasText: 'Selective' }).waitFor()
+  await linked_row.getByRole('button', { name: 'Change' }).click()
+  await window.getByTestId('replication-policy').getByLabel(/Index only/).check()
+  await window.getByTestId('replication-policy').getByRole('button', { name: 'Save' }).click()
+  await linked_row.getByTestId('replication-mode').filter({ hasText: 'Index only' }).waitFor()
+  step('replication policy', 'full, then selective with a filter, then index only')
   await nav(window, 'Identity')
   await window.getByTestId('identity-own-library').filter({ hasText: '(retired)' }).waitFor()
   await window.getByTestId('held-capabilities').getByText('No other identity has granted you a capability.').waitFor()
@@ -134,5 +161,6 @@ try {
   console.log('v1.1 smoke passed')
 } finally {
   await app.close().catch(() => {})
+  await stop_peer(other)
   await node.stop()
 }
