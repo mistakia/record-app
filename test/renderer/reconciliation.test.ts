@@ -28,13 +28,15 @@ afterEach(() => {
 })
 
 describe('tags_for_event', () => {
-  test('maps track, library, and index events, and ignores the rest', () => {
-    expect(tags_for_event('track:added')).toEqual(['tracks'])
-    expect(tags_for_event('track:removed')).toEqual(['tracks'])
-    expect(tags_for_event('library:index-updated')).toEqual(['tracks', 'libraries'])
+  test('maps track, library, peer, and index events, and ignores import events', () => {
+    expect(tags_for_event('track:added')).toEqual(['tracks', 'tags'])
+    expect(tags_for_event('track:removed')).toEqual(['tracks', 'tags'])
+    expect(tags_for_event('library:index-updated')).toEqual(['tracks', 'tags', 'libraries'])
     expect(tags_for_event('library:replicate-progress')).toEqual(['libraries'])
+    expect(tags_for_event('library:linked')).toEqual(['libraries', 'tracks', 'tags', 'about'])
+    expect(tags_for_event('library:peer-joined')).toEqual(['libraries', 'peers'])
+    expect(tags_for_event('peer:joined')).toEqual(['peers'])
     expect(tags_for_event('import:finished')).toEqual([])
-    expect(tags_for_event('peer:joined')).toEqual([])
   })
 })
 

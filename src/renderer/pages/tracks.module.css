@@ -1,35 +1,35 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
 }
 
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.toolbar select {
+.toolbar select,
+.toolbar input {
   font: inherit;
-  max-width: 420px;
+}
+
+.toolbar select:first-child {
+  max-width: 320px;
+}
+
+.toolbar input[type='search'] {
+  min-width: 220px;
+  padding: 3px 6px;
 }
 
 .count {
-  margin-right: auto;
+  margin-left: auto;
   color: var(--muted);
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.table th {
-  text-align: left;
-  font-weight: 600;
-  border-bottom: 1px solid var(--border);
-  padding: 6px 8px;
 }
 
 .error {

@@ -13,7 +13,7 @@ describe('build_api_path', () => {
       method: 'get',
       path_template: '/tracks',
       query: { offset: 200, limit: 200, library_addresses: ['/record/a/b', 'c d'], query: undefined }
-    })).toEqual({ ok: true, path: '/api/tracks?offset=200&limit=200&library_addresses=%2Frecord%2Fa%2Fb&library_addresses=c+d' })
+    })).toEqual({ ok: true, path: '/api/tracks?offset=200&limit=200&library_addresses=%2Frecord%2Fa%2Fb&library_addresses=c%20d' })
   })
 
   test('encodes path parameters with encodeURIComponent', () => {

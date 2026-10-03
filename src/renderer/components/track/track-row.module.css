@@ -1,13 +1,29 @@
-.row td {
-  padding: 4px 8px;
+.row {
+  height: 100%;
   border-bottom: 1px solid var(--border);
 }
 
-.current td {
+.current .title,
+.current .cell {
   font-weight: 600;
 }
 
+.cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tags {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .title {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   background: none;
   border: none;
   padding: 0;

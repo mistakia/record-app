@@ -28,10 +28,11 @@
     "verify": "bun run lint && bun run typecheck",
     "gen:api": "openapi-typescript node_modules/record-node/dist/api/7-http-api.yaml -o src/renderer/api/generated-types.ts && node cli/generate-api-routes.mjs",
     "smoke:remote": "node test/e2e/remote-smoke.ts",
-    "smoke:local": "node test/e2e/local-playback-smoke.ts"
+    "smoke:local": "node test/e2e/local-smoke.ts"
   },
   "dependencies": {
     "@reduxjs/toolkit": "2.12.0",
+    "@tanstack/react-virtual": "3.14.13",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-redux": "9.3.0",
