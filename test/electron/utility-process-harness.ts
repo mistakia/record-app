@@ -13,10 +13,10 @@ import { app } from 'electron'
 import { spawn_utility_process } from '#main/bundled/bundled-node.ts'
 import { build_child_env } from '#main/bundled/child-env.ts'
 import type { ChildHandle, SpawnChild } from '#main/bundled/child-handle.ts'
-import { create_node_lock } from '#main/bundled/node-lock.ts'
 import { create_node_log } from '#main/bundled/node-log.ts'
 import { create_node_manager } from '#main/bundled/node-manager.ts'
-import { is_alive, os_process_probe } from '#main/bundled/process-probe.ts'
+import { app_marker, CHILD_FILE } from '#main/bundled/node-orphan.ts'
+import { describe_process, is_alive } from '#main/bundled/process-probe.ts'
 
 const cli_path = process.argv.at(-1) as string
 const results: Record<string, unknown> = {}
@@ -75,7 +75,7 @@ const make_manager = async (root: string, options: Partial<Parameters<typeof cre
     config_path: join(root, 'bundled-node.json'),
     version: 'test',
     env: { ...process.env, NODE_OPTIONS: '--inspect=0' },
-    lock_for: (dir) => create_node_lock({ data_dir: dir, app_pid: process.pid, owner: `harness-${Math.random()}`, probe: os_process_probe, app_marker: process.execPath }),
+    orphan_marker: app_marker(process.execPath),
     log: create_node_log({ log_dir: join(root, 'logs') }),
     on_state: () => {},
     ...options
@@ -92,6 +92,11 @@ const run = async () => {
     const first = manager.get_state()
     const settings = await (await fetch(`${first.url}/api/settings`)).json() as { peer_id: string }
     check('healthy and pinned', settings.peer_id === first.node_key_pin?.peer_id, { url: first.url, pid: first.pid, peer_id: settings.peer_id })
+    // An orphan is found by its recorded PID and the app's marker in its
+    // command line, which a utility child's must therefore carry.
+    const recorded = JSON.parse(await readFile(join(root, 'node-data', CHILD_FILE), 'utf8')) as { pid: number }
+    const command = (await describe_process(first.pid as number))?.command ?? ''
+    check('child recorded, carrying the app marker', recorded.pid === first.pid && command.includes(app_marker(process.execPath)), { recorded, marker: app_marker(process.execPath), command: command.slice(0, 200) })
 
     // The environment: a NODE_OPTIONS in the app never reaches the child.
     const dump = join(root, 'env.mjs')
@@ -134,7 +139,7 @@ const run = async () => {
     })
 
     // A stop during each step of a start leaves no child.
-    for (const step of ['lock', 'port', 'config', 'spawned', 'locked']) {
+    for (const step of ['port', 'config', 'spawned']) {
       const step_root = await mkdtemp(join(tmpdir(), 'record-app-utility-step-'))
       let stop: (() => Promise<void>) | null = null
       const stopped: Array<Promise<void>> = []

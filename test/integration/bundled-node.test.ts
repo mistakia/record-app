@@ -2,11 +2,13 @@
 // dist/cli.js under the Electron binary (child_process with
 // ELECTRON_RUN_AS_NODE here; the app's utilityProcess path runs in
 // bundled-utility-process.test.ts). Health, a crash and its restart, clean
-// shutdown, the data-directory lock, a stop during every startup step, a
-// double retry, the child's environment, and an impostor on the port.
+// shutdown, record-node's data-directory lock and an orphan holding it, a
+// stop during every startup step, a double retry, the child's environment,
+// and an impostor on the port.
 
 import { afterAll, describe, expect, test } from 'bun:test'
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
@@ -16,17 +18,17 @@ import { fileURLToPath } from 'node:url'
 import electron_path from 'electron'
 
 import { spawn_node_process, type ChildHandle, type SpawnChild } from '#main/bundled/child-handle.ts'
-import { create_node_lock, LOCK_FILE } from '#main/bundled/node-lock.ts'
 import { create_node_log } from '#main/bundled/node-log.ts'
 import { choose_port, create_node_manager, MAX_FAILED_RESTARTS, MAX_PORT_RETRIES, restart_delay_ms, YTDLP_DISABLED_PATH } from '#main/bundled/node-manager.ts'
+import { CHILD_FILE } from '#main/bundled/node-orphan.ts'
 import { PIN_FILE } from '#main/bundled/node-pin.ts'
-import { is_alive, os_process_probe } from '#main/bundled/process-probe.ts'
+import { is_alive } from '#main/bundled/process-probe.ts'
 import type { BundledState } from '#shared/bridge.ts'
 
 const CLI_PATH = fileURLToPath(new URL('../../node_modules/record-node/dist/cli.js', import.meta.url))
-// The app marker the lock checks a live owner's command line for: in the
-// app, its executable path; here, this test process's own command.
-const APP_MARKER = ((await os_process_probe.command_of(process.pid)) ?? process.execPath).split(' ')[0] as string
+// What an orphan's command line must carry: in the app, its bundle; here,
+// where children run under child_process, the script itself.
+const ORPHAN_MARKER = CLI_PATH
 const directories: string[] = []
 const managers: Array<ReturnType<typeof create_node_manager>> = []
 
@@ -54,9 +56,8 @@ const counting_spawn = () => {
   return { children, spawn_child }
 }
 
-const setup = async ({ cli_path = CLI_PATH, owner = 'test-owner', data_dir: shared_dir, spawn_child, ...options }: {
+const setup = async ({ cli_path = CLI_PATH, data_dir: shared_dir, spawn_child, ...options }: {
   cli_path?: string
-  owner?: string
   data_dir?: string
   spawn_child?: SpawnChild
 } & Partial<Parameters<typeof create_node_manager>[0]> = {}) => {
@@ -73,7 +74,7 @@ const setup = async ({ cli_path = CLI_PATH, owner = 'test-owner', data_dir: shar
     config_path: join(root, 'bundled-node.json'),
     version: 'test',
     env: process.env,
-    lock_for: (dir) => create_node_lock({ data_dir: dir, app_pid: process.pid, owner, probe: os_process_probe, app_marker: APP_MARKER }),
+    orphan_marker: ORPHAN_MARKER,
     log,
     on_state: (state) => { states.push(state) },
     ...options
@@ -83,7 +84,7 @@ const setup = async ({ cli_path = CLI_PATH, owner = 'test-owner', data_dir: shar
 }
 
 describe('bundled node manager', () => {
-  test('starts the real node on loopback, pins it, survives a crash, refuses a second owner, and stops cleanly', async () => {
+  test('starts the real node on loopback, pins it, survives a crash, fails beside a node it did not leave, and stops cleanly', async () => {
     const { manager, data_dir, root, log } = await setup()
     await manager.start()
     await wait_for(() => manager.get_state().status === 'running', 'running')
@@ -92,7 +93,7 @@ describe('bundled node manager', () => {
     const settings = await (await fetch(`${url}/api/settings`)).json() as { peer_id: string }
     expect(node_key_pin).toMatchObject({ peer_id: settings.peer_id, identity_address: expect.stringMatching(/^\/record\//) })
     expect(JSON.parse(await readFile(join(data_dir, PIN_FILE), 'utf8'))).toEqual(node_key_pin)
-    expect(JSON.parse(await readFile(join(data_dir, LOCK_FILE), 'utf8'))).toMatchObject({ app_pid: process.pid, child_pid: pid })
+    expect(JSON.parse(await readFile(join(data_dir, CHILD_FILE), 'utf8'))).toEqual({ pid })
     expect(JSON.parse(await readFile(join(root, 'bundled-node.json'), 'utf8'))).toMatchObject({ host: '127.0.0.1', cors_origins: [] })
     expect((await fetch(`${url}/api/settings`, { headers: { origin: 'http://localhost:5173' } })).status).toBe(403)
     expect((await readFile(log.path, 'utf8')).length).toBeGreaterThan(0)
@@ -103,10 +104,16 @@ describe('bundled node manager', () => {
     await wait_for(() => manager.get_state().status === 'running', 'running again')
     expect(manager.get_state()).toMatchObject({ url, node_key_pin })
     expect(manager.get_state().pid).not.toBe(pid)
+    expect(JSON.parse(await readFile(join(data_dir, CHILD_FILE), 'utf8'))).toEqual({ pid: manager.get_state().pid })
 
-    const second = await setup({ owner: 'second-owner', data_dir })
+    // A second manager's node exits 75 on record-node's lock. The holder is
+    // a child of this process, not an orphan, so it is left running.
+    const second = await setup({ data_dir })
     await second.manager.start()
-    expect(second.manager.get_state()).toMatchObject({ status: 'failed', error: expect.stringContaining('in use') })
+    await wait_for(() => second.manager.get_state().status === 'failed', 'the second manager to fail')
+    expect(second.manager.get_state().error).toContain('Another record-node is using the data directory')
+    expect(is_alive(manager.get_state().pid as number)).toBe(true)
+    expect(second.manager.get_state().failed_restarts).toBe(0)
 
     const running_pid = manager.get_state().pid as number
     const started = Date.now()
@@ -114,11 +121,11 @@ describe('bundled node manager', () => {
     expect(Date.now() - started).toBeLessThan(10_000)
     expect(is_alive(running_pid)).toBe(false)
     expect(manager.get_state().status).toBe('stopped')
-    expect(await Bun.file(join(data_dir, LOCK_FILE)).exists()).toBe(false)
+    await wait_for(() => !existsSync(join(data_dir, CHILD_FILE)), 'the child record cleared')
   }, 90_000)
 
   test('a stop during any step of a start leaves no child behind', async () => {
-    for (const step of ['lock', 'port', 'config', 'spawned', 'locked']) {
+    for (const step of ['port', 'config', 'spawned']) {
       let stop: (() => Promise<void>) | null = null
       const stopped: Array<Promise<void>> = []
       const { manager, children } = await setup({
@@ -132,7 +139,7 @@ describe('bundled node manager', () => {
     }
   }, 60_000)
 
-  test('relocating moves the node to a new data directory: the old lock is released and the new directory gets its own node', async () => {
+  test('relocating moves the node to a new data directory, which gets its own node', async () => {
     const { manager, data_dir, root } = await setup()
     await manager.start()
     await wait_for(() => manager.get_state().status === 'running', 'running')
@@ -146,8 +153,7 @@ describe('bundled node manager', () => {
     expect(moved.data_dir).toBe(next_dir)
     expect(moved.started_at_ms).toBeNumber()
     expect(is_alive(old_pid)).toBe(false)
-    expect(await Bun.file(join(data_dir, LOCK_FILE)).exists()).toBe(false)
-    expect(JSON.parse(await readFile(join(next_dir, LOCK_FILE), 'utf8'))).toMatchObject({ child_pid: moved.pid })
+    expect(JSON.parse(await readFile(join(next_dir, CHILD_FILE), 'utf8'))).toEqual({ pid: moved.pid })
     expect(moved.node_key_pin?.identity_address).not.toBe(old_pin?.identity_address)
 
     // Moving back finds the first node's pin, and with start false leaves it stopped.
@@ -160,16 +166,18 @@ describe('bundled node manager', () => {
     await first.manager.start()
     await wait_for(() => first.manager.get_state().status === 'running', 'first running')
     // A second manager on the same data directory fails on the lock...
-    const second = await setup({ owner: 'second-owner', data_dir: first.data_dir })
+    const second = await setup({ data_dir: first.data_dir })
     await second.manager.start()
-    expect(second.manager.get_state().status).toBe('failed')
-    // ...and once the lock is free, a double retry spawns exactly one child.
+    await wait_for(() => second.manager.get_state().status === 'failed', 'the second manager to fail')
+    // ...and once the lock is free, a double retry spawns exactly one child
+    // beyond the one record-node refused.
+    expect(second.children).toHaveLength(1)
     await first.manager.stop()
     await Promise.all([second.manager.restart(), second.manager.restart()])
     await wait_for(() => second.manager.get_state().status === 'running', 'second running')
-    expect(second.children).toHaveLength(1)
+    expect(second.children).toHaveLength(2)
     await second.manager.restart()
-    expect(second.children).toHaveLength(1)
+    expect(second.children).toHaveLength(2)
     await second.manager.stop()
   }, 90_000)
 
@@ -234,7 +242,6 @@ describe('bundled node manager', () => {
     let picks = 0
     const again = await setup({
       data_dir,
-      owner: 'again',
       pick_port: async (preferred) => (picks++ === 0 ? port : await choose_port(preferred)),
       on_state: (state) => { states.push(state) }
     })
@@ -248,7 +255,7 @@ describe('bundled node manager', () => {
 
     // An impostor on every port the node is offered: it gives up, never running.
     const stuck_states: BundledState[] = []
-    const stuck = await setup({ data_dir, owner: 'stuck', pick_port: async () => port, on_state: (state) => { stuck_states.push(state) } })
+    const stuck = await setup({ data_dir, pick_port: async () => port, on_state: (state) => { stuck_states.push(state) } })
     await stuck.manager.start()
     await wait_for(() => stuck.manager.get_state().status === 'failed', 'gave up')
     expect(stuck.manager.get_state().error).toContain(`after ${MAX_PORT_RETRIES} tries`)
@@ -264,35 +271,46 @@ describe('bundled node manager', () => {
     await manager.stop()
     // The pin now names a different peer than the data directory holds.
     await writeFile(join(data_dir, PIN_FILE), JSON.stringify({ peer_id: '12D3KooWSomeoneElse', identity_address: null }))
-    const again = await setup({ data_dir, owner: 'again' })
+    const again = await setup({ data_dir })
     await again.manager.start()
     await wait_for(() => again.manager.get_state().status === 'failed', 'refused')
     expect(again.manager.get_state().error).toContain('holds a different node')
     await again.manager.stop()
   }, 60_000)
 
-  test('a stale lock is replaced: its app is gone, or its PID now belongs to another program', async () => {
-    for (const make_app_pid of [async () => 2147480000, async () => spawn('sleep', ['30'], { stdio: 'ignore' }).pid as number]) {
-      const { manager, data_dir } = await setup()
-      await mkdir(data_dir, { recursive: true })
-      const app_pid = await make_app_pid()
-      await writeFile(join(data_dir, LOCK_FILE), JSON.stringify({ app_pid, owner: 'gone', child_pid: null }))
+  test('an orphan of this app holding the data directory is ended, and anything else is left alone', async () => {
+    const { manager, data_dir, log } = await setup()
+    await mkdir(data_dir, { recursive: true })
+    // A node whose parent is gone, as a force quit could leave: started
+    // through a shell that exits at once.
+    const port = await choose_port(null)
+    const shell = spawn('sh', ['-c', 'ELECTRON_RUN_AS_NODE=1 "$0" "$1" --port "$2" --data-dir "$3" >/dev/null 2>&1 & echo $!', electron_path as unknown as string, CLI_PATH, String(port), data_dir], { stdio: ['ignore', 'pipe', 'ignore'] })
+    let output = ''
+    shell.stdout.on('data', (data: Buffer) => { output += String(data) })
+    await new Promise((resolve) => shell.once('exit', resolve))
+    const orphan = Number(output.trim())
+    try {
+      let answering = false
+      await wait_for(() => {
+        fetch(`http://127.0.0.1:${port}/api/settings`).then(() => { answering = true }).catch(() => {})
+        return answering
+      }, 'the orphan to come up')
+      // Not recorded as this app's child: refused, and left running.
       await manager.start()
-      await wait_for(() => manager.get_state().status === 'running', 'running')
-      expect(JSON.parse(await readFile(join(data_dir, LOCK_FILE), 'utf8'))).toMatchObject({ app_pid: process.pid })
-      if (app_pid !== 2147480000) process.kill(app_pid)
+      await wait_for(() => manager.get_state().status === 'failed', 'refused beside an unknown holder')
+      expect(manager.get_state().error).toContain('not one this app left running')
+      expect(is_alive(orphan)).toBe(true)
+      // Recorded: ended, and the app's own node takes the directory.
+      await writeFile(join(data_dir, CHILD_FILE), JSON.stringify({ pid: orphan }))
+      await manager.restart()
+      await wait_for(() => manager.get_state().status === 'running', 'running after ending the orphan')
+      expect(is_alive(orphan)).toBe(false)
+      expect(await readFile(log.path, 'utf8')).toContain(`ending an orphaned bundled node (process ${orphan})`)
       await manager.stop()
+    } finally {
+      try { process.kill(orphan, 'SIGKILL') } catch {}
     }
-  }, 60_000)
-
-  test('two acquirers racing past a stale lock: exactly one wins', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'record-app-lock-race-'))
-    directories.push(root)
-    await writeFile(join(root, LOCK_FILE), JSON.stringify({ app_pid: 2147480000, owner: 'gone', child_pid: null }))
-    const lock = (owner: string) => create_node_lock({ data_dir: root, app_pid: process.pid, owner, probe: os_process_probe, app_marker: APP_MARKER })
-    const results = await Promise.all([lock('a').acquire(), lock('b').acquire()])
-    expect(results.filter(({ ok }) => ok)).toHaveLength(1)
-  })
+  }, 90_000)
 
   test('a node that never answers fails with its stderr tail', async () => {
     const { root } = await setup()
