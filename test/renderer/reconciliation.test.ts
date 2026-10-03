@@ -85,13 +85,13 @@ describe('reconcile and the write gate', () => {
     await subscription
 
     store.dispatch(events_state_changed(open_state(2)))
-    let freshness_before_retry: string | null = null
+    const seen: { freshness_before_retry: string | null } = { freshness_before_retry: null }
     const failing = store.dispatch(reconcile({
       connection_id: 2,
       // Instead of retrying, the connection drops while it waits.
       wait: async (ms) => {
         if (ms > 0) {
-          freshness_before_retry = store.getState().connection.freshness
+          seen.freshness_before_retry = store.getState().connection.freshness
           store.dispatch(events_state_changed({ ...open_state(2), status: 'reconnecting' }))
         }
         await settle()
@@ -100,7 +100,7 @@ describe('reconcile and the write gate', () => {
     await settle()
     answer_all({ ok: false, failure: { kind: 'network', message: 'down' } })
     await failing
-    expect(freshness_before_retry).toBe('stale')
+    expect(seen.freshness_before_retry).toBe('stale')
     store.dispatch(events_state_changed(open_state(2)))
 
     const replaced = store.dispatch(reconcile({ connection_id: 2 }))
@@ -175,9 +175,9 @@ describe('reconcile and the write gate', () => {
       { ok: false, failure: { kind: 'network', message: 'down' } },
       { ok: true, data: [] }
     ]
-    let done = false
-    reconciling.then(() => { done = true }).catch(() => { done = true })
-    while (!done) {
+    const progress = { done: false }
+    reconciling.then(() => { progress.done = true }).catch(() => { progress.done = true })
+    while (!progress.done) {
       await settle()
       const result = results[0]
       if (requests.length > 0 && result !== undefined) {
