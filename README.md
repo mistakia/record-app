@@ -22,7 +22,7 @@ updated_at: '2026-10-03T08:17:19.158Z'
 
 The app is an Electron client of [record-node](https://github.com/mistakia/record-node). It holds no protocol logic: it talks to one node at a time over the node's HTTP and WebSocket API. The application contract is chapter 8 of the [Record protocol specification](https://github.com/mistakia/record-docs).
 
-**Status:** early rebuild. Remote mode works: point the app at a running record-node, browse its libraries and tracks, and play a track. Bundled mode (the app spawns its own node), events, the queue, ingest, and packaging come next.
+**Status:** early rebuild. Remote mode works: point the app at a running record-node, browse its libraries and tracks, and play a track. The track list updates live from the node's events, the app shows when the node is unreachable, and it reopens on the last-viewed libraries and tracks from a local snapshot. Bundled mode (the app spawns its own node), the queue, ingest, and packaging come next.
 
 ## Requirements
 
@@ -58,7 +58,7 @@ bun test         # unit and integration tests
 
 The integration test starts record-node in process and ingests a fixture, which needs `ffmpeg` and `fpcalc`. When their versions differ from record-node's pins, run `RECORD_TOOLCHAIN_PREFLIGHT=bypass bun test`.
 
-`bun run smoke:remote` launches the built app against a running node, finds a track, and plays it. Set `RECORD_NODE_URL`, `RECORD_SMOKE_TITLE`, and `RECORD_SMOKE_ARTIST` to choose the node and the track.
+`bun run smoke:remote` launches the built app against a running node, finds a track, and plays it, then relaunches from the offline snapshot and checks the unreachable state. Set `RECORD_NODE_URL`, `RECORD_SMOKE_TITLE`, and `RECORD_SMOKE_ARTIST` to choose the node and the track. The script header documents the optional live-update and offline-relaunch checks.
 
 ## Security
 
