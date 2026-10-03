@@ -2,15 +2,19 @@
 // updates). Events may repeat or go missing (§8.7.7), so they only ever mark
 // data for refetch; nothing is patched from an event payload.
 
-export const NODE_API_TAGS = ['settings', 'libraries', 'tracks'] as const
+export const NODE_API_TAGS = ['settings', 'libraries', 'tracks', 'tags', 'about', 'listens', 'peers'] as const
 export type NodeApiTag = typeof NODE_API_TAGS[number]
 
 export const tags_for_event = (type: string): NodeApiTag[] => {
-  if (type.startsWith('track:')) return ['tracks']
-  // A finished index batch changes track lists and per-library counts.
-  if (type === 'library:index-updated') return ['tracks', 'libraries']
+  if (type.startsWith('track:')) return ['tracks', 'tags']
+  // A finished index batch changes track lists, tags, and per-library counts.
+  if (type === 'library:index-updated') return ['tracks', 'tags', 'libraries']
+  if (type === 'library:peer-joined' || type === 'library:peer-left') return ['libraries', 'peers']
+  if (type === 'library:linked' || type === 'library:unlinked') return ['libraries', 'tracks', 'tags', 'about']
   if (type.startsWith('library:')) return ['libraries']
-  // import:* drives the importer, and peer:* the peer list, in later phases.
+  if (type.startsWith('peer:')) return ['peers']
+  // import:* drives the importer's progress list, not the cache; the tracks
+  // an import adds arrive as track:added.
   return []
 }
 

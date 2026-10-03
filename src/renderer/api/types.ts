@@ -11,6 +11,10 @@ export type TrackList = Schemas['TrackList']
 export type Library = Schemas['Library']
 export type About = Schemas['About']
 export type Settings = Schemas['Settings']
+export type TagCount = Schemas['TagCount']
+export type Peer = Schemas['Peer']
+export type ImportAck = Schemas['ImportAck']
+export type ListenCount = Schemas['ListenCount']
 export type ApiError = Schemas['Error']
 
 interface LibraryAddressPayload { library_address: string }

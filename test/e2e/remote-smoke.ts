@@ -32,7 +32,6 @@ const title = process.env.RECORD_SMOKE_TITLE ?? 'Intro'
 const artist = process.env.RECORD_SMOKE_ARTIST ?? 'SebastiAn'
 const expect_live = process.env.RECORD_SMOKE_EXPECT_LIVE === '1'
 const screenshot_dir = process.env.RECORD_SMOKE_SCREENSHOT_DIR ?? tmpdir()
-const MAX_PAGES = 100
 const UNREACHABLE_URL = 'http://127.0.0.1:9'
 const offline_command = process.env.RECORD_SMOKE_OFFLINE_CMD
 const online_command = process.env.RECORD_SMOKE_ONLINE_CMD
@@ -51,6 +50,10 @@ const track_total = async (window: Page): Promise<number> => Number((await windo
 const wait_fresh = async (window: Page): Promise<void> => {
   await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: 60_000 })
 }
+
+const rows = (window: Page) => window.getByTestId('track-row')
+const titles = async (window: Page) => await rows(window).locator('button').filter({ hasNotText: /^(Next|Queue)$/ }).allInnerTexts()
+const settled = async (window: Page) => { await window.locator('[data-testid=track-list][aria-busy=false]').waitFor() }
 
 const save_node_url = async (window: Page, url: string): Promise<void> => {
   await window.getByRole('link', { name: 'Connection', exact: true }).click()
@@ -71,7 +74,7 @@ try {
   await window.getByRole('button', { name: 'Save', exact: true }).click()
   await wait_fresh(window)
   console.log('event connection: open, data fresh')
-  await window.locator('table[aria-busy=false]').waitFor()
+  await settled(window)
   console.log('track list:', await window.getByTestId('track-total').textContent())
 
   if (expect_live) {
@@ -83,14 +86,48 @@ try {
     console.log('live update: track total', before, '->', await track_total(window), 'with no reload')
   }
 
-  const row = window.locator('tr', { has: window.getByRole('button', { name: title, exact: true }) }).filter({ hasText: artist })
-  for (let page = 1; await row.count() === 0; page++) {
-    if (page >= MAX_PAGES || await window.getByRole('button', { name: 'Next page', exact: true }).isDisabled()) throw new Error(`no "${title}" by ${artist} in the list`)
-    await window.getByRole('button', { name: 'Next page', exact: true }).click()
-    await window.getByText(`Page ${page + 1} of`).waitFor()
-    await window.locator('table[aria-busy=false]').waitFor()
+  // Read-only browsing. The virtual list renders a window of rows however
+  // long the result is; scrolling to the end fills in the last page.
+  const total = await track_total(window)
+  const scroller = window.getByTestId('track-scroller')
+  const rendered_rows = await rows(window).count()
+  const started = Date.now()
+  await scroller.evaluate((element) => { element.scrollTop = element.scrollHeight })
+  await rows(window).last().waitFor()
+  await window.waitForFunction(() => document.querySelectorAll('[data-testid=track-list] [role=row][aria-busy=true]').length === 0, undefined, { timeout: 30_000 })
+  console.log('virtual list:', { total, rows_in_dom_at_top: rendered_rows, rows_in_dom_at_end: await rows(window).count(), last_rows: (await titles(window)).slice(-3), filled_in_ms: Date.now() - started })
+  if (rendered_rows > 120) throw new Error('the list rendered more rows than a window')
+  await scroller.evaluate((element) => { element.scrollTop = 0 })
+
+  await window.getByLabel('Sort by').selectOption('title')
+  await window.getByRole('button', { name: 'Descending' }).click()
+  await settled(window)
+  console.log('sorted by title ascending, first rows:', (await titles(window)).slice(0, 3))
+  await window.getByRole('button', { name: 'Ascending' }).click()
+  await settled(window)
+  console.log('sorted by title descending, first rows:', (await titles(window)).slice(0, 3))
+  // Back to the default view: newest first.
+  await window.getByLabel('Sort by').selectOption('added_at')
+  await settled(window)
+
+  const tag_buttons = window.getByTestId('tag-filter').getByRole('button')
+  if (await tag_buttons.count() > 0) {
+    const tag = (await tag_buttons.first().innerText()).replace(/\s+\d+$/, '')
+    await tag_buttons.first().click()
+    await settled(window)
+    console.log(`tag filter "${tag}":`, await window.getByTestId('track-total').textContent())
+    await window.getByRole('button', { name: 'Clear filters' }).click()
+    await settled(window)
+  } else {
+    console.log('tag filter: the node has no tags yet')
   }
-  console.log('found row:', (await row.first().innerText()).replaceAll('\t', ' | '))
+
+  await window.getByLabel('Search tracks').fill(artist)
+  await window.locator('[data-testid=track-row]', { hasText: artist }).first().waitFor({ timeout: 30_000 })
+  await settled(window)
+  console.log(`search "${artist}":`, await window.getByTestId('track-total').textContent())
+  const row = rows(window).filter({ has: window.getByRole('button', { name: title, exact: true }) }).filter({ hasText: artist })
+  console.log('found row:', (await row.first().innerText()).replaceAll('\n', ' | '))
   await row.first().getByRole('button', { name: title, exact: true }).click()
   await window.locator('[data-testid=player-bar][data-state=playing]').waitFor({ timeout: 60_000 })
   const first_position = await window.getByTestId('player-position').textContent()
@@ -108,7 +145,7 @@ try {
   await first.app.close()
   const snapshot = JSON.parse(await readFile(join(user_data_dir, 'snapshot.json'), 'utf8')) as {
     libraries: unknown[]
-    active: { tracks: Array<{ title: string | null }> } | null
+    active: { total: number, tracks: Array<{ title: string | null }> } | null
     queue: { position_seconds: number } | null
     route: string
   }
@@ -118,16 +155,16 @@ try {
   // Second launch. Offline, the snapshot alone must render, marked stale.
   if (run_offline) execSync(offline_command, { stdio: 'inherit' })
   const second = await launch(user_data_dir)
-  await second.window.locator('tbody tr').first().waitFor()
+  await rows(second.window).first().waitFor()
   const player_text = (await second.window.getByTestId('player-bar').innerText()).replaceAll('\n', ' ')
   console.log('relaunch: rows rendered, player cued:', player_text)
   if (run_offline) {
     await second.window.getByTestId('node-unreachable').waitFor({ timeout: 30_000 })
-    const rows = await second.window.locator('tbody tr').count()
-    const first_title = await second.window.locator('tbody tr').first().locator('button').first().innerText()
+    const shown_total = await track_total(second.window)
+    const first_title = (await titles(second.window))[0]
     const freshness = await second.window.getByTestId('events-status').getAttribute('data-freshness')
-    console.log('offline relaunch:', { rows, first_title, freshness, snapshot_rows: snapshot.active.tracks.length, snapshot_first_title: snapshot.active.tracks[0]?.title })
-    if (rows !== snapshot.active.tracks.length || freshness !== 'stale') throw new Error('the offline relaunch did not render the stale snapshot')
+    console.log('offline relaunch:', { shown_total, first_title, freshness, snapshot_total: snapshot.active.total, snapshot_first_title: snapshot.active.tracks[0]?.title })
+    if (shown_total !== snapshot.active.total || first_title !== (snapshot.active.tracks[0]?.title ?? 'Untitled') || freshness !== 'stale') throw new Error('the offline relaunch did not render the stale snapshot')
     await second.window.screenshot({ path: join(screenshot_dir, 'record-app-smoke-offline-snapshot.png') })
     execSync(online_command, { stdio: 'inherit' })
     await second.window.getByRole('button', { name: 'Retry now', exact: true }).click()

@@ -1,0 +1,16 @@
+.dialog {
+  min-width: 380px;
+  max-width: 640px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 16px;
+}

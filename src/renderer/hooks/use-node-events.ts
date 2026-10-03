@@ -9,8 +9,10 @@ import type { EventsState } from '#shared/bridge.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { events_state_changed } from '#renderer/store/connection.ts'
 import { create_invalidation_batcher, tags_for_event } from '#renderer/store/event-invalidation.ts'
+import { import_event_received } from '#renderer/store/imports.ts'
 import { use_app_dispatch } from '#renderer/store/index.ts'
 import { reconcile } from '#renderer/store/reconcile.ts'
+import { library_event_received } from '#renderer/store/replication.ts'
 
 export const use_node_events = (): void => {
   const dispatch = use_app_dispatch()
@@ -29,7 +31,11 @@ export const use_node_events = (): void => {
     }
 
     const off_state = window.record.events.on_state(apply_state)
-    const off_event = window.record.events.on_event((message) => { batcher.add(tags_for_event(message.type)) })
+    const off_event = window.record.events.on_event((message) => {
+      batcher.add(tags_for_event(message.type))
+      if (message.type.startsWith('import:')) dispatch(import_event_received(message))
+      else if (message.type.startsWith('library:')) dispatch(library_event_received(message))
+    })
     window.record.events.get_state().then(apply_state).catch(() => {})
     return () => {
       off_state()

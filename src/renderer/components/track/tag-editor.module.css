@@ -1,0 +1,46 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+}
+
+.tags {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tags li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.other,
+.from {
+  color: var(--muted);
+}
+
+.add {
+  display: flex;
+  gap: 8px;
+}
+
+.add input {
+  flex: 1;
+  font: inherit;
+  padding: 4px 6px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

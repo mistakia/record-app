@@ -52,6 +52,25 @@ const bridge: RecordBridge = {
     on_event: (listener: (message: NodeEventMessage) => void) => subscribe(IPC_CHANNELS.events_message, listener),
     on_state: (listener: (state: EventsState) => void) => subscribe(IPC_CHANNELS.events_state, listener)
   },
+  import: {
+    choose_files: async () => await ipcRenderer.invoke(IPC_CHANNELS.import_choose_files),
+    upload_files: async (files: Array<{ name: string, data: ArrayBuffer }>) => {
+      if (!Array.isArray(files)) throw new TypeError('files must be an array')
+      return await ipcRenderer.invoke(IPC_CHANNELS.import_upload_files, files.map(({ name, data }) => ({ name, data })))
+    }
+  },
+  identity: {
+    export: async () => await ipcRenderer.invoke(IPC_CHANNELS.identity_export),
+    import: async ({ private_key }: { private_key: string }) => {
+      if (typeof private_key !== 'string') throw new TypeError('private_key must be a string')
+      return await ipcRenderer.invoke(IPC_CHANNELS.identity_import, { private_key })
+    },
+    copy_key: async ({ text }: { text: string }) => {
+      if (typeof text !== 'string') throw new TypeError('text must be a string')
+      return await ipcRenderer.invoke(IPC_CHANNELS.identity_copy_key, { text })
+    },
+    public_key: async () => await ipcRenderer.invoke(IPC_CHANNELS.identity_public_key)
+  },
   snapshot: {
     load: async () => await ipcRenderer.invoke(IPC_CHANNELS.snapshot_load),
     update: async (snapshot: HibernationSnapshot) => {

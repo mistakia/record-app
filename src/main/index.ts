@@ -34,7 +34,8 @@ const broadcast = (channel: string, payload: unknown): void => {
 // Started from whenReady rather than a top-level await, which would hold the
 // module's evaluation open and stall tooling that waits for it to finish.
 const start = async (): Promise<void> => {
-  // The renderer needs no browser permission (camera, notifications, ...).
+  // The renderer needs no browser permission (camera, clipboard,
+  // notifications, ...); copying the exported key goes through main.
   // eslint-disable-next-line n/no-callback-literal -- Electron's callback takes the grant as a boolean
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => { callback(false) })
   const user_data = app.getPath('userData')

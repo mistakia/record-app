@@ -41,15 +41,17 @@ export const build_api_path = ({ method, path_template, params = {}, query = {} 
     path = path.replace(`{${name}}`, encodeURIComponent(value))
   }
 
-  const search = new URLSearchParams()
+  // encodeURIComponent, not URLSearchParams: the node's validator rejects
+  // the `+` that URLSearchParams writes for a space.
+  const search: string[] = []
   for (const [name, value] of Object.entries(query)) {
     if (value === undefined) continue
     if (!QUERY_KEY.test(name)) return { ok: false, reason: `invalid query parameter: ${name}` }
     for (const item of Array.isArray(value) ? value : [value]) {
       if (!['string', 'number', 'boolean'].includes(typeof item)) return { ok: false, reason: `invalid value for query parameter: ${name}` }
-      search.append(name, String(item))
+      search.push(`${name}=${encodeURIComponent(String(item))}`)
     }
   }
-  const query_string = search.toString()
+  const query_string = search.join('&')
   return { ok: true, path: `/api${path}${query_string === '' ? '' : `?${query_string}`}` }
 }

@@ -1,0 +1,93 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.page h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.page h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.name {
+  display: block;
+  font-weight: 600;
+}
+
+.address {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+
+.own {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.linked {
+  border-color: #2e9d4f;
+  color: #2e9d4f;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.actions button {
+  margin-right: 4px;
+}
+
+.link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.link h2 {
+  width: 100%;
+}
+
+.link input {
+  font: inherit;
+  padding: 4px 6px;
+  min-width: 260px;
+}
+
+.error {
+  color: var(--danger);
+  margin: 0;
+}
+
+.dialog_actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

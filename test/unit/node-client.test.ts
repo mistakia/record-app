@@ -70,3 +70,13 @@ describe('network failure codes', () => {
     expect(!audio.ok && audio.failure).toMatchObject({ kind: 'network', code: 'ECONNREFUSED' })
   })
 })
+
+describe('dropped file names', () => {
+  test('reduce to a safe audio base name, or are refused', async () => {
+    const { clean_upload_name } = await import('#main/import-files.ts')
+    expect(clean_upload_name('Intro.FLAC')).toBe('Intro.FLAC')
+    expect(clean_upload_name('/Users/someone/Music/Intro.mp3')).toBe('Intro.mp3')
+    expect(clean_upload_name('..\\..\\evil\\Intro.m4a')).toBe('Intro.m4a')
+    for (const name of ['../../etc/passwd', 'notes.txt', '.flac', '', 42, null]) expect(clean_upload_name(name)).toBeNull()
+  })
+})

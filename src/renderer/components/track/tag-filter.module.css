@@ -1,0 +1,33 @@
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 64px;
+  overflow: auto;
+}
+
+.tag {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1px 8px;
+  background: none;
+  color: inherit;
+  font-size: 12px;
+}
+
+.on {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.count,
+.more,
+.empty {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.empty {
+  margin: 0;
+}

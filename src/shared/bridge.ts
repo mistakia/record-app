@@ -67,6 +67,11 @@ export interface NodeEventMessage {
   payload: Record<string, unknown>
 }
 
+export interface ImportAck {
+  import_id: string
+  file_count?: number
+}
+
 export interface RecordBridge {
   connection: {
     get: () => Promise<ConnectionConfig>
@@ -83,6 +88,25 @@ export interface RecordBridge {
     // Each returns its unsubscribe function.
     on_event: (listener: (message: NodeEventMessage) => void) => () => void
     on_state: (listener: (state: EventsState) => void) => () => void
+  }
+  import: {
+    // Opens main's file picker; null when the user cancels.
+    choose_files: () => Promise<NodeResult<ImportAck | null>>
+    // Files the user dropped, as their bytes and bare names, never paths.
+    upload_files: (files: Array<{ name: string, data: ArrayBuffer }>) => Promise<NodeResult<ImportAck>>
+  }
+  identity: {
+    // The key pair, after the user confirms in main's native dialog. The
+    // generic request refuses the identity routes.
+    export: () => Promise<NodeResult<{ public_key: string, private_key: string }>>
+    // Bundled node only (spec §8.5.4).
+    import: (input: { private_key: string }) => Promise<NodeResult<unknown>>
+    // Copies the exported key; main clears the clipboard after a minute if
+    // it still holds exactly that text.
+    copy_key: (input: { text: string }) => Promise<NodeResult<{ clears_in_ms: number }>>
+    // The node's public key alone. Chapter 7 serves it only with the private
+    // key (GET /identity/export), so main reads it and keeps only this half.
+    public_key: () => Promise<NodeResult<{ public_key: string }>>
   }
   snapshot: {
     // The snapshot for the configured node, or null.
@@ -107,6 +131,12 @@ export const IPC_CHANNELS = {
   events_reconnect_now: 'record:events:reconnect-now',
   events_message: 'record:events:message',
   events_state: 'record:events:state',
+  import_choose_files: 'record:import:choose-files',
+  import_upload_files: 'record:import:upload-files',
+  identity_public_key: 'record:identity:public-key',
+  identity_export: 'record:identity:export',
+  identity_import: 'record:identity:import',
+  identity_copy_key: 'record:identity:copy-key',
   snapshot_load: 'record:snapshot:load',
   snapshot_update: 'record:snapshot:update',
   snapshot_get_info: 'record:snapshot:get-info',
