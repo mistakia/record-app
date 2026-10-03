@@ -64,5 +64,36 @@
     "vite": "7.3.6",
     "yaml": "2.9.1"
   },
-  "trustedDependencies": []
+  "trustedDependencies": [],
+  "auditRoles": {
+    "shipped": [
+      "@reduxjs/toolkit",
+      "@tanstack/react-virtual",
+      "react",
+      "react-dom",
+      "react-redux",
+      "react-router"
+    ],
+    "shippedPackageOnly": [
+      "electron"
+    ],
+    "build": [
+      "@electron/fuses",
+      "@types/bun",
+      "@types/node",
+      "@types/react",
+      "@types/react-dom",
+      "@vitejs/plugin-react",
+      "ajv",
+      "electron-builder",
+      "electron-vite",
+      "eslint",
+      "neostandard",
+      "openapi-typescript",
+      "playwright-core",
+      "typescript",
+      "vite",
+      "yaml"
+    ]
+  }
 }
