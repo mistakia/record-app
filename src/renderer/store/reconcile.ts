@@ -50,9 +50,13 @@ export const reconcile = ({ connection_id, wait = sleep }: { connection_id: numb
       if (!still_current()) return
       // Fresh when every cached surface has data and none failed, and the
       // library list behind the head-check was fetched in this attempt.
-      const queries = Object.values(get_state().node_api.queries).filter((entry) => entry !== undefined && entry.status !== 'uninitialized')
+      // The identity heads are the head-check's own input, not a surface.
+      const queries = Object.values(get_state().node_api.queries)
+        .filter((entry) => entry !== undefined && entry.status !== 'uninitialized' && entry.endpointName !== 'get_identity_heads')
       const libraries = node_api.endpoints.get_libraries.select()(get_state())
-      const ok = queries.every((entry) => entry?.status === 'fulfilled') && libraries.status === 'fulfilled' && (libraries.fulfilledTimeStamp ?? 0) >= started_at
+      // Started, not just finished, in this attempt: a check sent before the
+      // reconnect could otherwise pass for this one.
+      const ok = queries.every((entry) => entry?.status === 'fulfilled') && libraries.status === 'fulfilled' && (libraries.startedTimeStamp ?? 0) >= started_at
       dispatch(reconcile_finished({ connection_id, ok }))
       if (ok) return
       await wait(reconcile_retry_delay_ms(attempt))

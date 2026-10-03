@@ -1,13 +1,14 @@
 // Pins and the head-check (spec §4.6.2, §8.8.5) against an in-process
 // record-node: a pin by audio CID marks the track pinned and records a pin in
-// the identity library, an unpin clears it, the events reach the app, and a
-// write moves its library's heads, which is what the head-check compares.
+// the identity library and moves its heads (how the head-check sees a pin
+// made on another device), an unpin clears it, the events reach main's
+// socket, and a write moves its library's heads.
 
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { request_node } from '#main/node-client.ts'
 import { open_node_events, type NodeEvents } from '#main/node-events.ts'
-import { moved_libraries } from '#renderer/store/library-heads.ts'
+import { mark_libraries, moved_libraries } from '#renderer/store/library-heads.ts'
 import type { Library, Track, TrackList } from '#renderer/api/types.ts'
 import type { NodeEventMessage, NodeRequest, NodeResult } from '#shared/bridge.ts'
 import { start_test_node, type TestNode } from './node-fixture.ts'
@@ -51,7 +52,10 @@ describe('pins', () => {
   test('pins and unpins a track by its audio CID, recorded in the identity library', async () => {
     const track = await first_track()
     expect(track.is_pinned).toBe(false)
+    const identity_heads = async () => (await call<{ heads: string[] }>({ method: 'get', path_template: '/identity/meta-log', query: { offset: 0, limit: 1 } })).heads
+    const heads_before = await identity_heads()
     await call({ method: 'post', path_template: '/tracks/{cid}/pin', params: { cid: track.audio_cid } })
+    expect(await identity_heads()).not.toEqual(heads_before)
     expect((await first_track()).is_pinned).toBe(true)
     await wait_for(() => messages.some(({ type }) => type === 'track:pinned'), 'track:pinned')
     const pins = await call<{ items: Array<{ type: string, op: string }> }>({ method: 'get', path_template: '/identity/meta-log', query: { type: 'pin', current_only: true } })
@@ -70,7 +74,7 @@ describe('head-check', () => {
     await call({ method: 'post', path_template: '/tags', body: { track_id: track.id, tag: 'head-check', library_address: own } })
     const after = await call<Library[]>({ method: 'get', path_template: '/libraries' })
     expect(after.find(({ address }) => address === own)?.heads.length).toBeGreaterThan(0)
-    expect(moved_libraries({ before, after }).map(({ address }) => address)).toEqual([own])
-    expect(moved_libraries({ before: after, after })).toEqual([])
+    expect(moved_libraries({ before: mark_libraries(before), after: mark_libraries(after) }).map(({ address }) => address)).toEqual([own])
+    expect(moved_libraries({ before: mark_libraries(after), after: mark_libraries(after) })).toEqual([])
   })
 })
