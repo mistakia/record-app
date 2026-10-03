@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { request_node } from '#main/node-client.ts'
 import { open_node_events, type NodeEvents } from '#main/node-events.ts'
-import { can_retire, has_profile, own_library_address } from '#renderer/components/library/library-category.ts'
+import { can_retire, has_profile, own_libraries_of, own_library_address } from '#renderer/components/library/library-category.ts'
 import { tags_for_event } from '#renderer/store/event-invalidation.ts'
 import type { About, Library } from '#renderer/api/types.ts'
 import type { NodeEventMessage, NodeRequest, NodeResult } from '#shared/bridge.ts'
@@ -57,6 +57,14 @@ describe('own libraries', () => {
     expect(own_library_address(libraries)).toBe(libraries.find(({ library_type }) => library_type === 'recordstore')?.address ?? null)
   })
 
+  test('without GET /identity/libraries the own libraries come from GET /libraries', async () => {
+    const libraries = await call<Library[]>({ method: 'get', path_template: '/libraries' })
+    const fallback = own_libraries_of({ own: undefined, libraries })
+    expect(fallback.length).toBeGreaterThan(0)
+    expect(fallback.every(({ is_own }) => is_own)).toBe(true)
+    expect(own_libraries_of({ own: [], libraries })).toEqual([])
+  })
+
   test('creates a library with a discriminator and about, and refuses the same discriminator again', async () => {
     const created = await call<Library>({ method: 'post', path_template: '/identity/libraries', body: { discriminator: 'mixes', about: { name: 'Mixes' } } })
     expect(created).toMatchObject({ is_own: true, is_retired: false, library_type: 'recordstore' })
@@ -66,7 +74,7 @@ describe('own libraries', () => {
     expect((await own_libraries()).map(({ address }) => address)).toContain(created.address)
     const duplicate = await send({ method: 'post', path_template: '/identity/libraries', body: { discriminator: 'mixes' } })
     expect(duplicate).toMatchObject({ ok: false, failure: { kind: 'http', status: 409 } })
-    await wait_for(() => messages.some(({ type }) => type === 'identity:library-created'), 'identity:library-created')
+    await wait_for(() => messages.some(({ type, payload }) => type === 'identity:library-created' && (payload.library as Library | undefined)?.address === created.address), 'identity:library-created')
     expect(tags_for_event('identity:library-created')).toContain('libraries')
     // A generated discriminator when none is given.
     const unnamed = await call<Library>({ method: 'post', path_template: '/identity/libraries' })
@@ -86,7 +94,7 @@ describe('own libraries', () => {
     // turns it into a 500 (a follow-up on the record protocol v1.1 task).
     const write = await send({ method: 'post', path_template: '/libraries/{address}/about', params: { address: created.address }, body: { name: 'Again' } })
     expect(write.ok).toBe(false)
-    await wait_for(() => messages.some(({ type }) => type === 'identity:library-retired'), 'identity:library-retired')
+    await wait_for(() => messages.some(({ type, payload }) => type === 'identity:library-retired' && payload.library_address === created.address), 'identity:library-retired')
     expect(tags_for_event('identity:library-retired')).toContain('libraries')
 
     const listens = (await own_libraries()).find(({ library_type }) => library_type === 'listens')

@@ -50,7 +50,7 @@ export const choose_port = async (preferred: number | null): Promise<number> => 
   return (preferred === null ? null : await try_listen(preferred)) ?? await try_listen(0) ?? 0
 }
 
-export interface Health { peer_id: string, own_library_address: string | null }
+export interface Health { peer_id: string, identity_address: string | null }
 
 // GET /api/settings for the peer_id, and GET /api/identity for the
 // identity's default own library.
@@ -58,9 +58,9 @@ export const probe_health = async (url: string): Promise<Health | null> => {
   try {
     const settings = await (await fetch(`${url}/api/settings`, { signal: AbortSignal.timeout(1_000) })).json() as { peer_id?: unknown }
     if (typeof settings.peer_id !== 'string') return null
-    const identity = await (await fetch(`${url}/api/identity`, { signal: AbortSignal.timeout(2_000) })).json() as { own_library_address?: unknown }
-    const own = identity.own_library_address
-    return { peer_id: settings.peer_id, own_library_address: typeof own === 'string' && own !== '' ? own : null }
+    const identity = await (await fetch(`${url}/api/identity`, { signal: AbortSignal.timeout(2_000) })).json() as { meta_log_address?: unknown }
+    const address = identity.meta_log_address
+    return { peer_id: settings.peer_id, identity_address: typeof address === 'string' && address !== '' ? address : null }
   } catch {
     return null
   }
@@ -175,8 +175,8 @@ export const create_node_manager = ({
           return
         }
         if (answer !== null && listening.port === port && current.alive()) {
-          const next_pin: NodePin = { peer_id: answer.peer_id, own_library_address: answer.own_library_address }
-          if (pin === null || pin.own_library_address !== next_pin.own_library_address) await write_pin(data_dir, next_pin)
+          const next_pin: NodePin = { peer_id: answer.peer_id, identity_address: answer.identity_address }
+          if (pin === null || pin.identity_address !== next_pin.identity_address) await write_pin(data_dir, next_pin)
           if (child !== current) return
           port_retries = 0
           avoid_port = null
@@ -373,7 +373,7 @@ export const create_node_manager = ({
       if (state.url === null || state.node_key_pin === null) return
       const answer = await health(state.url)
       if (answer === null || answer.peer_id !== state.node_key_pin.peer_id) return
-      const pin = { peer_id: answer.peer_id, own_library_address: answer.own_library_address }
+      const pin = { peer_id: answer.peer_id, identity_address: answer.identity_address }
       await write_pin(data_dir, pin)
       set_state({ node_key_pin: pin })
     },

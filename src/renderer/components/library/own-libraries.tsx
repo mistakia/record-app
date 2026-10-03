@@ -3,7 +3,8 @@
 // one with an optional name and discriminator; retiring one, which is
 // permanent; and choosing which own library's profile to edit. The listens
 // library is where listens go, so it is marked and never offered for
-// retirement. A node without the endpoint (404) shows nothing here (§8.7.6).
+// retirement. A node without the endpoint (404) keeps only the profile
+// editor for its own library (§8.7.6).
 
 import { useState, type FormEvent } from 'react'
 
@@ -11,7 +12,7 @@ import styles from './own-libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { AboutEditor } from './about-editor.tsx'
-import { can_retire, has_profile, library_name, own_library_address } from './library-category.ts'
+import { can_retire, has_profile, library_name, own_libraries_of, own_library_address } from './library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -53,14 +54,18 @@ export const OwnLibraries = () => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const own = node_api.endpoints.get_own_libraries.useQuery()
+  const all = node_api.endpoints.get_libraries.useQuery()
   const [name, set_name] = useState('')
   const [discriminator, set_discriminator] = useState('')
   const [creating, set_creating] = useState(false)
   const [retiring, set_retiring] = useState<Library | null>(null)
   const [editing, set_editing] = useState<string | null>(null)
 
-  if (is_not_found(own.error)) return null
-  const libraries = own.data ?? []
+  if (is_not_found(own.error)) {
+    const address = own_library_address(all.data)
+    return address === null ? null : <AboutEditor address={address} />
+  }
+  const libraries = own_libraries_of({ own: own.data, libraries: all.data })
   // The profile shown: the one chosen, while it can still be edited, or the
   // default own library.
   const chosen = libraries.find(({ address }) => address === editing)

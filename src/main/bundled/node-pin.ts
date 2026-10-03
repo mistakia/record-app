@@ -1,7 +1,8 @@
 // Which node and identity the bundled data directory holds, recorded on its
 // first healthy start: the libp2p peer_id, which a later health check must
 // match (so another process on the port cannot pass for the node), and the
-// own library address, which follows the identity key. Together they name
+// identity library's address, which the identity key alone derives (spec
+// §3.6.2), so creating or retiring own libraries never changes it. Together they name
 // the node for per-node state, so a reset data directory or an imported
 // identity starts that state clean. Kept in the data directory, so it goes
 // with it. Imports nothing from Electron.
@@ -14,14 +15,14 @@ export const PIN_FILE = 'record-app-node.json'
 
 export interface NodePin {
   peer_id: string
-  own_library_address: string | null
+  identity_address: string | null
 }
 
 export const read_pin = (data_dir: string): NodePin | null => {
   try {
     const pin = JSON.parse(readFileSync(join(data_dir, PIN_FILE), 'utf8')) as Partial<NodePin>
     if (typeof pin.peer_id !== 'string') return null
-    return { peer_id: pin.peer_id, own_library_address: typeof pin.own_library_address === 'string' ? pin.own_library_address : null }
+    return { peer_id: pin.peer_id, identity_address: typeof pin.identity_address === 'string' ? pin.identity_address : null }
   } catch {
     return null
   }
@@ -34,4 +35,4 @@ export const write_pin = async (data_dir: string, pin: NodePin): Promise<void> =
 }
 
 export const bundled_node_key = (pin: NodePin | null): string | null =>
-  pin === null ? null : `bundled:${pin.peer_id}:${pin.own_library_address ?? ''}`
+  pin === null ? null : `bundled:${pin.peer_id}:${pin.identity_address ?? ''}`

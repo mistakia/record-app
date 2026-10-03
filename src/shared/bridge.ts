@@ -113,7 +113,7 @@ export interface BundledState {
   // Why ingest is off (the pinned ffmpeg and fpcalc are not bundled yet).
   ingest_disabled: string | null
   // The node and identity the data directory holds, once it has answered.
-  node_key_pin: { peer_id: string, own_library_address: string | null } | null
+  node_key_pin: { peer_id: string, identity_address: string | null } | null
   // When the running node last came up, for its uptime.
   started_at_ms: number | null
 }
