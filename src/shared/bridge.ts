@@ -8,8 +8,16 @@ export type ConnectionMode = 'bundled' | 'remote'
 
 export interface ConnectionConfig {
   mode: ConnectionMode
-  // Null until the user saves one; the app opens on connection settings.
+  // The remote node's URL; kept while in bundled mode, so switching back
+  // offers it again. Null until the user saves one.
   node_url: string | null
+}
+
+// The saved config as the renderer sees it, plus the key that names the node
+// for the hibernation snapshot and other per-node state: the remote URL, or
+// 'bundled' for the bundled node, whose port can change between launches.
+export interface ConnectionView extends ConnectionConfig {
+  node_key: string | null
 }
 
 export type ApiRoute = typeof API_ROUTES[number]
@@ -67,6 +75,28 @@ export interface NodeEventMessage {
   payload: Record<string, unknown>
 }
 
+// The bundled node (spec §8.4), as main manages it.
+export interface BundledState {
+  status: 'stopped' | 'starting' | 'running' | 'restarting' | 'failed'
+  // Set while the node answers its health check.
+  url: string | null
+  port: number | null
+  pid: number | null
+  data_dir: string
+  log_path: string
+  // The pinned record-node version (spec §8.2.7).
+  version: string
+  // Restarts in a row that have not stayed up; auto-restart stops past five.
+  failed_restarts: number
+  retry_at_ms: number | null
+  error: string | null
+  stderr_tail: string | null
+  // Why ingest is off (the pinned ffmpeg and fpcalc are not bundled yet).
+  ingest_disabled: string | null
+  // The node and identity the data directory holds, once it has answered.
+  node_key_pin: { peer_id: string, own_library_address: string | null } | null
+}
+
 export interface ImportAck {
   import_id: string
   file_count?: number
@@ -74,9 +104,12 @@ export interface ImportAck {
 
 export interface RecordBridge {
   connection: {
-    get: () => Promise<ConnectionConfig>
-    save: (config: ConnectionConfig) => Promise<NodeResult<ConnectionConfig>>
+    get: () => Promise<ConnectionView>
+    save: (config: ConnectionConfig) => Promise<NodeResult<ConnectionView>>
     test: (config: ConnectionConfig) => Promise<NodeResult<ConnectionTest>>
+    // The view again whenever its node key changes, as when the bundled
+    // node first answers or its identity changes.
+    on_view: (listener: (view: ConnectionView) => void) => () => void
   }
   request: (request: NodeRequest) => Promise<NodeResult<unknown>>
   // request_id names the download so cancel_audio can abort it.
@@ -108,6 +141,14 @@ export interface RecordBridge {
     // key (GET /identity/export), so main reads it and keeps only this half.
     public_key: () => Promise<NodeResult<{ public_key: string }>>
   }
+  bundled: {
+    get_state: () => Promise<BundledState>
+    on_state: (listener: (state: BundledState) => void) => () => void
+    // A manual restart, as after the automatic restarts gave up.
+    restart: () => Promise<NodeResult<null>>
+    open_data_dir: () => Promise<void>
+    open_log: () => Promise<void>
+  }
   snapshot: {
     // The snapshot for the configured node, or null.
     load: () => Promise<HibernationSnapshot | null>
@@ -124,6 +165,7 @@ export const IPC_CHANNELS = {
   connection_get: 'record:connection:get',
   connection_save: 'record:connection:save',
   connection_test: 'record:connection:test',
+  connection_view: 'record:connection:view',
   request: 'record:request',
   get_audio: 'record:get-audio',
   cancel_audio: 'record:cancel-audio',
@@ -137,6 +179,11 @@ export const IPC_CHANNELS = {
   identity_export: 'record:identity:export',
   identity_import: 'record:identity:import',
   identity_copy_key: 'record:identity:copy-key',
+  bundled_get_state: 'record:bundled:get-state',
+  bundled_state: 'record:bundled:state',
+  bundled_restart: 'record:bundled:restart',
+  bundled_open_data_dir: 'record:bundled:open-data-dir',
+  bundled_open_log: 'record:bundled:open-log',
   snapshot_load: 'record:snapshot:load',
   snapshot_update: 'record:snapshot:update',
   snapshot_get_info: 'record:snapshot:get-info',

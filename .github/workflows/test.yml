@@ -34,15 +34,17 @@ jobs:
       # pinned versions; here any version will do, so the preflight is
       # bypassed below.
       - name: Install ffmpeg and fpcalc
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg libchromaprint-tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg libchromaprint-tools xvfb
 
       - name: Verify (lint and typecheck)
         run: bun run verify
 
+      # The bundled node's utilityProcess test runs inside Electron, which
+      # needs a display on Linux.
       - name: Test
         env:
           RECORD_TOOLCHAIN_PREFLIGHT: bypass
-        run: bun test
+        run: xvfb-run -a bun test
 
       - name: Build
         run: bun run build

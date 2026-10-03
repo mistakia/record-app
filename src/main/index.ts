@@ -6,8 +6,11 @@ import { pathToFileURL } from 'node:url'
 
 import { app, BrowserWindow, powerMonitor, session } from 'electron'
 
+import { IPC_CHANNELS } from '#shared/bridge.ts'
 import { open_connection_store } from './connection-store.ts'
 import { register_ipc } from './ipc.ts'
+import { create_bundled_node } from './bundled/bundled-node.ts'
+import { create_node_connection } from './node-connection.ts'
 import { create_node_session } from './node-session.ts'
 import { open_snapshot_store } from './snapshot-store.ts'
 import { create_main_window, guard_web_contents } from './window.ts'
@@ -45,7 +48,22 @@ const start = async (): Promise<void> => {
     settings_path: join(user_data, 'snapshot-settings.json')
   })
   const node_session = create_node_session({ broadcast })
-  register_ipc({ store, session: node_session, snapshots, is_app_frame })
+  const manager = create_bundled_node({
+    user_data,
+    on_state: (state) => {
+      broadcast(IPC_CHANNELS.bundled_state, state)
+      connection.sync()
+    }
+  })
+  let forget_identity = (): void => {}
+  const connection = create_node_connection({
+    store,
+    manager,
+    session: node_session,
+    on_node_changed: () => { forget_identity() },
+    on_view_changed: (view) => { broadcast(IPC_CHANNELS.connection_view, view) }
+  })
+  forget_identity = register_ipc({ store, connection, manager, session: node_session, snapshots, is_app_frame }).forget_identity
   // Spec §8.8.3: written every 30 s when it changed, and on clean shutdown.
   const snapshot_timer = setInterval(() => { snapshots.flush().catch(() => {}) }, SNAPSHOT_WRITE_INTERVAL_MS)
   app.on('before-quit', () => {
@@ -55,7 +73,19 @@ const start = async (): Promise<void> => {
   })
   // A socket that looked open before sleep is usually dead after it.
   powerMonitor.on('resume', () => { node_session.force_reconnect('Reconnecting after the computer woke.') })
-  node_session.start(store.get().node_url)
+  // Spec §8.4.5: the app does not exit before the bundled node has stopped.
+  let node_stopped = false
+  app.on('will-quit', (event) => {
+    if (node_stopped || manager.get_state().status === 'stopped') return
+    event.preventDefault()
+    manager.stop().catch(() => {}).finally(() => {
+      node_stopped = true
+      app.quit()
+    })
+  })
+  // A forced exit still takes the child with it, synchronously.
+  process.on('exit', () => { manager.kill_now() })
+  connection.start().catch((error: unknown) => { console.error(error) })
   open_window()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) open_window()

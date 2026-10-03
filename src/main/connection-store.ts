@@ -8,16 +8,15 @@ import { dirname } from 'node:path'
 import type { ConnectionConfig, NodeResult } from '#shared/bridge.ts'
 import { check_node_url } from '#shared/node-url.ts'
 
-// Bundled mode is not built yet, so the app starts in remote mode with no
-// node configured until the user saves one.
-const DEFAULT_CONFIG: ConnectionConfig = Object.freeze({ mode: 'remote', node_url: null })
+// First launch runs the bundled node (spec §8.3.3).
+const DEFAULT_CONFIG: ConnectionConfig = Object.freeze({ mode: 'bundled', node_url: null })
 
 // A config as the renderer or the file supplied it: remote mode needs a valid
-// node URL, and bundled mode is refused until it exists.
+// node URL; bundled mode keeps the last remote URL, if any, for switching back.
 export const check_connection_config = (input: unknown): NodeResult<ConnectionConfig> => {
   const { mode, node_url } = (typeof input === 'object' && input !== null ? input : {}) as Record<string, unknown>
-  if (mode === 'bundled') return { ok: false, failure: { kind: 'refused', message: 'Bundled mode is not available yet.' } }
-  if (mode !== 'remote') return { ok: false, failure: { kind: 'refused', message: 'Mode must be bundled or remote.' } }
+  if (mode !== 'remote' && mode !== 'bundled') return { ok: false, failure: { kind: 'refused', message: 'Mode must be bundled or remote.' } }
+  if (mode === 'bundled' && (node_url === null || node_url === undefined || node_url === '')) return { ok: true, data: { mode, node_url: null } }
   if (typeof node_url !== 'string') return { ok: false, failure: { kind: 'refused', message: 'Enter a node URL.' } }
   const checked = check_node_url(node_url)
   if (!checked.ok) return { ok: false, failure: { kind: 'refused', message: checked.reason } }

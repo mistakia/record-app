@@ -42,7 +42,7 @@ describe('identity export', () => {
     const { build_snapshot } = await import('#renderer/snapshot/hibernation.ts')
     const { connection_loaded } = await import('#renderer/store/connection.ts')
     const { node_api } = await import('#renderer/store/api.ts')
-    store.dispatch(connection_loaded({ mode: 'remote', node_url: 'http://127.0.0.1:3000' }))
+    store.dispatch(connection_loaded({ mode: 'remote', node_url: 'http://127.0.0.1:3000', node_key: 'http://127.0.0.1:3000' }))
     await store.dispatch(node_api.util.upsertQueryData('get_libraries', undefined, []))
 
     const result = await export_identity()
@@ -95,8 +95,8 @@ describe('identity export', () => {
 describe('backup prompt', () => {
   test('prompts only in bundled mode before the first export', async () => {
     const { should_prompt_backup } = await import('#renderer/components/identity/backup-prompt.tsx')
-    expect(should_prompt_backup({ mode: 'bundled', node_url: 'http://127.0.0.1:3000', last_export: null })).toBe(true)
-    expect(should_prompt_backup({ mode: 'bundled', node_url: 'http://127.0.0.1:3000', last_export: 1 })).toBe(false)
-    expect(should_prompt_backup({ mode: 'remote', node_url: 'http://127.0.0.1:8088', last_export: null })).toBe(false)
+    expect(should_prompt_backup({ mode: 'bundled', node_key: 'bundled', last_export: null })).toBe(true)
+    expect(should_prompt_backup({ mode: 'bundled', node_key: 'bundled', last_export: 1 })).toBe(false)
+    expect(should_prompt_backup({ mode: 'remote', node_key: 'http://127.0.0.1:8088', last_export: null })).toBe(false)
   })
 })

@@ -195,7 +195,7 @@ describe('identity', () => {
     const snapshots = await open_snapshot_store({ snapshot_path: join(user_data, 'snapshot.json'), settings_path: join(user_data, 'snapshot-settings.json') })
     const exported = await call<{ private_key: string }>({ method: 'get', path_template: '/identity/export' })
     const libraries = await call<Library[]>({ method: 'get', path_template: '/libraries' })
-    snapshots.update({ snapshot: { version: 1, node_url: node.node_url, written_at_ms: 1, route: '/identity', libraries: libraries as unknown as Array<Record<string, unknown>>, active: null, queue: null }, node_url: node.node_url })
+    snapshots.update({ snapshot: { version: 1, node_key: node.node_url, written_at_ms: 1, route: '/identity', libraries: libraries as unknown as Array<Record<string, unknown>>, active: null, queue: null }, node_key: node.node_url })
     await snapshots.flush()
     snapshots.flush_sync()
     const files = await readdir(user_data)

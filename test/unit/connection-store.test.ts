@@ -17,9 +17,16 @@ const temporary_file = async (): Promise<string> => {
 }
 
 describe('connection store', () => {
-  test('starts in remote mode with no node URL', async () => {
+  test('starts in bundled mode, the first-launch default (spec 8.3.3)', async () => {
     const store = await open_connection_store({ file_path: await temporary_file() })
-    expect(store.get()).toEqual({ mode: 'remote', node_url: null })
+    expect(store.get()).toEqual({ mode: 'bundled', node_url: null })
+  })
+
+  test('bundled mode keeps the last remote URL, if valid, for switching back', async () => {
+    const store = await open_connection_store({ file_path: await temporary_file() })
+    expect(await store.save({ mode: 'bundled', node_url: 'http://127.0.0.1:8088' })).toEqual({ ok: true, data: { mode: 'bundled', node_url: 'http://127.0.0.1:8088' } })
+    expect(await store.save({ mode: 'bundled', node_url: null })).toEqual({ ok: true, data: { mode: 'bundled', node_url: null } })
+    expect((await store.save({ mode: 'bundled', node_url: 'file:///etc' })).ok).toBe(false)
   })
 
   test('persists a valid config, normalized, readable only by the owner', async () => {
@@ -31,10 +38,9 @@ describe('connection store', () => {
     expect((await open_connection_store({ file_path })).get()).toEqual({ mode: 'remote', node_url: 'http://127.0.0.1:8088' })
   })
 
-  test('refuses bundled mode, unknown modes, and invalid URLs without changing the saved config', async () => {
+  test('refuses unknown modes and invalid URLs without changing the saved config', async () => {
     const store = await open_connection_store({ file_path: await temporary_file() })
     for (const input of [
-      { mode: 'bundled', node_url: null },
       { mode: 'hosted', node_url: 'http://127.0.0.1:3000' },
       { mode: 'remote', node_url: 'file:///etc/passwd' },
       { mode: 'remote' },
@@ -42,16 +48,16 @@ describe('connection store', () => {
     ]) {
       expect((await store.save(input)).ok).toBe(false)
     }
-    expect(store.get()).toEqual({ mode: 'remote', node_url: null })
+    expect(store.get()).toEqual({ mode: 'bundled', node_url: null })
   })
 
   test('falls back to the default on a corrupt or invalid file', async () => {
     const file_path = await temporary_file()
     const quiet = () => {}
     await writeFile(file_path, '{ not json')
-    expect((await open_connection_store({ file_path, log: quiet })).get()).toEqual({ mode: 'remote', node_url: null })
+    expect((await open_connection_store({ file_path, log: quiet })).get()).toEqual({ mode: 'bundled', node_url: null })
     await writeFile(file_path, JSON.stringify({ mode: 'remote', node_url: 'javascript:alert(1)' }))
-    expect((await open_connection_store({ file_path, log: quiet })).get()).toEqual({ mode: 'remote', node_url: null })
+    expect((await open_connection_store({ file_path, log: quiet })).get()).toEqual({ mode: 'bundled', node_url: null })
   })
 })
 

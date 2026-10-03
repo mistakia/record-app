@@ -31,8 +31,8 @@ const MAX_QUEUE_ENTRIES = 10_000
 // the contents.
 export const check_snapshot = (input: unknown): input is HibernationSnapshot => {
   if (!is_object(input) || input.version !== SNAPSHOT_VERSION) return false
-  const { node_url, written_at_ms, route, libraries, active, queue } = input
-  if (typeof node_url !== 'string' || typeof written_at_ms !== 'number') return false
+  const { node_key, written_at_ms, route, libraries, active, queue } = input
+  if (typeof node_key !== 'string' || typeof written_at_ms !== 'number') return false
   if (typeof route !== 'string' || !route.startsWith('/') || route.length > 200) return false
   if (!Array.isArray(libraries) || libraries.length > MAX_LIBRARIES || !libraries.every(is_object)) return false
   if (active !== null && !(is_object(active) && typeof active.library_address === 'string' && Array.isArray(active.tracks) && active.tracks.length <= MAX_ACTIVE_TRACKS)) return false
@@ -58,8 +58,8 @@ export const fit_snapshot = ({ snapshot, budget_bytes, full_text }: {
 }
 
 export interface SnapshotStore {
-  load: (node_url: string | null) => Promise<HibernationSnapshot | null>
-  update: (input: { snapshot: unknown, node_url: string | null }) => NodeResult<SnapshotInfo>
+  load: (node_key: string | null) => Promise<HibernationSnapshot | null>
+  update: (input: { snapshot: unknown, node_key: string | null }) => NodeResult<SnapshotInfo>
   flush: () => Promise<void>
   // Synchronous on purpose: it runs at quit, where an async write could be
   // cut off before it lands.
@@ -123,21 +123,21 @@ export const open_snapshot_store = async ({ snapshot_path, settings_path, log = 
   }
 
   return {
-    load: async (node_url) => {
-      if (node_url === null || budget_bytes === 0) return null
+    load: async (node_key) => {
+      if (node_key === null || budget_bytes === 0) return null
       try {
         const snapshot = JSON.parse(await readFile(snapshot_path, 'utf8')) as unknown
-        if (check_snapshot(snapshot) && snapshot.node_url === node_url) return snapshot
+        if (check_snapshot(snapshot) && snapshot.node_key === node_key) return snapshot
         log(`snapshot store: ignoring a snapshot for another node or in an old format at ${snapshot_path}`)
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') log(`snapshot store: ignoring unreadable ${snapshot_path}: ${String(error)}`)
       }
       return null
     },
-    update: ({ snapshot, node_url }) => {
+    update: ({ snapshot, node_key }) => {
       if (!check_snapshot(snapshot)) return refuse('Malformed snapshot.')
       // A snapshot of a node other than the configured one is dropped.
-      if (snapshot.node_url !== node_url) return refuse('The snapshot is for another node.')
+      if (snapshot.node_key !== node_key) return refuse('The snapshot is for another node.')
       const full_text = JSON.stringify(snapshot)
       if (Buffer.byteLength(full_text) > MAX_SNAPSHOT_BUDGET_BYTES) return refuse('The snapshot is larger than any allowed budget.')
       if (budget_bytes > 0) pending = fit_snapshot({ snapshot, budget_bytes, full_text })

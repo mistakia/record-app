@@ -9,7 +9,7 @@ import styles from './identity.module.css'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { export_identity, record_export, type ExportedIdentity } from '#renderer/identity/identity.ts'
 
-export const ExportDialog = ({ node_url, on_close }: { node_url: string, on_close: (exported: boolean) => void }) => {
+export const ExportDialog = ({ node_key, on_close }: { node_key: string, on_close: (exported: boolean) => void }) => {
   const [identity, set_identity] = useState<ExportedIdentity | null>(null)
   const [error, set_error] = useState<string | null>(null)
   const [copied, set_copied] = useState(false)
@@ -20,7 +20,7 @@ export const ExportDialog = ({ node_url, on_close }: { node_url: string, on_clos
       if (result.failure.kind !== 'aborted') set_error(result.failure.message)
       return
     }
-    record_export(node_url)
+    record_export(node_key)
     set_identity(result.data)
   }
 

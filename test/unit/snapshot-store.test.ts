@@ -37,7 +37,7 @@ const track = (index: number): SnapshotTrack => ({
 
 const snapshot = (overrides: Partial<HibernationSnapshot> = {}): HibernationSnapshot => ({
   version: 1,
-  node_url: NODE_URL,
+  node_key: NODE_URL,
   written_at_ms: 1,
   route: '/tracks',
   libraries: [{ address: '/record/a/record', name: 'Own', is_own: true }],
@@ -69,7 +69,7 @@ describe('snapshot store', () => {
   test('keeps updates in memory until a flush, then loads them for the same node only', async () => {
     const { store, snapshot_path, open } = await open_store()
     expect(store.get_info()).toEqual({ size_bytes: 0, budget_bytes: DEFAULT_SNAPSHOT_BUDGET_BYTES })
-    expect(store.update({ snapshot: snapshot(), node_url: NODE_URL }).ok).toBe(true)
+    expect(store.update({ snapshot: snapshot(), node_key: NODE_URL }).ok).toBe(true)
     expect(await store.load(NODE_URL)).toBeNull()
     await store.flush()
     expect(store.get_info().size_bytes).toBe(Buffer.byteLength(await readFile(snapshot_path)))
@@ -81,14 +81,14 @@ describe('snapshot store', () => {
   test('refuses malformed snapshots and snapshots of another node', async () => {
     const { store } = await open_store()
     for (const input of [null, {}, { ...snapshot(), version: 2 }, { ...snapshot(), route: 'tracks' }, { ...snapshot(), libraries: 'x' }]) {
-      expect(store.update({ snapshot: input, node_url: NODE_URL }).ok).toBe(false)
+      expect(store.update({ snapshot: input, node_key: NODE_URL }).ok).toBe(false)
     }
-    expect(store.update({ snapshot: snapshot(), node_url: 'http://127.0.0.1:3001' }).ok).toBe(false)
+    expect(store.update({ snapshot: snapshot(), node_key: 'http://127.0.0.1:3001' }).ok).toBe(false)
   })
 
   test('flush_sync writes the pending snapshot, and wipe removes it', async () => {
     const { store, snapshot_path } = await open_store()
-    store.update({ snapshot: snapshot(), node_url: NODE_URL })
+    store.update({ snapshot: snapshot(), node_key: NODE_URL })
     store.flush_sync()
     expect(JSON.parse(await readFile(snapshot_path, 'utf8'))).toEqual(snapshot())
     await store.wipe()
@@ -103,7 +103,7 @@ describe('snapshot store', () => {
     for (const budget_bytes of [-1, 1.5, MAX_SNAPSHOT_BUDGET_BYTES + 1, Number.NaN]) {
       expect((await store.set_budget({ budget_bytes })).ok).toBe(false)
     }
-    store.update({ snapshot: snapshot(), node_url: NODE_URL })
+    store.update({ snapshot: snapshot(), node_key: NODE_URL })
     await store.flush()
     const result = await store.set_budget({ budget_bytes: 2000 })
     expect(result.ok && result.data.budget_bytes).toBe(2000)
@@ -112,7 +112,7 @@ describe('snapshot store', () => {
 
     await store.set_budget({ budget_bytes: 0 })
     expect(await Bun.file(snapshot_path).exists()).toBe(false)
-    store.update({ snapshot: snapshot(), node_url: NODE_URL })
+    store.update({ snapshot: snapshot(), node_key: NODE_URL })
     await store.flush()
     expect(await Bun.file(snapshot_path).exists()).toBe(false)
     expect(await store.load(NODE_URL)).toBeNull()
@@ -135,15 +135,15 @@ describe('snapshot store bounds and write ordering', () => {
       snapshot({ active: { library_address: '', total: 0, tracks: many(501, track(0)) } }),
       snapshot({ queue: { entries: many(10_001, { queue_id: 'q', track_id: 'x', audio_cid: 'a', title: null, artist: null, duration_seconds: null, library_address: '' }), index: 0, position_seconds: 0, repeat: 'off', shuffle: false } })
     ]) {
-      expect(store.update({ snapshot: input, node_url: NODE_URL }).ok).toBe(false)
+      expect(store.update({ snapshot: input, node_key: NODE_URL }).ok).toBe(false)
     }
   })
 
   test('an async write still in flight does not land over a later flush_sync, and they use different temporary files', async () => {
     const { store, snapshot_path } = await open_store()
-    store.update({ snapshot: snapshot({ route: '/older' }), node_url: NODE_URL })
+    store.update({ snapshot: snapshot({ route: '/older' }), node_key: NODE_URL })
     const flushing = store.flush()
-    store.update({ snapshot: snapshot({ route: '/newer' }), node_url: NODE_URL })
+    store.update({ snapshot: snapshot({ route: '/newer' }), node_key: NODE_URL })
     store.flush_sync()
     await flushing
     expect((JSON.parse(await readFile(snapshot_path, 'utf8')) as HibernationSnapshot).route).toBe('/newer')
@@ -153,9 +153,9 @@ describe('snapshot store bounds and write ordering', () => {
 
   test('lowering the budget while a write is queued refits the newest snapshot, and the settings file is replaced atomically', async () => {
     const { store, snapshot_path, settings_path } = await open_store()
-    store.update({ snapshot: snapshot({ route: '/first' }), node_url: NODE_URL })
+    store.update({ snapshot: snapshot({ route: '/first' }), node_key: NODE_URL })
     await store.flush()
-    store.update({ snapshot: snapshot({ route: '/second' }), node_url: NODE_URL })
+    store.update({ snapshot: snapshot({ route: '/second' }), node_key: NODE_URL })
     const flushing = store.flush()
     const budget = store.set_budget({ budget_bytes: 2000 })
     await Promise.all([flushing, budget])
