@@ -2,14 +2,16 @@
 // untrusted and re-validated here (spec §8.10.3), and only the app's own
 // window may call.
 
-import { ipcMain, type IpcMainInvokeEvent } from 'electron'
+import { BrowserWindow, dialog, ipcMain, type IpcMainInvokeEvent } from 'electron'
 
 import { API_ROUTES } from '#shared/api-routes.ts'
 import { IPC_CHANNELS, type NodeRequest, type NodeResult } from '#shared/bridge.ts'
 import { create_audio_downloads } from './audio-downloads.ts'
+import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { get_audio, request_node, test_connection } from './node-client.ts'
 import type { NodeSession } from './node-session.ts'
+import { refused_by_policy } from './request-policy.ts'
 import type { SnapshotStore } from './snapshot-store.ts'
 
 const METHODS = new Set<string>(API_ROUTES.map(({ method }) => method))
@@ -38,11 +40,11 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
   snapshots: SnapshotStore
   is_app_frame: (url: string) => boolean
 }): void => {
-  const handle = (channel: string, handler: (input: unknown) => Promise<unknown>): void => {
+  const handle = (channel: string, handler: (input: unknown, event: IpcMainInvokeEvent) => Promise<unknown>): void => {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, input: unknown) => {
       const url = event.senderFrame?.url
       if (url === undefined || !is_app_frame(url)) return refuse('IPC from an unknown frame.')
-      return await handler(input)
+      return await handler(input, event)
     })
   }
 
@@ -65,6 +67,8 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
   handle(IPC_CHANNELS.request, async (input) => {
     const request = check_node_request(input)
     if (request === null) return refuse('Malformed node request.')
+    const refusal = refused_by_policy({ request, mode: store.get().mode })
+    if (refusal !== null) return refuse(refusal)
     return await request_node({ node_url: store.get().node_url, request })
   })
   const audio_downloads = create_audio_downloads({ download: async ({ cid, signal }) => await get_audio({ node_url: store.get().node_url, cid, signal }) })
@@ -77,6 +81,22 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
   handle(IPC_CHANNELS.cancel_audio, async (input) => {
     const request_id = is_plain_object(input) ? input.request_id : undefined
     if (typeof request_id === 'string') audio_downloads.cancel(request_id)
+  })
+
+  handle(IPC_CHANNELS.import_choose_files, async (_input, event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    const options = { title: 'Import audio files', properties: ['openFile', 'multiSelections'] as Array<'openFile' | 'multiSelections'>, filters: [{ name: 'Audio', extensions: AUDIO_EXTENSIONS }] }
+    const chosen = window === null ? await dialog.showOpenDialog(options) : await dialog.showOpenDialog(window, options)
+    if (chosen.canceled || chosen.filePaths.length === 0) return { ok: true, data: null }
+    return await import_chosen_paths({ node_url: store.get().node_url, paths: chosen.filePaths })
+  })
+  handle(IPC_CHANNELS.import_upload_files, async (input) => await import_dropped_files({ node_url: store.get().node_url, input }))
+  handle(IPC_CHANNELS.identity_public_key, async () => {
+    const exported = await request_node({ node_url: store.get().node_url, request: { method: 'get', path_template: '/identity/export' } })
+    if (!exported.ok) return exported
+    const { public_key } = exported.data as { public_key?: unknown }
+    if (typeof public_key !== 'string') return refuse('The node returned no public key.')
+    return { ok: true, data: { public_key } }
   })
 
   handle(IPC_CHANNELS.events_get_state, async () => session.get_state())

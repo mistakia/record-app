@@ -10,6 +10,7 @@ import { SnapshotControls } from '#renderer/components/common/snapshot-controls.
 import { stop_playback } from '#renderer/player/player-controller.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { connection_loaded, node_switch_started } from '#renderer/store/connection.ts'
+import { replication_reset } from '#renderer/store/replication.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import type { ConnectionTest, NodeResult } from '#shared/bridge.ts'
 import { check_node_url } from '#shared/node-url.ts'
@@ -55,6 +56,7 @@ export const ConnectionSettings = () => {
         return
       }
       dispatch(node_switch_started())
+      dispatch(replication_reset())
       stop_playback()
       dispatch(node_api.util.resetApiState())
       dispatch(connection_loaded(result.data))

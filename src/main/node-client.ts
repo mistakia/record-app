@@ -9,6 +9,8 @@ import { build_api_path } from './api-path.ts'
 const REQUEST_TIMEOUT_MS = 15_000
 const AUDIO_TIMEOUT_MS = 120_000
 const TEST_TIMEOUT_MS = 5_000
+// Uploading is bounded by the size of the files, so this is generous.
+const IMPORT_TIMEOUT_MS = 30 * 60_000
 // The whole file crosses IPC and is decoded in memory, so refuse anything
 // larger rather than exhaust either process.
 export const MAX_AUDIO_BYTES = 1024 ** 3
@@ -147,5 +149,31 @@ export const test_connection = async ({ node_url }: { node_url: string }): Promi
     return { ok: true, data: { peer_id: settings.peer_id, version: typeof settings.version === 'string' ? settings.version : null } }
   } catch {
     return { ok: false, failure: { kind: 'http', status: result.data.status, code: null, message: 'The URL answered, but not as a record-node: GET /api/settings returned no peer_id.' } }
+  }
+}
+
+export interface ImportAck {
+  import_id: string
+  file_count?: number
+}
+
+// POST /api/import/file as multipart `files` parts. Each file's name only
+// tells the node the container by its extension; progress arrives as
+// import:* events.
+export const import_files = async ({ node_url, files }: {
+  node_url: string | null
+  files: Array<{ name: string, blob: Blob }>
+}): Promise<NodeResult<ImportAck>> => {
+  if (node_url === null) return not_configured
+  const form = new FormData()
+  for (const { name, blob } of files) form.append('files', blob, name)
+  const result = await fetch_node({ url: `${node_url}/api/import/file`, init: { method: 'POST', body: form, headers: { accept: 'application/json' } }, timeout_ms: IMPORT_TIMEOUT_MS })
+  if (!result.ok) return result
+  try {
+    const ack = await result.data.json() as { import_id?: unknown, file_count?: unknown }
+    if (typeof ack.import_id !== 'string') throw new Error('no import_id')
+    return { ok: true, data: { import_id: ack.import_id, ...(typeof ack.file_count === 'number' ? { file_count: ack.file_count } : {}) } }
+  } catch {
+    return { ok: false, failure: { kind: 'http', status: result.data.status, code: null, message: 'The node accepted the upload but returned no import id.' } }
   }
 }
