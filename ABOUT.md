@@ -35,7 +35,6 @@ The Record ecosystem spans several repos. This one is the user-facing app; coord
 
 - [[user:repository/active/record-docs/ABOUT.md]] — protocol specification (canonical for protocol semantics)
 - `repository/active/record-node/` — core node implementation (networking, storage, indexing, sync)
-- `repository/active/record-ipfsd/` — IPFS daemon wrapper
 - `repository/active/record-chrome-extension/` — web import tool
 - `repository/active/record-resolver/` — IPFS resolution layer
 
