@@ -9,7 +9,7 @@ import styles from './connection-settings.module.css'
 import { SnapshotControls } from '#renderer/components/common/snapshot-controls.tsx'
 import { stop_playback } from '#renderer/player/player-controller.ts'
 import { node_api } from '#renderer/store/api.ts'
-import { connection_loaded } from '#renderer/store/connection.ts'
+import { connection_loaded, node_switch_started } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import type { ConnectionTest, NodeResult } from '#shared/bridge.ts'
 import { check_node_url } from '#shared/node-url.ts'
@@ -54,6 +54,7 @@ export const ConnectionSettings = () => {
         set_save_error(result.failure.message)
         return
       }
+      dispatch(node_switch_started())
       stop_playback()
       dispatch(node_api.util.resetApiState())
       dispatch(connection_loaded(result.data))

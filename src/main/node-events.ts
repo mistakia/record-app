@@ -106,6 +106,9 @@ export const open_node_events = ({
     }
   }
 
+  // Report `connecting` at once, so a node switch never leaves the renderer
+  // believing the previous connection is still open.
+  on_state(state)
   connect()
 
   return {

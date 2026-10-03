@@ -96,7 +96,7 @@ describe('open_node_events', () => {
     sockets[2]?.onopen?.()
     expect(delays).toEqual([0, 1])
     expect(connection.get_state()).toMatchObject({ status: 'open', connection_id: 2, attempt: 0, last_error: null })
-    expect(states.map(({ status }) => status)).toEqual(['open', 'reconnecting', 'connecting', 'reconnecting', 'connecting', 'open'])
+    expect(states.map(({ status }) => status)).toEqual(['connecting', 'open', 'reconnecting', 'connecting', 'reconnecting', 'connecting', 'open'])
 
     connection.close()
     expect(sockets[2]?.closed).toBe(true)
@@ -129,8 +129,12 @@ describe('create_node_session', () => {
     session.start('http://127.0.0.1:3000')
     sockets[0]?.onopen?.()
     expect(session.get_state()).toMatchObject({ status: 'open', connection_id: 1 })
+    sent.length = 0
     session.start('http://127.0.0.1:3001')
     expect(sockets[0]?.closed).toBe(true)
+    // The switch is reported before the new socket opens, never as open.
+    const first_new_state = sent.find(({ channel, payload }) => channel === IPC_CHANNELS.events_state && (payload as EventsState).node_url === 'http://127.0.0.1:3001')
+    expect(first_new_state?.payload).toMatchObject({ status: 'connecting', connection_id: 1 })
     sockets[0]?.onmessage?.({ data: '{"type":"track:added","payload":{}}' })
     sockets[1]?.onopen?.()
     expect(session.get_state()).toMatchObject({ status: 'open', node_url: 'http://127.0.0.1:3001', connection_id: 2 })

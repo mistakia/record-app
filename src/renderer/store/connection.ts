@@ -32,6 +32,12 @@ export const connection_slice = createSlice({
       // until that connection's own reconcile finishes.
       if (action.payload.status !== 'open' || action.payload.connection_id !== previous_connection_id) state.freshness = 'stale'
     },
+    // A saved connection is about to replace the current one: nothing shown
+    // is fresh and no write may pass until the new connection reconciles.
+    node_switch_started: (state) => {
+      if (state.events !== null) state.events = { ...state.events, status: 'connecting', retry_at_ms: null }
+      state.freshness = 'stale'
+    },
     reconcile_started: (state, action: PayloadAction<{ connection_id: number }>) => {
       if (state.events?.connection_id === action.payload.connection_id) state.freshness = 'reconciling'
     },
@@ -44,7 +50,7 @@ export const connection_slice = createSlice({
   }
 })
 
-export const { connection_loaded, events_state_changed, reconcile_started, reconcile_finished } = connection_slice.actions
+export const { connection_loaded, events_state_changed, node_switch_started, reconcile_started, reconcile_finished } = connection_slice.actions
 
 // Spec §8.8.3: writes are gated until reconciliation completes.
 export const select_writes_allowed = (state: { connection: ConnectionState }): boolean =>

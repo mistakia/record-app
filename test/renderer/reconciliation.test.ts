@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from 'bun:test'
 
 import type { EventsState, NodeRequest, NodeResult } from '#shared/bridge.ts'
 import { node_api } from '#renderer/store/api.ts'
-import { events_state_changed, select_writes_allowed } from '#renderer/store/connection.ts'
+import { events_state_changed, node_switch_started, select_writes_allowed } from '#renderer/store/connection.ts'
 import { create_invalidation_batcher, tags_for_event } from '#renderer/store/event-invalidation.ts'
 import { store } from '#renderer/store/index.ts'
 import { reconcile } from '#renderer/store/reconcile.ts'
@@ -121,5 +121,31 @@ describe('reconcile and the write gate', () => {
     expect(requests.map(({ request }) => request.method)).toEqual(['post'])
     answer_all({ ok: true, data: null })
     expect((await sent).error).toBeUndefined()
+  })
+
+  test('a node switch blocks writes at once, and a reconcile still running for the old connection cannot mark the new one fresh', async () => {
+    const subscription = store.dispatch(node_api.endpoints.get_libraries.initiate())
+    await settle()
+    answer_all({ ok: true, data: [] })
+    await subscription
+    store.dispatch(events_state_changed(open_state(10)))
+    const first_reconcile = store.dispatch(reconcile({ connection_id: 10 }))
+    await settle()
+    answer_all({ ok: true, data: [] })
+    await first_reconcile
+    expect(select_writes_allowed(store.getState())).toBe(true)
+
+    const old_reconcile = store.dispatch(reconcile({ connection_id: 10 }))
+    await settle()
+    store.dispatch(node_switch_started())
+    expect(select_writes_allowed(store.getState())).toBe(false)
+    // Main then reports the new node connecting; its first open is a new connection_id.
+    store.dispatch(events_state_changed({ ...open_state(10), status: 'connecting', node_url: 'http://127.0.0.1:3001' }))
+    answer_all({ ok: true, data: [] })
+    await old_reconcile
+    expect(store.getState().connection.freshness).toBe('stale')
+    store.dispatch(events_state_changed({ ...open_state(11), node_url: 'http://127.0.0.1:3001' }))
+    expect(select_writes_allowed(store.getState())).toBe(false)
+    subscription.unsubscribe()
   })
 })

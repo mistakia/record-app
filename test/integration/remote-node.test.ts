@@ -139,7 +139,7 @@ describe('node client against an in-process record-node with cors_origins: []', 
   })
 
   test('the event connection opened on the first dial and delivers the ingest\'s track:added', async () => {
-    expect(event_states.map(({ status }) => status)).toEqual(['open'])
+    expect(event_states.map(({ status }) => status)).toEqual(['connecting', 'open'])
     const own_address = peer.identity().own_address
     await wait_for(() => event_messages.some(({ type, payload }) => type === 'track:added' && payload.library_address === own_address), 'track:added')
     const added = event_messages.find(({ type }) => type === 'track:added')
