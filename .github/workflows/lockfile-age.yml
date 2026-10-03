@@ -6,11 +6,13 @@ name: Lockfile Age
 on:
   pull_request:
     paths:
-      - 'yarn.lock'
+      - 'bun.lock'
+      - 'cli/check-lockfile-age.mjs'
       - '.github/workflows/lockfile-age.yml'
   push:
     paths:
-      - 'yarn.lock'
+      - 'bun.lock'
+      - 'cli/check-lockfile-age.mjs'
       - '.github/workflows/lockfile-age.yml'
 
 permissions:
@@ -37,4 +39,4 @@ jobs:
           if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
             base="HEAD~1"
           fi
-          node cli/check-lockfile-age.mjs yarn.lock --base "$base" --days 7
+          node cli/check-lockfile-age.mjs bun.lock --base "$base" --days 7

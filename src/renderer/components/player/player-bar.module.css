@@ -1,0 +1,47 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.toggle {
+  min-width: 64px;
+}
+
+.now_playing {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 260px;
+}
+
+.title,
+.artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artist,
+.status {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.seek {
+  flex: 1;
+}
+
+.volume {
+  width: 100px;
+}

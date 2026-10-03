@@ -1,0 +1,6 @@
+# Supply-chain floor: refuse any package version published less than 7 days
+# ago (user:guideline/npm-supply-chain-hygiene.md). Dependency lifecycle
+# scripts never run: package.json carries an empty trustedDependencies,
+# which replaces bun's built-in default allowlist.
+[install]
+minimumReleaseAge = 604800

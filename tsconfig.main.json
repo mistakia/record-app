@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "ES2024"
+    ],
+    "types": [
+      "node",
+      "bun"
+    ]
+  },
+  "include": [
+    "src/main",
+    "src/shared",
+    "test",
+    "electron.vite.config.ts"
+  ],
+  "exclude": [
+    "test/renderer"
+  ]
+}
