@@ -6,3 +6,4 @@ release/
 coverage/
 test-results/
 *.log
+/toolchain/
