@@ -29,6 +29,7 @@
     "gen:api": "openapi-typescript node_modules/record-node/dist/api/7-http-api.yaml -o src/renderer/api/generated-types.ts && node cli/generate-api-routes.mjs",
     "smoke:remote": "node test/e2e/remote-smoke.ts",
     "smoke:local": "node test/e2e/local-smoke.ts",
+    "smoke:auth": "node test/e2e/auth-smoke.ts",
     "package:mac": "bun run package:prepare && electron-vite build && electron-builder --mac --publish never",
     "smoke:packaged": "node test/e2e/packaged-smoke.ts",
     "audit": "node cli/check-audit.ts",
@@ -37,7 +38,7 @@
     "package:mac:test": "bun run package:prepare && RECORD_TEST_BUILD=1 electron-vite build && electron-builder --mac --publish never -c.directories.output=release-test"
   },
   "dependencies": {
-    "record-node": "git+https://github.com/mistakia/record-node.git#193ffa35f77fa2a3d1c2208297854d215baf6f01"
+    "record-node": "git+https://github.com/mistakia/record-node.git#886e4a0c2f69ec9229c7945b06f6849144683798"
   },
   "devDependencies": {
     "@electron/fuses": "2.1.3",

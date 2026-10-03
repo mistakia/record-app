@@ -25,6 +25,12 @@ export const reconnect_delay_ms = ({ attempt, random = Math.random }: { attempt:
 
 export const events_url = (node_url: string): string => `${node_url.replace(/^http/, 'ws')}/api/ws`
 
+// A remote node's token rides in the bearer.<token> subprotocol, offered
+// beside record, which the node selects so the token is never echoed back;
+// never in the query string, which HTTP infrastructure logs (§8.7.7).
+export const events_protocols = (token: string | null | undefined): string[] =>
+  token === null || token === undefined ? [] : ['record', `bearer.${token}`]
+
 // The node's messages are `{ type, payload }` JSON (x-websocket-events);
 // anything else is dropped.
 export const parse_event_message = (data: unknown): NodeEventMessage | null => {
@@ -50,18 +56,20 @@ export interface NodeEvents {
 
 export const open_node_events = ({
   node_url,
+  token,
   on_event,
   on_state,
-  create_socket = (url) => new WebSocket(url),
+  create_socket = (url, protocols) => new WebSocket(url, protocols),
   delay_ms = (attempt) => reconnect_delay_ms({ attempt }),
   probe,
   probe_interval_ms = PROBE_INTERVAL_MS,
   now = Date.now
 }: {
   node_url: string
+  token?: string | null | undefined
   on_event: (message: NodeEventMessage) => void
   on_state: (state: EventsState) => void
-  create_socket?: (url: string) => WebSocket
+  create_socket?: (url: string, protocols: string[]) => WebSocket
   delay_ms?: (attempt: number) => number
   // Resolves false when the node is out of reach.
   probe?: () => Promise<boolean>
@@ -133,7 +141,7 @@ export const open_node_events = ({
     let failure = 'The event connection closed.'
     let current: WebSocket
     try {
-      current = create_socket(events_url(node_url))
+      current = create_socket(events_url(node_url), events_protocols(token))
     } catch (error) {
       schedule_retry(`Cannot open the event connection: ${String(error)}`)
       return

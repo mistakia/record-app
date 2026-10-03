@@ -11,12 +11,13 @@ import type { create_diagnostics } from './diagnostics.ts'
 import { create_secret_clipboard } from './clipboard-expiry.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
-import { get_audio, test_connection } from './node-client.ts'
+import { get_audio, request_node, test_connection } from './node-client.ts'
 import type { create_node_connection } from './node-connection.ts'
 import type { NodeSession } from './node-session.ts'
 import { serve_generic_request } from './request-policy.ts'
 import { create_identity_access } from './identity-access.ts'
 import type { SnapshotStore } from './snapshot-store.ts'
+import { check_token } from './token-store.ts'
 
 const CID = /^[A-Za-z0-9]{1,128}$/
 const REQUEST_ID = /^[A-Za-z0-9-]{1,64}$/
@@ -25,6 +26,20 @@ const refuse = (message: string): NodeResult<never> => ({ ok: false, failure: { 
 
 const is_plain_object = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const NEEDS_TOKEN: NodeResult<never> = {
+  ok: false,
+  failure: { kind: 'auth', status: 401, message: 'The node needs a valid access token. Enter one in Connection settings.' }
+}
+
+// The token a save or test carries: absent (keep or use the saved one), or
+// a string that must pass check_token.
+const entered_token = (input: unknown): { ok: true, token: string | undefined } | { ok: false, result: NodeResult<never> } => {
+  const token = is_plain_object(input) ? input.token : undefined
+  if (token === undefined || token === null || token === '') return { ok: true, token: undefined }
+  const checked = check_token(token)
+  return checked.ok ? { ok: true, token: checked.token } : { ok: false, result: refuse(checked.reason) }
+}
 
 export const register_ipc = ({ store, connection, manager, session, snapshots, diagnostics, is_app_frame }: {
   store: ConnectionStore
@@ -35,7 +50,16 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
   diagnostics: ReturnType<typeof create_diagnostics>
   is_app_frame: (url: string) => boolean
 }): { forget_identity: () => void } => {
-  const node_url = (): string | null => connection.node_url()
+  // Every call to the node goes through here: with the remote node's token,
+  // never while the node has refused it, and a 401 forgets it (spec §8.7.3).
+  const authed = async <T>(run: (target: { node_url: string | null, token: string | null }) => Promise<NodeResult<T>>): Promise<NodeResult<T>> => {
+    const target = connection.target()
+    if (target?.blocked === true) return NEEDS_TOKEN
+    const sent = { node_url: target?.node_url ?? null, token: target?.token ?? null }
+    const result = await run(sent)
+    if (!result.ok && result.failure.kind === 'auth' && sent.node_url !== null) await connection.unauthorized({ node_url: sent.node_url, token: sent.token })
+    return result
+  }
   const handle = (channel: string, handler: (input: unknown, event: IpcMainInvokeEvent) => Promise<unknown>): void => {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, input: unknown) => {
       const url = event.senderFrame?.url
@@ -45,7 +69,8 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
   }
 
   const identity = create_identity_access({
-    get_connection: () => ({ mode: store.get().mode, node_url: node_url() }),
+    get_connection: () => ({ mode: store.get().mode, node_url: connection.node_url() }),
+    call: async ({ request }) => await authed(async ({ node_url, token }) => await request_node({ node_url, token, request })),
     confirm_export: async ({ node_url, cleartext }) => {
       const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
       const options = {
@@ -66,25 +91,52 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
   // mode switch stops or starts the bundled node, the event connection moves
   // to the new node, and a different node wipes the snapshot (§8.8.3).
   handle(IPC_CHANNELS.connection_save, async (input) => {
+    const token = entered_token(input)
+    if (!token.ok) return token.result
+    const checked = check_connection_config(input)
+    if (!checked.ok) return checked
+    if (token.token !== undefined && checked.data.mode !== 'remote') return refuse('An access token is only for a remote node.')
     const previous_key = connection.node_key()
-    const saved = await store.save(input)
+    const saved = await store.save(checked.data)
     if (!saved.ok) return saved
     identity.forget()
-    await connection.switched()
+    try {
+      await connection.switched({ token: token.token })
+    } catch (error) {
+      return refuse(`The connection was saved, but the access token could not be stored: ${error instanceof Error ? error.message : String(error)}`)
+    }
     if (connection.node_key() !== previous_key) await snapshots.wipe()
     return { ok: true, data: connection.view() }
   })
+  handle(IPC_CHANNELS.connection_logout, async () => {
+    try {
+      await connection.logout()
+    } catch (error) {
+      return refuse(`The access token could not be deleted: ${error instanceof Error ? error.message : String(error)}`)
+    }
+    return { ok: true, data: connection.view() }
+  })
   handle(IPC_CHANNELS.connection_test, async (input) => {
+    const token = entered_token(input)
+    if (!token.ok) return token.result
     const checked = check_connection_config(input)
     if (!checked.ok) return checked
     if (checked.data.mode === 'bundled') {
       const { url } = manager.get_state()
       return url === null ? refuse('The bundled node is not running.') : await test_connection({ node_url: url })
     }
-    return await test_connection({ node_url: checked.data.node_url as string })
+    const node_url = checked.data.node_url as string
+    if (token.token !== undefined) return await test_connection({ node_url, token: token.token })
+    // No token entered: test with the saved one, which a 401 then forgets.
+    const target = connection.target()
+    if (target === null || target.node_url !== node_url || store.get().mode !== 'remote') return await test_connection({ node_url })
+    return await authed(async ({ token: saved }) => await test_connection({ node_url, token: saved }))
   })
-  handle(IPC_CHANNELS.request, async (input) => await serve_generic_request({ input, node_url: node_url(), mode: store.get().mode }))
-  const audio_downloads = create_audio_downloads({ download: async ({ cid, signal }) => await get_audio({ node_url: node_url(), cid, signal }) })
+  handle(IPC_CHANNELS.request, async (input) => await authed(async ({ node_url, token }) =>
+    await serve_generic_request({ input, node_url, mode: store.get().mode, call: async (args) => await request_node({ ...args, token }) })))
+  const audio_downloads = create_audio_downloads({
+    download: async ({ cid, signal }) => await authed(async ({ node_url, token }) => await get_audio({ node_url, token, cid, signal }))
+  })
   handle(IPC_CHANNELS.get_audio, async (input) => {
     const { cid, request_id } = is_plain_object(input) ? input : {}
     if (typeof cid !== 'string' || !CID.test(cid)) return refuse('Malformed audio CID.')
@@ -101,9 +153,9 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     const options = { title: 'Import audio files', properties: ['openFile', 'multiSelections'] as Array<'openFile' | 'multiSelections'>, filters: [{ name: 'Audio', extensions: AUDIO_EXTENSIONS }] }
     const chosen = window === null ? await dialog.showOpenDialog(options) : await dialog.showOpenDialog(window, options)
     if (chosen.canceled || chosen.filePaths.length === 0) return { ok: true, data: null }
-    return await import_chosen_paths({ node_url: node_url(), paths: chosen.filePaths })
+    return await authed(async ({ node_url, token }) => await import_chosen_paths({ node_url, token, paths: chosen.filePaths }))
   })
-  handle(IPC_CHANNELS.import_upload_files, async (input) => await import_dropped_files({ node_url: node_url(), input }))
+  handle(IPC_CHANNELS.import_upload_files, async (input) => await authed(async ({ node_url, token }) => await import_dropped_files({ node_url, token, input })))
   handle(IPC_CHANNELS.identity_export, async () => await identity.export_identity())
   const secret_clipboard = create_secret_clipboard({
     clipboard: { readText: async () => await clipboard.readText(), writeText: async (text) => { await clipboard.writeText(text) }, clear: () => { clipboard.clear() } }

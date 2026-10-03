@@ -22,6 +22,7 @@ bun test                    # RECORD_TOOLCHAIN_PREFLIGHT=bypass when ffmpeg/fpca
 bun run gen:api             # regenerate API types and the route allowlist after bumping record-node
 bun run smoke:remote        # built app against a running node, read-only (RECORD_NODE_URL; options in the script header)
 bun run smoke:local         # built app against its own in-process node: every write, gapless, identity export
+bun run smoke:auth          # built app against an in-process node that requires a bearer token
 ```
 
 ## Architecture
@@ -42,6 +43,7 @@ cli/           generate-api-routes.mjs, check-lockfile-age.mjs (vendored from ba
 ```
 
 - **Transport.** The renderer never talks to the node. Main uses Node's `fetch`, which sends no `Origin`; nodes run `cors_origins: []` and refuse any request carrying one. The renderer CSP is `connect-src 'self'`.
+- **Remote bearer auth** (spec §8.7.3). main holds a remote node's token and adds `Authorization: Bearer` to every request, audio fetch, and upload, and offers `record` plus `bearer.<token>` as WebSocket subprotocols; the bundled node gets none. Tokens are tchar only (they must fit the subprotocol), one per node URL, in the login Keychain through `/usr/bin/security` with the token on stdin (`token-store.ts`); off macOS they last until quit. The renderer sends a token on save or test and only ever learns `auth.status` (`none`, `saved`, `rejected`). Every node call in `ipc.ts` goes through `authed`: a 401 for the token sent deletes it, the node is blocked (`EventsState.status` `unauthorized`, no socket, every call refused locally) until the user saves a new token, and a refused WebSocket upgrade is diagnosed by a REST probe. Log out deletes the token.
 - **Request allowlist.** `request` accepts only a method and path template listed in `src/shared/api-routes.ts`, generated from record-node's `dist/api/7-http-api.yaml`; params go through `encodeURIComponent`. Audio has its own `get_audio` channel.
 - **Events.** Main holds one WebSocket to `/api/ws` (backoff 1 s to 30 s with jitter) and forwards events and its state over IPC. Events only invalidate cache tags, batched to one refetch per second; each new connection triggers a full reconcile.
 - **Freshness.** Node data is stale until the reconcile after each connect finishes. The RTK Query base query refuses every write until then, and the banner shows the unreachable or stale state.
@@ -52,7 +54,7 @@ cli/           generate-api-routes.mjs, check-lockfile-age.mjs (vendored from ba
 - **Ingest paths.** File-picker paths come only from main's own dialog; dropped files reach main as bytes and a bare name (`import-files.ts`). The renderer never hands main a path (spec §8.10.3).
 - **Identity.** The generic request channel refuses both identity routes. Export goes through main's `identity.export` channel, which returns the key only after the user confirms in a native dialog; the key lives in the export dialog's state, is cleared on close, and a copy is cleared from the clipboard after 60 s. The public key is read once per node URL in main, which keeps only the public half and refuses over plain http to another machine. Import is an RTK mutation (`track: false`) to main's `identity.import`, which sends only to the bundled node (§8.5.4).
 - **Browsing.** The track list is virtualized over the whole result; only the 200-row pages near the viewport are subscribed. Search, sort, and tag filtering are node queries (§8.8.2).
-- **Electron-free modules.** `node-client.ts`, `api-path.ts`, `connection-store.ts`, `node-events.ts`, `node-session.ts`, `snapshot-store.ts`, `audio-downloads.ts`, `import-files.ts`, `request-policy.ts`, `identity-access.ts`, `clipboard-expiry.ts`, `node-connection.ts`, and everything in `bundled/` except `bundled-node.ts` import nothing from Electron, so tests drive them under Bun.
+- **Electron-free modules.** `node-client.ts`, `api-path.ts`, `connection-store.ts`, `node-events.ts`, `node-session.ts`, `snapshot-store.ts`, `audio-downloads.ts`, `import-files.ts`, `request-policy.ts`, `identity-access.ts`, `clipboard-expiry.ts`, `node-connection.ts`, `node-auth.ts`, `token-store.ts`, and everything in `bundled/` except `bundled-node.ts` import nothing from Electron, so tests drive them under Bun.
 - **State.** Server data lives only in the RTK Query cache; slices hold client state (`connection`, `player`, `ui`, `replication`, `imports`, `notifications`).
 
 ## Conventions

@@ -18,6 +18,22 @@ export interface ConnectionConfig {
 // 'bundled' for the bundled node, whose port can change between launches.
 export interface ConnectionView extends ConnectionConfig {
   node_key: string | null
+  auth: AuthView
+}
+
+// Whether main holds a bearer token for the remote node (spec §8.7.3),
+// never the token itself (§8.10.7). `rejected` means the node answered 401
+// and nothing is sent to it until the user enters a new token. persistent
+// is false where tokens are not kept in a Keychain, and so last until quit.
+export interface AuthView {
+  status: 'none' | 'saved' | 'rejected'
+  persistent: boolean
+}
+
+// What a save sends: the config, plus a new token for the remote node when
+// the user entered one. A save without a token keeps the saved one.
+export interface ConnectionSave extends ConnectionConfig {
+  token?: string
 }
 
 export type ApiRoute = typeof API_ROUTES[number]
@@ -57,11 +73,12 @@ export interface ConnectionTest {
   version: string | null
 }
 
-// The event connection (spec §8.7.7). `idle` means no node is configured;
-// each transition to `open` carries a new connection_id, which is the
-// renderer's cue to reconcile.
+// The event connection (spec §8.7.7). `idle` means no node is configured,
+// and `unauthorized` that the node refused the token and nothing is sent
+// until the user enters a new one; each transition to `open` carries a new
+// connection_id, which is the renderer's cue to reconcile.
 export interface EventsState {
-  status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed'
+  status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'unauthorized' | 'closed'
   node_url: string | null
   connection_id: number
   attempt: number
@@ -129,8 +146,11 @@ export interface ImportAck {
 export interface RecordBridge {
   connection: {
     get: () => Promise<ConnectionView>
-    save: (config: ConnectionConfig) => Promise<NodeResult<ConnectionView>>
-    test: (config: ConnectionConfig) => Promise<NodeResult<ConnectionTest>>
+    save: (config: ConnectionSave) => Promise<NodeResult<ConnectionView>>
+    // Tests the entered config; with no token, the remote node's saved one.
+    test: (config: ConnectionSave) => Promise<NodeResult<ConnectionTest>>
+    // Deletes the remote node's saved token (spec §8.7.3).
+    logout: () => Promise<NodeResult<ConnectionView>>
     // The view again whenever its node key changes, as when the bundled
     // node first answers or its identity changes.
     on_view: (listener: (view: ConnectionView) => void) => () => void
@@ -196,6 +216,7 @@ export const IPC_CHANNELS = {
   connection_save: 'record:connection:save',
   connection_test: 'record:connection:test',
   connection_view: 'record:connection:view',
+  connection_logout: 'record:connection:logout',
   request: 'record:request',
   get_audio: 'record:get-audio',
   cancel_audio: 'record:cancel-audio',

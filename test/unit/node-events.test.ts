@@ -172,11 +172,11 @@ describe('create_node_session', () => {
       broadcast: (channel, payload) => { sent.push({ channel, payload }) },
       open_events: (options) => open_node_events({ ...options, create_socket, delay_ms: () => 5, probe: async () => true })
     })
-    session.start('http://127.0.0.1:3000')
+    session.start({ node_url: 'http://127.0.0.1:3000', token: null, blocked: false })
     sockets[0]?.onopen?.()
     expect(session.get_state()).toMatchObject({ status: 'open', connection_id: 1 })
     sent.length = 0
-    session.start('http://127.0.0.1:3001')
+    session.start({ node_url: 'http://127.0.0.1:3001', token: null, blocked: false })
     expect(sockets[0]?.closed).toBe(true)
     // The switch is reported before the new socket opens, never as open.
     const first_new_state = sent.find(({ channel, payload }) => channel === IPC_CHANNELS.events_state && (payload as EventsState).node_url === 'http://127.0.0.1:3001')

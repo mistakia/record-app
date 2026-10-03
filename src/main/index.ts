@@ -11,9 +11,11 @@ import { open_connection_store } from './connection-store.ts'
 import { register_ipc } from './ipc.ts'
 import { create_bundled_node } from './bundled/bundled-node.ts'
 import { create_diagnostics } from './diagnostics.ts'
+import { create_node_auth } from './node-auth.ts'
 import { create_node_connection } from './node-connection.ts'
 import { create_node_session } from './node-session.ts'
 import { open_snapshot_store } from './snapshot-store.ts'
+import { create_token_store } from './token-store.ts'
 import { create_update_service, UPDATE_FEED_URL } from './updates.ts'
 import { create_main_window, guard_web_contents } from './window.ts'
 
@@ -59,7 +61,10 @@ const start = async (): Promise<void> => {
     snapshot_path: join(user_data, 'snapshot.json'),
     settings_path: join(user_data, 'snapshot-settings.json')
   })
-  const node_session = create_node_session({ broadcast })
+  const node_session = create_node_session({
+    broadcast,
+    on_unauthorized: (target) => { connection.unauthorized(target).catch((error: unknown) => { console.error(error) }) }
+  })
   const manager = create_bundled_node({
     user_data,
     on_state: (state) => {
@@ -70,6 +75,7 @@ const start = async (): Promise<void> => {
   let forget_identity = (): void => {}
   const connection = create_node_connection({
     store,
+    auth: create_node_auth({ tokens: create_token_store() }),
     manager,
     session: node_session,
     on_node_changed: () => { forget_identity() },

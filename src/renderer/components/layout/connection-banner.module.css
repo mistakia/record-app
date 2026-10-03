@@ -45,3 +45,7 @@
 .reconnecting {
   background: var(--danger);
 }
+
+.unauthorized {
+  background: var(--danger);
+}

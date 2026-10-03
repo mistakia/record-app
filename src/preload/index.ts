@@ -4,7 +4,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 
-import { IPC_CHANNELS, type BundledState, type ConnectionConfig, type ConnectionView, type EventsState, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
+import { IPC_CHANNELS, type BundledState, type ConnectionSave, type ConnectionView, type EventsState, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
 import type { HibernationSnapshot } from '#shared/snapshot.ts'
 
 const require_object = (value: unknown, name: string): void => {
@@ -23,14 +23,15 @@ const subscribe = <T>(channel: string, listener: (payload: T) => void): () => vo
 const bridge: RecordBridge = {
   connection: {
     get: async () => await ipcRenderer.invoke(IPC_CHANNELS.connection_get),
-    save: async (config: ConnectionConfig) => {
+    save: async (config: ConnectionSave) => {
       require_object(config, 'config')
-      return await ipcRenderer.invoke(IPC_CHANNELS.connection_save, { mode: config.mode, node_url: config.node_url })
+      return await ipcRenderer.invoke(IPC_CHANNELS.connection_save, { mode: config.mode, node_url: config.node_url, token: config.token })
     },
-    test: async (config: ConnectionConfig) => {
+    test: async (config: ConnectionSave) => {
       require_object(config, 'config')
-      return await ipcRenderer.invoke(IPC_CHANNELS.connection_test, { mode: config.mode, node_url: config.node_url })
+      return await ipcRenderer.invoke(IPC_CHANNELS.connection_test, { mode: config.mode, node_url: config.node_url, token: config.token })
     },
+    logout: async () => await ipcRenderer.invoke(IPC_CHANNELS.connection_logout),
     on_view: (listener: (view: ConnectionView) => void) => subscribe(IPC_CHANNELS.connection_view, listener)
   },
   request: async (request: NodeRequest) => {
