@@ -6,12 +6,14 @@
 // as record-node's own suite does.
 
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { connect } from 'node:net'
 import { fileURLToPath } from 'node:url'
 
 import { as_api_resolver, create_api_server, create_peer, start_peer, stop_api_server, stop_peer, type ApiServer, type Peer } from 'record-node'
 
 import { get_audio, request_node, test_connection } from '#main/node-client.ts'
-import type { NodeRequest, NodeResult } from '#shared/bridge.ts'
+import { open_node_events, type NodeEvents } from '#main/node-events.ts'
+import type { EventsState, NodeEventMessage, NodeRequest, NodeResult } from '#shared/bridge.ts'
 import type { Library, Settings, TrackList } from '#renderer/api/types.ts'
 
 const FIXTURE_PATH = fileURLToPath(new URL('../../node_modules/record-node/test/fixtures/audio/sine-sweep-5s.flac', import.meta.url))
@@ -21,6 +23,39 @@ const UNKNOWN_CID = 'bafkreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku
 let peer: Peer
 let server: ApiServer
 let node_url: string
+let events: NodeEvents
+const event_messages: NodeEventMessage[] = []
+const event_states: EventsState[] = []
+
+const wait_for = async (condition: () => boolean, label: string): Promise<void> => {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    if (condition()) return
+    await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+  throw new Error(`timed out waiting for ${label}`)
+}
+
+// The status line the node answers a raw WebSocket upgrade with, with or
+// without an Origin header.
+const upgrade_status = async (headers: Record<string, string>): Promise<string> => await new Promise((resolve, reject) => {
+  const socket = connect(server.port, '127.0.0.1', () => {
+    const lines = [
+      'GET /api/ws HTTP/1.1',
+      `Host: 127.0.0.1:${server.port}`,
+      'Connection: Upgrade',
+      'Upgrade: websocket',
+      'Sec-WebSocket-Version: 13',
+      'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==',
+      ...Object.entries(headers).map(([name, value]) => `${name}: ${value}`)
+    ]
+    socket.write(`${lines.join('\r\n')}\r\n\r\n`)
+  })
+  socket.once('data', (data) => {
+    resolve(String(data).split('\r\n')[0] ?? '')
+    socket.destroy()
+  })
+  socket.once('error', reject)
+})
 
 const refused_with_403 = (result: NodeResult<unknown>): boolean =>
   !result.ok && 'status' in result.failure && result.failure.status === 403
@@ -35,12 +70,20 @@ const request = async <T>(input: NodeRequest): Promise<T> => {
 beforeAll(async () => {
   peer = await create_peer({ config: { network: false, allow_toolchain_mismatch: process.env.RECORD_TOOLCHAIN_PREFLIGHT === 'bypass' } })
   await start_peer(peer)
-  await peer.ingest_file(FIXTURE_PATH)
   server = await create_api_server({ peer, resolve: as_api_resolver(peer.context.resolve), port: 0, cors_origins: [], log: false, validate_responses: true })
   node_url = `http://127.0.0.1:${server.port}`
+  // The event connection opens before the ingest, so the ingest's events arrive on it.
+  events = open_node_events({
+    node_url,
+    on_event: (message) => { event_messages.push(message) },
+    on_state: (state) => { event_states.push(state) }
+  })
+  await wait_for(() => events.get_state().status === 'open', 'the event connection to open')
+  await peer.ingest_file(FIXTURE_PATH)
 }, 60_000)
 
 afterAll(async () => {
+  events.close()
   await stop_api_server(server)
   await stop_peer(peer)
 })
@@ -88,6 +131,43 @@ describe('node client against an in-process record-node with cors_origins: []', 
     const audio = await get_audio({ node_url, cid: UNKNOWN_CID })
     expect(audio.ok).toBe(false)
     expect(!audio.ok && audio.failure).toMatchObject({ kind: 'http', status: 404, code: 'NOT_FOUND' })
+  })
+
+  test('the node refuses a WebSocket upgrade that carries an Origin, and accepts one without', async () => {
+    expect(await upgrade_status({ Origin: 'http://localhost:5173' })).toBe('HTTP/1.1 403 Forbidden')
+    expect(await upgrade_status({})).toBe('HTTP/1.1 101 Switching Protocols')
+  })
+
+  test('the event connection opened on the first dial and delivers the ingest\'s track:added', async () => {
+    expect(event_states.map(({ status }) => status)).toEqual(['connecting', 'open'])
+    const own_address = peer.identity().own_address
+    await wait_for(() => event_messages.some(({ type, payload }) => type === 'track:added' && payload.library_address === own_address), 'track:added')
+    const added = event_messages.find(({ type }) => type === 'track:added')
+    expect((added?.payload.track as { audio_cid?: unknown } | undefined)?.audio_cid).toBeString()
+  })
+
+  test('the event connection reconnects after the node drops it, with a new connection_id', async () => {
+    const before = events.get_state().connection_id
+    for (const client of server.bridge.clients) client.terminate()
+    await wait_for(() => events.get_state().status === 'reconnecting', 'the drop')
+    await wait_for(() => events.get_state().status === 'open', 'the reconnect')
+    expect(events.get_state()).toMatchObject({ connection_id: before + 1, attempt: 0 })
+  })
+
+  test('POST /listens records a listen for a track from the own library, and the track\'s listen_count rises', async () => {
+    const own_address = peer.identity().own_address
+    const [track] = (await request<TrackList>({ method: 'get', path_template: '/tracks', query: { offset: 0, limit: 1 } })).items
+    if (track === undefined) throw new Error('no track')
+    const listen = await request<{ track_id: string, count: number }>({
+      method: 'post',
+      path_template: '/listens',
+      body: { track_id: track.id, library_address: own_address }
+    })
+    expect(listen).toMatchObject({ track_id: track.id, count: track.listen_count + 1 })
+    const [after] = (await request<TrackList>({ method: 'get', path_template: '/tracks', query: { offset: 0, limit: 1 } })).items
+    expect(after?.listen_count).toBe(track.listen_count + 1)
+    const history = await request<TrackList>({ method: 'get', path_template: '/listens', query: { offset: 0, limit: 10 } })
+    expect(history.items.map(({ id }) => id)).toContain(track.id)
   })
 
   test('refuses a route the pinned yaml does not have, without calling the node', async () => {

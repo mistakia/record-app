@@ -20,7 +20,8 @@ bun run build               # production build into out/, no source maps
 bun run verify              # eslint + three tsc projects
 bun test                    # RECORD_TOOLCHAIN_PREFLIGHT=bypass when ffmpeg/fpcalc differ from record-node's pins
 bun run gen:api             # regenerate API types and the route allowlist after bumping record-node
-bun run smoke:remote        # built app against a running node (RECORD_NODE_URL)
+bun run smoke:remote        # built app against a running node, read-only (RECORD_NODE_URL; options in the script header)
+bun run smoke:local         # built app against its own in-process node: gapless, listen, Media Session
 ```
 
 ## Architecture
@@ -28,19 +29,26 @@ bun run smoke:remote        # built app against a running node (RECORD_NODE_URL)
 ```
 src/
   main/        Electron main: window.ts (hardening), ipc.ts, connection-store.ts,
-               node-client.ts, api-path.ts. All node traffic leaves from here.
+               node-client.ts, api-path.ts, node-events.ts (WebSocket),
+               node-session.ts, snapshot-store.ts. All node traffic leaves from here.
   preload/     index.ts: the window.record bridge, nothing else
-  shared/      bridge.ts (IPC types and channels), node-url.ts, api-routes.ts (generated)
+  shared/      bridge.ts (IPC types and channels), snapshot.ts, node-url.ts, api-routes.ts (generated)
   renderer/    React app: api/ (generated-types.ts, types.ts), store/, pages/,
-               components/, player/ (audio-engine.ts, player-controller.ts)
-test/          unit/, integration/ (in-process record-node), e2e/ (Playwright Electron)
+               components/, hooks/, snapshot/, player/ (player-controller.ts, audio-engine.ts,
+               audio-slots.ts, queue-manager.ts, listen-recorder.ts, media-session.ts)
+test/          unit/ (main and shared), renderer/ (store, engine), integration/ (in-process
+               record-node), e2e/ (Playwright Electron)
 cli/           generate-api-routes.mjs, check-lockfile-age.mjs (vendored from base)
 ```
 
 - **Transport.** The renderer never talks to the node. Main uses Node's `fetch`, which sends no `Origin`; nodes run `cors_origins: []` and refuse any request carrying one. The renderer CSP is `connect-src 'self'`.
 - **Request allowlist.** `request` accepts only a method and path template listed in `src/shared/api-routes.ts`, generated from record-node's `dist/api/7-http-api.yaml`; params go through `encodeURIComponent`. Audio has its own `get_audio` channel.
-- **Electron-free modules.** `node-client.ts`, `api-path.ts`, and `connection-store.ts` import nothing from Electron, so tests drive them under Bun.
-- **State.** Server data lives only in the RTK Query cache; slices hold client state (`connection`, `player`).
+- **Events.** Main holds one WebSocket to `/api/ws` (backoff 1 s to 30 s with jitter) and forwards events and its state over IPC. Events only invalidate cache tags, batched to one refetch per second; each new connection triggers a full reconcile.
+- **Freshness.** Node data is stale until the reconcile after each connect finishes. The RTK Query base query refuses every write until then, and the banner shows the unreachable or stale state.
+- **Playback.** `player-controller.ts` is the one action path; the player bar, queue panel, track rows, and Media Session all call it. The engine holds two decoded buffers at most and splices the next one in with `start(when)` at the current buffer's end. A listen POSTs once per play at 60 s of played time (or near the end of a shorter track), behind the write gate. POST /listens is not idempotent, so a failed listen is retried only when it provably never reached the node (gated, refused, or DNS), never after a timeout; held listens live in memory and are lost if the app quits first. Never let a smoke against a shared node play that long.
+- **Hibernation snapshot.** The renderer hands main the snapshot (libraries, the active first page, the queue, the route) every 5 s when changed. Main writes it every 30 s and at quit, fits it to the user's limit, and wipes it on a node URL change. Launch renders it before any query, marked stale.
+- **Electron-free modules.** `node-client.ts`, `api-path.ts`, `connection-store.ts`, `node-events.ts`, `node-session.ts`, and `snapshot-store.ts` import nothing from Electron, so tests drive them under Bun.
+- **State.** Server data lives only in the RTK Query cache; slices hold client state (`connection`, `player`, `ui`).
 
 ## Conventions
 

@@ -1,0 +1,47 @@
+.unreachable,
+.stale {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.unreachable {
+  background: rgb(217 83 79 / 15%);
+}
+
+.stale {
+  background: rgb(201 138 0 / 12%);
+}
+
+.unreachable span {
+  flex: 1;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.open {
+  background: #2e9d4f;
+}
+
+.connecting {
+  background: var(--warning);
+}
+
+.reconnecting {
+  background: var(--danger);
+}

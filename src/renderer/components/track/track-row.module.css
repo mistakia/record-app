@@ -18,3 +18,13 @@
 .title:hover {
   color: var(--accent);
 }
+
+.actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.actions button {
+  font-size: 12px;
+  margin-left: 4px;
+}

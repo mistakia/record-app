@@ -1,19 +1,37 @@
-// Web Audio playback of whole decoded files: one AudioBufferSourceNode at a
-// time through a gain node. A source node plays once, so pause, resume, and
-// seek each stop it and start a fresh one at the right offset.
+// Web Audio playback of whole decoded files with gapless transitions. Two
+// slots at most (spec §8.11.2): the current track, and the next one, fetched
+// once the current has prebuffer_seconds left and started with
+// start(when) at the exact context time the current one ends, so the splice
+// is sample-accurate. Sources run through a fade gain (5 ms ramps around a
+// seek) and a volume gain. Each start of a track is a new play_id, and
+// played_seconds counts context time actually played in it, for listens.
+
+import { create_slot_scheduler, type PlayingSlot } from './audio-slots.ts'
 
 export type EngineState = 'idle' | 'loading' | 'playing' | 'paused' | 'ended' | 'error'
 
+// key identifies the queue entry, cid the audio to fetch.
+export interface EngineTrack {
+  key: string
+  cid: string
+}
+
 export interface EngineSnapshot {
   state: EngineState
+  key: string | null
+  play_id: number
   position_seconds: number
   duration_seconds: number
+  played_seconds: number
   volume: number
   error: string | null
 }
 
 export interface AudioEngine {
-  play: (input: { cid: string }) => Promise<void>
+  // start_at resumes a restored position (seconds into the track).
+  play: (input: { track: EngineTrack, start_at?: number }) => Promise<void>
+  // The track to splice in when the current one ends, or null for none.
+  set_next: (track: EngineTrack | null) => void
   pause: () => void
   resume: () => Promise<void>
   seek: (position_seconds: number) => void
@@ -21,151 +39,164 @@ export interface AudioEngine {
   stop: () => void
   get_snapshot: () => EngineSnapshot
   subscribe: (listener: (snapshot: EngineSnapshot) => void) => () => void
+  // Called when the next track took over without a gap.
+  on_advance: (listener: (key: string) => void) => () => void
 }
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value))
 
-export const create_audio_engine = ({ load_audio, create_context = () => new AudioContext(), tick_ms = 250 }: {
-  load_audio: (input: { cid: string }) => Promise<ArrayBuffer>
+export const create_audio_engine = ({
+  load_audio,
+  create_context = () => new AudioContext(),
+  tick_ms = 250,
+  prebuffer_seconds = 30,
+  ramp_seconds = 0.005
+}: {
+  load_audio: (input: { cid: string, signal: AbortSignal }) => Promise<ArrayBuffer>
   create_context?: () => AudioContext
   tick_ms?: number
+  prebuffer_seconds?: number
+  ramp_seconds?: number
 }): AudioEngine => {
   const listeners = new Set<(snapshot: EngineSnapshot) => void>()
-  let snapshot: EngineSnapshot = { state: 'idle', position_seconds: 0, duration_seconds: 0, volume: 1, error: null }
-  let context: AudioContext | null = null
-  let gain: GainNode | null = null
-  let buffer: AudioBuffer | null = null
-  let source: AudioBufferSourceNode | null = null
-  // Context time at which offset 0 of the buffer played (or would have).
-  let started_at = 0
-  let paused_at = 0
-  // Each play bumps this, so a slow load that a later play overtook is dropped.
-  let load_token = 0
+  const advance_listeners = new Set<(key: string) => void>()
+  let snapshot: EngineSnapshot = { state: 'idle', key: null, play_id: 0, position_seconds: 0, duration_seconds: 0, played_seconds: 0, volume: 1, error: null }
   let tick: ReturnType<typeof setInterval> | null = null
+  // Each play aborts the load of the one before it.
+  let play_load: AbortController | null = null
 
   const emit = (patch: Partial<EngineSnapshot>): void => {
     snapshot = { ...snapshot, ...patch }
     for (const listener of listeners) listener(snapshot)
   }
 
-  const open_context = (): { context: AudioContext, gain: GainNode } => {
-    if (context === null || gain === null) {
-      context = create_context()
-      gain = context.createGain()
-      gain.gain.value = snapshot.volume
-      gain.connect(context.destination)
+  const slots = create_slot_scheduler({
+    create_context,
+    ramp_seconds,
+    load_audio,
+    get_volume: () => snapshot.volume,
+    // The outgoing play's last stretch is counted before the new play starts.
+    on_advance: (slot: PlayingSlot, finished_played_seconds: number) => {
+      emit({ played_seconds: snapshot.played_seconds + finished_played_seconds })
+      emit({ key: slot.track.key, play_id: snapshot.play_id + 1, duration_seconds: slot.buffer.duration, position_seconds: 0, played_seconds: 0 })
+      for (const listener of advance_listeners) listener(slot.track.key)
+    },
+    on_ended: (finished_played_seconds: number) => {
+      stop_tick()
+      emit({ state: 'ended', position_seconds: snapshot.duration_seconds, played_seconds: snapshot.played_seconds + finished_played_seconds })
     }
-    return { context, gain }
-  }
-
-  const current_position = (): number => {
-    if (snapshot.state !== 'playing' || context === null || buffer === null) return paused_at
-    return clamp(context.currentTime - started_at, 0, buffer.duration)
-  }
+  })
 
   const stop_tick = (): void => {
     if (tick !== null) clearInterval(tick)
     tick = null
   }
 
-  const stop_source = (): void => {
+  const start_tick = (): void => {
     stop_tick()
-    if (source === null) return
-    source.onended = null
-    try {
-      source.stop()
-    } catch {}
-    source.disconnect()
-    source = null
+    tick = setInterval(() => {
+      if (snapshot.state !== 'playing') return
+      slots.settle_transition()
+      emit({ position_seconds: slots.position(), played_seconds: snapshot.played_seconds + slots.take_played_seconds() })
+      slots.maybe_prebuffer(prebuffer_seconds)
+    }, tick_ms)
   }
 
-  const start_source = (offset: number): void => {
-    if (buffer === null) return
-    const opened = open_context()
-    stop_source()
-    const node = opened.context.createBufferSource()
-    node.buffer = buffer
-    node.connect(opened.gain)
-    node.onended = () => {
-      if (source !== node || buffer === null) return
-      source = null
-      stop_tick()
-      paused_at = buffer.duration
-      emit({ state: 'ended', position_seconds: buffer.duration })
-    }
-    started_at = opened.context.currentTime - offset
-    node.start(0, offset)
-    source = node
-    tick = setInterval(() => { emit({ position_seconds: current_position() }) }, tick_ms)
+  const settle_played = (): void => {
+    if (snapshot.state === 'playing') snapshot = { ...snapshot, played_seconds: snapshot.played_seconds + slots.take_played_seconds() }
   }
 
   return {
-    play: async ({ cid }) => {
-      const token = ++load_token
-      stop_source()
-      buffer = null
-      paused_at = 0
-      emit({ state: 'loading', position_seconds: 0, duration_seconds: 0, error: null })
+    play: async ({ track, start_at = 0 }) => {
+      play_load?.abort()
+      const load = new AbortController()
+      play_load = load
+      stop_tick()
+      slots.settle_transition()
+      settle_played()
+      // The outgoing play's last stretch is reported under its own key and
+      // play_id before anything names the new track, so its listen is
+      // judged on its own time and the new track inherits none of it.
+      if (snapshot.key !== null) emit({ played_seconds: snapshot.played_seconds })
+      const ready = slots.take_ready_next(track)
+      slots.clear_current()
+      emit({ state: 'loading', key: track.key, position_seconds: 0, duration_seconds: 0, played_seconds: 0, error: null })
       // Resume before the first await, while the click's user activation holds.
-      const { context: opened } = open_context()
-      const resumed = opened.resume()
+      const resumed = slots.resume_context()
       try {
-        const data = await load_audio({ cid })
-        if (token !== load_token) return
-        const decoded = await opened.decodeAudioData(data)
+        let buffer = ready
+        if (buffer === null) {
+          const data = await load_audio({ cid: track.cid, signal: load.signal })
+          // A play that a later play overtook is not decoded.
+          if (load.signal.aborted) return
+          buffer = await slots.decode(data)
+        }
         await resumed
-        if (token !== load_token) return
-        buffer = decoded
-        emit({ state: 'playing', duration_seconds: decoded.duration })
-        start_source(0)
+        if (load.signal.aborted) return
+        const offset = clamp(start_at, 0, buffer.duration)
+        slots.start_current({ track, buffer, offset })
+        emit({ state: 'playing', play_id: snapshot.play_id + 1, duration_seconds: buffer.duration, position_seconds: offset, played_seconds: 0 })
+        start_tick()
+        slots.maybe_prebuffer(prebuffer_seconds)
       } catch (error) {
-        if (token !== load_token) return
+        if (load.signal.aborted) return
         emit({ state: 'error', error: error instanceof Error ? error.message : String(error) })
       }
     },
+    set_next: (track) => {
+      slots.set_next(track)
+      if (snapshot.state === 'playing') slots.maybe_prebuffer(prebuffer_seconds)
+    },
     pause: () => {
       if (snapshot.state !== 'playing') return
-      paused_at = current_position()
-      stop_source()
-      emit({ state: 'paused', position_seconds: paused_at })
+      // Act on the slot that is audible now, even if onended is still due.
+      slots.settle_transition()
+      settle_played()
+      stop_tick()
+      const position = slots.pause()
+      emit({ state: 'paused', position_seconds: position })
     },
     resume: async () => {
-      if ((snapshot.state !== 'paused' && snapshot.state !== 'ended') || buffer === null) return
-      const token = load_token
-      await open_context().context.resume()
+      if ((snapshot.state !== 'paused' && snapshot.state !== 'ended') || !slots.has_current()) return
+      const load = play_load
+      await slots.resume_context()
       // A play, stop, or seek may have run while the context resumed.
-      if (token !== load_token || (snapshot.state !== 'paused' && snapshot.state !== 'ended') || buffer === null) return
-      const offset = snapshot.state === 'ended' ? 0 : paused_at
+      if (load !== play_load || (snapshot.state !== 'paused' && snapshot.state !== 'ended') || !slots.has_current()) return
+      const offset = snapshot.state === 'ended' ? 0 : slots.paused_position()
+      slots.start_current_at(offset)
       emit({ state: 'playing', position_seconds: offset })
-      start_source(offset)
+      start_tick()
+      slots.maybe_prebuffer(prebuffer_seconds)
     },
     seek: (position_seconds) => {
-      if (buffer === null) return
-      const offset = clamp(position_seconds, 0, buffer.duration)
-      if (snapshot.state === 'playing') {
-        start_source(offset)
-      } else {
-        paused_at = offset
-        if (snapshot.state === 'ended') emit({ state: 'paused' })
-      }
-      emit({ position_seconds: offset })
+      if (!slots.has_current()) return
+      if (snapshot.state === 'playing') slots.settle_transition()
+      settle_played()
+      const offset = slots.seek({ position_seconds, playing: snapshot.state === 'playing' })
+      emit({ position_seconds: offset, ...(snapshot.state === 'ended' ? { state: 'paused' as const } : {}) })
     },
     set_volume: (volume) => {
       const level = clamp(volume, 0, 1)
-      if (gain !== null) gain.gain.value = level
+      snapshot = { ...snapshot, volume: level }
+      slots.apply_volume()
       emit({ volume: level })
     },
     stop: () => {
-      load_token++
-      stop_source()
-      buffer = null
-      paused_at = 0
-      emit({ state: 'idle', position_seconds: 0, duration_seconds: 0, error: null })
+      play_load?.abort()
+      play_load = null
+      stop_tick()
+      slots.clear_current()
+      slots.set_next(null)
+      emit({ state: 'idle', key: null, position_seconds: 0, duration_seconds: 0, played_seconds: 0, error: null })
     },
     get_snapshot: () => snapshot,
     subscribe: (listener) => {
       listeners.add(listener)
       return () => { listeners.delete(listener) }
+    },
+    on_advance: (listener) => {
+      advance_listeners.add(listener)
+      return () => { advance_listeners.delete(listener) }
     }
   }
 }

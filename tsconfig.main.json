@@ -16,6 +16,7 @@
     "electron.vite.config.ts"
   ],
   "exclude": [
-    "test/renderer"
+    "test/renderer",
+    "test/e2e"
   ]
 }
