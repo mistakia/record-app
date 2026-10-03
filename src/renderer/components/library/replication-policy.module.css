@@ -1,0 +1,38 @@
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 480px;
+  max-width: 640px;
+}
+
+.dialog h3,
+.dialog p {
+  margin: 0;
+}
+
+.modes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.estimate {
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -1,6 +1,6 @@
-// Libraries (spec §8.6.5): every library with its category, replication
-// state, connect and disconnect, unlink, linking a new one, and the own
-// libraries with their profiles.
+// Libraries (spec §8.6.5, §8.6.5a): every library with its category,
+// replication state and mode (with a one-action change), connect and
+// disconnect, unlink, linking a new one, and the own libraries.
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
@@ -9,6 +9,7 @@ import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { OwnLibraries } from '#renderer/components/library/own-libraries.tsx'
+import { mode_label, ReplicationPolicyDialog } from '#renderer/components/library/replication-policy.tsx'
 import { current_progress, is_replicating, library_category, library_name, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
@@ -19,11 +20,12 @@ import { report_write } from '#renderer/store/write.ts'
 import { describe_scope } from '#renderer/library/capabilities.ts'
 import { use_left_libraries } from '#renderer/library/left-libraries.ts'
 
-const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
+const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink, on_policy }: {
   library: Library
   libraries_fetched_at: number | undefined
   now: number
   on_unlink: (library: Library) => void
+  on_policy: (library: Library) => void
 }) => {
   const dispatch = use_app_dispatch()
   const navigate = useNavigate()
@@ -70,6 +72,14 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
             ? `Replicating${progress.total > 0 ? ` ${progress.progress} of ${progress.total}` : ''}`
             : connected === false ? 'Paused' : 'Up to date'}
       </td>
+      <td data-testid='replication-mode'>
+        {library.replication_mode === null || library.replication_mode === undefined
+          ? 'None'
+          : <span className={styles.mode}>{mode_label(library.replication_mode)}</span>}
+        {category !== 'own' && library.is_linked && (
+          <button type='button' className={styles.change} disabled={!writes_allowed} onClick={() => { on_policy(library) }}>Change</button>
+        )}
+      </td>
       <td>{library.peer_ids.length}</td>
       <td className={styles.actions}>
         <button type='button' onClick={() => { dispatch(library_selected(library.address)); navigate('/tracks') }}>Tracks</button>
@@ -92,6 +102,7 @@ export const Libraries = () => {
   const [address, set_address] = useState('')
   const [alias, set_alias] = useState('')
   const [unlinking, set_unlinking] = useState<Library | null>(null)
+  const [policy_for, set_policy_for] = useState<Library | null>(null)
   // Re-evaluated every few seconds so a fresh link's grace period ends.
   const [now, set_now] = useState(Date.now())
   const has_recent_link = use_app_selector((state) => Object.values(state.replication.linked_at).some((at) => Date.now() - at < RECENT_LINK_MS))
@@ -129,11 +140,11 @@ export const Libraries = () => {
       {libraries.error !== undefined && <p className={styles.error}>{'message' in libraries.error ? libraries.error.message : 'The node request failed.'}</p>}
       <table className={styles.table}>
         <thead>
-          <tr><th>Library</th><th>Category</th><th>Tracks</th><th>Replication</th><th>Peers</th><th /></tr>
+          <tr><th>Library</th><th>Category</th><th>Tracks</th><th>Replication</th><th>Mode</th><th>Peers</th><th /></tr>
         </thead>
         <tbody>
           {libraries.data?.map((library) => (
-            <LibraryRow key={library.id} library={library} libraries_fetched_at={libraries.fulfilledTimeStamp} now={now} on_unlink={set_unlinking} />
+            <LibraryRow key={library.id} library={library} libraries_fetched_at={libraries.fulfilledTimeStamp} now={now} on_unlink={set_unlinking} on_policy={set_policy_for} />
           ))}
         </tbody>
       </table>
@@ -144,6 +155,7 @@ export const Libraries = () => {
         <button type='submit' disabled={!writes_allowed || address.trim() === ''}>Link</button>
       </form>
       <OwnLibraries />
+      {policy_for !== null && <ReplicationPolicyDialog key={policy_for.address} library={policy_for} on_close={() => { set_policy_for(null) }} />}
       <Dialog open={unlinking !== null} title='Unlink library' on_close={() => { set_unlinking(null) }}>
         <p>
           Unlink {unlinking === null ? '' : library_name(unlinking)}? It leaves every view, and the node drops its replica and any
