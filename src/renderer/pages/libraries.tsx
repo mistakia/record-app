@@ -33,7 +33,8 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
   const linked_at = use_app_selector((state) => state.replication.linked_at[library.address])
   const category = library_category(library)
   const held = node_api.endpoints.get_held_capabilities.useQuery(undefined, { skip: category !== 'shared' })
-  const left = use_left_libraries(use_app_selector((state) => state.connection.config?.node_key ?? null)).includes(library.address)
+  const node_key = use_app_selector((state) => state.connection.config?.node_key ?? null)
+  const left = use_left_libraries(node_key).includes(library.address)
   // Spec §8.6.1: a shared library shows the scope of what this identity holds there.
   const scope = category === 'shared'
     ? (held.data ?? []).filter(({ library_address, status }) => library_address === library.address && status === 'active').map(describe_scope)

@@ -18,16 +18,29 @@ export const describe_action = (verb: string): string => ACTION_LABELS[verb] ?? 
 
 export const short_key = (key: string): string => key.length > 16 ? `${key.slice(0, 8)}…${key.slice(-6)}` : key
 
+// A known type carrying a field it does not define fails closed (§3.5.5),
+// so the extra field is named rather than passed over.
+const extra_fields = (value: Record<string, unknown>, allowed: readonly string[]): string => {
+  const extra = Object.keys(value).filter((key) => !allowed.includes(key))
+  return extra.length === 0 ? '' : ` (unknown fields: ${extra.join(', ')})`
+}
+
+const as_record = (value: unknown): Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {}
+
 export const describe_grantee = (grantee: unknown): string => {
-  const { type, key, keys } = (typeof grantee === 'object' && grantee !== null ? grantee : {}) as { type?: unknown, key?: unknown, keys?: unknown }
-  if (type === 'key' && typeof key === 'string') return short_key(key)
-  if (type === 'key_set' && Array.isArray(keys)) return `${keys.length} identities: ${keys.map((each) => short_key(String(each))).join(', ')}`
+  const record = as_record(grantee)
+  const { type, key, keys } = record
+  if (type === 'key' && typeof key === 'string') return short_key(key) + extra_fields(record, ['type', 'key'])
+  if (type === 'key_set' && Array.isArray(keys)) return `${keys.length} identities: ${keys.map((each) => short_key(String(each))).join(', ')}${extra_fields(record, ['type', 'keys'])}`
+  if (type === 'key' || type === 'key_set') return `(malformed ${type} grantee)`
   return `(unknown grantee: ${String(type)})`
 }
 
 export const describe_conditions = (conditions: readonly unknown[]): string[] => conditions.map((condition) => {
-  const { type, at } = (typeof condition === 'object' && condition !== null ? condition : {}) as { type?: unknown, at?: unknown }
-  if (type === 'expires_at' && typeof at === 'number') return `expires ${new Date(at).toLocaleString()}`
+  const record = as_record(condition)
+  const { type, at } = record
+  if (type === 'expires_at' && typeof at === 'number') return `expires ${new Date(at).toLocaleString()}${extra_fields(record, ['type', 'at'])}`
+  if (type === 'expires_at') return '(malformed expires_at)'
   return `(unknown condition: ${String(type)})`
 })
 

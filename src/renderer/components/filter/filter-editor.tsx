@@ -1,13 +1,17 @@
-// The FilterSpec builder (spec §8.6.6, §8.9.1), shared by capability issue
-// and the selective replication policy: a structured editor over the six
-// node types, with field paths suggested from the consumer's subject, and
-// an advanced JSON mode. A filter holding a node type this app does not
-// know opens in JSON mode only, so it is never silently rewritten (§8.6.4).
+// The FilterSpec builder (spec §8.6.6, §8.9.1): a structured editor over the
+// six node types, with field paths suggested from the consumer's subject,
+// and an advanced JSON mode. It edits a draft that keeps the typed text
+// (filter-draft.ts) and emits a FilterSpec when the draft reads as one, or
+// undefined while it does not, so a caller never sends a filter other than
+// the one on screen. A filter the structured editor cannot show (an unknown
+// node type, a malformed node) opens in JSON mode only, never rewritten
+// (§8.6.4).
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import styles from './filter-editor.module.css'
-import { blank_filter, describe_filter, filter_problems, FILTER_TYPES, is_known_type, type FilterField, type FilterSpec, type FilterType, type Scalar } from '#renderer/filter/filter-spec.ts'
+import { blank_draft, BOUND_KEYS, can_draft, from_draft, to_draft, type FilterDraft } from '#renderer/filter/filter-draft.ts'
+import { describe_filter, filter_problems, FILTER_TYPES, type FilterField, type FilterType } from '#renderer/filter/filter-spec.ts'
 
 const TYPE_LABELS: Record<FilterType, string> = {
   match: 'Field equals',
@@ -17,54 +21,53 @@ const TYPE_LABELS: Record<FilterType, string> = {
   or: 'Any of',
   not: 'Not'
 }
-
-// Text typed for a value: a number for a numeric field when it reads as one,
-// otherwise the text itself.
-const parse_value = (text: string, fields: readonly FilterField[], path: string): Scalar => {
-  const kind = fields.find((field) => field.path === path)?.kind
-  if (kind === 'number' && text.trim() !== '' && Number.isFinite(Number(text))) return Number(text)
-  return text
-}
-
-const show_value = (value: Scalar): string => value === null ? '' : String(value)
+const BOUND_LABELS = { gte: 'at least', gt: 'over', lte: 'at most', lt: 'under' } as const
 
 const FieldInput = ({ value, fields, list_id, on_change }: { value: string, fields: readonly FilterField[], list_id: string, on_change: (path: string) => void }) => (
-  <input className={styles.field} aria-label='Field' list={list_id} spellCheck={false} placeholder='field' value={value} onChange={(event) => { on_change(event.target.value.trim()) }} title={fields.find((field) => field.path === value)?.label ?? 'A dot-separated field path'} />
+  <input
+    className={styles.field}
+    aria-label='Field'
+    list={list_id}
+    spellCheck={false}
+    placeholder='field'
+    value={value}
+    title={fields.find((field) => field.path === value)?.label ?? 'A dot-separated field path'}
+    onChange={(event) => { on_change(event.target.value) }}
+  />
 )
 
-const FilterNode = ({ spec, fields, list_id, depth, on_change, on_remove }: {
-  spec: FilterSpec
+const DraftNode = ({ draft, fields, list_id, depth, on_change, on_remove }: {
+  draft: FilterDraft
   fields: readonly FilterField[]
   list_id: string
   depth: number
-  on_change: (spec: FilterSpec) => void
-  on_remove?: () => void
+  on_change: (draft: FilterDraft) => void
+  on_remove?: (() => void) | undefined
 }) => {
   const first_field = fields[0]?.path ?? 'tags'
   const header = (
     <div className={styles.header}>
-      <select aria-label='Filter type' value={spec.type} onChange={(event) => { on_change(blank_filter(event.target.value as FilterType, first_field)) }}>
+      <select aria-label='Filter type' value={draft.type} onChange={(event) => { on_change(blank_draft(event.target.value as FilterType, first_field)) }}>
         {FILTER_TYPES.map((type) => <option key={type} value={type} disabled={depth >= 16 && ['and', 'or', 'not'].includes(type)}>{TYPE_LABELS[type]}</option>)}
       </select>
       {on_remove !== undefined && <button type='button' aria-label='Remove filter' onClick={on_remove}>Remove</button>}
     </div>
   )
-  switch (spec.type) {
+  switch (draft.type) {
     case 'match': {
-      const entries = Object.entries(spec.fields)
-      const set_entries = (next: Array<[string, Scalar]>) => { on_change({ type: 'match', fields: Object.fromEntries(next) }) }
+      const set_rows = (rows: Array<{ path: string, text: string }>) => { on_change({ type: 'match', rows }) }
       return (
         <div className={styles.node}>
           {header}
-          {entries.map(([path, value], index) => (
+          {draft.rows.map((row, index) => (
             <div key={index} className={styles.row}>
-              <FieldInput value={path} fields={fields} list_id={list_id} on_change={(next) => { set_entries(entries.map((entry, at) => at === index ? [next, entry[1]] : entry)) }} />
+              <FieldInput value={row.path} fields={fields} list_id={list_id} on_change={(path) => { set_rows(draft.rows.map((each, at) => at === index ? { ...each, path } : each)) }} />
               <span>is</span>
-              <input aria-label='Value' value={show_value(value)} onChange={(event) => { set_entries(entries.map((entry, at) => at === index ? [entry[0], parse_value(event.target.value, fields, path)] : entry)) }} />
-              {entries.length > 1 && <button type='button' aria-label='Remove field' onClick={() => { set_entries(entries.filter((_, at) => at !== index)) }}>Remove</button>}
+              <input aria-label='Value' value={row.text} onChange={(event) => { set_rows(draft.rows.map((each, at) => at === index ? { ...each, text: event.target.value } : each)) }} />
+              {draft.rows.length > 1 && <button type='button' aria-label='Remove field' onClick={() => { set_rows(draft.rows.filter((_, at) => at !== index)) }}>Remove</button>}
             </div>
           ))}
-          {entries.length < 16 && <button type='button' onClick={() => { set_entries([...entries, ['', '']]) }}>Add field</button>}
+          {draft.rows.length < 16 && <button type='button' onClick={() => { set_rows([...draft.rows, { path: '', text: '' }]) }}>Add field</button>}
         </div>
       )
     }
@@ -73,65 +76,52 @@ const FilterNode = ({ spec, fields, list_id, depth, on_change, on_remove }: {
         <div className={styles.node}>
           {header}
           <div className={styles.row}>
-            <FieldInput value={spec.field} fields={fields} list_id={list_id} on_change={(field) => { on_change({ ...spec, field }) }} />
+            <FieldInput value={draft.field} fields={fields} list_id={list_id} on_change={(field) => { on_change({ ...draft, field }) }} />
             <span>is any of</span>
-            <input
-              aria-label='Values'
-              placeholder='comma, separated, values'
-              value={spec.values.map(show_value).join(', ')}
-              onChange={(event) => { on_change({ ...spec, values: event.target.value.split(',').map((part) => parse_value(part.trim(), fields, spec.field)) }) }}
-            />
           </div>
+          {draft.values.map((value, index) => (
+            <div key={index} className={styles.row}>
+              <input aria-label='Value' value={value} onChange={(event) => { on_change({ ...draft, values: draft.values.map((each, at) => at === index ? event.target.value : each) }) }} />
+              {draft.values.length > 1 && <button type='button' aria-label='Remove value' onClick={() => { on_change({ ...draft, values: draft.values.filter((_, at) => at !== index) }) }}>Remove</button>}
+            </div>
+          ))}
+          {draft.values.length < 256 && <button type='button' onClick={() => { on_change({ ...draft, values: [...draft.values, ''] }) }}>Add value</button>}
         </div>
       )
-    case 'range': {
-      const bound = (key: 'gte' | 'gt' | 'lte' | 'lt', label: string) => (
-        <label className={styles.bound}>
-          {label}
-          <input
-            aria-label={label}
-            inputMode='decimal'
-            value={spec[key] === undefined ? '' : String(spec[key])}
-            onChange={(event) => {
-              const { [key]: _dropped, ...rest } = spec
-              const text = event.target.value.trim()
-              on_change(text === '' || !Number.isFinite(Number(text)) ? rest : { ...rest, [key]: Number(text) })
-            }}
-          />
-        </label>
-      )
+    case 'range':
       return (
         <div className={styles.node}>
           {header}
           <div className={styles.row}>
-            <FieldInput value={spec.field} fields={fields} list_id={list_id} on_change={(field) => { on_change({ ...spec, field }) }} />
-            {bound('gte', 'at least')}
-            {bound('gt', 'over')}
-            {bound('lte', 'at most')}
-            {bound('lt', 'under')}
+            <FieldInput value={draft.field} fields={fields} list_id={list_id} on_change={(field) => { on_change({ ...draft, field }) }} />
+            {BOUND_KEYS.map((key) => (
+              <label key={key} className={styles.bound}>
+                {BOUND_LABELS[key]}
+                <input aria-label={BOUND_LABELS[key]} inputMode='decimal' value={draft.bounds[key]} onChange={(event) => { on_change({ ...draft, bounds: { ...draft.bounds, [key]: event.target.value } }) }} />
+              </label>
+            ))}
           </div>
         </div>
       )
-    }
     case 'and':
     case 'or':
       return (
         <div className={styles.node}>
           {header}
           <div className={styles.children}>
-            {spec.filters.map((child, index) => (
-              <FilterNode
+            {draft.children.map((child, index) => (
+              <DraftNode
                 key={index}
-                spec={child}
+                draft={child}
                 fields={fields}
                 list_id={list_id}
                 depth={depth + 1}
-                on_change={(next) => { on_change({ ...spec, filters: spec.filters.map((existing, at) => at === index ? next : existing) }) }}
-                {...(spec.filters.length > 1 ? { on_remove: () => { on_change({ ...spec, filters: spec.filters.filter((_, at) => at !== index) }) } } : {})}
+                on_change={(next) => { on_change({ ...draft, children: draft.children.map((each, at) => at === index ? next : each) }) }}
+                on_remove={draft.children.length > 1 ? () => { on_change({ ...draft, children: draft.children.filter((_, at) => at !== index) }) } : undefined}
               />
             ))}
           </div>
-          {spec.filters.length < 64 && <button type='button' onClick={() => { on_change({ ...spec, filters: [...spec.filters, blank_filter('match', first_field)] }) }}>Add condition</button>}
+          {draft.children.length < 64 && <button type='button' onClick={() => { on_change({ ...draft, children: [...draft.children, blank_draft('match', first_field)] }) }}>Add condition</button>}
         </div>
       )
     case 'not':
@@ -139,25 +129,18 @@ const FilterNode = ({ spec, fields, list_id, depth, on_change, on_remove }: {
         <div className={styles.node}>
           {header}
           <div className={styles.children}>
-            <FilterNode spec={spec.filter} fields={fields} list_id={list_id} depth={depth + 1} on_change={(filter) => { on_change({ ...spec, filter }) }} />
+            <DraftNode draft={draft.child} fields={fields} list_id={list_id} depth={depth + 1} on_change={(child) => { on_change({ ...draft, child }) }} />
           </div>
         </div>
       )
   }
 }
 
-// Whether every node is one the structured editor can show.
-const all_known = (spec: unknown): boolean => {
-  if (typeof spec !== 'object' || spec === null) return false
-  const { type, filters, filter } = spec as { type?: unknown, filters?: unknown, filter?: unknown }
-  if (!is_known_type(type)) return false
-  if (Array.isArray(filters)) return filters.every(all_known)
-  if (filter !== undefined) return all_known(filter)
-  return true
-}
+const as_json = (value: unknown): string => value === null || value === undefined ? '' : JSON.stringify(value, null, 2)
 
-// value null is "no filter". on_change receives the filter as edited, sound
-// or not; callers check filter_problems before sending.
+// value null is "no filter", and undefined a filter still being edited that
+// does not yet read as one. Callers send nothing while value is undefined
+// or filter_problems finds anything.
 export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
   value: unknown
   on_change: (value: unknown) => void
@@ -165,17 +148,69 @@ export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
   label?: string
 }) => {
   const list_id = useId()
-  const structured_ok = value === null || all_known(value)
-  const [json_mode, set_json_mode] = useState(!structured_ok)
-  const [json_text, set_json_text] = useState(value === null ? '' : JSON.stringify(value, null, 2))
-  const [json_error, set_json_error] = useState<string | null>(null)
-  const problems = value === null ? [] : filter_problems(value)
+  const [draft, set_draft] = useState<FilterDraft | null>(() => can_draft(value) ? to_draft(value) : null)
+  const [json_mode, set_json_mode] = useState(() => value !== null && value !== undefined && !can_draft(value))
+  const [json_text, set_json_text] = useState(() => as_json(value))
+  const [draft_error, set_draft_error] = useState<string | null>(null)
+  // The last value this editor emitted, so a change from outside (a reset
+  // after issuing) can be told apart from an echo of our own edit.
+  const emitted = useRef<unknown>(value)
 
-  const open_json = () => {
-    set_json_text(value === null ? '' : JSON.stringify(value, null, 2))
-    set_json_error(null)
-    set_json_mode(true)
+  useEffect(() => {
+    if (Object.is(value, emitted.current)) return
+    emitted.current = value
+    set_draft(can_draft(value) ? to_draft(value) : null)
+    set_json_text(as_json(value))
+    set_draft_error(null)
+    if (value !== null && value !== undefined && !can_draft(value)) set_json_mode(true)
+  }, [value])
+
+  const emit = (next: unknown) => {
+    emitted.current = next
+    on_change(next)
   }
+
+  const edit_draft = (next: FilterDraft) => {
+    set_draft(next)
+    const result = from_draft(next, fields)
+    set_draft_error(result.ok ? null : result.reason)
+    emit(result.ok ? result.spec : undefined)
+  }
+
+  const edit_json = (text: string) => {
+    set_json_text(text)
+    if (text.trim() === '') {
+      set_draft_error('Enter a filter, or turn the filter off.')
+      emit(undefined)
+      return
+    }
+    try {
+      const parsed = JSON.parse(text) as unknown
+      set_draft_error(null)
+      emit(parsed)
+    } catch {
+      set_draft_error('Not valid JSON yet.')
+      emit(undefined)
+    }
+  }
+
+  const toggle = (on: boolean) => {
+    if (!on) {
+      set_draft(null)
+      set_json_text('')
+      set_draft_error(null)
+      emit(null)
+      return
+    }
+    const fresh = blank_draft('match', fields[0]?.path ?? 'tags')
+    set_json_mode(false)
+    edit_draft(fresh)
+    set_json_text('')
+  }
+
+  const enabled = value !== null
+  const structured_ok = value === undefined ? draft !== null && !json_mode : can_draft(value)
+  const problems = value === null || value === undefined ? [] : filter_problems(value)
 
   return (
     <fieldset className={styles.editor} data-testid='filter-editor'>
@@ -183,37 +218,18 @@ export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
       <datalist id={list_id}>{fields.map((field) => <option key={field.path} value={field.path}>{field.label}</option>)}</datalist>
       <div className={styles.header}>
         <label>
-          <input type='checkbox' checked={value !== null} onChange={(event) => { on_change(event.target.checked ? blank_filter('match', fields[0]?.path ?? 'tags') : null) }} />
+          <input type='checkbox' checked={enabled} onChange={(event) => { toggle(event.target.checked) }} />
           Use a filter
         </label>
-        {value !== null && (json_mode || !structured_ok
-          ? <button type='button' disabled={!structured_ok} onClick={() => { set_json_mode(false) }}>Structured editor</button>
-          : <button type='button' onClick={open_json}>Edit as JSON</button>)}
+        {enabled && (json_mode
+          ? <button type='button' disabled={!structured_ok} onClick={() => { if (can_draft(value)) set_draft(to_draft(value)); set_json_mode(false) }}>Structured editor</button>
+          : <button type='button' onClick={() => { set_json_text(as_json(value)); set_json_mode(true) }}>Edit as JSON</button>)}
       </div>
-      {value !== null && (json_mode || !structured_ok
-        ? (
-          <>
-            <textarea
-              aria-label='Filter JSON'
-              className={styles.json}
-              rows={8}
-              spellCheck={false}
-              value={json_text}
-              onChange={(event) => {
-                set_json_text(event.target.value)
-                try {
-                  on_change(JSON.parse(event.target.value) as unknown)
-                  set_json_error(null)
-                } catch {
-                  set_json_error('Not valid JSON yet.')
-                }
-              }}
-            />
-            {json_error !== null && <p className={styles.error}>{json_error}</p>}
-          </>
-          )
-        : <FilterNode spec={value as FilterSpec} fields={fields} list_id={list_id} depth={1} on_change={on_change} />)}
-      {value !== null && <p className={styles.summary} data-testid='filter-summary'>{describe_filter(value)}</p>}
+      {enabled && (json_mode || draft === null
+        ? <textarea aria-label='Filter JSON' className={styles.json} rows={8} spellCheck={false} value={json_text} onChange={(event) => { edit_json(event.target.value) }} />
+        : <DraftNode draft={draft} fields={fields} list_id={list_id} depth={1} on_change={edit_draft} />)}
+      {enabled && value !== undefined && <p className={styles.summary} data-testid='filter-summary'>{describe_filter(value)}</p>}
+      {draft_error !== null && <p className={styles.error}>{draft_error}</p>}
       {problems.map((problem) => <p key={problem} className={styles.error}>{problem}</p>)}
     </fieldset>
   )
