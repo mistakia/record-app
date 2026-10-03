@@ -3,29 +3,35 @@
 // lock. It records the PID of each healthy child in the data directory,
 // with its start time, so a spawn refused on the lock can find the holder.
 // An orphan is that recorded process, still alive with the same start time,
-// no child of this app, whose command line carries the app's marker. Any
+// no child of this app, that carries the app's marker. Any
 // other holder is left alone. Imports nothing from Electron.
 
 import { readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, sep } from 'node:path'
 
-import { describe_process, is_alive } from './process-probe.ts'
+import { describe_process, is_alive, type ProcessInfo } from './process-probe.ts'
 
 export const CHILD_FILE = 'record-app-child.json'
 
 // record-node's exit code when another node holds the data directory.
 export const EXIT_DATA_DIR_LOCKED = 75
 
-// Text in the command line of every process the app spawns: on macOS its
-// bundle, since a utility child runs the bundle's helper executable and its
-// command line names neither the script nor the data directory; elsewhere
-// its executable's directory.
+// What marks every process the app spawns. A utility child's command line
+// names neither the script nor the data directory, but it runs the app's
+// own executable: on macOS the bundle's helper, so the marker is the bundle;
+// elsewhere the same executable (shown as /proc/self/exe on Linux), so the
+// marker is its directory.
 export const app_marker = (exec_path: string): string => {
   const bundle_end = exec_path.lastIndexOf(`.app${sep}`)
   return bundle_end === -1 ? `${dirname(exec_path)}${sep}` : exec_path.slice(0, bundle_end + 5)
 }
 
 interface ChildRecord { pid: number, started: string }
+
+// Whether a process is one of the app's: its command line, or on Linux its
+// executable, carries the marker.
+export const carries_marker = (info: ProcessInfo, marker: string): boolean =>
+  info.command.includes(marker) || info.executable?.startsWith(marker) === true
 
 const read_recorded = async (data_dir: string): Promise<ChildRecord | null> => {
   try {
@@ -53,5 +59,5 @@ export const find_orphan = async ({ data_dir, marker }: { data_dir: string, mark
   const recorded = await read_recorded(data_dir)
   if (recorded === null || recorded.pid === process.pid || !is_alive(recorded.pid)) return null
   const found = await describe_process(recorded.pid)
-  return found !== null && found.started === recorded.started && found.ppid !== process.pid && found.command.includes(marker) ? recorded.pid : null
+  return found !== null && found.started === recorded.started && found.ppid !== process.pid && carries_marker(found, marker) ? recorded.pid : null
 }
