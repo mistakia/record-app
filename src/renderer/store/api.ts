@@ -4,7 +4,7 @@
 import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react'
 
 import type { NodeFailure, NodeRequest } from '#shared/bridge.ts'
-import { TRACK_PAGE_SIZE, type About, type Capability, type ImportAck, type Library, type Peer, type Settings, type TagCount, type Track, type TrackList } from '#renderer/api/types.ts'
+import { TRACK_PAGE_SIZE, type About, type Capability, type ReplicationMode, type ReplicationPolicy, type ImportAck, type Library, type Peer, type Settings, type TagCount, type Track, type TrackList } from '#renderer/api/types.ts'
 import { select_writes_allowed, type ConnectionState } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
 import { library_ids } from './cache-ids.ts'
@@ -96,6 +96,11 @@ export const node_api = createApi({
       query: (address) => ({ method: 'get', path_template: '/libraries/{address}/capabilities', params: encode(address) }),
       providesTags: ['capabilities']
     }),
+    // Node-local, per library (§4.6.1); an own library is always full.
+    get_replication_policy: build.query<ReplicationPolicy, string>({
+      query: (address) => ({ method: 'get', path_template: '/libraries/{address}/replication-policy', params: encode(address) }),
+      providesTags: (_result, _error, address) => [{ type: 'replication_policy' as const, id: address }]
+    }),
     get_tracks: build.query<TrackList, GetTracksArgs>({
       query: (args) => ({ method: 'get', path_template: '/tracks', query: { ...args } }),
       // Per library, so the head-check refetches only what moved (§8.8.5).
@@ -163,6 +168,10 @@ export const node_api = createApi({
     disconnect_library: build.mutation<unknown, string>({
       query: (address) => ({ method: 'post', path_template: '/libraries/{address}/disconnect', params: encode(address) }),
       invalidatesTags: ['libraries']
+    }),
+    set_replication_policy: build.mutation<ReplicationPolicy, { address: string, mode: ReplicationMode, filter?: unknown }>({
+      query: ({ address, ...body }) => ({ method: 'put', path_template: '/libraries/{address}/replication-policy', params: encode(address), body }),
+      invalidatesTags: ['replication_policy', 'libraries']
     }),
     issue_capability: build.mutation<Capability, { address: string, grantee: unknown, actions: string[], filter?: unknown, conditions?: unknown[] }>({
       query: ({ address, ...body }) => ({ method: 'post', path_template: '/libraries/{address}/capabilities', params: encode(address), body }),

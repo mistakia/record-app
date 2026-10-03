@@ -17,6 +17,8 @@ export type ImportAck = Schemas['ImportAck']
 export type ListenCount = Schemas['ListenCount']
 export type ApiError = Schemas['Error']
 export type Capability = Schemas['Capability']
+export type ReplicationPolicy = Schemas['ReplicationPolicy']
+export type ReplicationMode = Schemas['ReplicationMode']
 
 interface LibraryAddressPayload { library_address: string }
 
@@ -42,6 +44,7 @@ interface NodeEventPayloads {
   'identity:library-created': { library: Library }
   'identity:library-retired': LibraryAddressPayload
   'library:entries-inert': LibraryAddressPayload & { capability_id: string, entry_hashes: string[], track_ids: string[] }
+  'library:replication-policy-changed': LibraryAddressPayload & { policy: ReplicationPolicy }
   'capability:issued': { capability: Capability }
   'capability:revoked': { capability: Capability }
   'peer:joined': { peer_id: string, peer_count: number }

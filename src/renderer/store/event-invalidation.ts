@@ -2,7 +2,7 @@
 // updates). Events may repeat or go missing (§8.7.7), so they only ever mark
 // data for refetch; nothing is patched from an event payload.
 
-export const NODE_API_TAGS = ['settings', 'libraries', 'tracks', 'tags', 'about', 'listens', 'peers', 'capabilities', 'own_libraries'] as const
+export const NODE_API_TAGS = ['settings', 'libraries', 'tracks', 'tags', 'about', 'listens', 'peers', 'capabilities', 'own_libraries', 'replication_policy'] as const
 export type NodeApiTag = typeof NODE_API_TAGS[number]
 
 export const tags_for_event = (type: string): NodeApiTag[] => {
@@ -13,6 +13,7 @@ export const tags_for_event = (type: string): NodeApiTag[] => {
   if (type === 'library:linked' || type === 'library:unlinked') return ['libraries', 'tracks', 'tags', 'about']
   // A revocation made entries inert: tracks and tags may have changed.
   if (type === 'library:entries-inert') return ['tracks', 'tags', 'libraries', 'capabilities']
+  if (type === 'library:replication-policy-changed') return ['libraries', 'replication_policy']
   if (type.startsWith('library:')) return ['libraries']
   // Own libraries created or retired here or on another of the identity's
   // devices (§4.8.5).

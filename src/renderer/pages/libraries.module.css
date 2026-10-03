@@ -102,3 +102,11 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+.mode {
+  font-weight: 600;
+}
+
+.change {
+  margin-left: 6px;
+}
