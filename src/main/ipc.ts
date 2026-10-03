@@ -8,7 +8,7 @@ import { IPC_CHANNELS, type NodeResult } from '#shared/bridge.ts'
 import { create_audio_downloads } from './audio-downloads.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
-import { get_audio, request_node, test_connection } from './node-client.ts'
+import { get_audio, test_connection } from './node-client.ts'
 import type { NodeSession } from './node-session.ts'
 import { serve_generic_request } from './request-policy.ts'
 import { create_identity_access } from './identity-access.ts'
@@ -36,6 +36,23 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
     })
   }
 
+  const identity = create_identity_access({
+    get_connection: () => store.get(),
+    confirm_export: async ({ node_url, cleartext }) => {
+      const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+      const options = {
+        type: 'warning' as const,
+        buttons: ['Cancel', 'Show private key'],
+        defaultId: 0,
+        cancelId: 0,
+        message: 'Show this identity\'s private key?',
+        detail: `Anyone with the private key controls the library it writes and can write as you. The node at ${node_url} will send it to this app` +
+          (cleartext ? ' unencrypted over plain http, readable by anyone on the network path.' : '.')
+      }
+      const { response } = window === undefined ? await dialog.showMessageBox(options) : await dialog.showMessageBox(window, options)
+      return response === 1
+    }
+  })
   handle(IPC_CHANNELS.connection_get, async () => store.get())
   // Save is the teardown-and-reinitialize point (spec §8.3.5): the event
   // connection restarts, and a different node URL wipes the snapshot (§8.8.3).
@@ -44,6 +61,7 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
     const saved = await store.save(input)
     if (!saved.ok) return saved
     if (saved.data.node_url !== previous_url) await snapshots.wipe()
+    identity.forget()
     session.start(saved.data.node_url)
     return saved
   })
@@ -73,32 +91,9 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
     return await import_chosen_paths({ node_url: store.get().node_url, paths: chosen.filePaths })
   })
   handle(IPC_CHANNELS.import_upload_files, async (input) => await import_dropped_files({ node_url: store.get().node_url, input }))
-  const identity = create_identity_access({
-    get_connection: () => store.get(),
-    confirm_export: async ({ node_url, cleartext }) => {
-      const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
-      const options = {
-        type: 'warning' as const,
-        buttons: ['Cancel', 'Show private key'],
-        defaultId: 0,
-        cancelId: 0,
-        message: 'Show this identity\'s private key?',
-        detail: `Anyone with the private key controls the library it writes and can write as you. The node at ${node_url} will send it to this app` +
-          (cleartext ? ' unencrypted over plain http, readable by anyone on the network path.' : '.')
-      }
-      const { response } = window === undefined ? await dialog.showMessageBox(options) : await dialog.showMessageBox(window, options)
-      return response === 1
-    }
-  })
   handle(IPC_CHANNELS.identity_export, async () => await identity.export_identity())
   handle(IPC_CHANNELS.identity_import, async (input) => await identity.import_identity(input))
-  handle(IPC_CHANNELS.identity_public_key, async () => {
-    const exported = await request_node({ node_url: store.get().node_url, request: { method: 'get', path_template: '/identity/export' } })
-    if (!exported.ok) return exported
-    const { public_key } = exported.data as { public_key?: unknown }
-    if (typeof public_key !== 'string') return refuse('The node returned no public key.')
-    return { ok: true, data: { public_key } }
-  })
+  handle(IPC_CHANNELS.identity_public_key, async () => await identity.public_key())
 
   handle(IPC_CHANNELS.events_get_state, async () => session.get_state())
   handle(IPC_CHANNELS.events_reconnect_now, async () => { session.reconnect_now() })
