@@ -100,7 +100,10 @@ const run = async () => {
     const env_child = spawn_utility_process({ cli_path: dump, args: [], env: build_child_env({ ...process.env, NODE_OPTIONS: '--inspect=0' }) })
     let env_text = ''
     env_child.stdout?.on('data', (data) => { env_text += String(data) })
-    await env_child.exited
+    // On Linux the exit can land before the last stdout chunk; wait for both.
+    const stdout = env_child.stdout as unknown as { on: (event: 'end', listener: () => void) => unknown } | null
+    const stdout_ended = new Promise<void>((resolve) => { if (stdout === null) resolve(); else stdout.on('end', () => { resolve() }) })
+    await Promise.all([env_child.exited, stdout_ended])
     const child_env = JSON.parse(env_text) as Record<string, string>
     check('no NODE_OPTIONS in the child', child_env.NODE_OPTIONS === undefined, Object.keys(child_env).sort())
 
