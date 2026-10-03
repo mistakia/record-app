@@ -13,15 +13,20 @@ import { filters_cleared, library_selected, query_changed, tag_toggled, ui_slice
 const library = (overrides: Partial<Library> = {}): Library => ({
   id: 'id',
   address: '/record/zabc/record',
+  library_type: 'recordstore',
   track_count: 0,
   linked_library_count: 0,
   length: 0,
+  heads: [],
   replication_status: { progress: 0, total: 0 },
   is_replicating: false,
+  connected: true,
   is_loading_index: false,
   is_processing_index: false,
   is_linked: false,
   is_own: false,
+  is_retired: false,
+  held_capability_ids: [],
   peer_ids: [],
   ...overrides
 })
@@ -62,6 +67,12 @@ describe('libraries', () => {
     expect(library_category(library({ is_linked: true }))).toBe('linked')
     expect(library_category(library())).toBe('discovered')
     expect(own_library_address([library(), library({ is_own: true, address: '/mine' })])).toBe('/mine')
+    // The listens library and a retired one are own too, and never the write target.
+    expect(own_library_address([
+      library({ is_own: true, library_type: 'listens', address: '/listens' }),
+      library({ is_own: true, is_retired: true, address: '/retired' }),
+      library({ is_own: true, address: '/mine' })
+    ])).toBe('/mine')
     const linked = library({ is_linked: true })
     const none = { progress: 0, total: 0 }
     // A fresh link with nothing from the node counts as replicating for 60 s only.

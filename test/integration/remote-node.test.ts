@@ -16,7 +16,7 @@ import { open_node_events, type NodeEvents } from '#main/node-events.ts'
 import type { EventsState, NodeEventMessage, NodeRequest, NodeResult } from '#shared/bridge.ts'
 import type { Library, Settings, TrackList } from '#renderer/api/types.ts'
 
-const FIXTURE_PATH = fileURLToPath(new URL('../../node_modules/record-node/test/fixtures/audio/sine-sweep-5s.flac', import.meta.url))
+const FIXTURE_PATH = fileURLToPath(new URL('../../node_modules/record-node/test/fixtures/audio/chirp-10s.flac', import.meta.url))
 // A well-formed CIDv1 (raw, sha2-256 of the empty string) the node never stored.
 const UNKNOWN_CID = 'bafkreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'
 

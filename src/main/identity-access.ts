@@ -43,29 +43,25 @@ export const create_identity_access = ({ get_connection, confirm_export, call = 
   const public_keys = new Map<string, string>()
 
   return {
-    // Chapter 7 serves the public key only with the private key, so reading
-    // it moves the private key too; over plain http to another machine that
-    // is refused until a public-key read exists (record-docs v1.1.0).
+    // GET /identity serves the compressed public key alone, so showing it
+    // never moves the private key (spec §8.5.7).
     public_key: async (): Promise<NodeResult<{ public_key: string }>> => {
       const { node_url } = get_connection()
       if (node_url === null) return not_configured
       const known = public_keys.get(node_url)
       if (known !== undefined) return { ok: true, data: { public_key: known } }
-      if (is_cleartext_remote(node_url)) {
-        return refuse('Showing the public key would fetch the private key with it over unencrypted http. Use https, or wait for a public-key read in a later node version.')
-      }
-      const keys = await read_keys({ node_url, call })
-      if (!keys.ok) return keys
-      public_keys.set(node_url, keys.data.public_key)
-      return { ok: true, data: { public_key: keys.data.public_key } }
+      const result = await call({ node_url, request: { method: 'get', path_template: '/identity' } })
+      if (!result.ok) return result
+      const { public_key } = (result.data ?? {}) as { public_key?: unknown }
+      if (typeof public_key !== 'string') return refuse('The node returned no identity.')
+      public_keys.set(node_url, public_key)
+      return { ok: true, data: { public_key } }
     },
     export_identity: async (): Promise<NodeResult<IdentityKeys>> => {
       const { node_url } = get_connection()
       if (node_url === null) return not_configured
       if (!await confirm_export({ node_url, cleartext: is_cleartext_remote(node_url) })) return { ok: false, failure: { kind: 'aborted', message: 'Export cancelled.' } }
-      const keys = await read_keys({ node_url, call })
-      if (keys.ok) public_keys.set(node_url, keys.data.public_key)
-      return keys
+      return await read_keys({ node_url, call })
     },
     import_identity: async (input: unknown): Promise<NodeResult<unknown>> => {
       const { mode, node_url } = get_connection()

@@ -47,6 +47,7 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -54,8 +55,10 @@ export interface paths {
         /**
          * Adopt an existing track by content CID.
          * @description Adds a track that already exists in the content network (known by
-         *     CID) to the requestor's own library. For URL ingest use
-         *     `POST /import/url`; for file upload use `POST /import/file`.
+         *     CID) to the target library (spec §6.4.3). Adopting into a library
+         *     the identity does not own needs a capability granting
+         *     `library.append_track`. For URL ingest use `POST /import/url`; for
+         *     file upload use `POST /import/file`.
          */
         post: {
             parameters: {
@@ -68,6 +71,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         content_cid: string;
+                        library_address?: components["schemas"]["WriteTargetAddress"];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
                 };
             };
@@ -82,7 +87,10 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -105,10 +113,21 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Remove a track from the requestor's own library. */
+        /**
+         * Remove a track from an own library.
+         * @description Appends a DEL to the target library. No capability action
+         *     authorises a DEL (spec §3.5.6), so the target must be an own
+         *     library.
+         */
         delete: {
             parameters: {
-                query?: never;
+                query?: {
+                    /**
+                     * @description Target library of the write. Optional only when the identity has
+                     *     exactly one active own recordstore library (spec §4.8.3).
+                     */
+                    library_address?: components["parameters"]["WriteTarget"];
+                };
                 header?: never;
                 path: {
                     /** @description Track id (sha256 of the AcoustID fingerprint, lowercase hex). */
@@ -125,6 +144,99 @@ export interface paths {
                     };
                     content?: never;
                 };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/{cid}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description CID of the audio blob (`content.hash`), in any valid CID form.
+                 *     The node records it in the canonical form of spec §4.8.2
+                 *     (CIDv1, base32).
+                 */
+                cid: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pin a track's audio blob.
+         * @description Appends a `pin` PUT to the identity library (spec §4.8.2). Every
+         *     device of the identity then fetches and keeps the blob whatever
+         *     the replication policy (spec §4.6.2). Pinning a pinned blob is a
+         *     no-op.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /**
+                     * @description CID of the audio blob (`content.hash`), in any valid CID form.
+                     *     The node records it in the canonical form of spec §4.8.2
+                     *     (CIDv1, base32).
+                     */
+                    cid: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pinned. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        /**
+         * Unpin a track's audio blob.
+         * @description Appends a `pin` DEL to the identity library. The blob stays if an
+         *     own library or a replication policy still holds it (spec §4.6.2).
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /**
+                     * @description CID of the audio blob (`content.hash`), in any valid CID form.
+                     *     The node records it in the canonical form of spec §4.8.2
+                     *     (CIDv1, base32).
+                     */
+                    cid: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Unpinned. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Unauthorized"];
                 404: components["responses"]["NotFound"];
                 500: components["responses"]["InternalError"];
             };
@@ -163,11 +275,16 @@ export interface paths {
                         "application/json": components["schemas"]["TagCount"][];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
         put?: never;
-        /** Attach a tag to a track in the requestor's own library. */
+        /**
+         * Attach a tag to a track in the target library.
+         * @description Under a capability, needs `library.append_tag` or
+         *     `library.append_track` (spec §3.5.6).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -180,6 +297,8 @@ export interface paths {
                     "application/json": {
                         track_id: string;
                         tag: string;
+                        library_address?: components["schemas"]["WriteTargetAddress"];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
                 };
             };
@@ -194,17 +313,33 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
                 409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
         };
-        /** Detach a tag from a track in the requestor's own library. */
+        /**
+         * Detach a tag from a track in the target library.
+         * @description Under a capability, needs `library.append_track`:
+         *     `library.append_tag` only adds tags (spec §3.5.6).
+         */
         delete: {
             parameters: {
                 query: {
                     track_id: string;
                     tag: string;
+                    /**
+                     * @description Target library of the write. Optional only when the identity has
+                     *     exactly one active own recordstore library (spec §4.8.3).
+                     */
+                    library_address?: components["parameters"]["WriteTarget"];
+                    /**
+                     * @description Capability authorising the write (spec §3.5.9). Required when the
+                     *     identity does not own the target; omitted otherwise.
+                     */
+                    capability_id?: components["parameters"]["WriteCapability"];
                 };
                 header?: never;
                 path?: never;
@@ -222,7 +357,10 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -240,8 +378,10 @@ export interface paths {
         };
         /**
          * List all locally-known libraries.
-         * @description Union of libraries linked from the requestor's own library and
-         *     libraries cached from peer discovery.
+         * @description Union of the identity's own libraries (spec §4.8.3), its linked
+         *     libraries (spec §4.8.4), and libraries cached from peer
+         *     discovery. Identity libraries are not listed; read the
+         *     identity's own through `GET /identity/meta-log`.
          */
         get: {
             parameters: {
@@ -261,11 +401,18 @@ export interface paths {
                         "application/json": components["schemas"]["Library"][];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
         put?: never;
-        /** Link a library to the requestor's own library. */
+        /**
+         * Link a library.
+         * @description Appends a `link` PUT to the identity library (spec §4.8.4).
+         *     Replication then starts under the library's replication policy,
+         *     `full` unless configured. A link made before v1.1 defaults to
+         *     `index_only` (spec §4.6.1).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -278,7 +425,7 @@ export interface paths {
                     "application/json": {
                         /** @description Full library address to link. */
                         library_address: string;
-                        /** @description Optional display alias stored with the link entry. */
+                        /** @description Optional display alias stored with the link record. */
                         alias?: string | null;
                     };
                 };
@@ -294,6 +441,7 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
                 409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
@@ -342,6 +490,7 @@ export interface paths {
                         "application/json": components["schemas"]["Library"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
                 404: components["responses"]["NotFound"];
                 500: components["responses"]["InternalError"];
             };
@@ -350,9 +499,12 @@ export interface paths {
         post?: never;
         /**
          * Unlink and drop a library.
-         * @description Unlinks the library, drops the local replica, and unpins any
-         *     content held uniquely by this library. There is no "unlink only"
-         *     variant; unlink always implies drop.
+         * @description Appends a `link` DEL to the identity library (spec §4.8.4), drops
+         *     the local replica, and unpins any content held uniquely by this
+         *     library, except pinned blobs (spec §4.6). There is no "unlink
+         *     only" variant; unlink always implies drop. An own library cannot
+         *     be unlinked (409); retire it with
+         *     `DELETE /identity/libraries/{address}`.
          */
         delete: {
             parameters: {
@@ -373,7 +525,262 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["Unauthorized"];
                 404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/libraries/{address}/replication-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                address: components["parameters"]["LibraryAddress"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get the node-local replication policy for a library.
+         * @description Spec §4.6.1. For an own library the mode is always `full`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                    address: components["parameters"]["LibraryAddress"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReplicationPolicy"];
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+                404: components["responses"]["NotFound"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        /**
+         * Set the node-local replication policy for a linked library.
+         * @description Node-local configuration, not written to any log (spec §4.6.1).
+         *     `filter` is required for `selective` and ignored otherwise. A
+         *     filter the node cannot evaluate (unknown node type or malformed
+         *     shape, spec §3.5.7) is refused with 400. An own library's policy
+         *     cannot be changed (409). Connection state is changed through
+         *     `/connect` and `/disconnect`, not here.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                    address: components["parameters"]["LibraryAddress"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        mode: components["schemas"]["ReplicationMode"];
+                        filter?: components["schemas"]["FilterSpec"];
+                    };
+                };
+            };
+            responses: {
+                /** @description OK. Returns the stored policy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReplicationPolicy"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/libraries/{address}/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                address: components["parameters"]["LibraryAddress"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List every capability issued in a library.
+         * @description All capability records in the library's log, with their status
+         *     (spec §3.5.5, §3.5.10). Readable for any known library.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                    address: components["parameters"]["LibraryAddress"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Capability"][];
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+                404: components["responses"]["NotFound"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        put?: never;
+        /**
+         * Issue a capability.
+         * @description Appends a capability record (spec §3.5.5) to the library. The
+         *     owner issues directly; any other identity cites, as
+         *     `capability_id`, a capability granting
+         *     `library.grant_capability` (spec §3.5.9). The node refuses with
+         *     400 a capability holding an action, GranteeSpec, FilterSpec, or
+         *     ConditionSpec type it does not recognise, since it could not
+         *     verify writes under it. Capabilities exist only in recordstore
+         *     libraries.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                    address: components["parameters"]["LibraryAddress"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        grantee: components["schemas"]["GranteeSpec"];
+                        actions: string[];
+                        filter?: components["schemas"]["FilterSpec"];
+                        conditions?: components["schemas"]["ConditionSpec"][];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
+                    };
+                };
+            };
+            responses: {
+                /** @description Issued. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Capability"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/libraries/{address}/capabilities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                address: components["parameters"]["LibraryAddress"];
+                /** @description Capability id of the capability to revoke (spec §3.5.5). */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke a capability.
+         * @description Appends a revocation record (spec §3.5.10). The owner revokes any
+         *     capability directly. Any other identity may revoke only a
+         *     capability it issued, or one descending from a capability it
+         *     issued, and passes as the `capability_id` query parameter a
+         *     capability it holds. Revocation is not retroactive: entries the
+         *     node had merged when it revoked stay valid, concurrent entries
+         *     under the capability become inert, and later ones are rejected.
+         */
+        delete: {
+            parameters: {
+                query?: {
+                    /**
+                     * @description Capability authorising the write (spec §3.5.9). Required when the
+                     *     identity does not own the target; omitted otherwise.
+                     */
+                    capability_id?: components["parameters"]["WriteCapability"];
+                };
+                header?: never;
+                path: {
+                    /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                    address: components["parameters"]["LibraryAddress"];
+                    /** @description Capability id of the capability to revoke (spec §3.5.5). */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Revoked. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -418,6 +825,7 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["Unauthorized"];
                 404: components["responses"]["NotFound"];
                 500: components["responses"]["InternalError"];
             };
@@ -460,6 +868,7 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["Unauthorized"];
                 404: components["responses"]["NotFound"];
                 500: components["responses"]["InternalError"];
             };
@@ -506,6 +915,7 @@ export interface paths {
                         "application/json": components["schemas"]["About"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
                 404: components["responses"]["NotFound"];
                 500: components["responses"]["InternalError"];
             };
@@ -513,7 +923,8 @@ export interface paths {
         put?: never;
         /**
          * Update the profile for a library.
-         * @description Returns 403 if the caller does not own the target library. Any
+         * @description Returns 403 unless the caller owns the target library or cites a
+         *     capability granting `library.update_about` (spec §3.5.6). Any
          *     subset of mutable fields may be supplied; omitted fields remain
          *     unchanged. Per protocol spec §2.6, `avatar` MUST be a
          *     content-addressed CID.
@@ -536,6 +947,7 @@ export interface paths {
                         location?: string | null;
                         /** @description CID of an image blob. */
                         avatar?: string | null;
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
                 };
             };
@@ -550,6 +962,7 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
                 500: components["responses"]["InternalError"];
@@ -596,6 +1009,7 @@ export interface paths {
                         "application/json": components["schemas"]["TrackList"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -606,6 +1020,8 @@ export interface paths {
          *     entries are `{trackId, address, timestamp}`; the `address` is the
          *     library address the track was played from (may differ from the
          *     recording library if the listener is attributing a remote track).
+         *     The listen is written to the identity's listens library (spec
+         *     §4.8.3); there is no write target.
          */
         post: {
             parameters: {
@@ -634,6 +1050,7 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -673,6 +1090,7 @@ export interface paths {
                         "application/json": components["schemas"]["Peer"][];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -715,6 +1133,50 @@ export interface paths {
                         "application/json": components["schemas"]["Settings"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/identity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the node's identity.
+         * @description Public identity facts for display. Clients read the public key
+         *     here; `GET /identity/export` returns private key material and is
+         *     for an explicit user export only (spec §8.5.7).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Identity"];
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -756,6 +1218,7 @@ export interface paths {
                         "application/json": components["schemas"]["IdentityExport"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -809,14 +1272,253 @@ export interface paths {
                             /** @description sha256 of the public key. */
                             id: string;
                             public_key: string;
+                            /**
+                             * @description The identity's default own recordstore library: its
+                             *     only active one, or else the one with discriminator
+                             *     `library`. `GET /identity/libraries` lists them all.
+                             */
                             own_library_address: string;
+                            /** @description Address of the identity library (spec §3.6.2). */
+                            meta_log_address: string;
                         };
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/identity/libraries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the identity's own libraries.
+         * @description Every library the identity library records as owned (spec §4.8.3),
+         *     active and retired, including the listens library.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Library"][];
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        put?: never;
+        /**
+         * Create an own recordstore library.
+         * @description Derives the address from the identity key and the discriminator
+         *     (spec §3.6.1), appends a `library` PUT to the identity library,
+         *     and, when `about` is given, an About entry to the new library. If
+         *     `discriminator` is omitted the node generates one. A discriminator
+         *     the identity library already records, active or retired, is
+         *     refused with 409.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        discriminator?: string;
+                        about?: {
+                            name?: string | null;
+                            bio?: string | null;
+                            location?: string | null;
+                            avatar?: string | null;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Library"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                409: components["responses"]["Conflict"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/identity/libraries/{address}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                address: components["parameters"]["LibraryAddress"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Retire an own library.
+         * @description Appends a `library` DEL to the identity library (spec §4.8.3).
+         *     Retirement is permanent. The library stays valid and replicable;
+         *     the node refuses new writes to it. The identity's active listens library cannot be retired
+         *     (409).
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                    address: components["parameters"]["LibraryAddress"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Retired. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Unauthorized"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/identity/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List capabilities held by the identity.
+         * @description Every capability, in any known library, whose grantee matches the
+         *     identity's key (spec §3.5.5), with its status.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Capability"][];
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/identity/meta-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the identity library.
+         * @description Records of the identity library (spec §4.8.2), newest first by
+         *     `clock_time`. The library replicates across the identity's
+         *     devices, so records may come from another device.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Pagination offset. Default 0. */
+                    offset?: components["parameters"]["Offset"];
+                    /** @description Maximum results per page. Default 100, max 500. */
+                    limit?: components["parameters"]["Limit"];
+                    /** @description Only records of this type. */
+                    type?: "library" | "link" | "pin";
+                    /** @description Only the current record of each `(type, key)` (spec §4.8.2). */
+                    current_only?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MetaLogPage"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -837,7 +1539,11 @@ export interface paths {
          * @description Files are buffered to a temp directory and fed to the protocol-v1
          *     ingest pipeline via `import_blob(path)`. Returns an `import_id`
          *     immediately; progress is delivered via `import:*` WebSocket
-         *     events.
+         *     events. The target and capability are checked before the import
+         *     is accepted. A file with a degenerate fingerprint fails with
+         *     `DEGENERATE_FINGERPRINT`, and one whose track id the target holds
+         *     for audio of a different duration fails with `TRACK_ID_COLLISION`
+         *     (spec §6.4.1), each as an `import:error` event.
          */
         post: {
             parameters: {
@@ -850,6 +1556,8 @@ export interface paths {
                 content: {
                     "multipart/form-data": {
                         files: string[];
+                        library_address?: components["schemas"]["WriteTargetAddress"];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
                 };
             };
@@ -864,6 +1572,9 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -899,6 +1610,8 @@ export interface paths {
                     "application/json": {
                         /** Format: uri */
                         url: string;
+                        library_address?: components["schemas"]["WriteTargetAddress"];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
                 };
             };
@@ -913,6 +1626,9 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -987,6 +1703,7 @@ export interface paths {
                         "application/octet-stream": string;
                     };
                 };
+                401: components["responses"]["Unauthorized"];
                 404: components["responses"]["NotFound"];
                 500: components["responses"]["InternalError"];
             };
@@ -1024,6 +1741,7 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["Unauthorized"];
                 /** @description Not in the local content store. */
                 404: {
                     headers: {
@@ -1065,6 +1783,7 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -1084,7 +1803,7 @@ export interface components {
         Error: {
             error: {
                 /** @enum {string} */
-                code: "VALIDATION_ERROR" | "NOT_FOUND" | "CONFLICT" | "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_ERROR";
+                code: "VALIDATION_ERROR" | "NOT_FOUND" | "CONFLICT" | "UNAUTHORIZED" | "FORBIDDEN" | "CAPABILITY_EXPIRED" | "CAPABILITY_REVOKED" | "TRACK_ID_COLLISION" | "DEGENERATE_FINGERPRINT" | "INTERNAL_ERROR";
                 /** @description Human-readable message suitable for UI display. */
                 message: string;
                 /** @description Optional structured per-field errors (validation). */
@@ -1139,8 +1858,10 @@ export interface components {
             listen_count: number;
             /** @description Unix milliseconds of each listen. May be omitted on list endpoints for payload weight. */
             listen_timestamps_ms?: number[];
-            /** @description Whether the track exists in the requestor's own library. */
+            /** @description Whether the track exists in any of the identity's own libraries. */
             have_track: boolean;
+            /** @description Whether a current pin record holds `audio_cid` (spec §4.6.2). */
+            is_pinned?: boolean;
             /** @description First-seen timestamp (unix milliseconds) in the requestor's index. */
             added_at_ms?: number;
         };
@@ -1164,30 +1885,157 @@ export interface components {
             /** @description sha256 of the library address. */
             id: string;
             address: string;
+            /** @description Manifest type (spec §3.5.1), `recordstore` or `listens`. */
+            library_type: string;
             name?: string | null;
             bio?: string | null;
             location?: string | null;
             /** @description CID of the library's avatar image (protocol spec §2.6). */
             avatar?: string | null;
             /**
-             * @description Display alias from the link entry in the requestor's library.
-             *     Null when not linked or when no alias was provided.
+             * @description Display alias from the identity's link to this library (spec
+             *     §4.8.4). Null when not linked or when no alias was provided.
              */
             alias?: string | null;
             track_count: number;
             linked_library_count: number;
             /** @description Oplog length (count of live entries). */
             length: number;
+            /**
+             * @description Current head entry hashes (spec §4.3), base58btc. Clients
+             *     compare them to detect missed updates (spec §8.8.5).
+             */
+            heads: string[];
             replication_status: components["schemas"]["ReplicationStatus"];
             is_replicating: boolean;
+            /**
+             * @description Whether replication runs for this library, false while paused
+             *     by `/disconnect` (spec §5.4.4). Paused is the only other state,
+             *     so a boolean suffices. Matches `ReplicationPolicy.connected`.
+             */
+            connected: boolean;
             is_loading_index: boolean;
             is_processing_index: boolean;
-            /** @description Whether the requestor's own library links to this one. */
+            /** @description Whether the library is in the identity's link set (spec §4.8.4). */
             is_linked: boolean;
-            /** @description Whether this library IS the requestor's own library. */
+            /** @description Whether this is one of the identity's own libraries (spec §4.8.3), active or retired. */
             is_own: boolean;
+            /** @description Whether this own library is retired (spec §4.8.3). Always false when `is_own` is false. */
+            is_retired: boolean;
+            /**
+             * @description Ids of the active capabilities the identity holds in this
+             *     library (spec §3.5.5). Non-empty marks a shared library.
+             */
+            held_capability_ids: string[];
+            /** @description Replication mode (spec §4.6.1); null when neither own nor linked. */
+            replication_mode?: components["schemas"]["ReplicationMode"] | null;
             /** @description libp2p peer ids currently subscribed to this library's pubsub topic. */
             peer_ids: string[];
+        };
+        /**
+         * @description Target library of the write. Optional only when the identity has
+         *     exactly one active own recordstore library (spec §4.8.3).
+         */
+        WriteTargetAddress: string;
+        /**
+         * @description Capability authorising the write (spec §3.5.9). Required when the
+         *     identity does not own the target; omitted otherwise.
+         */
+        WriteCapabilityId: string;
+        /** @enum {string} */
+        ReplicationMode: "full" | "selective" | "index_only";
+        /** @description Node-local replication policy (spec §4.6.1). */
+        ReplicationPolicy: {
+            mode: components["schemas"]["ReplicationMode"];
+            /** @description The `selective` filter; null in other modes. */
+            filter: components["schemas"]["FilterSpec"] | null;
+            /** @description Whether replication is running (spec §5.4.4). */
+            connected: boolean;
+        };
+        /**
+         * @description Recursive predicate (spec §3.5.7). v1.1 node types are `match`,
+         *     `any_of`, `range`, `and`, `or`, and `not`. The schema admits any
+         *     `type` so a node can report filters from newer peers; a filter
+         *     holding a type the node does not recognise matches nothing.
+         */
+        FilterSpec: {
+            type: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * @description Who a capability is for (spec §3.5.5): `key` with `key`, or
+         *     `key_set` with `keys`. Any other `type` matches no signer.
+         */
+        GranteeSpec: {
+            type: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * @description Capability condition (spec §3.5.8). v1.1 defines `expires_at`
+         *     with `at` in Unix milliseconds. Any other `type` never holds.
+         */
+        ConditionSpec: {
+            type: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description A capability record and its state (spec §3.5.5). */
+        Capability: {
+            /** @description Entry hash of the capability record's entry. */
+            capability_id: string;
+            library_address: string;
+            /** @description Public key that signed the capability. */
+            issuer: string;
+            /** @description The capability the issuer cited, for a delegated grant. */
+            via_capability_id?: string | null;
+            grantee: components["schemas"]["GranteeSpec"];
+            /** @description Action verbs (spec §3.5.6), including any the node does not recognise. */
+            actions: string[];
+            filter: components["schemas"]["FilterSpec"] | null;
+            conditions: components["schemas"]["ConditionSpec"][];
+            /** @description The record's `timestamp`. */
+            issued_at_ms: number;
+            /** @description The earliest `expires_at` condition, if any. */
+            expires_at_ms?: number | null;
+            /**
+             * @description `revoked` when an effective revocation names it, and `inert`
+             *     when the capability's own entry is inert (spec §3.5.10). Both
+             *     follow verification. `expired` is advisory: it means an
+             *     `expires_at` is past by the node's clock, so a write the node
+             *     makes now, timestamped now, would fail §3.5.8. Verification
+             *     judges expiry by each operation's own timestamp, so entries
+             *     already written stay valid.
+             * @enum {string}
+             */
+            status: "active" | "expired" | "revoked" | "inert";
+            /** @description Entry hash of the effective revocation, if any. */
+            revoked_by?: string | null;
+        };
+        /** @description One entry of the identity library (spec §4.8.2). */
+        MetaLogRecord: {
+            entry_hash: string;
+            /** @enum {string} */
+            op: "PUT" | "DEL";
+            /** @description Record type, `library`, `link`, `pin`, or one the node does not recognise. */
+            type: string;
+            key: string;
+            /** @description The operation value as stored. */
+            record: {
+                [key: string]: unknown;
+            };
+            clock_time: number;
+            timestamp_ms: number;
+            /** @description Whether this is the current record for its `(type, key)`. */
+            is_current: boolean;
+        };
+        MetaLogPage: {
+            /** @description The identity library address (spec §3.6.2). */
+            address: string;
+            heads: string[];
+            items: components["schemas"]["MetaLogRecord"][];
+            total: number;
         };
         /**
          * @description Normalized replication progress. Same shape as the
@@ -1247,6 +2095,17 @@ export interface components {
                 object_count?: number;
             };
         };
+        Identity: {
+            /** @description Compressed secp256k1 public key, 66 lowercase hex characters (spec §3.1). */
+            public_key: string;
+            /** @description Address of the identity library (spec §3.6.2). */
+            meta_log_address: string;
+            /**
+             * @description The identity's default own recordstore library: its only
+             *     active one, or else the one with discriminator `library`.
+             */
+            own_library_address: string;
+        };
         /**
          * @description Hex-encoded libp2p marshaled keypair. Both fields include the
          *     key-type header so `private_key` round-trips through
@@ -1301,6 +2160,15 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
+        /** @description The bearer token is missing or invalid. */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Caller is not authorized to perform this operation. */
         Forbidden: {
             headers: {
@@ -1336,6 +2204,16 @@ export interface components {
         Limit: number;
         /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
         LibraryAddress: string;
+        /**
+         * @description Target library of the write. Optional only when the identity has
+         *     exactly one active own recordstore library (spec §4.8.3).
+         */
+        WriteTarget: string;
+        /**
+         * @description Capability authorising the write (spec §3.5.9). Required when the
+         *     identity does not own the target; omitted otherwise.
+         */
+        WriteCapability: string;
     };
     requestBodies: never;
     headers: never;

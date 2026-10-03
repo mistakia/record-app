@@ -9,7 +9,7 @@ import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
-import { current_progress, is_replicating, library_category, library_name, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
+import { current_progress, is_replicating, library_category, library_name, own_library_address, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -77,7 +77,7 @@ export const Libraries = () => {
   const [address, set_address] = useState('')
   const [alias, set_alias] = useState('')
   const [unlinking, set_unlinking] = useState<Library | null>(null)
-  const own = libraries.data?.find(({ is_own }) => is_own)
+  const own_address = own_library_address(libraries.data)
   // Re-evaluated every few seconds so a fresh link's grace period ends.
   const [now, set_now] = useState(Date.now())
   const has_recent_link = use_app_selector((state) => Object.values(state.replication.linked_at).some((at) => Date.now() - at < RECENT_LINK_MS))
@@ -129,7 +129,7 @@ export const Libraries = () => {
         <input aria-label='Alias' placeholder='Alias (optional)' maxLength={128} value={alias} onChange={(event) => { set_alias(event.target.value) }} />
         <button type='submit' disabled={!writes_allowed || address.trim() === ''}>Link</button>
       </form>
-      {own !== undefined && <AboutEditor address={own.address} />}
+      {own_address !== null && <AboutEditor address={own_address} />}
       <Dialog open={unlinking !== null} title='Unlink library' on_close={() => { set_unlinking(null) }}>
         <p>
           Unlink {unlinking === null ? '' : library_name(unlinking)}? It leaves every view, and the node drops its replica and any

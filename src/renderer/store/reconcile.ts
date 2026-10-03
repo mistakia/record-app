@@ -3,8 +3,9 @@
 // for those refetches, then mark the data fresh, which unblocks writes. A
 // failed attempt is retried with backoff (1 s doubling to 30 s) for as long
 // as the same connection stays open, so a passing node error does not leave
-// the app stale with writes blocked. The head-check by library log head
-// waits on chapter 7 v1.1.0; until then the full refetch of visible
+// the app stale with writes blocked. The head-check by library log head,
+// which chapter 7 v1.1.0 serves as Library.heads, is the rebuild's
+// pinning-and-head-check item; until it lands the full refetch of visible
 // surfaces stands in for it.
 
 import { node_api } from './api.ts'

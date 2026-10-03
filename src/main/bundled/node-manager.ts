@@ -52,14 +52,15 @@ export const choose_port = async (preferred: number | null): Promise<number> => 
 
 export interface Health { peer_id: string, own_library_address: string | null }
 
-// GET /api/settings for the peer_id, and the own library for the identity.
+// GET /api/settings for the peer_id, and GET /api/identity for the
+// identity's default own library.
 export const probe_health = async (url: string): Promise<Health | null> => {
   try {
     const settings = await (await fetch(`${url}/api/settings`, { signal: AbortSignal.timeout(1_000) })).json() as { peer_id?: unknown }
     if (typeof settings.peer_id !== 'string') return null
-    const libraries = await (await fetch(`${url}/api/libraries`, { signal: AbortSignal.timeout(2_000) })).json() as Array<{ is_own?: unknown, address?: unknown }>
-    const own = Array.isArray(libraries) ? libraries.find(({ is_own }) => is_own === true)?.address : undefined
-    return { peer_id: settings.peer_id, own_library_address: typeof own === 'string' ? own : null }
+    const identity = await (await fetch(`${url}/api/identity`, { signal: AbortSignal.timeout(2_000) })).json() as { own_library_address?: unknown }
+    const own = identity.own_library_address
+    return { peer_id: settings.peer_id, own_library_address: typeof own === 'string' && own !== '' ? own : null }
   } catch {
     return null
   }

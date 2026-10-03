@@ -1,6 +1,6 @@
-// Spec §8.6.1: every visible library shows its category. Chapter 7 serves
-// own and linked; shared libraries (held capabilities) wait on v1.1.0. A
-// library the node only knows from peer discovery is shown as discovered.
+// Spec §8.6.1: every visible library shows its category. Shared libraries
+// (held capabilities) wait on the capability-management UI. A library the
+// node only knows from peer discovery is shown as discovered.
 
 import type { Library } from '#renderer/api/types.ts'
 
@@ -12,8 +12,10 @@ export const library_category = (library: Pick<Library, 'is_own' | 'is_linked'>)
 export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address'>): string =>
   library.alias ?? library.name ?? library.address
 
+// The first active own recordstore: chapter 7 v1.1 lists every own library,
+// the listens library and retired ones included.
 export const own_library_address = (libraries: readonly Library[] | undefined): string | null =>
-  libraries?.find(({ is_own }) => is_own)?.address ?? null
+  libraries?.find(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore')?.address ?? null
 
 // How long a fresh link counts as replicating while the node reports
 // nothing for it, so it is never shown as simply empty (spec §8.6.5) but
