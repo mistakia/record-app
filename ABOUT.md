@@ -2,9 +2,8 @@
 title: record-app Repository Graph Entry
 type: text
 description: >-
-  Graph entry point for the record-app application-layer repository (Electron / React Native / web
-  UI for Record), mapping it to sibling Record ecosystem repos, the protocol spec, and the record
-  task directory.
+  Graph entry for record-app, the Electron and React 19 client of record-node per spec chapter 8.
+  Remote mode against the canonical node works. Bundled mode and the v1.1.0 surfaces are pending.
 base_uri: user:repository/active/record-app/ABOUT.md
 created_at: '2026-05-13T18:03:58.003Z'
 entity_id: 3f6fd760-c279-487e-aa92-b7ba7455869b
@@ -14,7 +13,7 @@ relations:
   - follows [[user:guideline/directory-markdown-standards.md]]
 tags:
   - user:tag/record-project.md
-updated_at: '2026-05-13T18:03:58.003Z'
+updated_at: '2026-10-03T08:17:19.393Z'
 ---
 
 ## Purpose

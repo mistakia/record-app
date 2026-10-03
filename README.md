@@ -1,13 +1,15 @@
 ---
 title: Record
 type: text
-description: Distributed audio file management system built on IPFS with desktop, mobile, and web interfaces
+description: >-
+  Record desktop app: an Electron and React 19 client of record-node that talks to one node at a
+  time over the chapter 7 HTTP API, with all node traffic routed through the main process.
 base_uri: user:repository/active/record-app/README.md
 created_at: '2026-03-06T19:51:52.304Z'
 entity_id: 7534e880-e625-4b9e-b1ba-200bd57a7f79
 owner_identity_uri: user:identity/trashman.md
 public_read: true
-updated_at: '2026-03-06T19:51:52.304Z'
+updated_at: '2026-10-03T08:17:19.158Z'
 ---
 
 <a href="https://record.tint.space/" title="Record">
