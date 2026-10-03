@@ -7,6 +7,7 @@ import type { NodeFailure, NodeRequest } from '#shared/bridge.ts'
 import { TRACK_PAGE_SIZE, type About, type Capability, type ImportAck, type Library, type Peer, type Settings, type TagCount, type Track, type TrackList } from '#renderer/api/types.ts'
 import { select_writes_allowed, type ConnectionState } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
+import { library_ids } from './cache-ids.ts'
 
 const READ_METHODS = new Set(['get', 'head'])
 const WRITES_WAIT: NodeFailure = { kind: 'refused', message: 'Writes wait until the app has caught up with the node.' }
@@ -83,7 +84,7 @@ export const node_api = createApi({
     // Every own library, active and retired, the listens library included.
     get_own_libraries: build.query<Library[], void>({
       query: () => ({ method: 'get', path_template: '/identity/libraries' }),
-      providesTags: ['libraries']
+      providesTags: ['libraries', 'own_libraries']
     }),
     // Capabilities other identities granted this one, in every known library.
     get_held_capabilities: build.query<Capability[], void>({
@@ -97,15 +98,16 @@ export const node_api = createApi({
     }),
     get_tracks: build.query<TrackList, GetTracksArgs>({
       query: (args) => ({ method: 'get', path_template: '/tracks', query: { ...args } }),
-      providesTags: ['tracks']
+      // Per library, so the head-check refetches only what moved (§8.8.5).
+      providesTags: (_result, _error, args) => library_ids(args.library_addresses).map((id) => ({ type: 'tracks' as const, id }))
     }),
     get_tags: build.query<TagCount[], { library_addresses?: string[] }>({
       query: ({ library_addresses }) => ({ method: 'get', path_template: '/tags', query: { library_addresses } }),
-      providesTags: ['tags']
+      providesTags: (_result, _error, { library_addresses }) => library_ids(library_addresses).map((id) => ({ type: 'tags' as const, id }))
     }),
     get_about: build.query<About, string>({
       query: (address) => ({ method: 'get', path_template: '/libraries/{address}/about', params: encode(address) }),
-      providesTags: ['about']
+      providesTags: (_result, _error, address) => [{ type: 'about' as const, id: address }]
     }),
     get_listens: build.query<TrackList, { offset: number, limit: number }>({
       query: ({ offset, limit }) => ({ method: 'get', path_template: '/listens', query: { offset, limit } }),
@@ -131,6 +133,12 @@ export const node_api = createApi({
     remove_tag: build.mutation<Track, { track_id: string, tag: string, library_address: string }>({
       query: (query) => ({ method: 'delete', path_template: '/tags', query }),
       invalidatesTags: ['tracks', 'tags']
+    }),
+    // Pins are identity-library records keyed on the audio CID (§4.6.2),
+    // binding on every device of the identity.
+    pin_track: build.mutation<unknown, { cid: string, pinned: boolean }>({
+      query: ({ cid, pinned }) => ({ method: pinned ? 'post' : 'delete', path_template: '/tracks/{cid}/pin', params: { cid } }),
+      invalidatesTags: ['tracks']
     }),
     // Ingest by CID, and adoption of a track from another library (§8.6.7).
     add_track_by_cid: build.mutation<Track, { content_cid: string } & TargetFields>({

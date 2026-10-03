@@ -16,6 +16,7 @@ import { SEARCH_INPUT_ID } from '#renderer/hooks/use-hotkeys.ts'
 import { add_to_queue, play_tracks } from '#renderer/player/player-controller.ts'
 import { node_api, track_page_args, type SortOrder, type TrackSort } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
+import { report_write } from '#renderer/store/write.ts'
 import { filters_cleared, library_selected, query_changed, sort_changed } from '#renderer/store/ui.ts'
 
 const SEARCH_DEBOUNCE_MS = 250
@@ -57,8 +58,20 @@ export const Tracks = () => {
     { label: 'Play next', on_select: () => { add_to_queue({ tracks: [track], at: 'next', library_address: listen_library }) } },
     { label: 'Add to queue', on_select: () => { add_to_queue({ tracks: [track], at: 'end', library_address: listen_library }) } },
     { label: 'Tags', on_select: () => { set_tagging(track) } },
-    { label: 'Adopt to library', on_select: () => { set_adopting(track) } }
+    { label: 'Adopt to library', on_select: () => { set_adopting(track) } },
+    { label: track.is_pinned === true ? 'Unpin' : 'Pin', on_select: () => { toggle_pin(track) } }
   ]
+
+  // Spec §4.6.2, §8.6.5a: a pin keeps the track's audio on every device of
+  // the identity, whatever each device's replication mode.
+  const toggle_pin = (track: Track) => {
+    const pinned = track.is_pinned !== true
+    report_write({
+      dispatch,
+      write: dispatch(node_api.endpoints.pin_track.initiate({ cid: track.audio_cid, pinned })),
+      success: pinned ? 'Pinned: kept on all your devices.' : 'Unpinned.'
+    }).catch(() => {})
+  }
 
   return (
     <section className={styles.page}>

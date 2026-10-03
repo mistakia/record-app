@@ -44,3 +44,12 @@
   font-size: 12px;
   margin-left: 4px;
 }
+
+.pinned {
+  margin-left: 6px;
+  border-radius: 8px;
+  padding: 0 6px;
+  font-size: 11px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}

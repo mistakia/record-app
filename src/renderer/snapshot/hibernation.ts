@@ -3,6 +3,7 @@
 // stale until the first reconcile, like everything else after a connect.
 
 import type { Library, TrackList } from '#renderer/api/types.ts'
+import { mark_restored_page } from './restored.ts'
 import { node_api, track_page_args } from '#renderer/store/api.ts'
 import type { AppDispatch, RootState } from '#renderer/store/index.ts'
 import { player_restored } from '#renderer/store/player.ts'
@@ -74,6 +75,7 @@ export const restore_snapshot = async ({ dispatch, snapshot }: { dispatch: AppDi
     // The snapshot keeps the spec's track fields only; the rest refill on refetch.
     const items = tracks.map((track) => ({ ...track, artists: [], genre: [], artwork: [], resolvers: [] }))
     await dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address, page: 0 }), { items, total }))
+    mark_restored_page(library_address)
   }
   if (snapshot.queue !== null) {
     const { entries, index, position_seconds, repeat, shuffle } = snapshot.queue

@@ -6,6 +6,30 @@ import { events_state_changed, node_switch_started, select_writes_allowed } from
 import { create_invalidation_batcher, tags_for_event } from '#renderer/store/event-invalidation.ts'
 import { store } from '#renderer/store/index.ts'
 import { reconcile, reconcile_retry_delay_ms } from '#renderer/store/reconcile.ts'
+import { moved_libraries, tags_for_moved } from '#renderer/store/head-check.ts'
+import { track_page_args } from '#renderer/store/api.ts'
+import { mark_restored_page } from '#renderer/snapshot/restored.ts'
+import type { Library } from '#renderer/api/types.ts'
+
+const library = (address: string, heads: string[], library_type = 'recordstore'): Library => ({
+  id: address,
+  address,
+  library_type,
+  track_count: 0,
+  linked_library_count: 0,
+  length: 0,
+  heads,
+  replication_status: { progress: 0, total: 0 },
+  is_replicating: false,
+  connected: true,
+  is_loading_index: false,
+  is_processing_index: false,
+  is_linked: true,
+  is_own: false,
+  is_retired: false,
+  held_capability_ids: [],
+  peer_ids: []
+})
 
 const open_state = (connection_id: number): EventsState =>
   ({ status: 'open', node_url: 'http://127.0.0.1:3000', connection_id, attempt: 0, retry_at_ms: null, last_error: null })
@@ -128,7 +152,10 @@ describe('reconcile and the write gate', () => {
     expect(requests).toHaveLength(0)
 
     store.dispatch(events_state_changed(open_state(5)))
-    await store.dispatch(reconcile({ connection_id: 5 }))
+    const reconciling = store.dispatch(reconcile({ connection_id: 5 }))
+    await settle()
+    answer_all({ ok: true, data: [] })
+    await reconciling
     expect(select_writes_allowed(store.getState())).toBe(true)
     const sent = store.dispatch(with_write.endpoints.test_write.initiate())
     await settle()
@@ -220,5 +247,75 @@ describe('reconcile and the write gate', () => {
 
   test('the retry delay doubles from 1 s and caps at 30 s', () => {
     expect([0, 1, 2, 3, 4, 5, 9].map(reconcile_retry_delay_ms)).toEqual([1000, 2000, 4000, 8000, 16000, 30000, 30000])
+  })
+
+  test('the head-check refetches only the libraries whose heads moved, and the aggregated view', async () => {
+    const answer = async (respond: (request: NodeRequest) => unknown) => {
+      for (let round = 0; round < 10 && requests.length > 0; round++) {
+        for (const { request, resolve } of requests.splice(0)) resolve({ ok: true, data: respond(request) })
+        await settle()
+      }
+    }
+    const before = [library('/a', ['h1']), library('/b', ['h2'])]
+    const pages = (request: NodeRequest) => request.path_template === '/libraries' ? current : { items: [], total: 0 }
+    let current = before
+    const subscriptions = [
+      store.dispatch(node_api.endpoints.get_libraries.initiate()),
+      store.dispatch(node_api.endpoints.get_tracks.initiate(track_page_args({ library_address: '/a', page: 0 }))),
+      store.dispatch(node_api.endpoints.get_tracks.initiate(track_page_args({ library_address: '/b', page: 0 }))),
+      store.dispatch(node_api.endpoints.get_tracks.initiate(track_page_args({ library_address: '', page: 0 })))
+    ]
+    await settle()
+    await answer(pages)
+
+    // Only /a moved: its page and the aggregated page refetch, /b's does not.
+    current = [library('/a', ['h3']), library('/b', ['h2'])]
+    store.dispatch(events_state_changed(open_state(20)))
+    const reconciling = store.dispatch(reconcile({ connection_id: 20 }))
+    await settle()
+    const seen: string[] = []
+    await answer((request) => {
+      seen.push(`${request.path_template} ${JSON.stringify(request.query?.library_addresses ?? null)}`)
+      return pages(request)
+    })
+    await reconciling
+    expect(seen.filter((line) => line.startsWith('/tracks')).sort()).toEqual(['/tracks ["/a"]', '/tracks null'])
+    expect(store.getState().connection.freshness).toBe('fresh')
+
+    // Nothing moved on the next connection: only the library list is read.
+    store.dispatch(events_state_changed(open_state(21)))
+    const quiet = store.dispatch(reconcile({ connection_id: 21 }))
+    await settle()
+    seen.length = 0
+    await answer((request) => {
+      seen.push(request.path_template)
+      return pages(request)
+    })
+    await quiet
+    expect(seen.filter((path) => path === '/tracks')).toEqual([])
+
+    // A page the snapshot restored is refetched once even with no move.
+    mark_restored_page('/b')
+    store.dispatch(events_state_changed(open_state(22)))
+    const restored = store.dispatch(reconcile({ connection_id: 22 }))
+    await settle()
+    seen.length = 0
+    await answer((request) => {
+      seen.push(`${request.path_template} ${JSON.stringify(request.query?.library_addresses ?? null)}`)
+      return pages(request)
+    })
+    await restored
+    expect(seen.filter((line) => line.startsWith('/tracks'))).toEqual(['/tracks ["/b"]'])
+    for (const subscription of subscriptions) subscription.unsubscribe()
+  })
+
+  test('moved_libraries finds moved, new, and removed libraries, and a moved listens library stales listens', () => {
+    const moved = moved_libraries({
+      before: [library('/a', ['h1', 'h2']), library('/gone', ['x'])],
+      after: [library('/a', ['h2', 'h1']), library('/new', ['y']), library('/l', ['z'], 'listens')]
+    })
+    expect(moved.map(({ address }) => address).sort()).toEqual(['/gone', '/l', '/new'])
+    expect(tags_for_moved(moved)).toContainEqual('listens')
+    expect(tags_for_moved([])).toEqual([])
   })
 })

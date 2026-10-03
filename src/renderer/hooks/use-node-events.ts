@@ -11,6 +11,7 @@ import { events_state_changed } from '#renderer/store/connection.ts'
 import { create_invalidation_batcher, tags_for_event } from '#renderer/store/event-invalidation.ts'
 import { import_event_received } from '#renderer/store/imports.ts'
 import { use_app_dispatch } from '#renderer/store/index.ts'
+import { head_check, HEAD_CHECK_INTERVAL_MS } from '#renderer/store/head-check.ts'
 import { reconcile } from '#renderer/store/reconcile.ts'
 import { notified } from '#renderer/store/notifications.ts'
 import { library_event_received } from '#renderer/store/replication.ts'
@@ -46,7 +47,13 @@ export const use_node_events = (): void => {
       else if (message.type.startsWith('library:')) dispatch(library_event_received(message))
     })
     window.record.events.get_state().then(apply_state).catch(() => {})
+    // Spec §8.8.5: a head-check every 5 minutes while connected and fresh.
+    const head_check_timer = setInterval(() => {
+      const { events, freshness } = get_state().connection
+      if (events?.status === 'open' && freshness === 'fresh') dispatch(head_check()).catch(() => {})
+    }, HEAD_CHECK_INTERVAL_MS)
     return () => {
+      clearInterval(head_check_timer)
       off_state()
       off_event()
       batcher.cancel()

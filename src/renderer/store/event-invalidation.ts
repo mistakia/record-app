@@ -2,7 +2,7 @@
 // updates). Events may repeat or go missing (§8.7.7), so they only ever mark
 // data for refetch; nothing is patched from an event payload.
 
-export const NODE_API_TAGS = ['settings', 'libraries', 'tracks', 'tags', 'about', 'listens', 'peers', 'capabilities'] as const
+export const NODE_API_TAGS = ['settings', 'libraries', 'tracks', 'tags', 'about', 'listens', 'peers', 'capabilities', 'own_libraries'] as const
 export type NodeApiTag = typeof NODE_API_TAGS[number]
 
 export const tags_for_event = (type: string): NodeApiTag[] => {
