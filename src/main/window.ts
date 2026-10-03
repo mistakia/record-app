@@ -37,9 +37,9 @@ export const guard_web_contents = (contents: WebContents): void => {
   })
 }
 
-export const create_main_window = ({ preload_path, renderer }: {
+export const create_main_window = ({ preload_path, renderer_url }: {
   preload_path: string
-  renderer: { url: string } | { file: string }
+  renderer_url: string
 }): BrowserWindow => {
   const window = new BrowserWindow({
     width: 1200,
@@ -61,7 +61,6 @@ export const create_main_window = ({ preload_path, renderer }: {
     }
   })
   window.once('ready-to-show', () => { window.show() })
-  if ('url' in renderer) window.loadURL(renderer.url).catch(() => {})
-  else window.loadFile(renderer.file).catch(() => {})
+  window.loadURL(renderer_url).catch(() => {})
   return window
 }

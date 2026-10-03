@@ -2,11 +2,11 @@
 // node. All node traffic leaves from here, never from the renderer.
 
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 import { app, BrowserWindow, powerMonitor, session } from 'electron'
 
 import { IPC_CHANNELS } from '#shared/bridge.ts'
+import { APP_ORIGIN, register_app_scheme, serve_app_files } from './app-protocol.ts'
 import { open_connection_store } from './connection-store.ts'
 import { register_ipc } from './ipc.ts'
 import { create_bundled_node } from './bundled/bundled-node.ts'
@@ -17,19 +17,18 @@ import { open_snapshot_store } from './snapshot-store.ts'
 import { create_main_window, guard_web_contents } from './window.ts'
 
 const PRELOAD_PATH = join(import.meta.dirname, '../preload/index.cjs')
-const RENDERER_FILE = join(import.meta.dirname, '../renderer/index.html')
+const RENDERER_ROOT = join(import.meta.dirname, '../renderer')
 // electron-vite sets this under `dev` only.
 const DEV_SERVER_URL = app.isPackaged ? undefined : process.env.ELECTRON_RENDERER_URL
 
-const renderer = DEV_SERVER_URL === undefined ? { file: RENDERER_FILE } : { url: DEV_SERVER_URL }
-const renderer_url = DEV_SERVER_URL ?? pathToFileURL(RENDERER_FILE).href
+const renderer_url = DEV_SERVER_URL ?? `${APP_ORIGIN}/index.html`
 
 const is_app_frame = (url: string): boolean => url.split('#')[0] === renderer_url.split('#')[0] ||
   (DEV_SERVER_URL !== undefined && new URL(url).origin === new URL(DEV_SERVER_URL).origin)
 
 const SNAPSHOT_WRITE_INTERVAL_MS = 30_000
 
-const open_window = (): BrowserWindow => create_main_window({ preload_path: PRELOAD_PATH, renderer })
+const open_window = (): BrowserWindow => create_main_window({ preload_path: PRELOAD_PATH, renderer_url })
 
 const broadcast = (channel: string, payload: unknown): void => {
   for (const window of BrowserWindow.getAllWindows()) window.webContents.send(channel, payload)
@@ -42,6 +41,7 @@ const start = async (): Promise<void> => {
   // notifications, ...); copying the exported key goes through main.
   // eslint-disable-next-line n/no-callback-literal -- Electron's callback takes the grant as a boolean
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => { callback(false) })
+  serve_app_files(RENDERER_ROOT)
   const user_data = app.getPath('userData')
   const store = await open_connection_store({ file_path: join(user_data, 'connection.json') })
   const snapshots = await open_snapshot_store({
@@ -103,6 +103,7 @@ if (!app.requestSingleInstanceLock()) {
     if (window.isMinimized()) window.restore()
     window.focus()
   })
+  register_app_scheme()
   app.on('web-contents-created', (_event, contents) => { guard_web_contents(contents) })
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()
