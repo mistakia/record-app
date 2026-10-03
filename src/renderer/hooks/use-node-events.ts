@@ -1,19 +1,19 @@
 // Wires the main process's event connection into the store: its state into
 // the connection slice, each event into a batched cache invalidation, and
 // each new connection into a reconcile (spec §8.7.7: full reconciliation on
-// every reconnect).
+// every reconnect), plus the 5-minute head-check (§8.8.5).
 
 import { useEffect } from 'react'
 import { useStore } from 'react-redux'
 
 import type { Library } from '#renderer/api/types.ts'
 import { library_name } from '#renderer/components/library/library-category.ts'
-
 import type { EventsState } from '#shared/bridge.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { events_state_changed } from '#renderer/store/connection.ts'
 import { create_invalidation_batcher, tags_for_event } from '#renderer/store/event-invalidation.ts'
 import { import_event_received } from '#renderer/store/imports.ts'
+import { head_check, HEAD_CHECK_INTERVAL_MS } from '#renderer/store/head-check.ts'
 import { use_app_dispatch, type RootState } from '#renderer/store/index.ts'
 import { reconcile } from '#renderer/store/reconcile.ts'
 import { notified } from '#renderer/store/notifications.ts'
@@ -46,8 +46,10 @@ export const use_node_events = (): void => {
       dispatch(events_state_changed(state))
       if (state.status !== 'open' || state.connection_id <= reconciled_up_to) return
       reconciled_up_to = state.connection_id
-      // Pending event invalidations are covered by the full refetch.
-      batcher.cancel()
+      // The reconcile refetches only what moved, so events still pending are
+      // applied now rather than dropped.
+      const pending = batcher.drain()
+      if (pending.length > 0) dispatch(node_api.util.invalidateTags(pending))
       dispatch(reconcile({ connection_id: state.connection_id })).catch(() => {})
     }
 
@@ -63,7 +65,16 @@ export const use_node_events = (): void => {
       else if (message.type.startsWith('library:')) dispatch(library_event_received(message))
     })
     window.record.events.get_state().then(apply_state).catch(() => {})
+    // Spec §8.8.5: a head-check every 5 minutes while connected and fresh.
+    let checking = false
+    const head_check_timer = setInterval(() => {
+      const { events, freshness } = get_state().connection
+      if (checking || events?.status !== 'open' || freshness !== 'fresh') return
+      checking = true
+      dispatch(head_check()).catch(() => {}).finally(() => { checking = false })
+    }, HEAD_CHECK_INTERVAL_MS)
     return () => {
+      clearInterval(head_check_timer)
       off_state()
       off_event()
       batcher.cancel()

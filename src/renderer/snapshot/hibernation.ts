@@ -3,6 +3,8 @@
 // stale until the first reconcile, like everything else after a connect.
 
 import type { Library, TrackList } from '#renderer/api/types.ts'
+import { mark_restored_page } from './restored.ts'
+import { seed_head_baseline } from '#renderer/store/head-check.ts'
 import { node_api, track_page_args } from '#renderer/store/api.ts'
 import type { AppDispatch, RootState } from '#renderer/store/index.ts'
 import { player_restored } from '#renderer/store/player.ts'
@@ -68,12 +70,15 @@ export const build_snapshot = ({ state, route, previous_active = null }: {
 // the routes finds it rather than issuing queries of its own.
 export const restore_snapshot = async ({ dispatch, snapshot }: { dispatch: AppDispatch, snapshot: HibernationSnapshot }): Promise<void> => {
   await dispatch(node_api.util.upsertQueryData('get_libraries', undefined, snapshot.libraries as unknown as Library[]))
+  // The heads the snapshot saw are the baseline the first head-check compares.
+  seed_head_baseline({ node_key: snapshot.node_key, libraries: snapshot.libraries as unknown as Library[] })
   if (snapshot.active !== null) {
     const { library_address, total, tracks } = snapshot.active
     dispatch(library_selected(library_address))
     // The snapshot keeps the spec's track fields only; the rest refill on refetch.
     const items = tracks.map((track) => ({ ...track, artists: [], genre: [], artwork: [], resolvers: [] }))
     await dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address, page: 0 }), { items, total }))
+    mark_restored_page(library_address)
   }
   if (snapshot.queue !== null) {
     const { entries, index, position_seconds, repeat, shuffle } = snapshot.queue

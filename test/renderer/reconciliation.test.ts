@@ -6,6 +6,31 @@ import { events_state_changed, node_switch_started, select_writes_allowed } from
 import { create_invalidation_batcher, tags_for_event } from '#renderer/store/event-invalidation.ts'
 import { store } from '#renderer/store/index.ts'
 import { reconcile, reconcile_retry_delay_ms } from '#renderer/store/reconcile.ts'
+import { mark_libraries, moved_libraries, tags_for_moved } from '#renderer/store/library-heads.ts'
+import { reset_head_baseline } from '#renderer/store/head-check.ts'
+import { track_page_args } from '#renderer/store/api.ts'
+import { mark_restored_page } from '#renderer/snapshot/restored.ts'
+import type { Library } from '#renderer/api/types.ts'
+
+const library = (address: string, heads: string[], library_type = 'recordstore'): Library => ({
+  id: address,
+  address,
+  library_type,
+  track_count: 0,
+  linked_library_count: 0,
+  length: 0,
+  heads,
+  replication_status: { progress: 0, total: 0 },
+  is_replicating: false,
+  connected: true,
+  is_loading_index: false,
+  is_processing_index: false,
+  is_linked: true,
+  is_own: false,
+  is_retired: false,
+  held_capability_ids: [],
+  peer_ids: []
+})
 
 const open_state = (connection_id: number): EventsState =>
   ({ status: 'open', node_url: 'http://127.0.0.1:3000', connection_id, attempt: 0, retry_at_ms: null, last_error: null })
@@ -23,6 +48,7 @@ const answer_all = (result: NodeResult<unknown>) => { for (const { resolve } of 
 const settle = async () => { await new Promise((resolve) => setTimeout(resolve, 5)) }
 
 afterEach(() => {
+  reset_head_baseline()
   answer_all({ ok: true, data: [] })
   store.dispatch(node_api.util.resetApiState())
 })
@@ -68,7 +94,7 @@ describe('reconcile and the write gate', () => {
     const reconciling = store.dispatch(reconcile({ connection_id: 1 }))
     await settle()
     expect(store.getState().connection.freshness).toBe('reconciling')
-    expect(requests.map(({ request }) => request.path_template)).toEqual(['/libraries'])
+    expect(requests.map(({ request }) => request.path_template)).toEqual(['/libraries', '/identity/meta-log'])
     answer_all({ ok: true, data: [] })
     await reconciling
     expect(store.getState().connection.freshness).toBe('fresh')
@@ -128,7 +154,10 @@ describe('reconcile and the write gate', () => {
     expect(requests).toHaveLength(0)
 
     store.dispatch(events_state_changed(open_state(5)))
-    await store.dispatch(reconcile({ connection_id: 5 }))
+    const reconciling = store.dispatch(reconcile({ connection_id: 5 }))
+    await settle()
+    answer_all({ ok: true, data: [] })
+    await reconciling
     expect(select_writes_allowed(store.getState())).toBe(true)
     const sent = store.dispatch(with_write.endpoints.test_write.initiate())
     await settle()
@@ -220,5 +249,73 @@ describe('reconcile and the write gate', () => {
 
   test('the retry delay doubles from 1 s and caps at 30 s', () => {
     expect([0, 1, 2, 3, 4, 5, 9].map(reconcile_retry_delay_ms)).toEqual([1000, 2000, 4000, 8000, 16000, 30000, 30000])
+  })
+
+  test('the head-check refetches only what moved: a library, its index, an own library, or the identity library', async () => {
+    const answer = async (respond: (request: NodeRequest) => unknown) => {
+      for (let round = 0; round < 10 && requests.length > 0; round++) {
+        for (const { request, resolve } of requests.splice(0)) resolve({ ok: true, data: respond(request) })
+        await settle()
+      }
+    }
+    let current = [library('/a', ['h1']), library('/b', ['h2'])]
+    let identity_heads = ['i1']
+    const respond = (request: NodeRequest) =>
+      request.path_template === '/libraries' ? current : request.path_template === '/identity/meta-log' ? { address: '/i', heads: identity_heads, items: [], total: 0 } : { items: [], total: 0 }
+    const subscriptions = [
+      store.dispatch(node_api.endpoints.get_libraries.initiate()),
+      store.dispatch(node_api.endpoints.get_tracks.initiate(track_page_args({ library_address: '/a', page: 0 }))),
+      store.dispatch(node_api.endpoints.get_tracks.initiate(track_page_args({ library_address: '/b', page: 0 }))),
+      store.dispatch(node_api.endpoints.get_tracks.initiate(track_page_args({ library_address: '', page: 0 })))
+    ]
+    await settle()
+    await answer(respond)
+    let connection_id = 30
+    const reconcile_seeing = async (): Promise<string[]> => {
+      store.dispatch(events_state_changed(open_state(++connection_id)))
+      const reconciling = store.dispatch(reconcile({ connection_id }))
+      await settle()
+      const seen: string[] = []
+      await answer((request) => {
+        if (request.path_template === '/tracks') seen.push(JSON.stringify(request.query?.library_addresses ?? null))
+        return respond(request)
+      })
+      await reconciling
+      expect(store.getState().connection.freshness).toBe('fresh')
+      return seen.sort()
+    }
+
+    // The first check this run has no baseline: every page refetches.
+    expect(await reconcile_seeing()).toEqual(['["/a"]', '["/b"]', 'null'])
+    // Nothing moved: no page refetches.
+    expect(await reconcile_seeing()).toEqual([])
+    // /a's heads moved: its page and the aggregated one.
+    current = [library('/a', ['h3']), library('/b', ['h2'])]
+    expect(await reconcile_seeing()).toEqual(['["/a"]', 'null'])
+    // /b's index moved with the same heads.
+    current = [library('/a', ['h3']), { ...library('/b', ['h2']), track_count: 7 }]
+    expect(await reconcile_seeing()).toEqual(['["/b"]', 'null'])
+    // The identity library moved (a pin on another device): every page.
+    identity_heads = ['i2']
+    expect(await reconcile_seeing()).toEqual(['["/a"]', '["/b"]', 'null'])
+    // A page the snapshot restored is refetched once even with no move.
+    mark_restored_page('/b')
+    expect(await reconcile_seeing()).toEqual(['["/b"]'])
+    for (const subscription of subscriptions) subscription.unsubscribe()
+  })
+
+  test('moved_libraries and tags_for_moved', () => {
+    const moved = moved_libraries({
+      before: mark_libraries([library('/a', ['h1', 'h2']), library('/gone', ['x'])]),
+      after: mark_libraries([library('/a', ['h2', 'h1']), library('/new', ['y']), library('/l', ['z'], 'listens')])
+    })
+    expect(moved.map(({ address }) => address).sort()).toEqual(['/gone', '/l', '/new'])
+    expect(tags_for_moved({ moved })).toContainEqual('listens')
+    expect(tags_for_moved({ moved })).not.toContainEqual('tracks')
+    expect(tags_for_moved({ moved: [], identity_moved: true })).toEqual(['tracks', 'listens'])
+    const own = mark_libraries([{ ...library('/own', ['h']), is_own: true }]).get('/own')
+    if (own === undefined) throw new Error('no mark')
+    expect(tags_for_moved({ moved: [own] })).toContainEqual('tracks')
+    expect(tags_for_moved({ moved: [] })).toEqual([])
   })
 })

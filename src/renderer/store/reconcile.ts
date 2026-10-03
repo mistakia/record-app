@@ -1,16 +1,17 @@
 // The stale-to-fresh transition (spec §8.8.5) after each (re)connect:
-// invalidate every cached surface so whatever is on screen refetches, wait
-// for those refetches, then mark the data fresh, which unblocks writes. A
-// failed attempt is retried with backoff (1 s doubling to 30 s) for as long
-// as the same connection stays open, so a passing node error does not leave
-// the app stale with writes blocked. The head-check by library log head,
-// which chapter 7 v1.1.0 serves as Library.heads, is the rebuild's
-// pinning-and-head-check item; until it lands the full refetch of visible
-// surfaces stands in for it.
+// refetch the node-wide surfaces (settings, peers, capabilities, the
+// identity's libraries), run the head-check, which refetches only the
+// libraries whose heads moved since they were last seen, wait for those
+// refetches, then mark the data fresh, which unblocks writes. A failed
+// attempt is retried with backoff (1 s doubling to 30 s) for as long as the
+// same connection stays open, so a passing node error does not leave the app
+// stale with writes blocked; a retry refetches everything.
 
 import { node_api } from './api.ts'
 import { reconcile_finished, reconcile_started } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
+import { head_check } from './head-check.ts'
+import { take_restored_page } from '#renderer/snapshot/restored.ts'
 import { live_progress_cleared } from './replication.ts'
 import type { AppDispatch, RootState } from './index.ts'
 
@@ -31,7 +32,15 @@ export const reconcile = ({ connection_id, wait = sleep }: { connection_id: numb
       const started_at = Date.now()
       dispatch(reconcile_started({ connection_id }))
       dispatch(live_progress_cleared())
-      dispatch(node_api.util.invalidateTags([...NODE_API_TAGS]))
+      if (attempt === 0) {
+        dispatch(node_api.util.invalidateTags(['settings', 'peers', 'capabilities', 'own_libraries']))
+        // A page the snapshot restored carries trimmed tracks: refetch it once
+        // even when its library's heads have not moved.
+        const restored = take_restored_page()
+        await dispatch(head_check({ extra: restored === null ? [] : [{ type: 'tracks', id: restored }] }))
+      } else {
+        dispatch(node_api.util.invalidateTags([...NODE_API_TAGS]))
+      }
       // Refetches start as the invalidation is processed; collect them a
       // tick later, and keep waiting while any is still running.
       await wait(0)
@@ -39,10 +48,15 @@ export const reconcile = ({ connection_id, wait = sleep }: { connection_id: numb
         await Promise.all(running)
       }
       if (!still_current()) return
-      // Fresh only when every cached surface has succeeded since this attempt began.
-      const ok = Object.values(get_state().node_api.queries)
-        .filter((entry) => entry !== undefined && entry.status !== 'uninitialized')
-        .every((entry) => entry?.status === 'fulfilled' && (entry.fulfilledTimeStamp ?? 0) >= started_at)
+      // Fresh when every cached surface has data and none failed, and the
+      // library list behind the head-check was fetched in this attempt.
+      // The identity heads are the head-check's own input, not a surface.
+      const queries = Object.values(get_state().node_api.queries)
+        .filter((entry) => entry !== undefined && entry.status !== 'uninitialized' && entry.endpointName !== 'get_identity_heads')
+      const libraries = node_api.endpoints.get_libraries.select()(get_state())
+      // Started, not just finished, in this attempt: a check sent before the
+      // reconnect could otherwise pass for this one.
+      const ok = queries.every((entry) => entry?.status === 'fulfilled') && libraries.status === 'fulfilled' && (libraries.startedTimeStamp ?? 0) >= started_at
       dispatch(reconcile_finished({ connection_id, ok }))
       if (ok) return
       await wait(reconcile_retry_delay_ms(attempt))
