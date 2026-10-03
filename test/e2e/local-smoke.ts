@@ -9,6 +9,7 @@
 // record-node's pins. Runs under Node: node test/e2e/local-smoke.ts
 
 import { readdir, readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -16,9 +17,10 @@ import { _electron as electron, type Page } from 'playwright-core'
 import { create_peer, start_peer, stop_peer } from 'record-node'
 
 import { start_test_node } from '../integration/node-fixture.ts'
+import { check_quit_stops_child, run_bundled_checks } from './bundled-run.ts'
 
 const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
-const screenshot_dir = process.env.RECORD_SMOKE_SCREENSHOT_DIR ?? APP_ROOT
+const screenshot_dir = process.env.RECORD_SMOKE_SCREENSHOT_DIR ?? tmpdir()
 
 const node = await start_test_node()
 const other = await create_peer({ config: { network: false, allow_toolchain_mismatch: true } })
@@ -50,9 +52,10 @@ try {
   const window = await app.firstWindow()
   const console_errors: string[] = []
   window.on('console', (message) => { if (message.type() === 'error') console_errors.push(message.text()) })
-  await window.locator('input[name=node_url]').fill(node.node_url)
-  await window.getByRole('button', { name: 'Save', exact: true }).click()
-  await window.locator('[data-testid=events-status][data-freshness=fresh]').waitFor({ timeout: 30_000 })
+  // A fresh profile starts in bundled mode; check it, then switch to the
+  // in-process node, which holds the tracks the rest of the walk uses.
+  await run_bundled_checks({ app, window, step, remote_url: node.node_url })
+  await nav(window, 'Tracks')
   await settled(window)
 
   // Browsing.
@@ -197,6 +200,13 @@ try {
   const leaks = await files_containing(user_data_dir, private_key)
   step('files in the app profile containing the exported key', leaks)
   if (private_key === '' || leaks.length > 0) throw new Error('the exported key reached a file')
+  await check_quit_stops_child({
+    launch: async () => {
+      const fresh = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${join(node.work_dir, 'profile-quit')}`], timeout: 30_000 })
+      return { app: fresh, window: await fresh.firstWindow() }
+    },
+    step
+  })
   console.log('local smoke passed')
 } finally {
   await stop_peer(other)

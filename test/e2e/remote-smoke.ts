@@ -63,15 +63,19 @@ const save_node_url = async (window: Page, url: string): Promise<void> => {
 
 const user_data_dir = await mkdtemp(join(tmpdir(), 'record-app-smoke-'))
 try {
-  // First launch: connect, go live, play.
+  // First launch: a fresh profile starts in bundled mode, so switch to the
+  // remote node (confirmed, spec 8.3.4), go live, and play.
   const first = await launch(user_data_dir)
   const { window } = first
+  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await window.getByLabel('Remote node').check()
   await window.locator('input[name=node_url]').fill(node_url)
   await window.getByRole('button', { name: 'Test connection', exact: true }).click()
   const test_result = await window.getByTestId('connection-test-result').textContent()
   console.log('test connection:', test_result)
   if (test_result?.startsWith('Connected to peer') !== true) throw new Error('connection test failed')
   await window.getByRole('button', { name: 'Save', exact: true }).click()
+  await window.getByRole('dialog').getByRole('button', { name: 'Switch' }).click()
   await wait_fresh(window)
   console.log('event connection: open, data fresh')
   await settled(window)
