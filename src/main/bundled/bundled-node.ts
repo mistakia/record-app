@@ -6,11 +6,11 @@
 // utilityProcess rather than the Electron binary with ELECTRON_RUN_AS_NODE,
 // so a packaged build can turn the RunAsNode fuse off. record-node's cli.js
 // runs under it unchanged (ESM, stdio, SIGTERM, exit codes), and a utility
-// child dies with the app, so a force quit leaves no orphan node. Unlike a
+// child dies with the app, so a force quit rarely leaves an orphan node
+// (node-orphan.ts ends one that does). Unlike a
 // plain Node process, a utility process does not exit when its event loop
 // empties; record-node always exits explicitly, on SIGTERM and on error.
 
-import { randomUUID } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
@@ -19,10 +19,9 @@ import { app, utilityProcess } from 'electron'
 
 import type { BundledState } from '#shared/bridge.ts'
 import type { SpawnChild } from './child-handle.ts'
-import { create_node_lock } from './node-lock.ts'
 import { create_node_log } from './node-log.ts'
 import { create_node_manager } from './node-manager.ts'
-import { os_process_probe } from './process-probe.ts'
+import { app_marker } from './node-orphan.ts'
 
 const CLI_RELATIVE = join('node_modules', 'record-node', 'dist', 'cli.js')
 
@@ -109,7 +108,6 @@ export const bundled_toolchain = (app_root: string): { ffmpeg_path: string, fpca
 export const create_bundled_node = ({ user_data, on_state }: { user_data: string, on_state: (state: BundledState) => void }) => {
   const app_root = app.getAppPath()
   const config_path = join(user_data, 'bundled-node.json')
-  const owner = randomUUID()
   return create_node_manager({
     spawn_child: spawn_utility_process,
     cli_path: join(app_root, CLI_RELATIVE),
@@ -118,7 +116,7 @@ export const create_bundled_node = ({ user_data, on_state }: { user_data: string
     version: pinned_version(app_root),
     env: process.env,
     toolchain: bundled_toolchain(app_root),
-    lock_for: (data_dir) => create_node_lock({ data_dir, app_pid: process.pid, owner, probe: os_process_probe, app_marker: process.execPath }),
+    orphan_marker: app_marker(process.execPath),
     log: create_node_log({ log_dir: logs_dir(user_data) }),
     // The last port, so the node's URL stays the same across launches when it can.
     preferred_port: async () => {

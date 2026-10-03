@@ -5,7 +5,10 @@
 // 8 s, up to 30 s) until five restarts in a row fail; and stopped with
 // SIGTERM, then SIGKILL after 10 s. Start, stop, and restart run one at a
 // time, and a stop bumps a generation that an unfinished start checks after
-// every await, so no child outlives a stop. Imports nothing from Electron.
+// every await, so no child outlives a stop. record-node locks its data
+// directory itself (§8.4.6); a child refused on that lock (exit 75) is
+// relaunched once after ending an orphan of this app (§8.4.5), and
+// otherwise fails. Imports nothing from Electron.
 
 import { mkdir, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
@@ -14,9 +17,9 @@ import type { BundledState } from '#shared/bridge.ts'
 import { MAX_FAILED_RESTARTS } from '#shared/bundled.ts'
 import { build_child_env } from './child-env.ts'
 import type { ChildHandle, SpawnChild } from './child-handle.ts'
-import type { create_node_lock } from './node-lock.ts'
 import { is_alive } from './process-probe.ts'
 import type { create_node_log } from './node-log.ts'
+import { clear_child, EXIT_DATA_DIR_LOCKED, find_orphan, record_child } from './node-orphan.ts'
 import { read_pin, write_pin, type NodePin } from './node-pin.ts'
 
 const RESTART_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000]
@@ -67,7 +70,7 @@ export const probe_health = async (url: string): Promise<Health | null> => {
 }
 
 export const create_node_manager = ({
-  spawn_child, cli_path, data_dir: initial_data_dir, config_path, version, env, toolchain = null, lock_for, log, on_state,
+  spawn_child, cli_path, data_dir: initial_data_dir, config_path, version, env, toolchain = null, orphan_marker, log, on_state,
   preferred_port = async () => null,
   pick_port = choose_port,
   health = probe_health,
@@ -86,8 +89,8 @@ export const create_node_manager = ({
   toolchain?: { ffmpeg_path: string, fpcalc_path: string } | null
   version: string
   env: NodeJS.ProcessEnv
-  // The data-directory lock for a directory; a new one after a relocation.
-  lock_for: (data_dir: string) => ReturnType<typeof create_node_lock>
+  // Text in the command line of a child this app spawned (node-orphan.ts).
+  orphan_marker: string
   log: ReturnType<typeof create_node_log>
   on_state: (state: BundledState) => void
   preferred_port?: () => Promise<number | null>
@@ -102,7 +105,6 @@ export const create_node_manager = ({
   stable_after_ms?: number
 }) => {
   let data_dir = initial_data_dir
-  let lock = lock_for(data_dir)
   let state: BundledState = {
     status: 'stopped',
     url: null,
@@ -126,6 +128,14 @@ export const create_node_manager = ({
   // launch must skip the remembered port because something else holds it.
   let port_retries = 0
   let avoid_port: number | null = null
+  // Whether this start already ended an orphan; a second refusal fails.
+  let orphan_ended = false
+  // The last child's PID. It holds record-node's lock until its OS process
+  // ends, so a launch waits until it is gone (up to the shutdown timeout).
+  // The wait never signals it: unlike a stop, which kills the child it was
+  // just running, a launch can come long after, when the PID may belong to
+  // another program.
+  let previous_pid: number | null = null
   let queue: Promise<unknown> = Promise.resolve()
   const timers = new Set<ReturnType<typeof setTimeout>>()
 
@@ -177,9 +187,15 @@ export const create_node_manager = ({
         if (answer !== null && listening.port === port && current.alive()) {
           const next_pin: NodePin = { peer_id: answer.peer_id, identity_address: answer.identity_address }
           if (pin === null || pin.identity_address !== next_pin.identity_address) await write_pin(data_dir, next_pin)
+          // Recorded only now that it holds the data directory's lock, so a
+          // child refused on the lock never overwrites the holder's record.
+          const pid = await current.spawned
+          if (child !== current) return
+          if (pid !== null) await record_child(data_dir, pid)
           if (child !== current) return
           port_retries = 0
           avoid_port = null
+          orphan_ended = false
           set_state({ status: 'running', url, retry_at_ms: null, error: null, node_key_pin: next_pin, started_at_ms: Date.now() })
           // A node that stays up this long has recovered; count from zero again.
           later(stable_after_ms, () => { if (child === current) set_state({ failed_restarts: 0 }) })
@@ -208,11 +224,37 @@ export const create_node_manager = ({
       .catch((error: unknown) => { fail(String(error)) })
   }
 
-  const on_exit = (current: ChildHandle, listening: { port: number | null }, port: number) => (code: number | null, signal: string | null): void => {
-    lock.record_child(null).catch(() => {})
+  // Another node holds the data directory. When it is an orphan of this
+  // app, end it and launch again, once; otherwise say so and stop trying.
+  const on_locked = (dir: string): void => {
+    const locked_generation = generation
+    set_state({ status: 'starting', url: null, pid: null, started_at_ms: null })
+    serialize(async () => {
+      if (generation !== locked_generation || child !== null) return
+      const orphan = orphan_ended ? null : await find_orphan({ data_dir: dir, marker: orphan_marker })
+      await checkpoint('orphan')
+      if (generation !== locked_generation) return
+      if (orphan === null) {
+        fail(`Another record-node is using the data directory ${dir}, and it is not one this app left running. Quit it, then retry.`)
+        return
+      }
+      orphan_ended = true
+      log.append('err', `ending an orphaned bundled node (process ${orphan}) that held the data directory\n`)
+      try { process.kill(orphan, 'SIGTERM') } catch {}
+      await ensure_gone(orphan)
+      if (generation === locked_generation && child === null) await launch(locked_generation)
+    }).catch((error: unknown) => { fail(String(error)) })
+  }
+
+  const on_exit = (current: ChildHandle, listening: { port: number | null }, port: number, dir: string) => (code: number | null, signal: string | null): void => {
+    current.spawned.then(async (pid) => { if (pid !== null) await clear_child(dir, pid) }).catch(() => {})
     if (child !== current) return
     child = null
     clear_timers()
+    if (code === EXIT_DATA_DIR_LOCKED && listening.port === null) {
+      on_locked(dir)
+      return
+    }
     // It never got as far as listening: likely the port was taken. Next time,
     // a fresh one.
     if (listening.port === null) avoid_port = port
@@ -235,6 +277,11 @@ export const create_node_manager = ({
   // leaves no child behind, and kills one that spawned for a stale start.
   async function launch (started_generation: number): Promise<void> {
     const stale = (): boolean => started_generation !== generation
+    if (previous_pid !== null) {
+      await wait_gone(previous_pid, shutdown_timeout_ms)
+      previous_pid = null
+      if (stale()) return
+    }
     log.clear_tail()
     const remembered = state.port ?? await preferred_port()
     const port = await pick_port(remembered !== null && remembered === avoid_port ? null : remembered)
@@ -249,7 +296,7 @@ export const create_node_manager = ({
     const listening = { port: null as number | null }
     const current = spawn_child({ cli_path, args: ['--port', String(port), '--data-dir', data_dir, '--config', config_path], env: build_child_env(env) })
     child = current
-    current.on_exit(on_exit(current, listening, port))
+    current.on_exit(on_exit(current, listening, port, data_dir))
     current.stdout?.on('data', (data: Buffer) => {
       const text = String(data)
       log.append('out', text)
@@ -263,6 +310,7 @@ export const create_node_manager = ({
       if (disabled !== null) set_state({ ingest_disabled: disabled[1]?.trim() ?? 'ingest is disabled' })
     })
     const pid = await current.spawned
+    previous_pid = pid
     await checkpoint('spawned')
     if (stale()) {
       if (child === current) child = null
@@ -270,28 +318,12 @@ export const create_node_manager = ({
       return
     }
     set_state({ status: state.status === 'restarting' ? 'restarting' : 'starting', port, pid, url: null })
-    if (pid !== null) await lock.record_child(pid)
-    await checkpoint('locked')
-    if (stale()) {
-      if (child === current) child = null
-      current.kill()
-      return
-    }
     watch_health(port, current, listening)
   }
 
   const start_now = async (started_generation: number): Promise<void> => {
     set_state({ status: 'starting', error: null, stderr_tail: null, failed_restarts: 0, ingest_disabled: null })
-    const locked = await lock.acquire()
-    await checkpoint('lock')
-    if (started_generation !== generation) {
-      await lock.release()
-      return
-    }
-    if (!locked.ok) {
-      fail(locked.reason)
-      return
-    }
+    orphan_ended = false
     await launch(started_generation)
   }
 
@@ -299,18 +331,18 @@ export const create_node_manager = ({
   // finishing its SIGTERM shutdown (Linux), so a stop is not clean until
   // nothing answers the child's pid. Wait that out, then force-kill a child
   // that never finishes; without this, a hung shutdown survives a stop.
+  const wait_gone = async (pid: number, ms: number): Promise<void> => {
+    const deadline = Date.now() + ms
+    while (is_alive(pid) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 25))
+    }
+  }
   const ensure_gone = async (pid: number | null): Promise<void> => {
     if (pid === null) return
-    const wait = async (ms: number): Promise<void> => {
-      const deadline = Date.now() + ms
-      while (is_alive(pid) && Date.now() < deadline) {
-        await new Promise((resolve) => setTimeout(resolve, 25))
-      }
-    }
-    await wait(shutdown_timeout_ms)
+    await wait_gone(pid, shutdown_timeout_ms)
     if (!is_alive(pid)) return
     try { process.kill(pid, 'SIGKILL') } catch {}
-    await wait(1_000)
+    await wait_gone(pid, 1_000)
   }
 
   const stop_now = async (): Promise<void> => {
@@ -325,21 +357,19 @@ export const create_node_manager = ({
       clearTimeout(forced)
     }
     await ensure_gone(pid)
-    await lock.release()
     set_state({ status: 'stopped', url: null, pid: null, retry_at_ms: null, started_at_ms: null })
   }
 
   return {
     get_state: (): BundledState => state,
-    // Moves to another data directory (spec §8.4.1): stops the node, takes
-    // the new directory's lock and pin, and starts again when asked.
+    // Moves to another data directory (spec §8.4.1): stops the node, reads
+    // the new directory's pin, and starts again when asked.
     relocate: async ({ next_data_dir, start }: { next_data_dir: string, start: boolean }): Promise<void> => {
       generation++
       const relocate_generation = generation
       await serialize(async () => {
         await stop_now()
         data_dir = next_data_dir
-        lock = lock_for(data_dir)
         port_retries = 0
         avoid_port = null
         set_state({ data_dir, node_key_pin: read_pin(data_dir), port: null, failed_restarts: 0, error: null, stderr_tail: null })
