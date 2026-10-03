@@ -112,6 +112,8 @@ export interface Diagnostics {
   user_data: string
   logs_dir: string
   bundled: BundledState
+  // Spec §8.2.5; off until a release feed exists.
+  updates: { status: string, detail: string | null }
   memory: {
     main_rss_bytes: number
     total_working_set_bytes: number

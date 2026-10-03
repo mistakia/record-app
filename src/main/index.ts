@@ -14,6 +14,7 @@ import { create_diagnostics } from './diagnostics.ts'
 import { create_node_connection } from './node-connection.ts'
 import { create_node_session } from './node-session.ts'
 import { open_snapshot_store } from './snapshot-store.ts'
+import { create_update_service, UPDATE_FEED_URL } from './updates.ts'
 import { create_main_window, guard_web_contents } from './window.ts'
 
 const PRELOAD_PATH = join(import.meta.dirname, '../preload/index.cjs')
@@ -64,7 +65,14 @@ const start = async (): Promise<void> => {
     on_node_changed: () => { forget_identity() },
     on_view_changed: (view) => { broadcast(IPC_CHANNELS.connection_view, view) }
   })
-  const diagnostics = create_diagnostics({ user_data, store, manager, connection })
+  const updates = create_update_service({
+    feed_url: UPDATE_FEED_URL,
+    channel: 'stable',
+    current_version: app.getVersion(),
+    create_backend: () => { throw new Error('No update backend is installed.') }
+  })
+  updates.start()
+  const diagnostics = create_diagnostics({ user_data, store, manager, connection, updates })
   forget_identity = register_ipc({ store, connection, manager, session: node_session, snapshots, diagnostics, is_app_frame }).forget_identity
   // Spec §8.8.3: written every 30 s when it changed, and on clean shutdown.
   const snapshot_timer = setInterval(() => { snapshots.flush().catch(() => {}) }, SNAPSHOT_WRITE_INTERVAL_MS)

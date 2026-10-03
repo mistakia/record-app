@@ -55,6 +55,7 @@ export const Diagnostics = () => {
         <dt>Platform</dt><dd>{data.platform}</dd>
         <dt>App data</dt><dd><code>{data.user_data}</code></dd>
         <dt>Logs</dt><dd><code>{data.logs_dir}</code></dd>
+        <dt>Updates</dt><dd data-testid='diagnostics-updates'>{data.updates.status}{data.updates.detail === null ? '' : `: ${data.updates.detail}`}</dd>
       </dl>
       <h2>Connection</h2>
       <dl className={styles.details}>

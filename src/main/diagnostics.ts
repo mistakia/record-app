@@ -10,6 +10,7 @@ import type { Diagnostics, NodeResult } from '#shared/bridge.ts'
 import { logs_dir, save_data_dir } from './bundled/bundled-node.ts'
 import type { create_node_manager } from './bundled/node-manager.ts'
 import type { ConnectionStore } from './connection-store.ts'
+import type { create_update_service } from './updates.ts'
 import type { create_node_connection } from './node-connection.ts'
 
 const inside = (parent: string, child: string): boolean => {
@@ -17,13 +18,15 @@ const inside = (parent: string, child: string): boolean => {
   return path === '' || (!path.startsWith('..') && !isAbsolute(path))
 }
 
-export const create_diagnostics = ({ user_data, store, manager, connection }: {
+export const create_diagnostics = ({ user_data, store, manager, connection, updates }: {
   user_data: string
   store: ConnectionStore
   manager: ReturnType<typeof create_node_manager>
   connection: ReturnType<typeof create_node_connection>
+  updates: ReturnType<typeof create_update_service>
 }) => ({
   collect: (): Diagnostics => {
+    const update = updates.get_state()
     const processes = app.getAppMetrics().map(({ type, pid, memory }) => ({ type, pid, working_set_bytes: memory.workingSetSize * 1024 }))
     return {
       app_version: app.getVersion(),
@@ -37,6 +40,10 @@ export const create_diagnostics = ({ user_data, store, manager, connection }: {
       user_data,
       logs_dir: logs_dir(user_data),
       bundled: manager.get_state(),
+      updates: {
+        status: update.status,
+        detail: update.status === 'off' ? update.reason : update.status === 'error' ? update.message : 'version' in update ? update.version : null
+      },
       memory: {
         main_rss_bytes: process.memoryUsage().rss,
         total_working_set_bytes: processes.reduce((total, { working_set_bytes }) => total + working_set_bytes, 0),
