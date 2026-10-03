@@ -13,6 +13,7 @@ import type { Track } from '#renderer/api/types.ts'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
 import { node_api, track_page_args, type TrackFilters } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
+import { describe_holders } from '#renderer/components/library/library-category.ts'
 
 const ROW_HEIGHT = 34
 
@@ -36,6 +37,7 @@ export const TrackList = ({ library_address, filters, total, busy, on_play, on_q
   const [menu, set_menu] = useState<{ x: number, y: number, track: Track } | null>(null)
   const virtualizer = useVirtualizer({ count: total, getScrollElement: () => scroller.current, estimateSize: () => ROW_HEIGHT, overscan: 12 })
   const rows = virtualizer.getVirtualItems()
+  const libraries = node_api.endpoints.get_libraries.useQuery().data
   const pages = pages_for_rows({ first_row: rows[0]?.index ?? 0, last_row: rows.at(-1)?.index ?? 0, total })
   const page_data = use_app_selector(
     (state) => pages.map((page) => node_api.endpoints.get_tracks.select(track_page_args({ library_address, page, filters }))(state).data),
@@ -66,6 +68,7 @@ export const TrackList = ({ library_address, filters, total, busy, on_play, on_q
                   : (
                     <TrackRow
                       track={track}
+                      holders={library_address === '' ? describe_holders({ addresses: track.library_addresses, libraries }) : null}
                       on_play={() => { on_play({ track, page_tracks, index: offset }) }}
                       on_queue={(at) => { on_queue({ track, at }) }}
                       on_menu={(x, y) => { set_menu({ x, y, track }) }}

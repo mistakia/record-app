@@ -5,8 +5,10 @@ import type { Track } from '#renderer/api/types.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
-export const TrackRow = ({ track, on_play, on_queue, on_menu }: {
+export const TrackRow = ({ track, holders, on_play, on_queue, on_menu }: {
   track: Track
+  // In an aggregated view, which libraries hold the track (spec §8.6.7).
+  holders: string | null
   on_play: () => void
   on_queue: (at: 'next' | 'end') => void
   on_menu: (x: number, y: number) => void
@@ -25,6 +27,7 @@ export const TrackRow = ({ track, on_play, on_queue, on_menu }: {
     >
       <span role='cell' className={styles.cell}>
         <button type='button' className={styles.title} onClick={on_play}>{track.title ?? 'Untitled'}</button>
+        {holders !== null && <span className={styles.holders} data-testid='track-holders' title={(track.library_addresses ?? []).join('\n')}>in {holders}</span>}
         {track.is_pinned === true && <span className={styles.pinned} title='Pinned: kept on every device of this identity' data-testid='pinned'>Pinned</span>}
       </span>
       <span role='cell' className={styles.cell}>{track.artist ?? ''}</span>

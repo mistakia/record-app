@@ -53,3 +53,9 @@
   border: 1px solid var(--accent);
   color: var(--accent);
 }
+
+.holders {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}

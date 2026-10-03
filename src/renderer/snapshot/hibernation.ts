@@ -76,7 +76,7 @@ export const restore_snapshot = async ({ dispatch, snapshot }: { dispatch: AppDi
     const { library_address, total, tracks } = snapshot.active
     dispatch(library_selected(library_address))
     // The snapshot keeps the spec's track fields only; the rest refill on refetch.
-    const items = tracks.map((track) => ({ ...track, artists: [], genre: [], artwork: [], resolvers: [] }))
+    const items = tracks.map((track) => ({ ...track, artists: [], genre: [], artwork: [], resolvers: [], library_addresses: [] }))
     await dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address, page: 0 }), { items, total }))
     mark_restored_page(library_address)
   }

@@ -15,6 +15,7 @@ const ADDRESS = '/record/zabc/record'
 const library = { id: 'l', address: ADDRESS, name: 'Own', track_count: 1, is_own: true } as unknown as Library
 const track: Track = {
   id: 'a'.repeat(64),
+  library_addresses: [ADDRESS],
   content_cid: 'content',
   audio_cid: 'audio',
   audio_size_bytes: 10,

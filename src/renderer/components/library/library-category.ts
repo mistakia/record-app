@@ -58,3 +58,17 @@ export const is_replicating = ({ library, progress, linked_at, now }: {
   const recent = linked_at !== undefined && now - linked_at < RECENT_LINK_MS && library.replication_status.total === 0 && library.length === 0
   return library.is_replicating || progress.progress < progress.total || recent
 }
+
+// Which libraries hold a track, by category (spec §8.6.7), as in "2 own,
+// 1 shared, 3 linked". Addresses the app does not list count as discovered;
+// nothing shows until the library list has loaded.
+export const describe_holders = ({ addresses, libraries }: { addresses: readonly string[] | undefined, libraries: readonly Library[] | undefined }): string | null => {
+  if (addresses === undefined || addresses.length === 0 || libraries === undefined) return null
+  const by_address = new Map(libraries.map((library) => [library.address, library]))
+  const counts: Record<LibraryCategory, number> = { own: 0, shared: 0, linked: 0, discovered: 0 }
+  for (const address of addresses) {
+    const library = by_address.get(address)
+    counts[library === undefined ? 'discovered' : library_category(library)]++
+  }
+  return (['own', 'shared', 'linked', 'discovered'] as const).filter((category) => counts[category] > 0).map((category) => `${counts[category]} ${category}`).join(', ')
+}

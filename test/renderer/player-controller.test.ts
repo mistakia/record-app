@@ -32,6 +32,7 @@ Object.assign(globalThis, {
 const LIBRARY = '/record/own/record'
 const track = (name: string, seconds: number): Track => ({
   id: name.padEnd(64, '0'),
+  library_addresses: [LIBRARY],
   content_cid: `content-${name}`,
   audio_cid: `${name}-${seconds}`,
   audio_size_bytes: 1,

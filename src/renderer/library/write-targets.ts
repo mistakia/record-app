@@ -62,14 +62,18 @@ export const write_targets = ({ libraries, held, action, now = Date.now() }: {
 }
 
 // The default target: the preferred address when it is a target (the
-// library being viewed, which holds the track being tagged), else the
-// library written to last (§8.6.3's recommendation), else the first own one.
-export const default_target = ({ targets, recent, preferred = null }: {
+// library being viewed), else among the libraries holding the track the one
+// written to last, then the first; else the library written to last
+// (§8.6.3's recommendation), else the first own one.
+export const default_target = ({ targets, recent, preferred = null, holders = [] }: {
   targets: readonly WriteTarget[]
   recent: string | null
   preferred?: string | null
+  holders?: readonly string[]
 }): WriteTarget | null =>
   targets.find(({ library_address }) => library_address === preferred) ??
+  (recent !== null && holders.includes(recent) ? targets.find(({ library_address }) => library_address === recent) : undefined) ??
+  holders.map((address) => targets.find(({ library_address }) => library_address === address)).find((target) => target !== undefined) ??
   targets.find(({ library_address }) => library_address === recent) ??
   targets.find(({ category }) => category === 'own') ??
   targets[0] ??
@@ -86,11 +90,12 @@ export type TargetResolution =
   | { kind: 'none' }
   | { kind: 'target', target: WriteTarget }
 
-export const resolve_target = ({ targets, chosen, recent, preferred = null, loading }: {
+export const resolve_target = ({ targets, chosen, recent, preferred = null, holders = [], loading }: {
   targets: readonly WriteTarget[]
   chosen: string | null
   recent: string | null
   preferred?: string | null
+  holders?: readonly string[]
   loading: boolean
 }): TargetResolution => {
   if (loading) return { kind: 'loading' }
@@ -98,7 +103,7 @@ export const resolve_target = ({ targets, chosen, recent, preferred = null, load
     const target = targets.find(({ library_address }) => library_address === chosen)
     return target === undefined ? { kind: 'chosen_gone', library_address: chosen } : { kind: 'target', target }
   }
-  const target = default_target({ targets, recent, preferred })
+  const target = default_target({ targets, recent, preferred, holders })
   return target === null ? { kind: 'none' } : { kind: 'target', target }
 }
 

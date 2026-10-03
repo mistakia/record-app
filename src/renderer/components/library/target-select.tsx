@@ -26,9 +26,11 @@ export interface WriteTargetChoice {
   name_of: (library_address: string) => string
 }
 
-export const use_write_target = ({ action, preferred = null, exclude = [] }: {
+export const use_write_target = ({ action, preferred = null, holders = [], exclude = [] }: {
   action: WriteAction
   preferred?: string | null
+  // The libraries holding the track written to (Track.library_addresses).
+  holders?: readonly string[]
   exclude?: readonly string[]
 }): WriteTargetChoice => {
   const dispatch = use_app_dispatch()
@@ -43,7 +45,7 @@ export const use_write_target = ({ action, preferred = null, exclude = [] }: {
     .filter(({ library_address, category }) => !exclude.includes(library_address) && !(category === 'shared' && left.includes(library_address)))
   // A 404 from an older node settles the capability list as empty (§8.7.6).
   const loading = libraries.isLoading || held.isLoading
-  const resolution = resolve_target({ targets, chosen, recent, preferred, loading })
+  const resolution = resolve_target({ targets, chosen, recent, preferred, holders, loading })
   const target = resolution.kind === 'target' ? resolution.target : null
   const name_of = (library_address: string): string => {
     const library = libraries.data?.find(({ address }) => address === library_address)

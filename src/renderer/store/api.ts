@@ -151,6 +151,11 @@ export const node_api = createApi({
       query: (query) => ({ method: 'delete', path_template: '/tags', query }),
       invalidatesTags: ['tracks', 'tags']
     }),
+    // A DEL in an own library; no capability authorises one (§3.5.6).
+    remove_track: build.mutation<unknown, { track_id: string, library_address: string }>({
+      query: ({ track_id, library_address }) => ({ method: 'delete', path_template: '/tracks/{id}', params: { id: track_id }, query: { library_address } }),
+      invalidatesTags: ['tracks', 'tags', 'libraries']
+    }),
     // Pins are identity-library records keyed on the audio CID (§4.6.2),
     // binding on every device of the identity.
     pin_track: build.mutation<unknown, { cid: string, pinned: boolean }>({

@@ -3,7 +3,8 @@
 // the listens library, retire, profile choice) and write targets (the
 // importer's selector, adoption into a chosen library, tagging into it),
 // capability management (issue with a filter, revoke, the held list),
-// pinning from the track menu, and the replication-policy editor on a
+// pinning from the track menu, holders in the aggregated view, removal
+// from an own library, and the replication-policy editor on a
 // linked library. Writes stay on the
 // in-process node. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
@@ -72,7 +73,8 @@ try {
   await row.click({ button: 'right' })
   await window.getByRole('menuitem', { name: 'Adopt to library' }).click()
   const adopt = window.getByTestId('adopt-dialog')
-  await adopt.getByLabel('Target library').selectOption({ label: 'Smoke Mixes' })
+  // The default library already holds the track, so Smoke Mixes is the one target.
+  await adopt.getByTestId('write-target').filter({ hasText: /Smoke Mixes$/ }).waitFor()
   await adopt.getByRole('button', { name: 'Adopt', exact: true }).click()
   await toast(window, 'Adopted into Smoke Mixes.')
   await window.getByLabel('Library', { exact: true }).selectOption({ label: 'Smoke Mixes (own, 1 tracks)' })
@@ -97,6 +99,19 @@ try {
   await toast(window, 'Unpinned.')
   await row.getByTestId('pinned').waitFor({ state: 'detached' })
   step('pin', 'pinned, then unpinned, from the track menu')
+  // The aggregated view says which libraries hold a track; remove it from
+  // one own library and the other keeps it.
+  await window.getByLabel('Library', { exact: true }).selectOption({ label: 'All libraries' })
+  await row.getByTestId('track-holders').filter({ hasText: /^in 2 own$/ }).waitFor()
+  step('holders', await row.getByTestId('track-holders').innerText())
+  await row.click({ button: 'right' })
+  await window.getByRole('menuitem', { name: 'Remove from library' }).click()
+  const remove = window.getByTestId('remove-dialog')
+  await remove.getByLabel('Library to remove from').selectOption({ label: 'Smoke Mixes' })
+  await remove.getByRole('button', { name: 'Remove', exact: true }).click()
+  await toast(window, 'Removed from Smoke Mixes.')
+  await row.getByTestId('track-holders').filter({ hasText: /^in 1 own$/ }).waitFor()
+  step('removed', 'V11 Alpha left Smoke Mixes and stays in the default library')
   await nav(window, 'Libraries')
 
   // Capability management on the new library: issue with a filter, revoke.
@@ -144,7 +159,8 @@ try {
   await policy.getByTestId('filter-editor').getByLabel('Value').fill('keep')
   const estimate_text = await policy.getByTestId('storage-estimate').innerText()
   step('estimate', estimate_text)
-  if (!estimate_text.includes('sampled tracks match')) throw new Error('the selective estimate is missing')
+  // The linked library is empty, so its audio size (Library.audio_size_bytes) is exactly zero.
+  if (estimate_text !== '0 B of audio kept on this device.') throw new Error('the selective estimate is missing or not exact')
   await policy.getByRole('button', { name: 'Save' }).click()
   await toast(window, /set to selective/)
   await linked_row.getByTestId('replication-mode').filter({ hasText: 'Selective' }).waitFor()

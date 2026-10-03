@@ -20,9 +20,12 @@ export const check_write_target = (input: unknown): WriteTargetFields | null => 
 }
 
 // The JSON writes the generic request channel carries that append to a
-// library, and where each carries its target.
-const TARGETED_WRITES: Record<string, 'body' | 'query'> = {
+// library, and where each carries its target. A unit test checks this
+// against every write the pinned yaml gives a target.
+export const TARGETED_WRITES: Record<string, 'body' | 'query'> = {
   'post /tracks': 'body',
+  'patch /tracks/{id}': 'body',
+  'delete /tracks/{id}': 'query',
   'post /tags': 'body',
   'delete /tags': 'query',
   'post /import/url': 'body'
