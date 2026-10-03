@@ -11,7 +11,7 @@ import { create_secret_clipboard } from './clipboard-expiry.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { get_audio, test_connection } from './node-client.ts'
-import { node_key_of, type create_node_connection } from './node-connection.ts'
+import type { create_node_connection } from './node-connection.ts'
 import type { NodeSession } from './node-session.ts'
 import { serve_generic_request } from './request-policy.ts'
 import { create_identity_access } from './identity-access.ts'
@@ -64,12 +64,12 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, i
   // mode switch stops or starts the bundled node, the event connection moves
   // to the new node, and a different node wipes the snapshot (§8.8.3).
   handle(IPC_CHANNELS.connection_save, async (input) => {
-    const previous_key = node_key_of(store.get())
+    const previous_key = connection.node_key()
     const saved = await store.save(input)
     if (!saved.ok) return saved
-    if (node_key_of(saved.data) !== previous_key) await snapshots.wipe()
     identity.forget()
     await connection.switched()
+    if (connection.node_key() !== previous_key) await snapshots.wipe()
     return { ok: true, data: connection.view() }
   })
   handle(IPC_CHANNELS.connection_test, async (input) => {
@@ -111,19 +111,30 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, i
     if (typeof text !== 'string' || text === '' || text.length > 10_000) return refuse('Nothing to copy.')
     return { ok: true, data: await secret_clipboard.copy(text) }
   })
-  handle(IPC_CHANNELS.identity_import, async (input) => await identity.import_identity(input))
+  handle(IPC_CHANNELS.identity_import, async (input) => {
+    const result = await identity.import_identity(input)
+    // The own library follows the key, so the node's key for per-node state changes.
+    if (result.ok) await manager.refresh_identity()
+    return result
+  })
   handle(IPC_CHANNELS.identity_public_key, async () => await identity.public_key())
 
   handle(IPC_CHANNELS.bundled_get_state, async () => manager.get_state())
-  handle(IPC_CHANNELS.bundled_restart, async () => { await manager.restart() })
+  // Only in bundled mode: the renderer cannot start a bundled node beside a
+  // remote one (spec §8.3.6).
+  handle(IPC_CHANNELS.bundled_restart, async () => {
+    if (store.get().mode !== 'bundled') return refuse('The bundled node runs only in bundled mode.')
+    await manager.restart()
+    return { ok: true, data: null }
+  })
   handle(IPC_CHANNELS.bundled_open_data_dir, async () => { await shell.openPath(manager.get_state().data_dir) })
   handle(IPC_CHANNELS.bundled_open_log, async () => { shell.showItemInFolder(manager.get_state().log_path) })
 
   handle(IPC_CHANNELS.events_get_state, async () => session.get_state())
   handle(IPC_CHANNELS.events_reconnect_now, async () => { session.reconnect_now() })
 
-  handle(IPC_CHANNELS.snapshot_load, async () => await snapshots.load(node_key_of(store.get())))
-  handle(IPC_CHANNELS.snapshot_update, async (input) => snapshots.update({ snapshot: input, node_key: node_key_of(store.get()) }))
+  handle(IPC_CHANNELS.snapshot_load, async () => await snapshots.load(connection.node_key()))
+  handle(IPC_CHANNELS.snapshot_update, async (input) => snapshots.update({ snapshot: input, node_key: connection.node_key() }))
   handle(IPC_CHANNELS.snapshot_get_info, async () => snapshots.get_info())
   handle(IPC_CHANNELS.snapshot_set_budget, async (input) => await snapshots.set_budget(input))
   handle(IPC_CHANNELS.snapshot_reset, async () => {

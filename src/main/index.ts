@@ -56,7 +56,13 @@ const start = async (): Promise<void> => {
     }
   })
   let forget_identity = (): void => {}
-  const connection = create_node_connection({ store, manager, session: node_session, on_node_changed: () => { forget_identity() } })
+  const connection = create_node_connection({
+    store,
+    manager,
+    session: node_session,
+    on_node_changed: () => { forget_identity() },
+    on_view_changed: (view) => { broadcast(IPC_CHANNELS.connection_view, view) }
+  })
   forget_identity = register_ipc({ store, connection, manager, session: node_session, snapshots, is_app_frame }).forget_identity
   // Spec §8.8.3: written every 30 s when it changed, and on clean shutdown.
   const snapshot_timer = setInterval(() => { snapshots.flush().catch(() => {}) }, SNAPSHOT_WRITE_INTERVAL_MS)

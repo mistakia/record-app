@@ -93,6 +93,8 @@ export interface BundledState {
   stderr_tail: string | null
   // Why ingest is off (the pinned ffmpeg and fpcalc are not bundled yet).
   ingest_disabled: string | null
+  // The node and identity the data directory holds, once it has answered.
+  node_key_pin: { peer_id: string, own_library_address: string | null } | null
 }
 
 export interface ImportAck {
@@ -105,6 +107,9 @@ export interface RecordBridge {
     get: () => Promise<ConnectionView>
     save: (config: ConnectionConfig) => Promise<NodeResult<ConnectionView>>
     test: (config: ConnectionConfig) => Promise<NodeResult<ConnectionTest>>
+    // The view again whenever its node key changes, as when the bundled
+    // node first answers or its identity changes.
+    on_view: (listener: (view: ConnectionView) => void) => () => void
   }
   request: (request: NodeRequest) => Promise<NodeResult<unknown>>
   // request_id names the download so cancel_audio can abort it.
@@ -140,7 +145,7 @@ export interface RecordBridge {
     get_state: () => Promise<BundledState>
     on_state: (listener: (state: BundledState) => void) => () => void
     // A manual restart, as after the automatic restarts gave up.
-    restart: () => Promise<void>
+    restart: () => Promise<NodeResult<null>>
     open_data_dir: () => Promise<void>
     open_log: () => Promise<void>
   }
@@ -160,6 +165,7 @@ export const IPC_CHANNELS = {
   connection_get: 'record:connection:get',
   connection_save: 'record:connection:save',
   connection_test: 'record:connection:test',
+  connection_view: 'record:connection:view',
   request: 'record:request',
   get_audio: 'record:get-audio',
   cancel_audio: 'record:cancel-audio',

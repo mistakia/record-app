@@ -5,7 +5,7 @@
 // that orphan is stopped before a new child starts (§8.4.5). Imports
 // nothing from Electron.
 
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { link, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 export const LOCK_FILE = 'record-app.lock'
@@ -37,7 +37,7 @@ const read_record = async (path: string): Promise<LockRecord | null> => {
   }
 }
 
-export const create_node_lock = ({ data_dir, app_pid, owner, probe, node_marker }: {
+export const create_node_lock = ({ data_dir, app_pid, owner, probe, node_marker, app_marker }: {
   data_dir: string
   app_pid: number
   // Unique per manager, so two managers in one process still exclude each other.
@@ -45,11 +45,14 @@ export const create_node_lock = ({ data_dir, app_pid, owner, probe, node_marker 
   probe: ProcessProbe
   // Text in the command line that marks a process as this node's child.
   node_marker: string
+  // Text in the command line of the app itself (its executable path), so a
+  // PID the OS has since given to another program does not hold the lock.
+  app_marker: string
 }) => {
   const path = join(data_dir, LOCK_FILE)
 
-  const write = async (record: LockRecord, flag: 'wx' | 'w'): Promise<void> => {
-    await writeFile(path, `${JSON.stringify(record)}\n`, { flag, mode: 0o600 })
+  const write = async (record: LockRecord): Promise<void> => {
+    await writeFile(path, `${JSON.stringify(record)}\n`, { mode: 0o600 })
   }
 
   return {
@@ -60,7 +63,7 @@ export const create_node_lock = ({ data_dir, app_pid, owner, probe, node_marker 
       const existing = await read_record(path)
       if (existing !== null) {
         if (existing.owner === owner) return { ok: true, cleaned }
-        if (probe.is_alive(existing.app_pid)) {
+        if (probe.is_alive(existing.app_pid) && (await probe.command_of(existing.app_pid))?.includes(app_marker) === true) {
           return { ok: false, reason: `The bundled node's data directory is in use by another running copy of the app (process ${existing.app_pid}).` }
         }
         cleaned = 'stale'
@@ -75,15 +78,21 @@ export const create_node_lock = ({ data_dir, app_pid, owner, probe, node_marker 
         }
         await rm(path, { force: true })
       }
+      // Written whole to a private file, then linked into place: link fails if
+      // the lock exists, so of two acquirers racing past a stale lock, one wins.
+      const temporary_path = `${path}.${owner}.tmp`
+      await writeFile(temporary_path, `${JSON.stringify({ app_pid, owner, child_pid: null })}\n`, { mode: 0o600 })
       try {
-        await write({ app_pid, owner, child_pid: null }, 'wx')
+        await link(temporary_path, path)
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'EEXIST') return { ok: false, reason: 'Another process took the bundled node\'s data directory lock first.' }
         throw error
+      } finally {
+        await rm(temporary_path, { force: true })
       }
       return { ok: true, cleaned }
     },
-    record_child: async (child_pid: number | null): Promise<void> => { await write({ app_pid, owner, child_pid }, 'w') },
+    record_child: async (child_pid: number | null): Promise<void> => { await write({ app_pid, owner, child_pid }) },
     release: async (): Promise<void> => {
       const existing = await read_record(path)
       if (existing?.owner === owner) await rm(path, { force: true })

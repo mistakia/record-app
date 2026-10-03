@@ -1,22 +1,27 @@
-// The bundled node (spec §8.4): spawned as a child under Electron's own
-// Node (ELECTRON_RUN_AS_NODE), on a loopback port with a data directory
-// under userData; health-checked every 250 ms until it answers or 30 s
-// pass; restarted after a crash with backoff (at once, then 1, 2, 4, 8 s, up
-// to 30 s) until five restarts in a row fail; and stopped with SIGTERM, then
-// SIGKILL after 10 s. Imports nothing from Electron.
+// The bundled node (spec §8.4): spawned as a child through an adapter
+// (Electron's utilityProcess in the app), on a loopback port with a data
+// directory under userData; health-checked every 250 ms until it answers or
+// 30 s pass; restarted after a crash with backoff (at once, then 1, 2, 4,
+// 8 s, up to 30 s) until five restarts in a row fail; and stopped with
+// SIGTERM, then SIGKILL after 10 s. Start, stop, and restart run one at a
+// time, and a stop bumps a generation that an unfinished start checks after
+// every await, so no child outlives a stop. Imports nothing from Electron.
 
-import { spawn, type ChildProcess } from 'node:child_process'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
 
 import type { BundledState } from '#shared/bridge.ts'
 import { MAX_FAILED_RESTARTS } from '#shared/bundled.ts'
+import { build_child_env } from './child-env.ts'
+import type { ChildHandle, SpawnChild } from './child-handle.ts'
 import type { create_node_lock } from './node-lock.ts'
 import type { create_node_log } from './node-log.ts'
+import { read_pin, write_pin, type NodePin } from './node-pin.ts'
 
 const RESTART_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000]
 const RESTART_MAX_DELAY_MS = 30_000
 const INGEST_DISABLED = /ingest disabled: (.*)/
+const LISTENING = /listening on http:\/\/127\.0\.0\.1:(\d+)\//
 
 export { MAX_FAILED_RESTARTS }
 
@@ -37,26 +42,34 @@ export const choose_port = async (preferred: number | null): Promise<number> => 
   return (preferred === null ? null : await try_listen(preferred)) ?? await try_listen(0) ?? 0
 }
 
-export const probe_health = async (url: string): Promise<boolean> => {
+export interface Health { peer_id: string, own_library_address: string | null }
+
+// GET /api/settings for the peer_id, and the own library for the identity.
+export const probe_health = async (url: string): Promise<Health | null> => {
   try {
-    const response = await fetch(`${url}/api/settings`, { signal: AbortSignal.timeout(1_000) })
-    return response.ok
+    const settings = await (await fetch(`${url}/api/settings`, { signal: AbortSignal.timeout(1_000) })).json() as { peer_id?: unknown }
+    if (typeof settings.peer_id !== 'string') return null
+    const libraries = await (await fetch(`${url}/api/libraries`, { signal: AbortSignal.timeout(2_000) })).json() as Array<{ is_own?: unknown, address?: unknown }>
+    const own = Array.isArray(libraries) ? libraries.find(({ is_own }) => is_own === true)?.address : undefined
+    return { peer_id: settings.peer_id, own_library_address: typeof own === 'string' ? own : null }
   } catch {
-    return false
+    return null
   }
 }
 
 export const create_node_manager = ({
-  node_path, cli_path, data_dir, config_path, version, env, lock, log, on_state,
+  spawn_child, cli_path, data_dir, config_path, version, env, lock, log, on_state,
   preferred_port = async () => null,
+  pick_port = choose_port,
   health = probe_health,
   delay_for = restart_delay_ms,
+  checkpoint = async () => {},
   health_interval_ms = 250,
   startup_timeout_ms = 30_000,
   shutdown_timeout_ms = 10_000,
   stable_after_ms = 60_000
 }: {
-  node_path: string
+  spawn_child: SpawnChild
   cli_path: string
   data_dir: string
   config_path: string
@@ -66,8 +79,11 @@ export const create_node_manager = ({
   log: ReturnType<typeof create_node_log>
   on_state: (state: BundledState) => void
   preferred_port?: () => Promise<number | null>
-  health?: (url: string) => Promise<boolean>
+  pick_port?: (preferred: number | null) => Promise<number>
+  health?: (url: string) => Promise<Health | null>
   delay_for?: (attempt: number) => number
+  // Called between the steps of a start; tests stop the manager here.
+  checkpoint?: (step: string) => Promise<void>
   health_interval_ms?: number
   startup_timeout_ms?: number
   shutdown_timeout_ms?: number
@@ -85,11 +101,13 @@ export const create_node_manager = ({
     retry_at_ms: null,
     error: null,
     stderr_tail: null,
-    ingest_disabled: null
+    ingest_disabled: null,
+    node_key_pin: read_pin(data_dir)
   }
-  let child: ChildProcess | null = null
-  let exited: Promise<void> = Promise.resolve()
-  let stopping = false
+  let child: ChildHandle | null = null
+  // Bumped by every stop; a start that sees it change gives up.
+  let generation = 0
+  let queue: Promise<unknown> = Promise.resolve()
   const timers = new Set<ReturnType<typeof setTimeout>>()
 
   const set_state = (patch: Partial<BundledState>): void => {
@@ -104,24 +122,42 @@ export const create_node_manager = ({
     for (const timer of timers) clearTimeout(timer)
     timers.clear()
   }
-
+  const serialize = async <T>(task: () => Promise<T>): Promise<T> => {
+    const run = queue.then(task)
+    queue = run.catch(() => {})
+    return await run
+  }
   const fail = (error: string): void => {
     set_state({ status: 'failed', url: null, pid: null, retry_at_ms: null, error, stderr_tail: log.stderr_tail() || null })
   }
 
-  const watch_health = (url: string, current: ChildProcess): void => {
+  // Healthy means: our child, still running, announced it listens on this
+  // port, and the node answering there is the one pinned to this data
+  // directory (the first healthy start pins it).
+  const watch_health = (port: number, current: ChildHandle, listening: { port: number | null }): void => {
+    const url = `http://127.0.0.1:${port}`
     const deadline = Date.now() + startup_timeout_ms
     const check = (): void => {
       if (child !== current) return
-      health(url).then((ok) => {
+      health(url).then(async (answer) => {
         if (child !== current) return
-        if (ok) {
-          set_state({ status: 'running', url, retry_at_ms: null, error: null })
+        const pin = state.node_key_pin
+        if (answer !== null && pin !== null && answer.peer_id !== pin.peer_id) {
+          child = null
+          current.kill()
+          fail(`Another node answered on the bundled node's port (peer ${answer.peer_id}, expected ${pin.peer_id}). It was not used.`)
+          return
+        }
+        if (answer !== null && listening.port === port && current.alive()) {
+          const next_pin: NodePin = { peer_id: answer.peer_id, own_library_address: answer.own_library_address }
+          if (pin === null || pin.own_library_address !== next_pin.own_library_address) await write_pin(data_dir, next_pin)
+          if (child !== current) return
+          set_state({ status: 'running', url, retry_at_ms: null, error: null, node_key_pin: next_pin })
           // A node that stays up this long has recovered; count from zero again.
           later(stable_after_ms, () => { if (child === current) set_state({ failed_restarts: 0 }) })
         } else if (Date.now() >= deadline) {
           child = null
-          current.kill('SIGKILL')
+          current.kill()
           fail(`The bundled node did not answer within ${Math.round(startup_timeout_ms / 1000)} s.`)
         } else {
           later(health_interval_ms, check)
@@ -131,9 +167,9 @@ export const create_node_manager = ({
     check()
   }
 
-  const on_exit = (current: ChildProcess) => (code: number | null, signal: NodeJS.Signals | null): void => {
+  const on_exit = (current: ChildHandle) => (code: number | null, signal: string | null): void => {
     lock.record_child(null).catch(() => {})
-    if (child !== current || stopping) return
+    if (child !== current) return
     child = null
     clear_timers()
     const failed_restarts = state.failed_restarts + 1
@@ -143,46 +179,85 @@ export const create_node_manager = ({
       return
     }
     const delay = delay_for(failed_restarts - 1)
+    const restart_generation = generation
     set_state({ status: 'restarting', url: null, pid: null, failed_restarts, retry_at_ms: Date.now() + delay, error: `The bundled node stopped (${how}).` })
-    later(delay, () => { launch().catch((error: unknown) => { fail(String(error)) }) })
+    later(delay, () => {
+      serialize(async () => { if (generation === restart_generation && child === null) await launch(restart_generation) })
+        .catch((error: unknown) => { fail(String(error)) })
+    })
   }
 
-  async function launch (): Promise<void> {
+  // Each await is followed by a generation check: a stop during a start
+  // leaves no child behind, and kills one that spawned for a stale start.
+  async function launch (started_generation: number): Promise<void> {
+    const stale = (): boolean => started_generation !== generation
     log.clear_tail()
-    const port = await choose_port(state.port ?? await preferred_port())
+    const port = await pick_port(state.port ?? await preferred_port())
+    await checkpoint('port')
+    if (stale()) return
     await mkdir(data_dir, { recursive: true })
     // Loopback only and no browser origins (spec §8.4.2, §8.7.5): record-node
     // binds 127.0.0.1 by default, and this config pins it.
     await writeFile(config_path, `${JSON.stringify({ host: '127.0.0.1', port, cors_origins: [] })}\n`, { mode: 0o600 })
-    const { RECORD_CONFIG: _ignored, ...child_env } = env
-    const current = spawn(node_path, [cli_path, '--port', String(port), '--data-dir', data_dir, '--config', config_path], {
-      env: { ...child_env, ELECTRON_RUN_AS_NODE: '1' },
-      stdio: ['ignore', 'pipe', 'pipe']
-    })
+    await checkpoint('config')
+    if (stale()) return
+    const listening = { port: null as number | null }
+    const current = spawn_child({ cli_path, args: ['--port', String(port), '--data-dir', data_dir, '--config', config_path], env: build_child_env(env) })
     child = current
-    exited = new Promise((resolve) => { current.once('exit', () => { resolve() }) })
-    current.on('exit', on_exit(current))
-    current.stdout?.on('data', (data: Buffer) => { log.append('out', String(data)) })
+    current.on_exit(on_exit(current))
+    current.stdout?.on('data', (data: Buffer) => {
+      const text = String(data)
+      log.append('out', text)
+      const announced = LISTENING.exec(text)
+      if (announced !== null) listening.port = Number(announced[1])
+    })
     current.stderr?.on('data', (data: Buffer) => {
       const text = String(data)
       log.append('err', text)
       const disabled = INGEST_DISABLED.exec(text)
       if (disabled !== null) set_state({ ingest_disabled: disabled[1]?.trim() ?? 'ingest is disabled' })
     })
-    set_state({ status: state.status === 'restarting' ? 'restarting' : 'starting', port, pid: current.pid ?? null, url: null })
-    if (current.pid !== undefined) await lock.record_child(current.pid)
-    watch_health(`http://127.0.0.1:${port}`, current)
+    const pid = await current.spawned
+    await checkpoint('spawned')
+    if (stale()) {
+      if (child === current) child = null
+      current.kill()
+      return
+    }
+    set_state({ status: state.status === 'restarting' ? 'restarting' : 'starting', port, pid, url: null })
+    if (pid !== null) await lock.record_child(pid)
+    await checkpoint('locked')
+    if (stale()) {
+      if (child === current) child = null
+      current.kill()
+      return
+    }
+    watch_health(port, current, listening)
   }
 
-  const stop = async (): Promise<void> => {
-    stopping = true
+  const start_now = async (started_generation: number): Promise<void> => {
+    set_state({ status: 'starting', error: null, stderr_tail: null, failed_restarts: 0, ingest_disabled: null })
+    const locked = await lock.acquire()
+    await checkpoint('lock')
+    if (started_generation !== generation) {
+      await lock.release()
+      return
+    }
+    if (!locked.ok) {
+      fail(locked.reason)
+      return
+    }
+    await launch(started_generation)
+  }
+
+  const stop_now = async (): Promise<void> => {
     clear_timers()
     const current = child
     child = null
-    if (current !== null && current.exitCode === null && current.signalCode === null) {
-      current.kill('SIGTERM')
-      const forced = setTimeout(() => { current.kill('SIGKILL') }, shutdown_timeout_ms)
-      await exited
+    if (current !== null && current.alive()) {
+      current.terminate()
+      const forced = setTimeout(() => { current.kill() }, shutdown_timeout_ms)
+      await current.exited
       clearTimeout(forced)
     }
     await lock.release()
@@ -192,31 +267,37 @@ export const create_node_manager = ({
   return {
     get_state: (): BundledState => state,
     start: async (): Promise<void> => {
-      if (child !== null) return
-      stopping = false
-      set_state({ status: 'starting', error: null, stderr_tail: null, failed_restarts: 0, ingest_disabled: null })
-      const locked = await lock.acquire()
-      if (!locked.ok) {
-        fail(locked.reason)
-        return
-      }
-      await launch().catch((error: unknown) => { fail(String(error)) })
+      const started_generation = generation
+      await serialize(async () => {
+        if (child !== null || started_generation !== generation) return
+        await start_now(started_generation)
+      })
     },
-    stop,
+    stop: async (): Promise<void> => {
+      generation++
+      await serialize(stop_now)
+    },
+    // A manual restart, as after the automatic restarts gave up. Two at once
+    // run one after the other, and the second finds a child already there.
+    // A stop that comes in meanwhile still wins, through the generation.
     restart: async (): Promise<void> => {
-      if (child !== null) await stop()
-      stopping = false
-      set_state({ failed_restarts: 0 })
-      clear_timers()
-      const locked = await lock.acquire()
-      if (!locked.ok) {
-        fail(locked.reason)
-        return
-      }
-      set_state({ status: 'starting', error: null, stderr_tail: null })
-      await launch().catch((error: unknown) => { fail(String(error)) })
+      const restart_generation = generation
+      await serialize(async () => {
+        if (restart_generation !== generation || child !== null) return
+        await stop_now()
+        await start_now(restart_generation)
+      })
+    },
+    // Re-reads the identity after an import, so per-node state follows it.
+    refresh_identity: async (): Promise<void> => {
+      if (state.url === null || state.node_key_pin === null) return
+      const answer = await health(state.url)
+      if (answer === null || answer.peer_id !== state.node_key_pin.peer_id) return
+      const pin = { peer_id: answer.peer_id, own_library_address: answer.own_library_address }
+      await write_pin(data_dir, pin)
+      set_state({ node_key_pin: pin })
     },
     // Synchronous, for process exit, where nothing asynchronous will run.
-    kill_now: (): void => { child?.kill('SIGKILL') }
+    kill_now: (): void => { child?.kill() }
   }
 }

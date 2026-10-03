@@ -4,7 +4,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 
-import { IPC_CHANNELS, type BundledState, type ConnectionConfig, type EventsState, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
+import { IPC_CHANNELS, type BundledState, type ConnectionConfig, type ConnectionView, type EventsState, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
 import type { HibernationSnapshot } from '#shared/snapshot.ts'
 
 const require_object = (value: unknown, name: string): void => {
@@ -30,7 +30,8 @@ const bridge: RecordBridge = {
     test: async (config: ConnectionConfig) => {
       require_object(config, 'config')
       return await ipcRenderer.invoke(IPC_CHANNELS.connection_test, { mode: config.mode, node_url: config.node_url })
-    }
+    },
+    on_view: (listener: (view: ConnectionView) => void) => subscribe(IPC_CHANNELS.connection_view, listener)
   },
   request: async (request: NodeRequest) => {
     require_object(request, 'request')
@@ -74,7 +75,7 @@ const bridge: RecordBridge = {
   bundled: {
     get_state: async () => await ipcRenderer.invoke(IPC_CHANNELS.bundled_get_state),
     on_state: (listener: (state: BundledState) => void) => subscribe(IPC_CHANNELS.bundled_state, listener),
-    restart: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_restart) },
+    restart: async () => await ipcRenderer.invoke(IPC_CHANNELS.bundled_restart),
     open_data_dir: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_data_dir) },
     open_log: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_log) }
   },
