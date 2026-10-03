@@ -51,6 +51,17 @@
   color: var(--accent);
 }
 
+.shared {
+  border-color: #b26ad8;
+  color: #b26ad8;
+}
+
+.scope {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .linked {
   border-color: #2e9d4f;
   color: #2e9d4f;

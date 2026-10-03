@@ -10,6 +10,7 @@ import { useState, type FormEvent } from 'react'
 
 import styles from './own-libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
+import { LibraryCapabilities } from '#renderer/components/capability/library-capabilities.tsx'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { AboutEditor } from './about-editor.tsx'
 import { can_retire, has_profile, library_name, own_libraries_of, own_library_address } from './library-category.ts'
@@ -23,10 +24,12 @@ const DISCRIMINATOR = /^[0-9a-zA-Z-]{1,64}$/
 const is_not_found = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && 'status' in error && (error as { status: unknown }).status === 404
 
-const OwnLibraryRow = ({ library, editing, on_edit, on_retire }: {
+const OwnLibraryRow = ({ library, editing, managing, on_edit, on_manage, on_retire }: {
   library: Library
   editing: boolean
+  managing: boolean
   on_edit: () => void
+  on_manage: () => void
   on_retire: () => void
 }) => {
   const writes_allowed = use_app_selector(select_writes_allowed)
@@ -44,6 +47,7 @@ const OwnLibraryRow = ({ library, editing, on_edit, on_retire }: {
       <td>{library.track_count}</td>
       <td className={styles.actions}>
         {has_profile(library) && <button type='button' aria-pressed={editing} onClick={on_edit}>Profile</button>}
+        {library.library_type === 'recordstore' && <button type='button' aria-pressed={managing} onClick={on_manage}>Capabilities</button>}
         {can_retire(library) && <button type='button' disabled={!writes_allowed} onClick={on_retire}>Retire</button>}
       </td>
     </tr>
@@ -60,6 +64,7 @@ export const OwnLibraries = () => {
   const [creating, set_creating] = useState(false)
   const [retiring, set_retiring] = useState<Library | null>(null)
   const [editing, set_editing] = useState<string | null>(null)
+  const [managing, set_managing] = useState<string | null>(null)
 
   if (is_not_found(own.error)) {
     const address = own_library_address(all.data)
@@ -70,6 +75,7 @@ export const OwnLibraries = () => {
   // default own library.
   const chosen = libraries.find(({ address }) => address === editing)
   const profile_address = chosen !== undefined && has_profile(chosen) ? chosen.address : own_library_address(libraries)
+  const managed = libraries.find(({ address }) => address === managing)
   const discriminator_valid = discriminator.trim() === '' || DISCRIMINATOR.test(discriminator.trim())
 
   const create = async (event: FormEvent) => {
@@ -111,7 +117,9 @@ export const OwnLibraries = () => {
               key={library.id}
               library={library}
               editing={library.address === profile_address}
+              managing={library.address === managing}
               on_edit={() => { set_editing(library.address) }}
+              on_manage={() => { set_managing(managing === library.address ? null : library.address) }}
               on_retire={() => { set_retiring(library) }}
             />
           ))}
@@ -132,6 +140,7 @@ export const OwnLibraries = () => {
         <button type='submit' disabled={!writes_allowed || creating || !discriminator_valid}>{creating ? 'Creating' : 'Create'}</button>
         {!discriminator_valid && <p className={styles.error}>The address name is 1 to 64 letters, digits, and hyphens.</p>}
       </form>
+      {managed !== undefined && <LibraryCapabilities key={managed.address} address={managed.address} name={library_name(managed)} retired={managed.is_retired} />}
       {profile_address !== null && <AboutEditor key={profile_address} address={profile_address} />}
       <Dialog open={retiring !== null} title='Retire library' on_close={() => { set_retiring(null) }}>
         <p>

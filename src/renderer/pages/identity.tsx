@@ -1,9 +1,11 @@
-// The identity surface (spec §8.5.7): who holds the key, the public key on
-// request, the own libraries, the last export, and export and import.
+// The identity surface (spec §8.5.7, §8.9.1): who holds the key, the public
+// key on request, the own libraries, the capabilities held from others, the
+// last export, and export and import.
 
 import { useState } from 'react'
 
 import styles from './identity.module.css'
+import { HeldCapabilities } from '#renderer/components/capability/held-capabilities.tsx'
 import { ExportDialog } from '#renderer/components/identity/export-dialog.tsx'
 import { ImportForm } from '#renderer/components/identity/import-form.tsx'
 import { library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
@@ -67,6 +69,7 @@ export const Identity = () => {
       <div>
         <button type='button' onClick={() => { set_exporting(true) }}>Export identity</button>
       </div>
+      <HeldCapabilities />
       <h2>Import</h2>
       <ImportForm mode={mode} />
       {exporting && <ExportDialog node_key={node_key} on_close={() => { set_exporting(false); set_export_count((count) => count + 1) }} />}

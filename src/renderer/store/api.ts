@@ -90,6 +90,11 @@ export const node_api = createApi({
       query: () => ({ method: 'get', path_template: '/identity/capabilities' }),
       providesTags: ['capabilities']
     }),
+    // Every capability ever issued in a library, with its status.
+    get_library_capabilities: build.query<Capability[], string>({
+      query: (address) => ({ method: 'get', path_template: '/libraries/{address}/capabilities', params: encode(address) }),
+      providesTags: ['capabilities']
+    }),
     get_tracks: build.query<TrackList, GetTracksArgs>({
       query: (args) => ({ method: 'get', path_template: '/tracks', query: { ...args } }),
       providesTags: ['tracks']
@@ -150,6 +155,14 @@ export const node_api = createApi({
     disconnect_library: build.mutation<unknown, string>({
       query: (address) => ({ method: 'post', path_template: '/libraries/{address}/disconnect', params: encode(address) }),
       invalidatesTags: ['libraries']
+    }),
+    issue_capability: build.mutation<Capability, { address: string, grantee: unknown, actions: string[], filter?: unknown, conditions?: unknown[] }>({
+      query: ({ address, ...body }) => ({ method: 'post', path_template: '/libraries/{address}/capabilities', params: encode(address), body }),
+      invalidatesTags: ['capabilities', 'libraries']
+    }),
+    revoke_capability: build.mutation<unknown, { address: string, capability_id: string }>({
+      query: ({ address, capability_id }) => ({ method: 'delete', path_template: '/libraries/{address}/capabilities/{id}', params: { address, id: capability_id } }),
+      invalidatesTags: ['capabilities', 'libraries']
     }),
     create_own_library: build.mutation<Library, { discriminator?: string, about?: { name: string } }>({
       query: (body) => ({ method: 'post', path_template: '/identity/libraries', body }),

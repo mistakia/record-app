@@ -1,0 +1,102 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section h3,
+.section h4 {
+  margin: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.status {
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+
+.active {
+  border-color: #2e9d4f;
+  color: #2e9d4f;
+}
+
+.revoked,
+.inert {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.expired {
+  color: var(--muted);
+}
+
+.issue {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 640px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field textarea,
+.field input {
+  font: inherit;
+  padding: 4px 6px;
+}
+
+.actions_set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.held_library {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.held_header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.dialog_actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

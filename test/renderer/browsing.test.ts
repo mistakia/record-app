@@ -65,6 +65,8 @@ describe('libraries', () => {
   test('category, own address, and replicating, including a fresh link with nothing yet', () => {
     expect(library_category(library({ is_own: true }))).toBe('own')
     expect(library_category(library({ is_linked: true }))).toBe('linked')
+    expect(library_category(library({ is_linked: true, held_capability_ids: ['cap'] }))).toBe('shared')
+    expect(library_category(library({ is_own: true, held_capability_ids: ['cap'] }))).toBe('own')
     expect(library_category(library())).toBe('discovered')
     expect(own_library_address([library(), library({ is_own: true, address: '/mine' })])).toBe('/mine')
     // The listens library and a retired one are own too, and never the write target.

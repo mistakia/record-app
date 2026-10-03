@@ -1,0 +1,59 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0 4px 8px;
+  border-left: 2px solid var(--border);
+}
+
+.header,
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.children {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field {
+  min-width: 140px;
+}
+
+.bound {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bound input {
+  width: 90px;
+}
+
+.json {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.summary {
+  margin: 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+}

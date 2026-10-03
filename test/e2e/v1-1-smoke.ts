@@ -1,7 +1,8 @@
 // The built app (`bun run build` first) against an in-process record-node,
 // walking the record-docs v1.1 surfaces: own-library management (create,
 // the listens library, retire, profile choice) and write targets (the
-// importer's selector, adoption into a chosen library, tagging into it). Writes stay on the
+// importer's selector, adoption into a chosen library, tagging into it),
+// and capability management (issue with a filter, revoke, the held list). Writes stay on the
 // in-process node. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
 // record-node's pins. Runs under Node: node test/e2e/v1-1-smoke.ts
@@ -83,14 +84,40 @@ try {
   await editor.getByRole('button', { name: 'Done' }).click()
   await nav(window, 'Libraries')
 
+  // Capability management on the new library: issue with a filter, revoke.
+  await created.getByRole('button', { name: 'Capabilities' }).click()
+  const panel = window.getByTestId('library-capabilities')
+  await panel.getByLabel('Grantee public keys').fill('0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798')
+  await panel.getByLabel('Add tags').check()
+  await panel.getByLabel('Use a filter').check()
+  await panel.getByTestId('filter-editor').getByLabel('Value').fill('house')
+  step('filter', await panel.getByTestId('filter-summary').innerText())
+  await panel.getByRole('button', { name: 'Issue', exact: true }).click()
+  await toast(window, 'Capability issued.')
+  const capability_row = panel.getByTestId('capability-row').first()
+  await capability_row.and(window.locator('[data-status=active]')).waitFor()
+  step('issued', (await capability_row.innerText()).replaceAll('\n', ' | ').replaceAll('\t', ' | '))
+  await capability_row.getByRole('button', { name: 'Revoke' }).click()
+  const revoke_text = await window.getByRole('dialog').innerText()
+  if (!revoke_text.includes('not retroactive')) throw new Error('the revoke confirmation does not warn that revocation is not retroactive')
+  await window.getByRole('dialog').getByRole('button', { name: 'Revoke', exact: true }).click()
+  await toast(window, 'Capability revoked.')
+  await panel.getByTestId('capability-row').and(window.locator('[data-status=revoked]')).first().waitFor()
+  step('revoked', 'listed as revoked')
+
   await created.getByRole('button', { name: 'Retire' }).click()
   await window.getByRole('dialog').getByRole('button', { name: 'Retire permanently' }).click()
   await toast(window, /^Retired /)
   await own_rows.filter({ hasText: 'Smoke Mixes' }).and(window.locator('[data-retired=true]')).waitFor()
-  if (await own_rows.filter({ hasText: 'Smoke Mixes' }).getByRole('button').count() !== 0) throw new Error('a retired library still offers actions')
-  step('retired', 'marked retired, no actions')
+  const retired_row = own_rows.filter({ hasText: 'Smoke Mixes' })
+  if (await retired_row.getByRole('button', { name: /^(Retire|Profile)$/ }).count() !== 0) throw new Error('a retired library still offers Retire or Profile')
+  await window.getByTestId('library-capabilities').getByText('This library is retired').waitFor()
+  if (await window.getByTestId('issue-capability').count() !== 0) throw new Error('a retired library offers issuing')
+  step('retired', 'marked retired; capabilities read-only')
   await nav(window, 'Identity')
   await window.getByTestId('identity-own-library').filter({ hasText: '(retired)' }).waitFor()
+  await window.getByTestId('held-capabilities').getByText('No other identity has granted you a capability.').waitFor()
+  step('held capabilities', await window.getByTestId('held-capabilities').innerText())
   step('identity own libraries', await window.getByTestId('identity-own-library').allInnerTexts())
 
   if (console_errors.length > 0) throw new Error(`renderer console errors: ${console_errors.join(' | ')}`)

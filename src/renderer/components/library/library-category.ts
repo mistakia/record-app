@@ -1,13 +1,13 @@
-// Spec §8.6.1: every visible library shows its category. Shared libraries
-// (held capabilities) wait on the capability-management UI. A library the
-// node only knows from peer discovery is shown as discovered.
+// Spec §8.6.1: every visible library shows its category: own, shared (this
+// identity holds an active capability there), linked (followed, read-only),
+// or discovered (known only from peer discovery).
 
 import type { Library } from '#renderer/api/types.ts'
 
-export type LibraryCategory = 'own' | 'linked' | 'discovered'
+export type LibraryCategory = 'own' | 'shared' | 'linked' | 'discovered'
 
-export const library_category = (library: Pick<Library, 'is_own' | 'is_linked'>): LibraryCategory =>
-  library.is_own ? 'own' : library.is_linked ? 'linked' : 'discovered'
+export const library_category = (library: Pick<Library, 'is_own' | 'is_linked' | 'held_capability_ids'>): LibraryCategory =>
+  library.is_own ? 'own' : library.held_capability_ids.length > 0 ? 'shared' : library.is_linked ? 'linked' : 'discovered'
 
 export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address'>): string =>
   library.alias ?? library.name ?? library.address

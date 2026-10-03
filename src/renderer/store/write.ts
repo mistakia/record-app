@@ -14,8 +14,14 @@ export const report_write = async <T>({ dispatch, write, success }: {
 }): Promise<T | null> => {
   const result = await write
   if (result.error !== undefined) {
-    const failure = result.error as Partial<NodeFailure>
-    dispatch(notified({ kind: 'error', message: typeof failure.message === 'string' ? failure.message : 'The node did not accept the change.' }))
+    const failure = result.error as Partial<NodeFailure> & { code?: unknown }
+    // Spec §8.6.8 words these two refusals for the user.
+    const message = failure.code === 'CAPABILITY_EXPIRED'
+      ? 'The capability authorising this action has expired.'
+      : failure.code === 'CAPABILITY_REVOKED'
+        ? 'The capability authorising this action has been revoked.'
+        : typeof failure.message === 'string' ? failure.message : 'The node did not accept the change.'
+    dispatch(notified({ kind: 'error', message }))
     return null
   }
   if (success !== null) dispatch(notified({ kind: 'info', message: success }))
