@@ -15,7 +15,7 @@ import { build_child_env } from '#main/bundled/child-env.ts'
 import type { ChildHandle, SpawnChild } from '#main/bundled/child-handle.ts'
 import { create_node_log } from '#main/bundled/node-log.ts'
 import { create_node_manager } from '#main/bundled/node-manager.ts'
-import { app_marker, CHILD_FILE } from '#main/bundled/node-orphan.ts'
+import { app_marker, carries_marker, CHILD_FILE } from '#main/bundled/node-orphan.ts'
 import { describe_process, is_alive } from '#main/bundled/process-probe.ts'
 
 const cli_path = process.argv.at(-1) as string
@@ -95,8 +95,8 @@ const run = async () => {
     // An orphan is found by its recorded PID and the app's marker in its
     // command line, which a utility child's must therefore carry.
     const recorded = JSON.parse(await readFile(join(root, 'node-data', CHILD_FILE), 'utf8')) as { pid: number }
-    const command = (await describe_process(first.pid as number))?.command ?? ''
-    check('child recorded, carrying the app marker', recorded.pid === first.pid && command.includes(app_marker(process.execPath)), { recorded, marker: app_marker(process.execPath), command: command.slice(0, 200) })
+    const info = await describe_process(first.pid as number)
+    check('child recorded, carrying the app marker', recorded.pid === first.pid && info !== null && carries_marker(info, app_marker(process.execPath)), { recorded, marker: app_marker(process.execPath), executable: info?.executable, command: info?.command.slice(0, 200) })
 
     // The environment: a NODE_OPTIONS in the app never reaches the child.
     const dump = join(root, 'env.mjs')
