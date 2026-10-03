@@ -10,6 +10,7 @@ import { useState } from 'react'
 import styles from './target-select.module.css'
 import { library_name } from './library-category.ts'
 import { resolve_target, write_targets, type TargetResolution, type WriteAction, type WriteTarget } from '#renderer/library/write-targets.ts'
+import { use_left_libraries } from '#renderer/library/left-libraries.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { write_target_used } from '#renderer/store/ui.ts'
@@ -35,8 +36,11 @@ export const use_write_target = ({ action, preferred = null, exclude = [] }: {
   const held = node_api.endpoints.get_held_capabilities.useQuery()
   const recent = use_app_selector((state) => state.ui.recent_write_target)
   const [chosen, set_chosen] = useState<string | null>(null)
+  // Shared libraries the user left are not offered (§8.6.4).
+  const node_key = use_app_selector((state) => state.connection.config?.node_key ?? null)
+  const left = use_left_libraries(node_key)
   const targets = write_targets({ libraries: libraries.data ?? [], held: held.data ?? [], action })
-    .filter(({ library_address }) => !exclude.includes(library_address))
+    .filter(({ library_address, category }) => !exclude.includes(library_address) && !(category === 'shared' && left.includes(library_address)))
   // A 404 from an older node settles the capability list as empty (§8.7.6).
   const loading = libraries.isLoading || held.isLoading
   const resolution = resolve_target({ targets, chosen, recent, preferred, loading })

@@ -16,6 +16,8 @@ import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { library_connection_requested, library_linked } from '#renderer/store/replication.ts'
 import { library_selected } from '#renderer/store/ui.ts'
 import { report_write } from '#renderer/store/write.ts'
+import { describe_scope } from '#renderer/library/capabilities.ts'
+import { use_left_libraries } from '#renderer/library/left-libraries.ts'
 
 const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
   library: Library
@@ -30,6 +32,13 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
   const connected = use_app_selector((state) => state.replication.connected[library.address])
   const linked_at = use_app_selector((state) => state.replication.linked_at[library.address])
   const category = library_category(library)
+  const held = node_api.endpoints.get_held_capabilities.useQuery(undefined, { skip: category !== 'shared' })
+  const node_key = use_app_selector((state) => state.connection.config?.node_key ?? null)
+  const left = use_left_libraries(node_key).includes(library.address)
+  // Spec §8.6.1: a shared library shows the scope of what this identity holds there.
+  const scope = category === 'shared'
+    ? (held.data ?? []).filter(({ library_address, status }) => library_address === library.address && status === 'active').map(describe_scope)
+    : []
   const progress = current_progress({ library, live_progress, libraries_fetched_at })
   const replicating = is_replicating({ library, progress, linked_at, now })
 
@@ -45,6 +54,8 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
       <td>
         <span className={styles.name}>{library_name(library)}</span>
         <span className={styles.address}>{library.address}</span>
+        {scope.map((line) => <span key={line} className={styles.scope} data-testid='shared-scope'>You may: {line}</span>)}
+        {left && <span className={styles.scope}>You left this shared library; the app offers no writes to it.</span>}
       </td>
       <td>
         <span className={`${styles.badge} ${styles[category]}`}>{category}</span>
@@ -68,7 +79,7 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
             <button type='button' disabled={!writes_allowed || connected === false} onClick={() => { set_connection(false) }}>Disconnect</button>
           </>
         )}
-        {category === 'linked' && <button type='button' disabled={!writes_allowed} onClick={() => { on_unlink(library) }}>Unlink</button>}
+        {library.is_linked && !library.is_own && <button type='button' disabled={!writes_allowed} onClick={() => { on_unlink(library) }}>Unlink</button>}
       </td>
     </tr>
   )
@@ -136,7 +147,7 @@ export const Libraries = () => {
       <Dialog open={unlinking !== null} title='Unlink library' on_close={() => { set_unlinking(null) }}>
         <p>
           Unlink {unlinking === null ? '' : library_name(unlinking)}? It leaves every view, and the node drops its replica and any
-          content only it held.
+          content only it held.{unlinking !== null && unlinking.held_capability_ids.length > 0 && ' Capabilities you hold there stay valid; unlinking revokes nothing.'}
         </p>
         <div className={styles.dialog_actions}>
           <button type='button' onClick={() => { set_unlinking(null) }}>Cancel</button>

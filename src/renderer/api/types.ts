@@ -41,6 +41,7 @@ interface NodeEventPayloads {
   'library:peer-left': LibraryAddressPayload & { peer_id: string }
   'identity:library-created': { library: Library }
   'identity:library-retired': LibraryAddressPayload
+  'library:entries-inert': LibraryAddressPayload & { capability_id: string, entry_hashes: string[], track_ids: string[] }
   'capability:issued': { capability: Capability }
   'capability:revoked': { capability: Capability }
   'peer:joined': { peer_id: string, peer_count: number }

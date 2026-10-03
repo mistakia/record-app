@@ -11,6 +11,8 @@ export const tags_for_event = (type: string): NodeApiTag[] => {
   if (type === 'library:index-updated') return ['tracks', 'tags', 'libraries']
   if (type === 'library:peer-joined' || type === 'library:peer-left') return ['libraries', 'peers']
   if (type === 'library:linked' || type === 'library:unlinked') return ['libraries', 'tracks', 'tags', 'about']
+  // A revocation made entries inert: tracks and tags may have changed.
+  if (type === 'library:entries-inert') return ['tracks', 'tags', 'libraries', 'capabilities']
   if (type.startsWith('library:')) return ['libraries']
   // Own libraries created or retired here or on another of the identity's
   // devices (§4.8.5).
