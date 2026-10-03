@@ -22,7 +22,8 @@ const open_external_url = (target: string): void => {
 
 // The renderer is a single page that never navigates: route changes are hash
 // changes, which do not fire will-navigate. Every navigation and window.open
-// is refused, and an external link opens in the system browser.
+// is refused, and an external link opens in the system browser. index.ts
+// applies this to every web contents through web-contents-created.
 export const guard_web_contents = (contents: WebContents): void => {
   contents.on('will-navigate', (event, url) => {
     event.preventDefault()
@@ -59,7 +60,6 @@ export const create_main_window = ({ preload_path, renderer }: {
       experimentalFeatures: false
     }
   })
-  guard_web_contents(window.webContents)
   window.once('ready-to-show', () => { window.show() })
   if ('url' in renderer) window.loadURL(renderer.url).catch(() => {})
   else window.loadFile(renderer.file).catch(() => {})

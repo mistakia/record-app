@@ -29,23 +29,51 @@ export interface ConnectionStore {
   save: (input: unknown) => Promise<NodeResult<ConnectionConfig>>
 }
 
-export const open_connection_store = async ({ file_path }: { file_path: string }): Promise<ConnectionStore> => {
-  let current = DEFAULT_CONFIG
+// The saved config, or the default when there is none. A file that exists
+// but does not hold a valid config is reported, then replaced on next save.
+const read_stored_config = async ({ file_path, log }: { file_path: string, log: (message: string) => void }): Promise<ConnectionConfig> => {
+  let text: string
   try {
-    const stored = check_connection_config(JSON.parse(await readFile(file_path, 'utf8')))
-    if (stored.ok) current = stored.data
-  } catch {}
+    text = await readFile(file_path, 'utf8')
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') log(`connection store: cannot read ${file_path}: ${String(error)}`)
+    return DEFAULT_CONFIG
+  }
+  try {
+    const stored = check_connection_config(JSON.parse(text))
+    if (stored.ok) return stored.data
+    log(`connection store: ignoring invalid config in ${file_path}: ${stored.failure.message}`)
+  } catch (error) {
+    log(`connection store: ignoring corrupt ${file_path}: ${String(error)}`)
+  }
+  return DEFAULT_CONFIG
+}
+
+export const open_connection_store = async ({ file_path, log = console.error }: {
+  file_path: string
+  log?: (message: string) => void
+}): Promise<ConnectionStore> => {
+  let current = await read_stored_config({ file_path, log })
+  // Saves run one at a time, so two writes never share the temporary file and
+  // the last save to finish is the one on disk and in memory.
+  let saves: Promise<unknown> = Promise.resolve()
+
+  const write = async (config: ConnectionConfig): Promise<void> => {
+    await mkdir(dirname(file_path), { recursive: true })
+    const temporary_path = `${file_path}.tmp`
+    await writeFile(temporary_path, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 })
+    await rename(temporary_path, file_path)
+    current = config
+  }
 
   return {
     get: () => current,
     save: async (input) => {
       const checked = check_connection_config(input)
       if (!checked.ok) return checked
-      await mkdir(dirname(file_path), { recursive: true })
-      const temporary_path = `${file_path}.tmp`
-      await writeFile(temporary_path, `${JSON.stringify(checked.data, null, 2)}\n`, { mode: 0o600 })
-      await rename(temporary_path, file_path)
-      current = checked.data
+      const saved = saves.then(async () => { await write(checked.data) })
+      saves = saved.catch(() => {})
+      await saved
       return checked
     }
   }

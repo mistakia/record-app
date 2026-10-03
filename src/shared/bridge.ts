@@ -35,6 +35,7 @@ export type NodeFailure =
   | { kind: 'tls', message: string }
   | { kind: 'auth', status: number, message: string }
   | { kind: 'http', status: number, code: string | null, message: string }
+  | { kind: 'too_large', message: string }
 
 export type NodeResult<T> = { ok: true, data: T } | { ok: false, failure: NodeFailure }
 

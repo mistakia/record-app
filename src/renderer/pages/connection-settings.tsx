@@ -2,7 +2,7 @@
 // Save tears down everything tied to the old node (playback, the query
 // cache) and reinitializes against the new one.
 
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 
 import styles from './connection-settings.module.css'
@@ -18,42 +18,66 @@ export const ConnectionSettings = () => {
   const navigate = useNavigate()
   const saved_url = use_app_selector((state) => state.connection.config?.node_url ?? null)
   const [node_url, set_node_url] = useState(saved_url ?? '')
-  const [test_result, set_test_result] = useState<NodeResult<ConnectionTest> | null>(null)
+  // A test result belongs to the URL it tested; once the field changes, a
+  // result that arrives late for the old URL is never shown.
+  const [tested, set_tested] = useState<{ node_url: string, result: NodeResult<ConnectionTest> } | null>(null)
   const [testing, set_testing] = useState(false)
+  const [saving, set_saving] = useState(false)
+  // Guards a second submit that lands before the disabled button re-renders.
+  const save_pending = useRef(false)
   const [save_error, set_save_error] = useState<string | null>(null)
 
   const checked = check_node_url(node_url)
   const config = { mode: 'remote' as const, node_url }
+  const test_result = tested?.node_url === node_url ? tested.result : null
 
   const run_test = async () => {
     set_testing(true)
-    set_test_result(null)
-    set_test_result(await window.record.connection.test(config))
-    set_testing(false)
+    const tested_url = node_url
+    try {
+      set_tested({ node_url: tested_url, result: await window.record.connection.test({ mode: 'remote', node_url: tested_url }) })
+    } catch (error) {
+      set_tested({ node_url: tested_url, result: { ok: false, failure: { kind: 'refused', message: String(error) } } })
+    } finally {
+      set_testing(false)
+    }
   }
 
-  const save = async (event: FormEvent) => {
-    event.preventDefault()
+  const save = async () => {
+    save_pending.current = true
+    set_saving(true)
     set_save_error(null)
-    const result = await window.record.connection.save(config)
-    if (!result.ok) {
-      set_save_error(result.failure.message)
-      return
+    try {
+      const result = await window.record.connection.save(config)
+      if (!result.ok) {
+        set_save_error(result.failure.message)
+        return
+      }
+      stop_playback()
+      dispatch(node_api.util.resetApiState())
+      dispatch(connection_loaded(result.data))
+      navigate('/tracks')
+    } catch (error) {
+      set_save_error(`Saving failed: ${String(error)}`)
+    } finally {
+      save_pending.current = false
+      set_saving(false)
     }
-    stop_playback()
-    dispatch(node_api.util.resetApiState())
-    dispatch(connection_loaded(result.data))
-    navigate('/tracks')
+  }
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    if (save_pending.current || !checked.ok) return
+    save().catch(() => {})
   }
 
   const cancel = () => {
     set_node_url(saved_url ?? '')
-    set_test_result(null)
     set_save_error(null)
   }
 
   return (
-    <form className={styles.form} onSubmit={(event) => { save(event).catch(() => {}) }}>
+    <form className={styles.form} onSubmit={submit}>
       <h1>Connection</h1>
       <fieldset className={styles.modes}>
         <legend>Mode</legend>
@@ -74,10 +98,7 @@ export const ConnectionSettings = () => {
           placeholder='http://127.0.0.1:3000'
           spellCheck={false}
           value={node_url}
-          onChange={(event) => {
-            set_node_url(event.target.value)
-            set_test_result(null)
-          }}
+          onChange={(event) => { set_node_url(event.target.value) }}
         />
       </label>
       {node_url !== '' && !checked.ok && <p className={styles.error}>{checked.reason}</p>}
@@ -86,8 +107,8 @@ export const ConnectionSettings = () => {
         <button type='button' disabled={!checked.ok || testing} onClick={() => { run_test().catch(() => {}) }}>
           {testing ? 'Testing' : 'Test connection'}
         </button>
-        <button type='submit' disabled={!checked.ok}>Save</button>
-        <button type='button' onClick={cancel}>Cancel</button>
+        <button type='submit' disabled={!checked.ok || saving}>{saving ? 'Saving' : 'Save'}</button>
+        <button type='button' disabled={saving} onClick={cancel}>Cancel</button>
       </div>
       {test_result?.ok === true && (
         <p className={styles.success} data-testid='connection-test-result'>

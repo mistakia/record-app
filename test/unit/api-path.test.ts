@@ -41,6 +41,31 @@ describe('build_api_path', () => {
     expect(build_api_path({ method: 'post', path_template: '/import/file' }).ok).toBe(false)
   })
 
+  test('refuses dot-segment parameters, which URL parsing would resolve onto another route', () => {
+    for (const address of ['.', '..']) {
+      expect(build_api_path({ method: 'post', path_template: '/libraries/{address}/connect', params: { address } }).ok).toBe(false)
+      expect(build_api_path({ method: 'get', path_template: '/libraries/{address}', params: { address } }).ok).toBe(false)
+    }
+  })
+
+  test('keeps slash-bearing and URL-shaped parameters inside one path segment', () => {
+    const cases: Array<[string, string]> = [
+      ['/', '%2F'],
+      ['%2F', '%252F'],
+      ['../..', '..%2F..'],
+      ['./x', '.%2Fx'],
+      ['http://evil.example/api/settings', 'http%3A%2F%2Fevil.example%2Fapi%2Fsettings'],
+      ['//evil.example', '%2F%2Fevil.example'],
+      ['a?b#c', 'a%3Fb%23c']
+    ]
+    for (const [address, encoded] of cases) {
+      const built = build_api_path({ method: 'post', path_template: '/libraries/{address}/connect', params: { address } })
+      expect(built).toEqual({ ok: true, path: `/api/libraries/${encoded}/connect` })
+      if (!built.ok) continue
+      expect(new URL(built.path, 'http://127.0.0.1:3000').pathname).toBe(`/api/libraries/${encoded}/connect`)
+    }
+  })
+
   test('refuses missing, empty, or unexpected path parameters', () => {
     expect(build_api_path({ method: 'get', path_template: '/libraries/{address}' }).ok).toBe(false)
     expect(build_api_path({ method: 'get', path_template: '/libraries/{address}', params: { address: '' } }).ok).toBe(false)

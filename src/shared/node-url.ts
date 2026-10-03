@@ -1,6 +1,7 @@
 // Node URL validation shared by the main process (authoritative, before any
 // request) and the connection settings form (inline feedback). Spec §8.7.2:
-// a node URL is `<scheme>://<host>:<port>` with scheme http or https; §8.7.4:
+// a node URL is `<scheme>://<host>:<port>`, port included, with scheme http
+// or https; §8.7.4:
 // plain http to a non-loopback host carries a visible warning.
 
 export type NodeUrlCheck =
@@ -30,8 +31,13 @@ export const check_node_url = (input: string): NodeUrlCheck => {
   if ((url.pathname !== '/' && url.pathname !== '') || url.search !== '' || url.hash !== '' || /[?#]$/.test(text)) {
     return { ok: false, reason: 'The node URL is scheme, host, and port only, with no path, query, or fragment.' }
   }
+  // The port must be written out. Read it from the input, because URL drops
+  // a scheme's default port (https://host:443 parses with port '').
+  const authority = text.slice(url.protocol.length + 2).split('/')[0] ?? ''
+  const port = /:(\d+)$/.exec(authority)?.[1]
+  if (port === undefined) return { ok: false, reason: 'The node URL needs an explicit port, as in http://127.0.0.1:3000.' }
   const warning = url.protocol === 'http:' && !is_loopback_hostname(url.hostname)
     ? 'Traffic to this node is unencrypted. Use https:// for a node on another machine.'
     : null
-  return { ok: true, node_url: url.origin, warning }
+  return { ok: true, node_url: `${url.protocol}//${url.hostname}:${Number(port)}`, warning }
 }

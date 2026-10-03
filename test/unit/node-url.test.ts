@@ -7,7 +7,15 @@ describe('check_node_url', () => {
     expect(check_node_url('http://127.0.0.1:8088')).toEqual({ ok: true, node_url: 'http://127.0.0.1:8088', warning: null })
     expect(check_node_url(' http://localhost:3000/ ')).toEqual({ ok: true, node_url: 'http://localhost:3000', warning: null })
     expect(check_node_url('https://node.example.com:8443')).toEqual({ ok: true, node_url: 'https://node.example.com:8443', warning: null })
-    expect(check_node_url('http://[::1]:3000')).toMatchObject({ ok: true, warning: null })
+    expect(check_node_url('http://[::1]:3000')).toEqual({ ok: true, node_url: 'http://[::1]:3000', warning: null })
+  })
+
+  test('requires an explicit port, and keeps a written default port', () => {
+    for (const input of ['http://127.0.0.1', 'https://node.example.com', 'http://127.0.0.1/', 'http://[::1]', 'http://127.0.0.1:']) {
+      expect(check_node_url(input).ok).toBe(false)
+    }
+    expect(check_node_url('https://node.example.com:443')).toEqual({ ok: true, node_url: 'https://node.example.com:443', warning: null })
+    expect(check_node_url('http://127.0.0.1:80/')).toEqual({ ok: true, node_url: 'http://127.0.0.1:80', warning: null })
   })
 
   test('warns on plain http to a non-loopback host', () => {

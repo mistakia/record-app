@@ -3,9 +3,20 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2024", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "lib": [
+      "ES2024",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "vite/client",
+      "bun"
+    ],
     "jsx": "react-jsx"
   },
-  "include": ["src/renderer", "src/shared"]
+  "include": [
+    "src/renderer",
+    "src/shared",
+    "test/renderer"
+  ]
 }

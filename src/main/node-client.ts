@@ -9,6 +9,9 @@ import { build_api_path } from './api-path.ts'
 const REQUEST_TIMEOUT_MS = 15_000
 const AUDIO_TIMEOUT_MS = 120_000
 const TEST_TIMEOUT_MS = 5_000
+// The whole file crosses IPC and is decoded in memory, so refuse anything
+// larger rather than exhaust either process.
+export const MAX_AUDIO_BYTES = 1024 ** 3
 
 const TLS_ERROR_CODE = /CERT|TLS|SSL/
 
@@ -70,12 +73,52 @@ export const request_node = async ({ node_url, request }: { node_url: string | n
   }
 }
 
+const too_large = (max_bytes: number): NodeResult<never> =>
+  ({ ok: false, failure: { kind: 'too_large', message: `The audio file is larger than the ${max_bytes}-byte limit.` } })
+
+// Reads the body into one buffer, giving up as soon as it passes max_bytes,
+// whatever Content-Length claimed.
+const read_capped = async ({ response, max_bytes }: { response: Response, max_bytes: number }): Promise<NodeResult<ArrayBuffer>> => {
+  const declared = Number(response.headers.get('content-length') ?? Number.NaN)
+  if (declared > max_bytes) {
+    await response.body?.cancel()
+    return too_large(max_bytes)
+  }
+  const chunks: Uint8Array[] = []
+  let total = 0
+  if (response.body !== null) {
+    for await (const chunk of response.body) {
+      total += chunk.byteLength
+      if (total > max_bytes) {
+        await response.body.cancel().catch(() => {})
+        return too_large(max_bytes)
+      }
+      chunks.push(chunk)
+    }
+  }
+  const bytes = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return { ok: true, data: bytes.buffer }
+}
+
 // The whole audio blob, which the renderer decodes with decodeAudioData.
-export const get_audio = async ({ node_url, cid }: { node_url: string | null, cid: string }): Promise<NodeResult<ArrayBuffer>> => {
+export const get_audio = async ({ node_url, cid, max_bytes = MAX_AUDIO_BYTES }: {
+  node_url: string | null
+  cid: string
+  max_bytes?: number
+}): Promise<NodeResult<ArrayBuffer>> => {
   if (node_url === null) return not_configured
   const result = await fetch_node({ url: `${node_url}/api/audio/${encodeURIComponent(cid)}`, init: { method: 'GET' }, timeout_ms: AUDIO_TIMEOUT_MS })
   if (!result.ok) return result
-  return { ok: true, data: await result.data.arrayBuffer() }
+  try {
+    return await read_capped({ response: result.data, max_bytes })
+  } catch (error) {
+    return { ok: false, failure: describe_fetch_error(error) }
+  }
 }
 
 // Spec §8.3.5: GET /settings against a candidate node, reporting its peer_id

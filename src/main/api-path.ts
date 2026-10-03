@@ -14,6 +14,7 @@ const KNOWN_ROUTES = new Set<string>(API_ROUTES.map(({ method, path_template }) 
 const DEDICATED_ROUTES = new Set(['get /audio/{cid}', 'head /audio/{cid}', 'post /import/file'])
 
 const QUERY_KEY = /^[a-z][a-z_]*$/
+const DOT_SEGMENTS = new Set(['.', '..'])
 
 export type ApiPathCheck = { ok: true, path: string } | { ok: false, reason: string }
 
@@ -34,6 +35,9 @@ export const build_api_path = ({ method, path_template, params = {}, query = {} 
   for (const name of names) {
     const value = params[name]
     if (typeof value !== 'string' || value === '') return { ok: false, reason: `missing path parameter: ${name}` }
+    // `.` and `..` survive encodeURIComponent, and URL parsing would then
+    // resolve them as dot segments onto another route.
+    if (DOT_SEGMENTS.has(value)) return { ok: false, reason: `invalid path parameter: ${name}` }
     path = path.replace(`{${name}}`, encodeURIComponent(value))
   }
 

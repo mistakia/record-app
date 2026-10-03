@@ -47,9 +47,38 @@ describe('connection store', () => {
 
   test('falls back to the default on a corrupt or invalid file', async () => {
     const file_path = await temporary_file()
+    const quiet = () => {}
     await writeFile(file_path, '{ not json')
-    expect((await open_connection_store({ file_path })).get()).toEqual({ mode: 'remote', node_url: null })
+    expect((await open_connection_store({ file_path, log: quiet })).get()).toEqual({ mode: 'remote', node_url: null })
     await writeFile(file_path, JSON.stringify({ mode: 'remote', node_url: 'javascript:alert(1)' }))
-    expect((await open_connection_store({ file_path })).get()).toEqual({ mode: 'remote', node_url: null })
+    expect((await open_connection_store({ file_path, log: quiet })).get()).toEqual({ mode: 'remote', node_url: null })
+  })
+})
+
+describe('connection store concurrency and corruption', () => {
+  test('concurrent saves all land, the last one wins, and no temporary file is left', async () => {
+    const file_path = await temporary_file()
+    const store = await open_connection_store({ file_path })
+    const ports = [3001, 3002, 3003, 3004, 3005]
+    const results = await Promise.all(ports.map(async (port) => await store.save({ mode: 'remote', node_url: `http://127.0.0.1:${port}` })))
+    expect(results.every((result) => result.ok)).toBe(true)
+    expect(store.get().node_url).toBe('http://127.0.0.1:3005')
+    expect(JSON.parse(await readFile(file_path, 'utf8')).node_url).toBe('http://127.0.0.1:3005')
+    expect(await Bun.file(`${file_path}.tmp`).exists()).toBe(false)
+  })
+
+  test('logs a corrupt or invalid file instead of reverting silently, and logs nothing when there is no file', async () => {
+    const file_path = await temporary_file()
+    const logged: string[] = []
+    const log = (message: string) => { logged.push(message) }
+    await open_connection_store({ file_path, log })
+    expect(logged).toEqual([])
+    await writeFile(file_path, '{ not json')
+    await open_connection_store({ file_path, log })
+    await writeFile(file_path, JSON.stringify({ mode: 'remote', node_url: 'http://127.0.0.1' }))
+    await open_connection_store({ file_path, log })
+    expect(logged).toHaveLength(2)
+    expect(logged[0]).toContain('corrupt')
+    expect(logged[1]).toContain('invalid config')
   })
 })

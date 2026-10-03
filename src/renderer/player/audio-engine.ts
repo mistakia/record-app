@@ -131,8 +131,11 @@ export const create_audio_engine = ({ load_audio, create_context = () => new Aud
     },
     resume: async () => {
       if ((snapshot.state !== 'paused' && snapshot.state !== 'ended') || buffer === null) return
-      const offset = snapshot.state === 'ended' ? 0 : paused_at
+      const token = load_token
       await open_context().context.resume()
+      // A play, stop, or seek may have run while the context resumed.
+      if (token !== load_token || (snapshot.state !== 'paused' && snapshot.state !== 'ended') || buffer === null) return
+      const offset = snapshot.state === 'ended' ? 0 : paused_at
       emit({ state: 'playing', position_seconds: offset })
       start_source(offset)
     },
