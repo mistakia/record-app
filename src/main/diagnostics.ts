@@ -2,22 +2,15 @@
 // the bundled node's process; and moving the bundled node's data directory
 // (§8.4.1), which asks first and restarts the node there.
 
-import { chmod, realpath } from 'node:fs/promises'
-import { isAbsolute, relative } from 'node:path'
-
 import { app, BrowserWindow, dialog } from 'electron'
 
 import type { Diagnostics, NodeResult } from '#shared/bridge.ts'
 import { logs_dir, save_data_dir } from './bundled/bundled-node.ts'
+import { prepare_data_dir, resolve_data_dir_target } from './bundled/data-dir-target.ts'
 import type { create_node_manager } from './bundled/node-manager.ts'
 import type { ConnectionStore } from './connection-store.ts'
 import type { create_update_service } from './updates.ts'
 import type { create_node_connection } from './node-connection.ts'
-
-const inside = (parent: string, child: string): boolean => {
-  const path = relative(parent, child)
-  return path === '' || (!path.startsWith('..') && !isAbsolute(path))
-}
 
 export const create_diagnostics = ({ user_data, store, manager, connection, updates }: {
   user_data: string
@@ -61,23 +54,26 @@ export const create_diagnostics = ({ user_data, store, manager, connection, upda
       properties: ['openDirectory', 'createDirectory']
     })
     const chosen = picked.filePaths[0]
-    if (picked.canceled || chosen === undefined || !isAbsolute(chosen)) return { ok: true, data: null }
-    // Spec §8.10.9: the path is canonicalized before anything uses it.
-    const next = await realpath(chosen)
-    if (next === current) return { ok: true, data: null }
-    if (inside(app.getAppPath(), next)) return { ok: false, failure: { kind: 'refused', message: 'The data folder cannot be inside the app itself.' } }
+    if (picked.canceled || chosen === undefined) return { ok: true, data: null }
+    // Spec §8.10.9: the path is canonicalized before anything uses it, and
+    // the node gets its own subfolder of the chosen one.
+    const target = await resolve_data_dir_target({ chosen, current, user_data, app_path: app.getAppPath() })
+    if (target.kind === 'unchanged') return { ok: true, data: null }
+    if (target.kind === 'refused') return { ok: false, failure: { kind: 'refused', message: target.message } }
+    const next = target.data_dir
     const options = {
       type: 'warning' as const,
       buttons: ['Cancel', 'Use this folder'],
       defaultId: 0,
       cancelId: 0,
       message: 'Move the bundled node to this folder?',
-      detail: `The app does not move the existing data. If ${next} holds no node data, the bundled node starts there with a new, empty library and a new identity, and the current data stays in ${current} until you move it yourself. The folder is made private to your user account, and the bundled node restarts.`
+      detail: target.kind === 'existing'
+        ? `${next} already holds a node's data; the bundled node uses it and restarts. The current data stays in ${current}.`
+        : `The bundled node keeps its data in a new folder, ${next}, private to your user account, and restarts. It starts there with a new, empty library and a new identity; the app does not move the existing data, which stays in ${current} until you move it yourself.`
     }
     const { response } = window === undefined ? await dialog.showMessageBox(options) : await dialog.showMessageBox(window, options)
     if (response !== 1) return { ok: true, data: null }
-    // Spec §8.10.9: the data directory is the user's alone (0700).
-    await chmod(next, 0o700)
+    await prepare_data_dir(target)
     await save_data_dir(user_data, next)
     await manager.relocate({ next_data_dir: next, start: store.get().mode === 'bundled' })
     connection.sync()
