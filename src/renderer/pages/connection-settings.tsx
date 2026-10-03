@@ -100,6 +100,7 @@ export const ConnectionSettings = () => {
         set_save_error(result.failure.message)
         // Nothing switched: show the connection as main still has it.
         dispatch(events_state_changed(await window.record.events.get_state()))
+        dispatch(connection_loaded(await window.record.connection.get()))
         return
       }
       dispatch(replication_reset())

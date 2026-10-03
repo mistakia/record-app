@@ -65,17 +65,25 @@ export const create_node_auth = ({ tokens, log = console.error }: {
         : refused === 'token' ? 'rejected' : refused === 'none' ? 'required' : token(node_url) === null ? 'none' : 'saved'
       return { status, persistent: tokens.persistent }
     },
+    // The new credentials take effect inside the queued write, once the
+    // token is stored: a failed save leaves the current ones, and a 401 for
+    // them, in force, and a rejection's delete queued behind the write sees
+    // the node no longer rejected and deletes nothing.
     save: async (node_url: string, value: string): Promise<void> => {
-      bump(node_url)
-      await queued(node_url, async () => { await tokens.set(node_url, value) })
-      loaded.set(node_url, value)
-      rejected.delete(node_url)
+      await queued(node_url, async () => {
+        await tokens.set(node_url, value)
+        bump(node_url)
+        loaded.set(node_url, value)
+        rejected.delete(node_url)
+      })
     },
     logout: async (node_url: string): Promise<void> => {
       bump(node_url)
-      await queued(node_url, async () => { await tokens.delete(node_url) })
-      loaded.set(node_url, null)
-      rejected.delete(node_url)
+      await queued(node_url, async () => {
+        await tokens.delete(node_url)
+        loaded.set(node_url, null)
+        rejected.delete(node_url)
+      })
     },
     // A 401 for a request sent under `sent`. True when that is news: the
     // node is now blocked, at once, and its token is deleted behind any
@@ -87,8 +95,9 @@ export const create_node_auth = ({ tokens, log = console.error }: {
       loaded.set(node_url, null)
       if (sent.token !== null) {
         queued(node_url, async () => {
-          // Delete only what was refused: a token saved meanwhile stays.
-          if (await tokens.get(node_url) === sent.token) await tokens.delete(node_url)
+          // Delete only what was refused: once a save or log out has landed
+          // the node is no longer rejected, and its token stays.
+          if (rejected.has(node_url) && await tokens.get(node_url) === sent.token) await tokens.delete(node_url)
         }).catch((error: unknown) => { log(`node auth: ${String(error)}`) })
       }
       return true

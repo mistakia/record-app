@@ -117,15 +117,20 @@ describe('node auth', () => {
     expect(await tokens.get(NODE)).toBeNull()
   })
 
-  test('a late 401 for a replaced token, even one re-saved with the same value, leaves the new one in place', async () => {
+  test('a 401 racing a save of the same value never deletes the saved token, and is moot once the save lands', async () => {
     const tokens = create_memory_token_store()
     await tokens.set(NODE, 'same')
     const auth = create_node_auth({ tokens })
     await auth.load(NODE)
     const in_flight = auth.credentials(NODE)
     const saving = auth.save(NODE, 'same')
-    expect(auth.reject(NODE, in_flight)).toBe(false)
+    // Mid-write the old credentials are still current, so the 401 blocks,
+    // but the save landing afterwards wins and its token is not deleted.
+    expect(auth.reject(NODE, in_flight)).toBe(true)
     await saving
+    await auth.load(NODE)
+    // A 401 for the credentials from before the save is now moot.
+    expect(auth.reject(NODE, in_flight)).toBe(false)
     expect(await tokens.get(NODE)).toBe('same')
     expect(auth.view(NODE).status).toBe('saved')
   })
@@ -156,6 +161,17 @@ describe('node auth', () => {
     await saving
     expect(order).toEqual(['delete', 'set new start', 'set new end'])
     expect(await memory.get(NODE)).toBe('new')
+  })
+
+  test('a failed save leaves the current credentials, and a 401 for them, in force', async () => {
+    const memory = create_memory_token_store()
+    await memory.set(NODE, 'old')
+    const auth = create_node_auth({ tokens: { ...memory, set: async () => { throw new Error('Keychain write failed (exit 1).') } } })
+    await auth.load(NODE)
+    const sent = auth.credentials(NODE)
+    await expect(auth.save(NODE, 'new')).rejects.toThrow()
+    expect(auth.credentials(NODE)).toEqual(sent)
+    expect(auth.reject(NODE, sent)).toBe(true)
   })
 
   test('a node that refuses a request without a token needs one', async () => {

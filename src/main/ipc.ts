@@ -94,7 +94,11 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     }
     const previous_key = connection.node_key()
     const saved = await store.save(checked.data)
-    if (!saved.ok) return saved
+    if (!saved.ok) {
+      // A token stored above may be the current node's: carry it now.
+      connection.sync()
+      return saved
+    }
     identity.forget()
     // switched always points the session at the saved node, even when
     // starting the bundled node fails; that failure shows in its own state.
