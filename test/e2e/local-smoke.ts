@@ -129,10 +129,13 @@ try {
     transfer.items.add(new File([bytes], 'Smoke Delta.flac', { type: 'audio/flac' }))
     document.querySelector('[data-testid=drop-zone]')?.dispatchEvent(new DragEvent('drop', { dataTransfer: transfer, bubbles: true, cancelable: true }))
   }, dropped)
-  await window.locator('[data-testid=import-item][data-finished=true]').nth(1).waitFor({ timeout: 60_000 })
+  // Each wait names its own item: the bundled pass left one in the list.
+  const finished = (label: string) => window.locator('[data-testid=import-item][data-finished=true]').filter({ hasText: label }).first().waitFor({ timeout: 60_000 })
+  await finished('Chosen files')
+  await finished('Smoke Delta.flac')
   await window.getByLabel('Import from URL').fill('https://example.test/smoke-epsilon')
   await window.getByRole('button', { name: 'Import URL' }).click()
-  await window.locator('[data-testid=import-item][data-finished=true]').nth(2).waitFor({ timeout: 60_000 })
+  await finished('smoke-epsilon')
   step('imports', (await window.getByTestId('import-item').allInnerTexts()).map((text) => text.replaceAll('\n', ' | ')))
   const [alpha] = (await node.peer.list_tracks({ offset: 0, limit: 10, shuffle: false, sort: 'title', order: 'asc', query: 'Alpha' })).items
   await window.getByLabel('Add by content CID').fill(alpha?.content_cid ?? '')
