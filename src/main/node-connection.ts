@@ -30,8 +30,8 @@ export const create_node_connection = ({ store, auth, manager, session, on_node_
 }) => {
   let session_url: string | null | undefined
   let session_auth: string | undefined
-  // Bumped whenever the remote token is saved, deleted, or refused.
-  let auth_generation = 0
+  // Bumped by every save, so a save always reconnects.
+  let save_generation = 0
   let last_key: string | null | undefined
 
   const node_key = (): string | null => node_key_of({ config: store.get(), pin: manager.get_state().node_key_pin })
@@ -45,8 +45,8 @@ export const create_node_connection = ({ store, auth, manager, session, on_node_
   const target = (): NodeTarget | null => {
     const url = node_url()
     if (url === null) return null
-    if (store.get().mode === 'bundled') return { node_url: url, token: null, blocked: false }
-    return { node_url: url, token: auth.token(url), blocked: auth.blocked(url) }
+    if (store.get().mode === 'bundled') return { node_url: url, token: null, generation: 0, blocked: false }
+    return { node_url: url, ...auth.credentials(url), blocked: auth.blocked(url) }
   }
 
   // Points the event session at the current target; called whenever the
@@ -58,7 +58,7 @@ export const create_node_connection = ({ store, auth, manager, session, on_node_
     const current = target()
     const url = current?.node_url ?? null
     // Only whether the token changed, never the token, is kept here.
-    const auth_state = current === null ? '' : `${current.blocked ? 'blocked' : 'open'}:${auth_generation}`
+    const auth_state = current === null ? '' : `${current.blocked ? 'blocked' : 'open'}:${current.generation}:${save_generation}`
     if (url === session_url && auth_state === session_auth) return
     const node_changed = url !== session_url
     session_url = url
@@ -66,11 +66,6 @@ export const create_node_connection = ({ store, auth, manager, session, on_node_
     session.start(current)
     if (node_changed) on_node_changed()
   }
-  const auth_changed = (): void => {
-    auth_generation++
-    sync()
-  }
-
   const load_auth = async (): Promise<void> => {
     const url = remote_url()
     if (url !== null) await auth.load(url)
@@ -95,29 +90,39 @@ export const create_node_connection = ({ store, auth, manager, session, on_node_
       await ensure_bundled_state()
       sync()
     },
-    // After a save: one node at a time, so the old target goes first. A
-    // token entered with the save is stored first, so the new connection
-    // carries it from its first request; a save always reconnects.
-    switched: async ({ token }: { token?: string | undefined } = {}): Promise<void> => {
-      const url = remote_url()
-      if (token !== undefined && url !== null) await auth.save(url, token)
-      await load_auth()
-      await ensure_bundled_state()
-      auth_changed()
+    // Before a save: a token entered with it is stored under the URL being
+    // saved, so a Keychain failure refuses the save before anything moves,
+    // and the new connection carries the token from its first request.
+    store_token: async ({ node_url: url, token }: { node_url: string, token: string }): Promise<void> => {
+      await auth.save(url, token)
+    },
+    // After a save: one node at a time, so the old target goes first; a
+    // save always reconnects.
+    switched: async (): Promise<void> => {
+      save_generation++
+      try {
+        await load_auth()
+        await ensure_bundled_state()
+      } finally {
+        sync()
+      }
     },
     logout: async (): Promise<void> => {
       const url = remote_url()
       if (url === null) return
-      await auth.logout(url)
-      auth_changed()
+      try {
+        await auth.logout(url)
+      } finally {
+        sync()
+      }
     },
     // A request answered 401 (spec §8.7.3): forget the token it carried and
     // send nothing more until the user enters a new one. A 401 from a node
-    // that is no longer the target, or for a token since replaced, is moot.
-    unauthorized: async ({ node_url: url, token }: { node_url: string, token: string | null }): Promise<void> => {
-      if (url !== remote_url()) return
-      if (!await auth.reject(url, token)) return
-      auth_changed()
+    // that is no longer the target, or for credentials since replaced, is moot.
+    unauthorized: (sent: { node_url: string, token: string | null, generation: number }): void => {
+      if (sent.node_url !== remote_url()) return
+      if (!auth.reject(sent.node_url, sent)) return
+      sync()
       on_view_changed(view())
     }
   }

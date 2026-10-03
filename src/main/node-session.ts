@@ -14,8 +14,12 @@ const idle_state: EventsState = { status: 'idle', node_url: null, connection_id:
 export interface NodeTarget {
   node_url: string
   token: string | null
+  // The credentials' generation (node-auth.ts), so a 401 names what it refused.
+  generation: number
   blocked: boolean
 }
+
+export type SentCredentials = Pick<NodeTarget, 'node_url' | 'token' | 'generation'>
 
 export interface NodeSession {
   start: (target: NodeTarget | null) => void
@@ -28,21 +32,20 @@ export interface NodeSession {
 // Out of reach only on a transport failure; an HTTP error still means the
 // node is answering. A 401 is reported, since the WebSocket upgrade cannot
 // say why it was refused.
-const probe_node = ({ node_url, token, on_unauthorized, check = test_connection }: {
-  node_url: string
-  token: string | null
-  on_unauthorized: (target: { node_url: string, token: string | null }) => void
+const probe_node = ({ sent, on_unauthorized, check = test_connection }: {
+  sent: SentCredentials
+  on_unauthorized: (sent: SentCredentials) => void
   check?: typeof test_connection
 }) => async (): Promise<boolean> => {
-  const result = await check({ node_url, token })
-  if (!result.ok && result.failure.kind === 'auth') on_unauthorized({ node_url, token })
+  const result = await check({ node_url: sent.node_url, token: sent.token })
+  if (!result.ok && result.failure.kind === 'auth') on_unauthorized(sent)
   return result.ok || (result.failure.kind !== 'network' && result.failure.kind !== 'tls')
 }
 
 export const create_node_session = ({ broadcast, on_unauthorized = () => {}, open_events = open_node_events, check = test_connection }: {
   broadcast: (channel: string, payload: EventsState | NodeEventMessage) => void
-  // The node answered 401 to the token the session sent.
-  on_unauthorized?: (target: { node_url: string, token: string | null }) => void
+  // The node answered 401 to the credentials the session sent.
+  on_unauthorized?: (sent: SentCredentials) => void
   open_events?: typeof open_node_events
   check?: typeof test_connection
 }): NodeSession => {
@@ -83,7 +86,7 @@ export const create_node_session = ({ broadcast, on_unauthorized = () => {}, ope
       unauthorized_url = null
       const offset = connection_offset
       const started = ++generation
-      const probe = probe_node({ node_url, token, on_unauthorized, check })
+      const probe = probe_node({ sent: { node_url, token, generation: target.generation }, on_unauthorized, check })
       events = open_events({
         node_url,
         token,

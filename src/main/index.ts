@@ -63,7 +63,7 @@ const start = async (): Promise<void> => {
   })
   const node_session = create_node_session({
     broadcast,
-    on_unauthorized: (target) => { connection.unauthorized(target).catch((error: unknown) => { console.error(error) }) }
+    on_unauthorized: (sent) => { connection.unauthorized(sent) }
   })
   const manager = create_bundled_node({
     user_data,

@@ -15,11 +15,12 @@ import { SnapshotControls } from '#renderer/components/common/snapshot-controls.
 import { BundledDetails } from '#renderer/components/layout/bundled-details.tsx'
 import { stop_playback } from '#renderer/player/player-controller.ts'
 import { node_api } from '#renderer/store/api.ts'
-import { connection_loaded, node_switch_started } from '#renderer/store/connection.ts'
+import { connection_loaded, events_state_changed, node_switch_started } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { replication_reset } from '#renderer/store/replication.ts'
 import type { ConnectionMode, ConnectionTest, NodeResult } from '#shared/bridge.ts'
 import { check_node_url } from '#shared/node-url.ts'
+import { check_token } from '#shared/token.ts'
 
 const SWITCH_TEXT: Record<ConnectionMode, string> = {
   bundled: 'Switch to the bundled node? The app disconnects from the remote node and starts its own node on this device. The remote node and its library are not changed.',
@@ -49,9 +50,10 @@ export const ConnectionSettings = () => {
 
   const checked = check_node_url(node_url)
   const entered_token = mode === 'remote' ? token.trim() : ''
+  const token_check = entered_token === '' ? null : check_token(entered_token)
   const target = mode === 'bundled' ? 'bundled' : `${node_url} ${entered_token}`
   const test_result = tested?.target === target ? tested.result : null
-  const can_save = mode === 'bundled' || checked.ok
+  const can_save = mode === 'bundled' || (checked.ok && token_check?.ok !== false)
   // Bundled mode keeps the last remote URL, so switching back offers it.
   const config = {
     mode,
@@ -96,6 +98,8 @@ export const ConnectionSettings = () => {
       const result = await window.record.connection.save(config)
       if (!result.ok) {
         set_save_error(result.failure.message)
+        // Nothing switched: show the connection as main still has it.
+        dispatch(events_state_changed(await window.record.events.get_state()))
         return
       }
       dispatch(replication_reset())
@@ -170,6 +174,7 @@ export const ConnectionSettings = () => {
                   onChange={(event) => { set_token(event.target.value) }}
                 />
               </label>
+              {token_check?.ok === false && <p className={styles.error}>{token_check.reason}</p>}
               {auth?.status === 'saved' && (
                 <p className={styles.token_status} data-testid='token-status'>
                   {auth.persistent ? 'A token for this node is saved in the Keychain.' : 'A token for this node is held until the app quits.'}
@@ -178,6 +183,9 @@ export const ConnectionSettings = () => {
               )}
               {auth?.status === 'rejected' && (
                 <p className={styles.error} data-testid='token-status'>The node refused its token, which has been deleted. Enter a valid token to reconnect.</p>
+              )}
+              {auth?.status === 'required' && (
+                <p className={styles.error} data-testid='token-status'>The node requires an access token. Enter one to connect.</p>
               )}
               {auth !== null && !auth.persistent && auth.status === 'none' && (
                 <p className={styles.warning}>On this platform a token is kept only until the app quits.</p>

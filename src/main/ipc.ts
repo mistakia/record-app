@@ -17,7 +17,8 @@ import type { NodeSession } from './node-session.ts'
 import { serve_generic_request } from './request-policy.ts'
 import { create_identity_access } from './identity-access.ts'
 import type { SnapshotStore } from './snapshot-store.ts'
-import { check_token } from './token-store.ts'
+import { check_token } from '#shared/token.ts'
+import { create_authed_call } from './authed-call.ts'
 
 const CID = /^[A-Za-z0-9]{1,128}$/
 const REQUEST_ID = /^[A-Za-z0-9-]{1,64}$/
@@ -26,11 +27,6 @@ const refuse = (message: string): NodeResult<never> => ({ ok: false, failure: { 
 
 const is_plain_object = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
-
-const NEEDS_TOKEN: NodeResult<never> = {
-  ok: false,
-  failure: { kind: 'auth', status: 401, message: 'The node needs a valid access token. Enter one in Connection settings.' }
-}
 
 // The token a save or test carries: absent (keep or use the saved one), or
 // a string that must pass check_token.
@@ -50,16 +46,7 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
   diagnostics: ReturnType<typeof create_diagnostics>
   is_app_frame: (url: string) => boolean
 }): { forget_identity: () => void } => {
-  // Every call to the node goes through here: with the remote node's token,
-  // never while the node has refused it, and a 401 forgets it (spec §8.7.3).
-  const authed = async <T>(run: (target: { node_url: string | null, token: string | null }) => Promise<NodeResult<T>>): Promise<NodeResult<T>> => {
-    const target = connection.target()
-    if (target?.blocked === true) return NEEDS_TOKEN
-    const sent = { node_url: target?.node_url ?? null, token: target?.token ?? null }
-    const result = await run(sent)
-    if (!result.ok && result.failure.kind === 'auth' && sent.node_url !== null) await connection.unauthorized({ node_url: sent.node_url, token: sent.token })
-    return result
-  }
+  const authed = create_authed_call({ target: connection.target, unauthorized: connection.unauthorized })
   const handle = (channel: string, handler: (input: unknown, event: IpcMainInvokeEvent) => Promise<unknown>): void => {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, input: unknown) => {
       const url = event.senderFrame?.url
@@ -96,15 +83,22 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     const checked = check_connection_config(input)
     if (!checked.ok) return checked
     if (token.token !== undefined && checked.data.mode !== 'remote') return refuse('An access token is only for a remote node.')
+    // The token first, so a Keychain failure refuses the save before
+    // anything moves.
+    if (token.token !== undefined) {
+      try {
+        await connection.store_token({ node_url: checked.data.node_url as string, token: token.token })
+      } catch (error) {
+        return refuse(`The access token could not be stored, so nothing was saved: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
     const previous_key = connection.node_key()
     const saved = await store.save(checked.data)
     if (!saved.ok) return saved
     identity.forget()
-    try {
-      await connection.switched({ token: token.token })
-    } catch (error) {
-      return refuse(`The connection was saved, but the access token could not be stored: ${error instanceof Error ? error.message : String(error)}`)
-    }
+    // switched always points the session at the saved node, even when
+    // starting the bundled node fails; that failure shows in its own state.
+    await connection.switched().catch((error: unknown) => { console.error(error) })
     if (connection.node_key() !== previous_key) await snapshots.wipe()
     return { ok: true, data: connection.view() }
   })

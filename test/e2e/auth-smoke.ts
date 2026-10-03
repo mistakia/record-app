@@ -35,13 +35,19 @@ try {
   step('no token', await window.getByTestId('node-unauthorized').innerText())
 
   await window.getByTestId('node-unauthorized').getByRole('link', { name: 'Enter a token' }).click()
-  await window.getByTestId('token-status').filter({ hasText: 'refused' }).waitFor()
+  await window.getByTestId('token-status').filter({ hasText: 'requires an access token' }).waitFor()
   await window.locator('input[name=token]').fill('wrong-token')
   await window.getByRole('button', { name: 'Test connection', exact: true }).click()
   step('test with a wrong token', await window.getByTestId('connection-test-result').innerText())
   await window.getByRole('button', { name: 'Save', exact: true }).click()
-  await status(window, 'unauthorized').waitFor({ timeout: 30_000 })
-  step('wrong token saved', 'refused and forgotten')
+  // The save lands on the track list; back in settings, the refusal of a
+  // saved token reads differently from the node needing one, so this
+  // cannot pass on the state from before the save.
+  await window.getByTestId('track-list').waitFor({ timeout: 30_000 })
+  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await window.getByTestId('token-status').filter({ hasText: 'refused its token' }).waitFor({ timeout: 30_000 })
+  if (process.platform === 'darwin' && await create_keychain_token_store().get(node.node_url) !== null) throw new Error('the refused token is still in the Keychain')
+  step('wrong token saved', 'refused and deleted')
 
   await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
   await window.locator('input[name=token]').fill(TOKEN)

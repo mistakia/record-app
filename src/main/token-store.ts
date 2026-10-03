@@ -2,28 +2,22 @@
 // macOS they live in the login Keychain, written through /usr/bin/security
 // with the token on stdin, never in argv where any process could read it.
 // Elsewhere (the Linux test runner) nothing is persisted: the token lasts
-// until the app quits. Imports nothing from Electron.
+// until the app quits. security's own output is never put in an error,
+// since it can echo the command it was given. The item trusts
+// /usr/bin/security, so any process running as the user can read it with
+// that tool; an app-scoped ACL needs a native Keychain binding. Imports
+// nothing from Electron.
 
 import { spawn } from 'node:child_process'
+
+import { check_token } from '#shared/token.ts'
 
 const SECURITY = '/usr/bin/security'
 const SERVICE = 'org.record.app.node-token'
 const LABEL = 'Record node access token'
-const MAX_TOKEN_CHARS = 4096
-// The token travels in the bearer.<token> WebSocket subprotocol, which must
-// be an HTTP token (RFC 7230 tchar), so anything else could never be sent.
-const TOKEN = /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/
-
-export type TokenCheck = { ok: true, token: string } | { ok: false, reason: string }
-
-export const check_token = (input: unknown): TokenCheck => {
-  if (typeof input !== 'string') return { ok: false, reason: 'Enter an access token.' }
-  const token = input.trim()
-  if (token === '') return { ok: false, reason: 'Enter an access token.' }
-  if (token.length > MAX_TOKEN_CHARS) return { ok: false, reason: `The access token is longer than ${MAX_TOKEN_CHARS} characters.` }
-  if (!TOKEN.test(token)) return { ok: false, reason: 'The access token has a space or a character a token cannot carry ( ) < > @ , ; : \\ " / [ ] ? = { }.' }
-  return { ok: true, token }
-}
+// security -i reads its commands in lines of about 4096 bytes and runs any
+// overflow as a command of its own, so a line never comes near that.
+const MAX_COMMAND_BYTES = 3500
 
 export interface TokenStore {
   // Whether a saved token outlives the app.
@@ -66,7 +60,7 @@ export const create_keychain_token_store = ({ run = run_security }: { run?: RunS
   const get = async (node_url: string): Promise<string | null> => {
     const result = await run({ args: ['find-generic-password', '-s', SERVICE, '-a', check_account(node_url), '-w'] })
     if (result.code === ITEM_NOT_FOUND) return null
-    if (result.code !== 0) throw new Error(`Keychain read failed (${result.code}): ${result.stderr.trim()}`)
+    if (result.code !== 0) throw new Error(`Keychain read failed (exit ${result.code}).`)
     const token = result.stdout.replace(/\n$/, '')
     return token === '' ? null : token
   }
@@ -79,13 +73,14 @@ export const create_keychain_token_store = ({ run = run_security }: { run?: RunS
       // Interactive mode reads the command from stdin. The token is tchar
       // only, so it holds no double quote and needs no escaping inside one.
       const command = `add-generic-password -U -s "${SERVICE}" -a "${check_account(node_url)}" -l "${LABEL}" -w "${checked.token}"\n`
+      if (Buffer.byteLength(command) > MAX_COMMAND_BYTES) throw new Error('The access token and node URL are too long to store.')
       const result = await run({ args: ['-i'], stdin: command })
-      // Interactive mode exits 0 even when its command fails, so read back.
-      if (result.code !== 0 || await get(node_url) !== checked.token) throw new Error(`Keychain write failed: ${result.stderr.trim()}`)
+      // Read back too: the exit code alone is not a check that it landed.
+      if (result.code !== 0 || await get(node_url) !== checked.token) throw new Error(`Keychain write failed (exit ${result.code}).`)
     },
     delete: async (node_url) => {
       const result = await run({ args: ['delete-generic-password', '-s', SERVICE, '-a', check_account(node_url)] })
-      if (result.code !== 0 && result.code !== ITEM_NOT_FOUND) throw new Error(`Keychain delete failed (${result.code}): ${result.stderr.trim()}`)
+      if (result.code !== 0 && result.code !== ITEM_NOT_FOUND) throw new Error(`Keychain delete failed (exit ${result.code}).`)
     }
   }
 }

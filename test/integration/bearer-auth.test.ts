@@ -8,6 +8,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
+import { create_authed_call } from '#main/authed-call.ts'
 import { open_connection_store } from '#main/connection-store.ts'
 import { import_chosen_paths } from '#main/import-files.ts'
 import { create_node_auth } from '#main/node-auth.ts'
@@ -22,6 +23,8 @@ import { start_test_node, type TestNode } from './node-fixture.ts'
 
 const TOKEN = 'hosted-node-token.v1'
 let node: TestNode
+// Every request and WebSocket upgrade the node authenticates.
+let authentications = 0
 
 const wait_for = async (condition: () => boolean, label: string): Promise<void> => {
   for (let attempt = 0; attempt < 200; attempt++) {
@@ -32,7 +35,7 @@ const wait_for = async (condition: () => boolean, label: string): Promise<void> 
 }
 
 beforeAll(async () => {
-  node = await start_test_node({ authenticate: (token) => token === TOKEN })
+  node = await start_test_node({ authenticate: (token) => { authentications++; return token === TOKEN } })
   await node.peer.ingest_file(node.make_audio({ name: 'Authed.flac', seed: 7 }))
 }, 120_000)
 
@@ -100,13 +103,13 @@ describe('bearer auth against a hosted node', () => {
       const late: { connection?: ReturnType<typeof create_node_connection> } = {}
       const session = create_node_session({
         broadcast: (channel, payload) => { if (channel.endsWith(':state')) session_states.push(payload as EventsState) },
-        on_unauthorized: (target) => { late.connection?.unauthorized(target).catch(() => {}) },
+        on_unauthorized: (sent) => { late.connection?.unauthorized(sent) },
         open_events: (options) => open_node_events({ ...options, delay_ms: () => 50 })
       })
       const connection = create_node_connection({ store, auth: create_node_auth({ tokens }), manager, session, on_node_changed: () => {} })
       late.connection = connection
       await connection.start()
-      expect(connection.target()).toEqual({ node_url: node.node_url, token: 'stale-token', blocked: false })
+      expect(connection.target()).toMatchObject({ node_url: node.node_url, token: 'stale-token', blocked: false })
 
       // The upgrade is refused; the reconnect probe learns why over REST.
       await wait_for(() => session.get_state().status === 'unauthorized', 'unauthorized')
@@ -114,7 +117,16 @@ describe('bearer auth against a hosted node', () => {
       expect(connection.view().auth.status).toBe('rejected')
       expect(connection.target()?.blocked).toBe(true)
 
-      await connection.switched({ token: TOKEN })
+      // Blocked: requests are refused in main, and the socket stays shut.
+      const authed = create_authed_call({ target: connection.target, unauthorized: connection.unauthorized })
+      const before = authentications
+      const blocked = await authed(async ({ node_url, token }) => await request_node({ node_url, token, request: { method: 'get', path_template: '/settings' } }))
+      expect(blocked).toMatchObject({ ok: false, failure: { kind: 'auth' } })
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      expect(authentications).toBe(before)
+
+      await connection.store_token({ node_url: node.node_url, token: TOKEN })
+      await connection.switched()
       expect(await tokens.get(node.node_url)).toBe(TOKEN)
       await wait_for(() => session.get_state().status === 'open', 'reopened')
       expect(connection.view().auth.status).toBe('saved')

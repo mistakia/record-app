@@ -23,10 +23,12 @@ export interface ConnectionView extends ConnectionConfig {
 
 // Whether main holds a bearer token for the remote node (spec §8.7.3),
 // never the token itself (§8.10.7). `rejected` means the node answered 401
-// and nothing is sent to it until the user enters a new token. persistent
+// to the saved token, which was deleted, and `required` that it answered
+// 401 to a request sent without one; either way nothing is sent to it
+// until the user enters a new token. persistent
 // is false where tokens are not kept in a Keychain, and so last until quit.
 export interface AuthView {
-  status: 'none' | 'saved' | 'rejected'
+  status: 'none' | 'saved' | 'rejected' | 'required'
   persistent: boolean
 }
 
