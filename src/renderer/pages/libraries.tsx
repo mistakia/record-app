@@ -2,14 +2,14 @@
 // state, connect and disconnect, unlink, linking a new one, and the own
 // library's profile.
 
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 
 import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
-import { is_replicating, library_category, library_name } from '#renderer/components/library/library-category.ts'
+import { current_progress, is_replicating, library_category, library_name, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -17,16 +17,21 @@ import { library_connection_requested, library_linked } from '#renderer/store/re
 import { library_selected } from '#renderer/store/ui.ts'
 import { report_write } from '#renderer/store/write.ts'
 
-const LibraryRow = ({ library, on_unlink }: { library: Library, on_unlink: (library: Library) => void }) => {
+const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
+  library: Library
+  libraries_fetched_at: number | undefined
+  now: number
+  on_unlink: (library: Library) => void
+}) => {
   const dispatch = use_app_dispatch()
   const navigate = useNavigate()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const live_progress = use_app_selector((state) => state.replication.progress[library.address])
   const connected = use_app_selector((state) => state.replication.connected[library.address])
-  const recently_linked = use_app_selector((state) => state.replication.recently_linked.includes(library.address))
+  const linked_at = use_app_selector((state) => state.replication.linked_at[library.address])
   const category = library_category(library)
-  const progress = live_progress ?? library.replication_status
-  const replicating = is_replicating({ library, live_progress, recently_linked })
+  const progress = current_progress({ library, live_progress, libraries_fetched_at })
+  const replicating = is_replicating({ library, progress, linked_at, now })
 
   const set_connection = (connect: boolean) => {
     const endpoint = connect ? node_api.endpoints.connect_library : node_api.endpoints.disconnect_library
@@ -73,6 +78,14 @@ export const Libraries = () => {
   const [alias, set_alias] = useState('')
   const [unlinking, set_unlinking] = useState<Library | null>(null)
   const own = libraries.data?.find(({ is_own }) => is_own)
+  // Re-evaluated every few seconds so a fresh link's grace period ends.
+  const [now, set_now] = useState(Date.now())
+  const has_recent_link = use_app_selector((state) => Object.values(state.replication.linked_at).some((at) => Date.now() - at < RECENT_LINK_MS))
+  useEffect(() => {
+    if (!has_recent_link) return
+    const timer = setInterval(() => { set_now(Date.now()) }, 5_000)
+    return () => { clearInterval(timer) }
+  }, [has_recent_link])
 
   const link = async (event: FormEvent) => {
     event.preventDefault()
@@ -105,7 +118,9 @@ export const Libraries = () => {
           <tr><th>Library</th><th>Category</th><th>Tracks</th><th>Replication</th><th>Peers</th><th /></tr>
         </thead>
         <tbody>
-          {libraries.data?.map((library) => <LibraryRow key={library.id} library={library} on_unlink={set_unlinking} />)}
+          {libraries.data?.map((library) => (
+            <LibraryRow key={library.id} library={library} libraries_fetched_at={libraries.fulfilledTimeStamp} now={now} on_unlink={set_unlinking} />
+          ))}
         </tbody>
       </table>
       <form className={styles.link} onSubmit={(event) => { link(event).catch(() => {}) }}>

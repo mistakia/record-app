@@ -10,6 +10,7 @@
 import { node_api } from './api.ts'
 import { reconcile_finished, reconcile_started } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
+import { live_progress_cleared } from './replication.ts'
 import type { AppDispatch, RootState } from './index.ts'
 
 const RETRY_MIN_MS = 1_000
@@ -28,6 +29,7 @@ export const reconcile = ({ connection_id, wait = sleep }: { connection_id: numb
     for (let attempt = 0; ; attempt++) {
       const started_at = Date.now()
       dispatch(reconcile_started({ connection_id }))
+      dispatch(live_progress_cleared())
       dispatch(node_api.util.invalidateTags([...NODE_API_TAGS]))
       // Refetches start as the invalidation is processed; collect them a
       // tick later, and keep waiting while any is still running.

@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 
 import { is_cid } from '#renderer/components/library/cid.ts'
-import { is_replicating, library_category, own_library_address } from '#renderer/components/library/library-category.ts'
+import { current_progress, is_replicating, library_category, own_library_address, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
 import { pages_for_rows, row_location } from '#renderer/components/track/track-pages.ts'
 import { resolve_hotkey, type KeyPress } from '#renderer/hooks/hotkeys.ts'
 import type { Library } from '#renderer/api/types.ts'
 import { DEFAULT_TRACK_FILTERS, track_page_args } from '#renderer/store/api.ts'
 import { import_event_received, import_requested, imports_slice } from '#renderer/store/imports.ts'
-import { library_event_received, library_linked, replication_slice } from '#renderer/store/replication.ts'
+import { library_event_received, library_linked, live_progress_cleared, replication_slice } from '#renderer/store/replication.ts'
 import { filters_cleared, library_selected, query_changed, tag_toggled, ui_slice } from '#renderer/store/ui.ts'
 
 const library = (overrides: Partial<Library> = {}): Library => ({
@@ -63,20 +63,37 @@ describe('libraries', () => {
     expect(library_category(library())).toBe('discovered')
     expect(own_library_address([library(), library({ is_own: true, address: '/mine' })])).toBe('/mine')
     const linked = library({ is_linked: true })
-    expect(is_replicating({ library: linked, live_progress: undefined, recently_linked: true })).toBe(true)
-    expect(is_replicating({ library: linked, live_progress: undefined, recently_linked: false })).toBe(false)
-    expect(is_replicating({ library: linked, live_progress: { progress: 3, total: 10 }, recently_linked: false })).toBe(true)
-    expect(is_replicating({ library: library({ is_own: true, is_replicating: true }), live_progress: undefined, recently_linked: false })).toBe(false)
+    const none = { progress: 0, total: 0 }
+    // A fresh link with nothing from the node counts as replicating for 60 s only.
+    expect(is_replicating({ library: linked, progress: none, linked_at: 1_000, now: 1_000 + 59_000 })).toBe(true)
+    expect(is_replicating({ library: linked, progress: none, linked_at: 1_000, now: 1_000 + RECENT_LINK_MS })).toBe(false)
+    // Once the node reports a status, the fresh-link grace no longer applies.
+    expect(is_replicating({ library: library({ is_linked: true, replication_status: { progress: 4, total: 4 }, length: 4 }), progress: { progress: 4, total: 4 }, linked_at: 1_000, now: 2_000 })).toBe(false)
+    expect(is_replicating({ library: linked, progress: { progress: 3, total: 10 }, linked_at: undefined, now: 0 })).toBe(true)
+    expect(is_replicating({ library: library({ is_own: true, is_replicating: true }), progress: none, linked_at: undefined, now: 0 })).toBe(false)
   })
 
-  test('the replication slice follows progress, connection, and unlink events', () => {
-    const event = (type: string, payload: Record<string, unknown>) => library_event_received({ type, payload: { library_address: '/x', ...payload } })
-    let state = replication_slice.reducer(undefined, library_linked('/x'))
+  test('live progress shows only when it arrived after the node\'s last library list', () => {
+    const linked = library({ is_linked: true, replication_status: { progress: 9, total: 9 } })
+    const live = { progress: 3, total: 9, received_at: 2_000 }
+    expect(current_progress({ library: linked, live_progress: live, libraries_fetched_at: 1_000 })).toBe(live)
+    expect(current_progress({ library: linked, live_progress: live, libraries_fetched_at: 3_000 })).toEqual({ progress: 9, total: 9 })
+    expect(current_progress({ library: linked, live_progress: undefined, libraries_fetched_at: 3_000 })).toEqual({ progress: 9, total: 9 })
+  })
+
+  test('the replication slice follows progress, completion, connection, and unlink events, and clears on reconcile', () => {
+    const event = (type: string, payload: Record<string, unknown>, at = 5) => library_event_received({ type, payload: { library_address: '/x', ...payload } }, at)
+    let state = replication_slice.reducer(undefined, library_linked('/x', 1))
     state = replication_slice.reducer(state, event('library:replicate-progress', { progress: 2, total: 5 }))
     state = replication_slice.reducer(state, event('library:disconnected', {}))
-    expect(state).toEqual({ progress: { '/x': { progress: 2, total: 5 } }, connected: { '/x': false }, recently_linked: ['/x'] })
+    expect(state).toEqual({ progress: { '/x': { progress: 2, total: 5, received_at: 5 } }, connected: { '/x': false }, linked_at: { '/x': 1 } })
+    state = replication_slice.reducer(state, event('library:replicated', { length: 5 }))
+    expect(state.progress).toEqual({})
+    state = replication_slice.reducer(state, event('library:replicate-progress', { progress: 1, total: 5 }))
+    state = replication_slice.reducer(state, live_progress_cleared())
+    expect(state.progress).toEqual({})
     state = replication_slice.reducer(state, event('library:unlinked', {}))
-    expect(state).toEqual({ progress: {}, connected: {}, recently_linked: [] })
+    expect(state).toEqual({ progress: {}, connected: {}, linked_at: {} })
   })
 
   test('is_cid accepts CIDv0 and v1 in base32 and base58btc, and nothing else', () => {
