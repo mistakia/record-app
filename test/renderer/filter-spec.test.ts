@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'bun:test'
 
-import { blank_draft, from_draft, to_draft } from '#renderer/filter/filter-draft.ts'
+import { blank_draft, can_draft, from_draft, to_draft } from '#renderer/filter/filter-draft.ts'
 import { CAPABILITY_FIELDS, describe_filter, filter_problems, FILTER_TYPES, REPLICATION_FIELDS, type FilterSpec } from '#renderer/filter/filter-spec.ts'
 import { describe_action, describe_conditions, describe_grantee, describe_scope, parse_grantee_keys } from '#renderer/library/capabilities.ts'
 
@@ -53,6 +53,20 @@ describe('filter drafts', () => {
     expect(from_draft({ type: 'match', rows: [{ path: '', text: 'a' }] }, CAPABILITY_FIELDS).ok).toBe(false)
     expect(from_draft({ type: 'range', field: 'added_at', bounds: { gte: '-', gt: '', lte: '', lt: '' } }, REPLICATION_FIELDS).ok).toBe(false)
     expect(from_draft({ type: 'range', field: 'added_at', bounds: { gte: '-2.5', gt: '', lte: '', lt: '' } }, REPLICATION_FIELDS)).toEqual({ ok: true, spec: { type: 'range', field: 'added_at', gte: -2.5 } })
+  })
+
+  test('only filters that survive a round trip open in the structured editor', () => {
+    expect(can_draft({ type: 'match', fields: { tags: 'house' } }, CAPABILITY_FIELDS)).toBe(true)
+    for (const spec of [
+      { type: 'match', fields: { id: null } },
+      { type: 'match', fields: { tags: true } },
+      { type: 'match', fields: { tags: 5 } },
+      { type: 'match', fields: { timestamp: '5' } },
+      { type: 'match', fields: { ' id': 'x' } },
+      { type: 'regex', pattern: 'x' }
+    ]) expect(can_draft(spec, CAPABILITY_FIELDS)).toBe(false)
+    expect(from_draft({ type: 'range', field: 'timestamp', bounds: { gte: '0x10', gt: '', lte: '', lt: '' } }, CAPABILITY_FIELDS).ok).toBe(false)
+    expect(describe_grantee({ type: 'key_set', keys: [] })).toBe('(malformed key_set grantee)')
   })
 
   test('round-trip a sound filter', () => {

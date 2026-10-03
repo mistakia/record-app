@@ -24,8 +24,10 @@ import { library_event_received } from '#renderer/store/replication.ts'
 // inert entries are a grantee's, not ours.
 export const describe_inert = ({ payload, libraries }: { payload: Record<string, unknown>, libraries: readonly Library[] | undefined }): string | null => {
   const count = Array.isArray(payload.entry_hashes) ? payload.entry_hashes.length : 0
-  const library = libraries?.find(({ address }) => address === payload.library_address)
-  if (count === 0 || library?.is_own === true) return null
+  // Until the library list is known, whose writes these were is not.
+  if (count === 0 || libraries === undefined) return null
+  const library = libraries.find(({ address }) => address === payload.library_address)
+  if (library?.is_own === true) return null
   const name = library === undefined ? String(payload.library_address) : library_name(library)
   return `A revoked capability made ${count} of your ${count === 1 ? 'change' : 'changes'} in ${name} no longer count: ` +
     'they were written after the library owner revoked it.'

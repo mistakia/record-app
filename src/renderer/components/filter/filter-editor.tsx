@@ -148,8 +148,8 @@ export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
   label?: string
 }) => {
   const list_id = useId()
-  const [draft, set_draft] = useState<FilterDraft | null>(() => can_draft(value) ? to_draft(value) : null)
-  const [json_mode, set_json_mode] = useState(() => value !== null && value !== undefined && !can_draft(value))
+  const [draft, set_draft] = useState<FilterDraft | null>(() => can_draft(value, fields) ? to_draft(value) : null)
+  const [json_mode, set_json_mode] = useState(() => value !== null && value !== undefined && !can_draft(value, fields))
   const [json_text, set_json_text] = useState(() => as_json(value))
   const [draft_error, set_draft_error] = useState<string | null>(null)
   // The last value this editor emitted, so a change from outside (a reset
@@ -159,10 +159,10 @@ export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
   useEffect(() => {
     if (Object.is(value, emitted.current)) return
     emitted.current = value
-    set_draft(can_draft(value) ? to_draft(value) : null)
+    set_draft(can_draft(value, fields) ? to_draft(value) : null)
     set_json_text(as_json(value))
     set_draft_error(null)
-    if (value !== null && value !== undefined && !can_draft(value)) set_json_mode(true)
+    if (value !== null && value !== undefined && !can_draft(value, fields)) set_json_mode(true)
   }, [value])
 
   const emit = (next: unknown) => {
@@ -186,6 +186,12 @@ export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
     }
     try {
       const parsed = JSON.parse(text) as unknown
+      // null here is text being typed, not "no filter": the checkbox says that.
+      if (parsed === null) {
+        set_draft_error('Enter a filter, or turn the filter off.')
+        emit(undefined)
+        return
+      }
       set_draft_error(null)
       emit(parsed)
     } catch {
@@ -209,7 +215,7 @@ export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
   }
 
   const enabled = value !== null
-  const structured_ok = value === undefined ? draft !== null && !json_mode : can_draft(value)
+  const structured_ok = value === undefined ? draft !== null && !json_mode : can_draft(value, fields)
   const problems = value === null || value === undefined ? [] : filter_problems(value)
 
   return (
@@ -222,8 +228,8 @@ export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
           Use a filter
         </label>
         {enabled && (json_mode
-          ? <button type='button' disabled={!structured_ok} onClick={() => { if (can_draft(value)) set_draft(to_draft(value)); set_json_mode(false) }}>Structured editor</button>
-          : <button type='button' onClick={() => { set_json_text(as_json(value)); set_json_mode(true) }}>Edit as JSON</button>)}
+          ? <button type='button' disabled={!structured_ok} onClick={() => { if (can_draft(value, fields)) set_draft(to_draft(value)); set_json_mode(false) }}>Structured editor</button>
+          : <button type='button' disabled={value === undefined} title={value === undefined ? 'Finish the filter first' : undefined} onClick={() => { set_json_text(as_json(value)); set_json_mode(true) }}>Edit as JSON</button>)}
       </div>
       {enabled && (json_mode || draft === null
         ? <textarea aria-label='Filter JSON' className={styles.json} rows={8} spellCheck={false} value={json_text} onChange={(event) => { edit_json(event.target.value) }} />
