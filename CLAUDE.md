@@ -21,7 +21,7 @@ bun run verify              # eslint + three tsc projects
 bun test                    # RECORD_TOOLCHAIN_PREFLIGHT=bypass when ffmpeg/fpcalc differ from record-node's pins
 bun run gen:api             # regenerate API types and the route allowlist after bumping record-node
 bun run smoke:remote        # built app against a running node, read-only (RECORD_NODE_URL; options in the script header)
-bun run smoke:local         # built app against its own in-process node: gapless, listen, Media Session
+bun run smoke:local         # built app against its own in-process node: every write, gapless, identity export
 ```
 
 ## Architecture
@@ -47,8 +47,12 @@ cli/           generate-api-routes.mjs, check-lockfile-age.mjs (vendored from ba
 - **Freshness.** Node data is stale until the reconcile after each connect finishes. The RTK Query base query refuses every write until then, and the banner shows the unreachable or stale state.
 - **Playback.** `player-controller.ts` is the one action path; the player bar, queue panel, track rows, and Media Session all call it. The engine holds two decoded buffers at most and splices the next one in with `start(when)` at the current buffer's end. A listen POSTs once per play at 60 s of played time (or near the end of a shorter track), behind the write gate. POST /listens is not idempotent, so a failed listen is retried only when it provably never reached the node (gated, refused, or DNS), never after a timeout; held listens live in memory and are lost if the app quits first. Never let a smoke against a shared node play that long.
 - **Hibernation snapshot.** The renderer hands main the snapshot (libraries, the active first page, the queue, the route) every 5 s when changed. Main writes it every 30 s and at quit, fits it to the user's limit, and wipes it on a node URL change. Launch renders it before any query, marked stale.
-- **Electron-free modules.** `node-client.ts`, `api-path.ts`, `connection-store.ts`, `node-events.ts`, `node-session.ts`, and `snapshot-store.ts` import nothing from Electron, so tests drive them under Bun.
-- **State.** Server data lives only in the RTK Query cache; slices hold client state (`connection`, `player`, `ui`).
+- **Writes against shared nodes.** Treat any node you did not start as read-only: tags, ingest, links, about, listens, and identity import and export are exercised only against the in-process node (integration tests and `smoke:local`). `smoke:remote` stays read-only.
+- **Ingest paths.** File-picker paths come only from main's own dialog; dropped files reach main as bytes and a bare name (`import-files.ts`). The renderer never hands main a path (spec §8.10.3).
+- **Identity.** Export goes straight through the bridge, never through RTK Query, so the private key never enters the store or the snapshot; it lives in the export dialog's state and is cleared on close. The public key is read in main, which passes on only the public half. Main refuses identity import unless the mode is bundled (§8.5.4).
+- **Browsing.** The track list is virtualized over the whole result; only the 200-row pages near the viewport are subscribed. Search, sort, and tag filtering are node queries (§8.8.2).
+- **Electron-free modules.** `node-client.ts`, `api-path.ts`, `connection-store.ts`, `node-events.ts`, `node-session.ts`, `snapshot-store.ts`, `audio-downloads.ts`, `import-files.ts`, and `request-policy.ts` import nothing from Electron, so tests drive them under Bun.
+- **State.** Server data lives only in the RTK Query cache; slices hold client state (`connection`, `player`, `ui`, `replication`, `imports`, `notifications`).
 
 ## Conventions
 
