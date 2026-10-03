@@ -22,6 +22,7 @@ import {
   type RepeatMode
 } from './queue-manager.ts'
 import type { Track } from '#renderer/api/types.ts'
+import type { NodeFailure } from '#shared/bridge.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { store } from '#renderer/store/index.ts'
@@ -45,14 +46,25 @@ const engine = create_audio_engine({
   }
 })
 
+// System errors that mean the request never left this machine or was never
+// accepted by the node.
+const NEVER_SENT_CODES = new Set(['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN'])
+const LISTEN_FLUSH_INTERVAL_MS = 30_000
+
+// POST /listens is not idempotent, so a listen is retried only when the
+// request provably never reached the node: gated by the app, no node
+// configured, connection refused, or the name did not resolve. A timeout or
+// a connection dropped mid-request may have landed, and a rare lost listen
+// is better than a duplicate.
+export const listen_never_reached_node = (failure: NodeFailure): boolean =>
+  failure.kind === 'refused' || failure.kind === 'not_configured' ||
+  (failure.kind === 'network' && failure.code !== null && NEVER_SENT_CODES.has(failure.code))
+
 const recorder = create_listen_recorder({
   record: async (listen) => {
     const result = await store.dispatch(node_api.endpoints.record_listen.initiate(listen))
     if (result.error === undefined) return true
-    // Kept for a retry when the write was gated or the node was out of
-    // reach; a request the node rejected would only be rejected again.
-    const kind = (result.error as { kind?: string }).kind
-    return !(kind === 'refused' || kind === 'network' || kind === 'tls')
+    return !listen_never_reached_node(result.error as NodeFailure)
   }
 })
 
@@ -96,12 +108,14 @@ const play_current = (start_at = 0): void => {
 let last_state = engine.get_snapshot().state
 engine.subscribe((snapshot) => {
   store.dispatch(engine_updated(snapshot))
-  const entry = current_entry(queue())
+  // The listen belongs to the entry the engine is reporting on, which can
+  // differ from the queue's current entry while a skip is under way.
+  const entry = queue().entries.find(({ queue_id }) => queue_id === snapshot.key)
   recorder.observe({
     play_id: snapshot.play_id,
     played_seconds: snapshot.played_seconds,
     duration_seconds: snapshot.duration_seconds,
-    listen: entry === null || entry.queue_id !== snapshot.key ? null : { track_id: entry.track_id, library_address: entry.library_address }
+    listen: entry === undefined ? null : { track_id: entry.track_id, library_address: entry.library_address }
   })
   // The track ran out with nothing spliced in (no next, or it was not
   // ready in time): move on the ordinary way.
@@ -121,13 +135,17 @@ engine.on_advance((key) => {
   if (index !== -1) commit_queue(jump_to({ queue: queue(), index }))
 })
 
-// Listens held back while writes were gated go out once they are allowed.
+// Held-back listens go out when writes become allowed, and every 30 s while
+// they are, in case one was held while writes were already allowed.
 let writes_allowed = false
 store.subscribe(() => {
   const allowed = select_writes_allowed(store.getState())
   if (allowed && !writes_allowed) recorder.flush_pending()
   writes_allowed = allowed
 })
+setInterval(() => {
+  if (writes_allowed && recorder.pending_count() > 0) recorder.flush_pending()
+}, LISTEN_FLUSH_INTERVAL_MS)
 
 export const play_tracks = ({ tracks, start_index, library_address }: { tracks: Track[], start_index: number, library_address: string }): void => {
   const entries = tracks.map((track) => to_entry({ track, library_address }))

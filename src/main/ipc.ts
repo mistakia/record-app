@@ -6,6 +6,7 @@ import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 
 import { API_ROUTES } from '#shared/api-routes.ts'
 import { IPC_CHANNELS, type NodeRequest, type NodeResult } from '#shared/bridge.ts'
+import { create_audio_downloads } from './audio-downloads.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { get_audio, request_node, test_connection } from './node-client.ts'
 import type { NodeSession } from './node-session.ts'
@@ -66,24 +67,16 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
     if (request === null) return refuse('Malformed node request.')
     return await request_node({ node_url: store.get().node_url, request })
   })
-  // In-flight audio downloads by request_id, so the renderer can cancel one.
-  const audio_downloads = new Map<string, AbortController>()
+  const audio_downloads = create_audio_downloads({ download: async ({ cid, signal }) => await get_audio({ node_url: store.get().node_url, cid, signal }) })
   handle(IPC_CHANNELS.get_audio, async (input) => {
     const { cid, request_id } = is_plain_object(input) ? input : {}
     if (typeof cid !== 'string' || !CID.test(cid)) return refuse('Malformed audio CID.')
-    if (request_id === undefined) return await get_audio({ node_url: store.get().node_url, cid })
-    if (typeof request_id !== 'string' || !REQUEST_ID.test(request_id) || audio_downloads.has(request_id)) return refuse('Malformed audio request id.')
-    const controller = new AbortController()
-    audio_downloads.set(request_id, controller)
-    try {
-      return await get_audio({ node_url: store.get().node_url, cid, signal: controller.signal })
-    } finally {
-      audio_downloads.delete(request_id)
-    }
+    if (typeof request_id !== 'string' || !REQUEST_ID.test(request_id)) return refuse('Malformed audio request id.')
+    return await audio_downloads.start({ cid, request_id })
   })
   handle(IPC_CHANNELS.cancel_audio, async (input) => {
     const request_id = is_plain_object(input) ? input.request_id : undefined
-    if (typeof request_id === 'string') audio_downloads.get(request_id)?.abort()
+    if (typeof request_id === 'string') audio_downloads.cancel(request_id)
   })
 
   handle(IPC_CHANNELS.events_get_state, async () => session.get_state())

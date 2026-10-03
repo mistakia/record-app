@@ -32,12 +32,15 @@ export interface NodeRequest {
 export type NodeFailure =
   | { kind: 'not_configured', message: string }
   | { kind: 'refused', message: string }
-  | { kind: 'network', message: string }
+  // code is the system error code (ECONNREFUSED, ENOTFOUND, ...), or
+  // TIMEOUT, or null when there is none.
+  | { kind: 'network', message: string, code: string | null }
   | { kind: 'tls', message: string }
   | { kind: 'auth', status: number, message: string }
   | { kind: 'http', status: number, code: string | null, message: string }
   | { kind: 'too_large', message: string }
   | { kind: 'aborted', message: string }
+  | { kind: 'busy', message: string }
 
 export type NodeResult<T> = { ok: true, data: T } | { ok: false, failure: NodeFailure }
 
@@ -72,7 +75,7 @@ export interface RecordBridge {
   }
   request: (request: NodeRequest) => Promise<NodeResult<unknown>>
   // request_id names the download so cancel_audio can abort it.
-  get_audio: (input: { cid: string, request_id?: string }) => Promise<NodeResult<ArrayBuffer>>
+  get_audio: (input: { cid: string, request_id: string }) => Promise<NodeResult<ArrayBuffer>>
   cancel_audio: (input: { request_id: string }) => Promise<void>
   events: {
     get_state: () => Promise<EventsState>

@@ -4,7 +4,7 @@ import { create_audio_engine } from '#renderer/player/audio-engine.ts'
 import { create_mock_context, sleep } from './mock-audio-context.ts'
 
 // Durations by cid; the mock decodes a buffer whose duration is its byte length.
-const DURATIONS: Record<string, number> = { a: 40, b: 50, c: 20, short: 10 }
+const DURATIONS: Record<string, number> = { a: 40, b: 50, c: 20, short: 10, long: 300 }
 
 const create_test_engine = ({ hold_resume = false, hold_loads = false } = {}) => {
   const mock = create_mock_context({ hold_resume })
@@ -229,5 +229,80 @@ describe('play and resume', () => {
     await Promise.all([first, second])
     expect(engine.get_snapshot().state).toBe('playing')
     expect(mock.sources).toHaveLength(2)
+  })
+})
+
+describe('playback review regressions', () => {
+  test('a skip just past 60 s reports the outgoing play under its own key, and the new track starts from zero', async () => {
+    const { engine, mock } = await playing({ cid: 'long' })
+    const seen: Array<{ key: string | null, play_id: number, played_seconds: number }> = []
+    engine.subscribe(({ key, play_id, played_seconds }) => { seen.push({ key, play_id, played_seconds }) })
+    // The last tick ran just under 60 s; the skip comes before the next one.
+    mock.context.currentTime = 59.9
+    await sleep()
+    mock.context.currentTime = 60.1
+    await engine.play({ track: track('c') })
+    const outgoing = seen.filter(({ key, play_id }) => key === 'key-long' && play_id === 1)
+    expect(outgoing.at(-1)?.played_seconds).toBeCloseTo(60.1, 5)
+    // Nothing ever pairs the new key with the old play_id and its time.
+    expect(seen.some(({ key, play_id, played_seconds }) => key === 'key-c' && play_id === 1 && played_seconds > 0)).toBe(false)
+    expect(engine.get_snapshot()).toMatchObject({ key: 'key-c', play_id: 2, played_seconds: 0 })
+  })
+
+  test('a superseded play is not decoded: three rapid plays decode once', async () => {
+    const { engine, mock, loads } = create_test_engine({ hold_loads: true })
+    let decodes = 0
+    const decode = mock.context.decodeAudioData
+    mock.context.decodeAudioData = async (data: ArrayBuffer) => { decodes++; return await decode(data) }
+    const plays = [engine.play({ track: track('a') }), engine.play({ track: track('b') }), engine.play({ track: track('c') })]
+    await sleep()
+    for (const load of loads) load.resolve()
+    await Promise.all(plays)
+    expect(decodes).toBe(1)
+    expect(engine.get_snapshot().key).toBe('key-c')
+  })
+
+  test('a replaced pre-buffer download is not decoded', async () => {
+    const { engine, mock, loads } = await playing({ hold_loads: true })
+    let decodes = 0
+    const decode = mock.context.decodeAudioData
+    mock.context.decodeAudioData = async (data: ArrayBuffer) => { decodes++; return await decode(data) }
+    mock.context.currentTime = 15
+    engine.set_next(track('b'))
+    await sleep()
+    engine.set_next(track('c'))
+    await sleep()
+    loads.find(({ cid }) => cid === 'b')?.resolve()
+    loads.find(({ cid }) => cid === 'c')?.resolve()
+    await sleep()
+    expect(decodes).toBe(1)
+  })
+
+  test('a pause after the splice point but before onended pauses the audible next track, not the old one', async () => {
+    const { engine, mock, advances } = await playing()
+    mock.context.currentTime = 15
+    engine.set_next(track('b'))
+    await sleep()
+    // b has been audible for half a second; a's onended has not arrived.
+    mock.context.currentTime = 40.5
+    engine.pause()
+    expect(advances).toEqual(['key-b'])
+    expect(engine.get_snapshot()).toMatchObject({ state: 'paused', key: 'key-b', play_id: 2 })
+    expect(engine.get_snapshot().position_seconds).toBeCloseTo(0.5, 5)
+    await engine.resume()
+    expect(mock.sources.at(-1)?.buffer?.duration).toBe(50)
+    expect(mock.sources.at(-1)?.start_offset).toBeCloseTo(0.5, 5)
+  })
+
+  test('a seek after the splice point seeks within the audible next track', async () => {
+    const { engine, mock } = await playing()
+    mock.context.currentTime = 15
+    engine.set_next(track('b'))
+    await sleep()
+    mock.context.currentTime = 41
+    engine.seek(10)
+    expect(engine.get_snapshot()).toMatchObject({ key: 'key-b', position_seconds: 10 })
+    expect(mock.sources.at(-1)?.buffer?.duration).toBe(50)
+    expect(mock.sources.at(-1)?.start_offset).toBe(10)
   })
 })

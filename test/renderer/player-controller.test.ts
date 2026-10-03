@@ -164,4 +164,39 @@ describe('player controller', () => {
     expect(mock.sources.at(-1)?.start_offset).toBe(42)
     controller.stop_playback()
   })
+
+  test('a skip just past 60 s records the outgoing track\'s listen, not the incoming one\'s', async () => {
+    const long = track('long', 300)
+    controller.play_tracks({ tracks: [long, track('b', 40)], start_index: 0, library_address: LIBRARY })
+    await sleep()
+    const listens = () => requests.filter(({ path_template }) => path_template === '/listens')
+    const before = listens().length
+    mock.context.currentTime += 59.9
+    await tick()
+    mock.context.currentTime += 0.2
+    controller.next_track()
+    await tick()
+    expect(listens()).toHaveLength(before + 1)
+    expect((listens().at(-1)?.body as { track_id: string }).track_id).toBe(long.id)
+    controller.stop_playback()
+  })
+
+  test('a listen is retried only when the request provably never reached the node', () => {
+    const never: Array<Parameters<typeof controller.listen_never_reached_node>[0]> = [
+      { kind: 'refused', message: 'gated' },
+      { kind: 'not_configured', message: 'none' },
+      { kind: 'network', message: 'refused', code: 'ECONNREFUSED' },
+      { kind: 'network', message: 'dns', code: 'ENOTFOUND' },
+      { kind: 'network', message: 'dns', code: 'EAI_AGAIN' }
+    ]
+    const maybe: Array<Parameters<typeof controller.listen_never_reached_node>[0]> = [
+      { kind: 'network', message: 'timeout', code: 'TIMEOUT' },
+      { kind: 'network', message: 'reset', code: 'ECONNRESET' },
+      { kind: 'network', message: 'unknown', code: null },
+      { kind: 'http', status: 500, code: null, message: 'boom' },
+      { kind: 'tls', message: 'bad cert' }
+    ]
+    expect(never.map(controller.listen_never_reached_node)).toEqual(never.map(() => true))
+    expect(maybe.map(controller.listen_never_reached_node)).toEqual(maybe.map(() => false))
+  })
 })

@@ -37,9 +37,9 @@ const bridge: RecordBridge = {
     const { method, path_template, params, query, body } = request
     return await ipcRenderer.invoke(IPC_CHANNELS.request, { method, path_template, params, query, body })
   },
-  get_audio: async ({ cid, request_id }: { cid: string, request_id?: string }) => {
+  get_audio: async ({ cid, request_id }: { cid: string, request_id: string }) => {
     if (typeof cid !== 'string') throw new TypeError('cid must be a string')
-    if (request_id !== undefined && typeof request_id !== 'string') throw new TypeError('request_id must be a string')
+    if (typeof request_id !== 'string') throw new TypeError('request_id must be a string')
     return await ipcRenderer.invoke(IPC_CHANNELS.get_audio, { cid, request_id })
   },
   cancel_audio: async ({ request_id }: { request_id: string }) => {

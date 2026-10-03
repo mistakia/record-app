@@ -98,7 +98,7 @@ describe('reconcile and the write gate', () => {
       }
     }))
     await settle()
-    answer_all({ ok: false, failure: { kind: 'network', message: 'down' } })
+    answer_all({ ok: false, failure: { kind: 'network', message: 'down', code: 'ECONNREFUSED' } })
     await failing
     expect(seen.freshness_before_retry).toBe('stale')
     store.dispatch(events_state_changed(open_state(2)))
@@ -171,8 +171,8 @@ describe('reconcile and the write gate', () => {
     const reconciling = store.dispatch(reconcile({ connection_id: 20, wait: async (ms) => { if (ms > 0) waits.push(ms); await settle() } }))
     // Each refetch is answered as it arrives: two failures, then success.
     const results: Array<NodeResult<unknown>> = [
-      { ok: false, failure: { kind: 'network', message: 'down' } },
-      { ok: false, failure: { kind: 'network', message: 'down' } },
+      { ok: false, failure: { kind: 'network', message: 'down', code: 'ECONNREFUSED' } },
+      { ok: false, failure: { kind: 'network', message: 'down', code: 'ECONNREFUSED' } },
       { ok: true, data: [] }
     ]
     const progress = { done: false }
@@ -209,7 +209,7 @@ describe('reconcile and the write gate', () => {
       }
     }))
     await settle(); await settle()
-    answer_all({ ok: false, failure: { kind: 'network', message: 'down' } })
+    answer_all({ ok: false, failure: { kind: 'network', message: 'down', code: 'ECONNREFUSED' } })
     await reconciling
     expect(attempts).toBe(1)
     expect(requests).toHaveLength(0)

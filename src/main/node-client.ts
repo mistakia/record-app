@@ -14,15 +14,20 @@ const TEST_TIMEOUT_MS = 5_000
 export const MAX_AUDIO_BYTES = 1024 ** 3
 
 const TLS_ERROR_CODE = /CERT|TLS|SSL/
+const BUN_ERROR_CODES: Record<string, string> = { ConnectionRefused: 'ECONNREFUSED' }
 
 const describe_fetch_error = (error: unknown): NodeFailure => {
-  if (error instanceof Error && error.name === 'TimeoutError') return { kind: 'network', message: 'The node did not respond in time.' }
+  if (error instanceof Error && error.name === 'TimeoutError') return { kind: 'network', message: 'The node did not respond in time.', code: 'TIMEOUT' }
   if (error instanceof Error && error.name === 'AbortError') return { kind: 'aborted', message: 'The request was cancelled.' }
   const cause = error instanceof Error ? error.cause as { code?: unknown, message?: unknown } | undefined : undefined
-  const code = typeof cause?.code === 'string' ? cause.code : null
+  // Node's fetch puts the system code on the cause; Bun's (the tests) puts
+  // its own name for it on the error.
+  const own_code = (error as { code?: unknown } | null)?.code
+  const raw_code = typeof cause?.code === 'string' ? cause.code : typeof own_code === 'string' ? own_code : null
+  const code = raw_code === null ? null : BUN_ERROR_CODES[raw_code] ?? raw_code
   const detail = typeof cause?.message === 'string' ? cause.message : String(error)
   if (code !== null && TLS_ERROR_CODE.test(code)) return { kind: 'tls', message: `TLS error: ${detail}` }
-  return { kind: 'network', message: code === null ? `Network error: ${detail}` : `Network error (${code}): ${detail}` }
+  return { kind: 'network', message: code === null ? `Network error: ${detail}` : `Network error (${code}): ${detail}`, code }
 }
 
 const describe_http_error = async (response: Response): Promise<NodeFailure> => {

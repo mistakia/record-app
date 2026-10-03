@@ -96,6 +96,7 @@ export const create_audio_engine = ({
     stop_tick()
     tick = setInterval(() => {
       if (snapshot.state !== 'playing') return
+      slots.settle_transition()
       emit({ position_seconds: slots.position(), played_seconds: snapshot.played_seconds + slots.take_played_seconds() })
       slots.maybe_prebuffer(prebuffer_seconds)
     }, tick_ms)
@@ -111,14 +112,25 @@ export const create_audio_engine = ({
       const load = new AbortController()
       play_load = load
       stop_tick()
+      slots.settle_transition()
       settle_played()
+      // The outgoing play's last stretch is reported under its own key and
+      // play_id before anything names the new track, so its listen is
+      // judged on its own time and the new track inherits none of it.
+      if (snapshot.key !== null) emit({ played_seconds: snapshot.played_seconds })
       const ready = slots.take_ready_next(track)
       slots.clear_current()
-      emit({ state: 'loading', key: track.key, position_seconds: 0, duration_seconds: 0, error: null })
+      emit({ state: 'loading', key: track.key, position_seconds: 0, duration_seconds: 0, played_seconds: 0, error: null })
       // Resume before the first await, while the click's user activation holds.
       const resumed = slots.resume_context()
       try {
-        const buffer = ready ?? await slots.decode(await load_audio({ cid: track.cid, signal: load.signal }))
+        let buffer = ready
+        if (buffer === null) {
+          const data = await load_audio({ cid: track.cid, signal: load.signal })
+          // A play that a later play overtook is not decoded.
+          if (load.signal.aborted) return
+          buffer = await slots.decode(data)
+        }
         await resumed
         if (load.signal.aborted) return
         const offset = clamp(start_at, 0, buffer.duration)
@@ -137,6 +149,8 @@ export const create_audio_engine = ({
     },
     pause: () => {
       if (snapshot.state !== 'playing') return
+      // Act on the slot that is audible now, even if onended is still due.
+      slots.settle_transition()
       settle_played()
       stop_tick()
       const position = slots.pause()
@@ -156,6 +170,7 @@ export const create_audio_engine = ({
     },
     seek: (position_seconds) => {
       if (!slots.has_current()) return
+      if (snapshot.state === 'playing') slots.settle_transition()
       settle_played()
       const offset = slots.seek({ position_seconds, playing: snapshot.state === 'playing' })
       emit({ position_seconds: offset, ...(snapshot.state === 'ended' ? { state: 'paused' as const } : {}) })

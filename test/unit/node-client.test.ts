@@ -59,3 +59,14 @@ describe('get_audio cancellation', () => {
     expect(!audio.ok && audio.failure.kind).toBe('aborted')
   })
 })
+
+describe('network failure codes', () => {
+  test('a refused connection carries its system code, so a caller can tell it never reached the node', async () => {
+    // A port that was just free; 9 and other fetch-blocked ports fail before connecting.
+    const probe = Bun.serve({ port: 0, fetch: () => new Response() })
+    const closed_port = probe.port
+    await probe.stop(true)
+    const audio = await get_audio({ node_url: `http://127.0.0.1:${closed_port}`, cid: 'x' })
+    expect(!audio.ok && audio.failure).toMatchObject({ kind: 'network', code: 'ECONNREFUSED' })
+  })
+})

@@ -90,19 +90,27 @@ export const create_slot_scheduler = ({ create_context, ramp_seconds, load_audio
     return played
   }
 
+  // Makes the spliced-in next slot current. Called from the old source's
+  // onended, and also whenever the clock has already reached the splice:
+  // the next source is audible from its start time, and onended can arrive
+  // after a pause or seek that needs to act on the audible slot.
+  const promote_next = (): boolean => {
+    if (current === null || next?.source == null || next.buffer === null) return false
+    const finished = take_played_seconds()
+    const when = end_time(current)
+    const promoted: CurrentSlot = { track: next.track, buffer: next.buffer, source: next.source, started_at: when }
+    next.source.onended = handle_current_end(next.source)
+    current = promoted
+    next = null
+    played_mark = when
+    on_advance(promoted, finished)
+    return true
+  }
+
   const handle_current_end = (source: AudioBufferSourceNode) => (): void => {
     if (current === null || current.source !== source) return
+    if (promote_next()) return
     const finished = take_played_seconds()
-    if (next?.source != null && next.buffer !== null) {
-      const when = end_time(current)
-      const promoted: CurrentSlot = { track: next.track, buffer: next.buffer, source: next.source, started_at: when }
-      next.source.onended = handle_current_end(next.source)
-      current = promoted
-      next = null
-      played_mark = when
-      on_advance(promoted, finished)
-      return
-    }
     current.source = null
     paused_at = current.buffer.duration
     played_mark = null
@@ -137,6 +145,12 @@ export const create_slot_scheduler = ({ create_context, ramp_seconds, load_audio
   }
 
   return {
+    // Promotes the next slot once the clock is past the splice, before
+    // onended arrives.
+    settle_transition: (): void => {
+      if (current?.source == null || next?.source == null || graph === null) return
+      if (graph.context.currentTime >= end_time(current)) promote_next()
+    },
     resume_context: async (): Promise<void> => { await open().context.resume() },
     decode: async (data: ArrayBuffer): Promise<AudioBuffer> => await open().context.decodeAudioData(data),
     has_current: (): boolean => current !== null,
@@ -219,9 +233,13 @@ export const create_slot_scheduler = ({ create_context, ramp_seconds, load_audio
       const loading = new AbortController()
       target.loading = loading
       load_audio({ cid: target.track.cid, signal: loading.signal })
-        .then(async (data) => await open().context.decodeAudioData(data))
+        .then(async (data) => {
+          // A superseded download is not decoded.
+          if (next !== target || loading.signal.aborted) return null
+          return await open().context.decodeAudioData(data)
+        })
         .then((buffer) => {
-          if (next !== target || loading.signal.aborted) return
+          if (buffer === null || next !== target || loading.signal.aborted) return
           target.buffer = buffer
           target.loading = null
           schedule_next()
