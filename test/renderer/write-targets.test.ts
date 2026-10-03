@@ -4,6 +4,8 @@
 import { describe, expect, test } from 'bun:test'
 
 import type { Capability, Library } from '#renderer/api/types.ts'
+import { describe_holders } from '#renderer/components/library/library-category.ts'
+import { removable_from } from '#renderer/components/track/remove-dialog.tsx'
 import { choose_capability, default_target, resolve_target, target_fields, write_targets } from '#renderer/library/write-targets.ts'
 
 const library = (overrides: Partial<Library>): Library => ({
@@ -12,6 +14,7 @@ const library = (overrides: Partial<Library>): Library => ({
   library_type: 'recordstore',
   track_count: 0,
   linked_library_count: 0,
+  audio_size_bytes: 0,
   length: 0,
   heads: [],
   replication_status: { progress: 0, total: 0 },
@@ -95,14 +98,28 @@ describe('write targets', () => {
     const targets = write_targets({ libraries: LIBRARIES, held: [capability({})], action: 'library.append_track' })
     expect(default_target({ targets, recent: null })?.library_address).toBe('/record/z/own')
     expect(default_target({ targets, recent: '/record/z/own2' })?.library_address).toBe('/record/z/own2')
-    expect(default_target({ targets, recent: '/record/z/own2', preferred: '/record/z/shared' })?.library_address).toBe('/record/z/shared')
+    expect(default_target({ targets, recent: '/record/z/own2', preferred: ['/record/z/shared'] })?.library_address).toBe('/record/z/shared')
     // A preferred library that is not writable falls through.
-    expect(default_target({ targets, recent: '/record/z/gone', preferred: '/record/z/linked' })?.library_address).toBe('/record/z/own')
+    // The first preferred address that is a target wins.
+    expect(default_target({ targets, recent: '/record/z/gone', preferred: ['/record/z/linked', '/record/z/own2'] })?.library_address).toBe('/record/z/own2')
     expect(default_target({ targets: [], recent: null })).toBeNull()
   })
 
   test('sends the capability only for a shared target', () => {
     expect(target_fields({ library_address: '/a', category: 'own', capability_id: null })).toEqual({ library_address: '/a' })
     expect(target_fields({ library_address: '/b', category: 'shared', capability_id: 'cap' })).toEqual({ library_address: '/b', capability_id: 'cap' })
+  })
+})
+
+describe('holders', () => {
+  test('describes which libraries hold a track, by category (spec 8.6.7)', () => {
+    expect(describe_holders({ addresses: ['/record/z/own', '/record/z/own2', '/record/z/shared', '/record/z/linked', '/record/z/unknown'], libraries: LIBRARIES }))
+      .toBe('2 own, 1 shared, 1 linked, 1 discovered')
+    expect(describe_holders({ addresses: [], libraries: LIBRARIES })).toBeNull()
+  })
+
+  test('a track can be removed only from own active recordstores holding it', () => {
+    const track = { library_addresses: ['/record/z/own2', '/record/z/retired', '/record/z/listens', '/record/z/shared'] } as unknown as Parameters<typeof removable_from>[0]['track']
+    expect(removable_from({ track, libraries: LIBRARIES }).map(({ address }) => address)).toEqual(['/record/z/own2'])
   })
 })

@@ -16,6 +16,7 @@ const library = (overrides: Partial<Library> = {}): Library => ({
   library_type: 'recordstore',
   track_count: 0,
   linked_library_count: 0,
+  audio_size_bytes: 0,
   length: 0,
   heads: [],
   replication_status: { progress: 0, total: 0 },

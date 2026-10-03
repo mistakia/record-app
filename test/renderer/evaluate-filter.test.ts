@@ -8,6 +8,7 @@ import { estimate_storage, evaluate_filter, format_bytes, track_view } from '#re
 
 const track = (overrides: Partial<Track>): Track => ({
   id: 'a'.repeat(64),
+  library_addresses: [],
   content_cid: 'zContent',
   audio_cid: 'bAudio',
   audio_size_bytes: 1_000_000,
@@ -56,9 +57,13 @@ describe('storage estimate', () => {
   })
 
   test('scales the sample to the whole library: all for full, the matching share for selective, none for index_only', () => {
-    expect(estimate_storage({ mode: 'full', filter: null, sample, track_count: 100, library_address })).toEqual({ bytes: 2_000_000_000, sampled: 2, matched: 2 })
+    expect(estimate_storage({ mode: 'full', filter: null, sample, track_count: 100, library_address })).toEqual({ bytes: 2_000_000_000, exact: false, sampled: 2, matched: 2 })
     expect(estimate_storage({ mode: 'selective', filter: { type: 'match', fields: { tags: 'keep' } }, sample, track_count: 100, library_address }))
-      .toEqual({ bytes: 500_000_000, sampled: 2, matched: 1 })
+      .toEqual({ bytes: 500_000_000, exact: false, sampled: 2, matched: 1 })
+    // With the node's total (Library.audio_size_bytes): exact for full, and
+    // selective scales it by the matching share of the sample's bytes.
+    expect(estimate_storage({ mode: 'full', filter: null, sample, track_count: 100, total_bytes: 3_000_000_000, library_address })).toEqual({ bytes: 3_000_000_000, exact: true, sampled: 0, matched: 0 })
+    expect(estimate_storage({ mode: 'selective', filter: { type: 'match', fields: { tags: 'keep' } }, sample, track_count: 100, total_bytes: 4_000_000_000, library_address })?.bytes).toBe(1_000_000_000)
     expect(estimate_storage({ mode: 'index_only', filter: null, sample, track_count: 100, library_address })?.bytes).toBe(0)
     expect(estimate_storage({ mode: 'full', filter: null, sample: [], track_count: 5, library_address })).toBeNull()
     expect(format_bytes(2_000_000_000)).toBe('2.0 GB')

@@ -60,7 +60,7 @@ export const ReplicationPolicyDialog = ({ library, on_close }: { library: Librar
   const stored_filter_fails = policy.data?.filter !== null && policy.data?.filter !== undefined && filter_problems(policy.data.filter).length > 0
   const estimate = sample.data === undefined || !known || !filter_ok
     ? null
-    : estimate_storage({ mode: current, filter, sample: sample.data.items, track_count: library.track_count, library_address: library.address })
+    : estimate_storage({ mode: current, filter, sample: sample.data.items, track_count: library.track_count, total_bytes: library.audio_size_bytes, library_address: library.address })
 
   const save = async () => {
     if (!known) return
@@ -109,9 +109,11 @@ export const ReplicationPolicyDialog = ({ library, on_close }: { library: Librar
                   ? 'Estimating storage.'
                   : current === 'index_only'
                     ? 'Audio is kept only while recently played.'
-                    : `About ${format_bytes(estimate.bytes)} of audio kept on this device` +
-                    (estimate.sampled < library.track_count ? `, estimated from the ${estimate.sampled} most recently added of ${library.track_count} tracks` : '') +
-                    (current === 'selective' ? ` (${estimate.matched} of ${estimate.sampled} sampled tracks match).` : '.')}
+                    : estimate.exact
+                      ? `${format_bytes(estimate.bytes)} of audio kept on this device.`
+                      : `About ${format_bytes(estimate.bytes)} of audio kept on this device` +
+                      (estimate.sampled < library.track_count ? `, estimated from the ${estimate.sampled} most recently added of ${library.track_count} tracks` : '') +
+                      (current === 'selective' ? ` (${estimate.matched} of ${estimate.sampled} sampled tracks match).` : '.')}
         </p>
         <div className={styles.actions}>
           <button type='button' onClick={on_close}>Cancel</button>

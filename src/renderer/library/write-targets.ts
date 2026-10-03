@@ -61,15 +61,16 @@ export const write_targets = ({ libraries, held, action, now = Date.now() }: {
   return targets
 }
 
-// The default target: the preferred address when it is a target (the
-// library being viewed, which holds the track being tagged), else the
-// library written to last (§8.6.3's recommendation), else the first own one.
-export const default_target = ({ targets, recent, preferred = null }: {
+// The default target: the first preferred address that is a target (the
+// library being viewed, then the libraries holding the track being tagged),
+// else the library written to last (§8.6.3's recommendation), else the
+// first own one.
+export const default_target = ({ targets, recent, preferred = [] }: {
   targets: readonly WriteTarget[]
   recent: string | null
-  preferred?: string | null
+  preferred?: readonly string[]
 }): WriteTarget | null =>
-  targets.find(({ library_address }) => library_address === preferred) ??
+  preferred.map((address) => targets.find(({ library_address }) => library_address === address)).find((target) => target !== undefined) ??
   targets.find(({ library_address }) => library_address === recent) ??
   targets.find(({ category }) => category === 'own') ??
   targets[0] ??
@@ -86,11 +87,11 @@ export type TargetResolution =
   | { kind: 'none' }
   | { kind: 'target', target: WriteTarget }
 
-export const resolve_target = ({ targets, chosen, recent, preferred = null, loading }: {
+export const resolve_target = ({ targets, chosen, recent, preferred = [], loading }: {
   targets: readonly WriteTarget[]
   chosen: string | null
   recent: string | null
-  preferred?: string | null
+  preferred?: readonly string[]
   loading: boolean
 }): TargetResolution => {
   if (loading) return { kind: 'loading' }

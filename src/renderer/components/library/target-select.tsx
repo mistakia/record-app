@@ -26,9 +26,9 @@ export interface WriteTargetChoice {
   name_of: (library_address: string) => string
 }
 
-export const use_write_target = ({ action, preferred = null, exclude = [] }: {
+export const use_write_target = ({ action, preferred = [], exclude = [] }: {
   action: WriteAction
-  preferred?: string | null
+  preferred?: readonly string[]
   exclude?: readonly string[]
 }): WriteTargetChoice => {
   const dispatch = use_app_dispatch()

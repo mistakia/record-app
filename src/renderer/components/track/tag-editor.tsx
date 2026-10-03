@@ -1,6 +1,7 @@
 // Tagging (spec §8.6.3, §8.6.9): tags are per library. A tag is added into a
 // chosen writable library (an own one, or a shared one whose capability
-// grants library.append_tag), defaulting to the library being viewed. A tag
+// grants library.append_tag), defaulting to the library being viewed, else
+// one that holds the track. A tag
 // is removed only from an own active library: no capability authorises
 // dropping a tag (§3.5.6). Tags from other libraries show read-only.
 
@@ -27,7 +28,9 @@ export const TagEditor = ({ track: initial, viewed_library, on_close }: {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const libraries = node_api.endpoints.get_libraries.useQuery()
-  const choice = use_write_target({ action: 'library.append_tag', preferred: viewed_library === '' ? null : viewed_library })
+  // A tag goes into a library that holds the track: the one being viewed,
+  // else any writable holder (Track.library_addresses).
+  const choice = use_write_target({ action: 'library.append_tag', preferred: [...(viewed_library === '' ? [] : [viewed_library]), ...(initial.library_addresses ?? [])] })
   const [track, set_track] = useState(initial)
   const [draft, set_draft] = useState('')
   const [busy, set_busy] = useState(false)

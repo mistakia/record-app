@@ -9,6 +9,7 @@ import type { Track } from '#renderer/api/types.ts'
 import type { MenuItem } from '#renderer/components/common/context-menu.tsx'
 import { library_category, library_name, own_library_address } from '#renderer/components/library/library-category.ts'
 import { AdoptDialog } from '#renderer/components/track/adopt-dialog.tsx'
+import { RemoveDialog, removable_from } from '#renderer/components/track/remove-dialog.tsx'
 import { TagEditor } from '#renderer/components/track/tag-editor.tsx'
 import { TagFilter } from '#renderer/components/track/tag-filter.tsx'
 import { TrackList } from '#renderer/components/track/track-list.tsx'
@@ -36,6 +37,7 @@ export const Tracks = () => {
   const [search, set_search] = useState(filters.query)
   const [tagging, set_tagging] = useState<Track | null>(null)
   const [adopting, set_adopting] = useState<Track | null>(null)
+  const [removing, set_removing] = useState<Track | null>(null)
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const first_page = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address, page: 0, filters }))
   const own_address = own_library_address(libraries.data)
@@ -59,7 +61,8 @@ export const Tracks = () => {
     { label: 'Add to queue', on_select: () => { add_to_queue({ tracks: [track], at: 'end', library_address: listen_library }) } },
     { label: 'Tags', on_select: () => { set_tagging(track) } },
     { label: 'Adopt to library', on_select: () => { set_adopting(track) } },
-    { label: track.is_pinned === true ? 'Unpin' : 'Pin', on_select: () => { toggle_pin(track) } }
+    { label: track.is_pinned === true ? 'Unpin' : 'Pin', on_select: () => { toggle_pin(track) } },
+    ...(removable_from({ track, libraries: libraries.data }).length > 0 ? [{ label: 'Remove from library', on_select: () => { set_removing(track) } }] : [])
   ]
 
   // Spec §4.6.2, §8.6.5a: a pin keeps the track's audio on every device of
@@ -124,6 +127,7 @@ export const Tracks = () => {
         menu_items={menu_items}
       />
       {tagging !== null && <TagEditor track={tagging} viewed_library={library_address} on_close={() => { set_tagging(null) }} />}
+      {removing !== null && <RemoveDialog track={removing} viewed_library={library_address} on_close={() => { set_removing(null) }} />}
       {adopting !== null && <AdoptDialog track={adopting} viewed_library={library_address} on_close={() => { set_adopting(null) }} />}
     </section>
   )

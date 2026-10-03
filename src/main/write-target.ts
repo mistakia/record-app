@@ -23,6 +23,7 @@ export const check_write_target = (input: unknown): WriteTargetFields | null => 
 // library, and where each carries its target.
 const TARGETED_WRITES: Record<string, 'body' | 'query'> = {
   'post /tracks': 'body',
+  'delete /tracks/{id}': 'query',
   'post /tags': 'body',
   'delete /tags': 'query',
   'post /import/url': 'body'

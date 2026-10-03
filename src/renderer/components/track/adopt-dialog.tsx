@@ -1,7 +1,7 @@
 // Adoption (spec §8.6.7, §8.9.1): copy a track's entry into a chosen
 // writable library, an own one or a shared one whose capability grants
-// library.append_track, by its content CID (POST /tracks). The library the
-// track is viewed in is not offered, since it already holds the track.
+// library.append_track, by its content CID (POST /tracks). Libraries that
+// already hold the track (Track.library_addresses) are not offered.
 
 import { useState } from 'react'
 
@@ -18,7 +18,7 @@ import { report_write } from '#renderer/store/write.ts'
 export const AdoptDialog = ({ track, viewed_library, on_close }: { track: Track, viewed_library: string, on_close: () => void }) => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
-  const choice = use_write_target({ action: 'library.append_track', exclude: viewed_library === '' ? [] : [viewed_library] })
+  const choice = use_write_target({ action: 'library.append_track', exclude: [...(viewed_library === '' ? [] : [viewed_library]), ...(track.library_addresses ?? [])] })
   const [busy, set_busy] = useState(false)
   const { target } = choice
 

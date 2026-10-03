@@ -154,7 +154,71 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Correct a track's audio metadata.
+         * @description Writes a new content object (spec §2.4.1) for the same audio, with
+         *     `content.tags` changed as the request says, and appends a PUT of it
+         *     under the same track id, which supersedes the current one (spec
+         *     §4.4.2). The audio blob and its size, `audio`, `artwork`,
+         *     `resolver`, and the envelope's labels (spec §2.4.3) are kept.
+         *
+         *     Each field of `tags` sets that tag, and `null` removes it.
+         *     `acoustid_fingerprint` derives the track id, so a request that
+         *     changes it fails with 400. A request that changes nothing appends
+         *     nothing. Under a capability the write needs `library.append_track`
+         *     (spec §3.5.6).
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Track id (sha256 of the AcoustID fingerprint, lowercase hex). */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Tag names to new values, or `null` to remove the tag. */
+                        tags: {
+                            [key: string]: unknown;
+                        };
+                        library_address?: components["schemas"]["WriteTargetAddress"];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
+                    };
+                };
+            };
+            responses: {
+                /** @description The track as the target library now holds it. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Track"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
+                /**
+                 * @description The target is retired, or the node does not hold the track's
+                 *     current content payload, so it has nothing to correct.
+                 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                500: components["responses"]["InternalError"];
+            };
+        };
         trace?: never;
     };
     "/tracks/{cid}/pin": {
@@ -1837,6 +1901,13 @@ export interface components {
         Track: {
             /** @description sha256 of the AcoustID fingerprint (lowercase hex). */
             id: string;
+            /**
+             * @description The libraries holding a live PUT of the track, among those the
+             *     request covers: the `library_addresses` filter when given, else
+             *     every library the node shows. A list folds a track several
+             *     libraries hold into one item, so this says which they are.
+             */
+            library_addresses: string[];
             /** @description Base58btc CID of the dag-cbor content payload. */
             content_cid: string;
             /** @description CID of the tag-stripped audio blob (from `content.hash`). */
@@ -1906,6 +1977,12 @@ export interface components {
              */
             alias?: string | null;
             track_count: number;
+            /**
+             * @description Total size of the audio blobs of the library's live tracks
+             *     (`content.size`), for storage estimates. A track whose content
+             *     payload the node does not hold yet counts zero.
+             */
+            audio_size_bytes: number;
             linked_library_count: number;
             /** @description Oplog length (count of live entries). */
             length: number;
