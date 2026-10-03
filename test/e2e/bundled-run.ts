@@ -4,7 +4,7 @@
 // remote node, after the confirmation 8.3.4 requires. On the way it reads
 // Diagnostics (8.9.1) and moves the data directory (8.4.1).
 
-import { realpath } from 'node:fs/promises'
+import { mkdir, realpath, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import type { ElectronApplication, Page } from 'playwright-core'
@@ -67,7 +67,9 @@ export const run_bundled_checks = async ({ app, window, step, remote_url, user_d
 
   // Move the data directory: main's picker and confirmation (stubbed in main,
   // as the user's answers), then the node restarts in the new place.
+  // A folder made through the picker starts world-readable; the move makes it private.
   const moved_dir = join(await realpath(user_data_dir), 'moved-node-data')
+  await mkdir(moved_dir, { mode: 0o755 })
   await app.evaluate(({ dialog }, path) => {
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path] })
     dialog.showMessageBox = async () => ({ response: 1, checkboxChecked: false })
@@ -82,8 +84,10 @@ export const run_bundled_checks = async ({ app, window, step, remote_url, user_d
     moved = await bundled_state(window)
   }
   await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: 30_000 })
-  step('after moving the data directory', { data_dir: moved.data_dir, pid: moved.pid, old_child_alive: is_alive(restarted.pid as number) })
+  const mode = ((await stat(moved_dir)).mode & 0o777).toString(8)
+  step('after moving the data directory', { data_dir: moved.data_dir, mode, pid: moved.pid, old_child_alive: is_alive(restarted.pid as number) })
   if (is_alive(restarted.pid as number)) throw new Error('the old child outlived the move')
+  if (mode !== '700') throw new Error(`the moved data directory is ${mode}, not 700`)
 
   // Switch to remote: confirmed, and the bundled child stops.
   await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()

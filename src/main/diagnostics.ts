@@ -2,6 +2,7 @@
 // the bundled node's process; and moving the bundled node's data directory
 // (§8.4.1), which asks first and restarts the node there.
 
+import { chmod, realpath } from 'node:fs/promises'
 import { isAbsolute, relative } from 'node:path'
 
 import { app, BrowserWindow, dialog } from 'electron'
@@ -59,9 +60,11 @@ export const create_diagnostics = ({ user_data, store, manager, connection, upda
       defaultPath: current,
       properties: ['openDirectory', 'createDirectory']
     })
-    const next = picked.filePaths[0]
-    if (picked.canceled || next === undefined) return { ok: true, data: null }
-    if (!isAbsolute(next) || next === current) return { ok: true, data: null }
+    const chosen = picked.filePaths[0]
+    if (picked.canceled || chosen === undefined || !isAbsolute(chosen)) return { ok: true, data: null }
+    // Spec §8.10.9: the path is canonicalized before anything uses it.
+    const next = await realpath(chosen)
+    if (next === current) return { ok: true, data: null }
     if (inside(app.getAppPath(), next)) return { ok: false, failure: { kind: 'refused', message: 'The data folder cannot be inside the app itself.' } }
     const options = {
       type: 'warning' as const,
@@ -69,10 +72,12 @@ export const create_diagnostics = ({ user_data, store, manager, connection, upda
       defaultId: 0,
       cancelId: 0,
       message: 'Move the bundled node to this folder?',
-      detail: `The app does not move the existing data. If ${next} holds no node data, the bundled node starts there with a new, empty library and a new identity, and the current data stays in ${current} until you move it yourself. The bundled node restarts.`
+      detail: `The app does not move the existing data. If ${next} holds no node data, the bundled node starts there with a new, empty library and a new identity, and the current data stays in ${current} until you move it yourself. The folder is made private to your user account, and the bundled node restarts.`
     }
     const { response } = window === undefined ? await dialog.showMessageBox(options) : await dialog.showMessageBox(window, options)
     if (response !== 1) return { ok: true, data: null }
+    // Spec §8.10.9: the data directory is the user's alone (0700).
+    await chmod(next, 0o700)
     await save_data_dir(user_data, next)
     await manager.relocate({ next_data_dir: next, start: store.get().mode === 'bundled' })
     connection.sync()
