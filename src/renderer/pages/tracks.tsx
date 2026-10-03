@@ -50,9 +50,9 @@ export const Tracks = () => {
           ))}
         </select>
         <span className={styles.count} data-testid='track-total'>{total} tracks</span>
-        <button type='button' disabled={page === 0} onClick={() => { set_page(page - 1) }}>Previous</button>
+        <button type='button' aria-label='Previous page' disabled={page === 0} onClick={() => { set_page(page - 1) }}>Previous</button>
         <span>Page {page + 1} of {page_count}</span>
-        <button type='button' disabled={page + 1 >= page_count} onClick={() => { set_page(page + 1) }}>Next</button>
+        <button type='button' aria-label='Next page' disabled={page + 1 >= page_count} onClick={() => { set_page(page + 1) }}>Next</button>
       </div>
       {error !== undefined && <p className={styles.error}>{'message' in error ? error.message : 'The node request failed.'}</p>}
       {tracks.isLoading && <p className={styles.muted}>Loading tracks</p>}

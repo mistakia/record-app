@@ -85,8 +85,8 @@ try {
 
   const row = window.locator('tr', { has: window.getByRole('button', { name: title, exact: true }) }).filter({ hasText: artist })
   for (let page = 1; await row.count() === 0; page++) {
-    if (page >= MAX_PAGES || await window.getByRole('button', { name: 'Next', exact: true }).isDisabled()) throw new Error(`no "${title}" by ${artist} in the list`)
-    await window.getByRole('button', { name: 'Next', exact: true }).click()
+    if (page >= MAX_PAGES || await window.getByRole('button', { name: 'Next page', exact: true }).isDisabled()) throw new Error(`no "${title}" by ${artist} in the list`)
+    await window.getByRole('button', { name: 'Next page', exact: true }).click()
     await window.getByText(`Page ${page + 1} of`).waitFor()
     await window.locator('table[aria-busy=false]').waitFor()
   }
@@ -124,7 +124,7 @@ try {
   if (run_offline) {
     await second.window.getByTestId('node-unreachable').waitFor({ timeout: 30_000 })
     const rows = await second.window.locator('tbody tr').count()
-    const first_title = await second.window.locator('tbody tr').first().locator('button').innerText()
+    const first_title = await second.window.locator('tbody tr').first().locator('button').first().innerText()
     const freshness = await second.window.getByTestId('events-status').getAttribute('data-freshness')
     console.log('offline relaunch:', { rows, first_title, freshness, snapshot_rows: snapshot.active.tracks.length, snapshot_first_title: snapshot.active.tracks[0]?.title })
     if (rows !== snapshot.active.tracks.length || freshness !== 'stale') throw new Error('the offline relaunch did not render the stale snapshot')
