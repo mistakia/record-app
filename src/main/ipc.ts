@@ -13,6 +13,7 @@ import type { SnapshotStore } from './snapshot-store.ts'
 
 const METHODS = new Set<string>(API_ROUTES.map(({ method }) => method))
 const CID = /^[A-Za-z0-9]{1,128}$/
+const REQUEST_ID = /^[A-Za-z0-9-]{1,64}$/
 
 const refuse = (message: string): NodeResult<never> => ({ ok: false, failure: { kind: 'refused', message } })
 
@@ -65,10 +66,24 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
     if (request === null) return refuse('Malformed node request.')
     return await request_node({ node_url: store.get().node_url, request })
   })
+  // In-flight audio downloads by request_id, so the renderer can cancel one.
+  const audio_downloads = new Map<string, AbortController>()
   handle(IPC_CHANNELS.get_audio, async (input) => {
-    const cid = is_plain_object(input) ? input.cid : undefined
+    const { cid, request_id } = is_plain_object(input) ? input : {}
     if (typeof cid !== 'string' || !CID.test(cid)) return refuse('Malformed audio CID.')
-    return await get_audio({ node_url: store.get().node_url, cid })
+    if (request_id === undefined) return await get_audio({ node_url: store.get().node_url, cid })
+    if (typeof request_id !== 'string' || !REQUEST_ID.test(request_id) || audio_downloads.has(request_id)) return refuse('Malformed audio request id.')
+    const controller = new AbortController()
+    audio_downloads.set(request_id, controller)
+    try {
+      return await get_audio({ node_url: store.get().node_url, cid, signal: controller.signal })
+    } finally {
+      audio_downloads.delete(request_id)
+    }
+  })
+  handle(IPC_CHANNELS.cancel_audio, async (input) => {
+    const request_id = is_plain_object(input) ? input.request_id : undefined
+    if (typeof request_id === 'string') audio_downloads.get(request_id)?.abort()
   })
 
   handle(IPC_CHANNELS.events_get_state, async () => session.get_state())

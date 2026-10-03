@@ -49,3 +49,13 @@ describe('get_audio size cap', () => {
     expect(!audio.ok && audio.failure.kind).toBe('too_large')
   })
 })
+
+describe('get_audio cancellation', () => {
+  test('an aborted signal ends the download with an aborted failure', async () => {
+    const controller = new AbortController()
+    const pending = get_audio({ node_url: `http://127.0.0.1:${server.port}`, cid: 'chunked', signal: controller.signal })
+    controller.abort()
+    const audio = await pending
+    expect(!audio.ok && audio.failure.kind).toBe('aborted')
+  })
+})

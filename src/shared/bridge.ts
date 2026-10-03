@@ -37,6 +37,7 @@ export type NodeFailure =
   | { kind: 'auth', status: number, message: string }
   | { kind: 'http', status: number, code: string | null, message: string }
   | { kind: 'too_large', message: string }
+  | { kind: 'aborted', message: string }
 
 export type NodeResult<T> = { ok: true, data: T } | { ok: false, failure: NodeFailure }
 
@@ -70,7 +71,9 @@ export interface RecordBridge {
     test: (config: ConnectionConfig) => Promise<NodeResult<ConnectionTest>>
   }
   request: (request: NodeRequest) => Promise<NodeResult<unknown>>
-  get_audio: (input: { cid: string }) => Promise<NodeResult<ArrayBuffer>>
+  // request_id names the download so cancel_audio can abort it.
+  get_audio: (input: { cid: string, request_id?: string }) => Promise<NodeResult<ArrayBuffer>>
+  cancel_audio: (input: { request_id: string }) => Promise<void>
   events: {
     get_state: () => Promise<EventsState>
     reconnect_now: () => Promise<void>
@@ -96,6 +99,7 @@ export const IPC_CHANNELS = {
   connection_test: 'record:connection:test',
   request: 'record:request',
   get_audio: 'record:get-audio',
+  cancel_audio: 'record:cancel-audio',
   events_get_state: 'record:events:get-state',
   events_reconnect_now: 'record:events:reconnect-now',
   events_message: 'record:events:message',

@@ -17,6 +17,7 @@ const TLS_ERROR_CODE = /CERT|TLS|SSL/
 
 const describe_fetch_error = (error: unknown): NodeFailure => {
   if (error instanceof Error && error.name === 'TimeoutError') return { kind: 'network', message: 'The node did not respond in time.' }
+  if (error instanceof Error && error.name === 'AbortError') return { kind: 'aborted', message: 'The request was cancelled.' }
   const cause = error instanceof Error ? error.cause as { code?: unknown, message?: unknown } | undefined : undefined
   const code = typeof cause?.code === 'string' ? cause.code : null
   const detail = typeof cause?.message === 'string' ? cause.message : String(error)
@@ -36,10 +37,16 @@ const describe_http_error = async (response: Response): Promise<NodeFailure> => 
   return { kind: 'http', status: response.status, code, message }
 }
 
-const fetch_node = async ({ url, init, timeout_ms }: { url: string, init: RequestInit, timeout_ms: number }): Promise<NodeResult<Response>> => {
+const fetch_node = async ({ url, init, timeout_ms, signal }: {
+  url: string
+  init: RequestInit
+  timeout_ms: number
+  signal?: AbortSignal | undefined
+}): Promise<NodeResult<Response>> => {
   try {
     // A redirect could point anywhere; the node never issues one.
-    const response = await fetch(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(timeout_ms) })
+    const timeout = AbortSignal.timeout(timeout_ms)
+    const response = await fetch(url, { ...init, redirect: 'error', signal: signal === undefined ? timeout : AbortSignal.any([timeout, signal]) })
     if (!response.ok) return { ok: false, failure: await describe_http_error(response) }
     return { ok: true, data: response }
   } catch (error) {
@@ -106,13 +113,16 @@ const read_capped = async ({ response, max_bytes }: { response: Response, max_by
 }
 
 // The whole audio blob, which the renderer decodes with decodeAudioData.
-export const get_audio = async ({ node_url, cid, max_bytes = MAX_AUDIO_BYTES }: {
+// signal cancels the download, as when the track it was pre-buffering for is
+// no longer next.
+export const get_audio = async ({ node_url, cid, max_bytes = MAX_AUDIO_BYTES, signal }: {
   node_url: string | null
   cid: string
   max_bytes?: number
+  signal?: AbortSignal
 }): Promise<NodeResult<ArrayBuffer>> => {
   if (node_url === null) return not_configured
-  const result = await fetch_node({ url: `${node_url}/api/audio/${encodeURIComponent(cid)}`, init: { method: 'GET' }, timeout_ms: AUDIO_TIMEOUT_MS })
+  const result = await fetch_node({ url: `${node_url}/api/audio/${encodeURIComponent(cid)}`, init: { method: 'GET' }, timeout_ms: AUDIO_TIMEOUT_MS, signal })
   if (!result.ok) return result
   try {
     return await read_capped({ response: result.data, max_bytes })
