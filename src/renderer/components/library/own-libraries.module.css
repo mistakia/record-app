@@ -1,0 +1,83 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section h3 {
+  width: 100%;
+  margin: 0;
+  font-size: 14px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.name {
+  display: block;
+  font-weight: 600;
+}
+
+.address {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  border-radius: 10px;
+  padding: 1px 8px;
+  margin-right: 4px;
+  font-size: 12px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.retired {
+  border-color: var(--muted);
+  color: var(--muted);
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.actions button {
+  margin-right: 4px;
+}
+
+.create {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.create input {
+  font: inherit;
+  padding: 4px 6px;
+  min-width: 220px;
+}
+
+.error {
+  width: 100%;
+  color: var(--danger);
+  margin: 0;
+}
+
+.dialog_actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

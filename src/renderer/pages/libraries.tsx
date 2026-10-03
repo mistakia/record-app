@@ -1,6 +1,6 @@
 // Libraries (spec §8.6.5): every library with its category, replication
 // state, connect and disconnect, unlink, linking a new one, and the own
-// library's profile.
+// libraries with their profiles.
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router'
 import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
-import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
-import { current_progress, is_replicating, library_category, library_name, own_library_address, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
+import { OwnLibraries } from '#renderer/components/library/own-libraries.tsx'
+import { current_progress, is_replicating, library_category, library_name, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -46,7 +46,11 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink }: {
         <span className={styles.name}>{library_name(library)}</span>
         <span className={styles.address}>{library.address}</span>
       </td>
-      <td><span className={`${styles.badge} ${styles[category]}`}>{category}</span></td>
+      <td>
+        <span className={`${styles.badge} ${styles[category]}`}>{category}</span>
+        {library.library_type === 'listens' && <span className={styles.badge}>listens</span>}
+        {library.is_retired && <span className={styles.badge}>retired</span>}
+      </td>
       <td>{library.track_count}</td>
       <td data-testid='replication'>
         {category === 'own'
@@ -77,7 +81,6 @@ export const Libraries = () => {
   const [address, set_address] = useState('')
   const [alias, set_alias] = useState('')
   const [unlinking, set_unlinking] = useState<Library | null>(null)
-  const own_address = own_library_address(libraries.data)
   // Re-evaluated every few seconds so a fresh link's grace period ends.
   const [now, set_now] = useState(Date.now())
   const has_recent_link = use_app_selector((state) => Object.values(state.replication.linked_at).some((at) => Date.now() - at < RECENT_LINK_MS))
@@ -129,7 +132,7 @@ export const Libraries = () => {
         <input aria-label='Alias' placeholder='Alias (optional)' maxLength={128} value={alias} onChange={(event) => { set_alias(event.target.value) }} />
         <button type='submit' disabled={!writes_allowed || address.trim() === ''}>Link</button>
       </form>
-      {own_address !== null && <AboutEditor address={own_address} />}
+      <OwnLibraries />
       <Dialog open={unlinking !== null} title='Unlink library' on_close={() => { set_unlinking(null) }}>
         <p>
           Unlink {unlinking === null ? '' : library_name(unlinking)}? It leaves every view, and the node drops its replica and any

@@ -12,6 +12,9 @@ export const tags_for_event = (type: string): NodeApiTag[] => {
   if (type === 'library:peer-joined' || type === 'library:peer-left') return ['libraries', 'peers']
   if (type === 'library:linked' || type === 'library:unlinked') return ['libraries', 'tracks', 'tags', 'about']
   if (type.startsWith('library:')) return ['libraries']
+  // Own libraries created or retired here or on another of the identity's
+  // devices (§4.8.5).
+  if (type === 'identity:library-created' || type === 'identity:library-retired') return ['libraries', 'about']
   if (type.startsWith('peer:')) return ['peers']
   // import:* drives the importer's progress list, not the cache; the tracks
   // an import adds arrive as track:added.

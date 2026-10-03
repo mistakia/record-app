@@ -23,6 +23,7 @@ bun run gen:api             # regenerate API types and the route allowlist after
 bun run smoke:remote        # built app against a running node, read-only (RECORD_NODE_URL; options in the script header)
 bun run smoke:local         # built app against its own in-process node: every write, gapless, identity export
 bun run smoke:auth          # built app against an in-process node that requires a bearer token
+bun run smoke:v1-1          # built app against an in-process node: the record-docs v1.1 surfaces
 ```
 
 ## Architecture
@@ -53,6 +54,7 @@ cli/           generate-api-routes.mjs, check-lockfile-age.mjs (vendored from ba
 - **Writes against shared nodes.** Treat any node you did not start as read-only: tags, ingest, links, about, listens, and identity import and export are exercised only against the in-process node (integration tests and `smoke:local`). `smoke:remote` stays read-only.
 - **Ingest paths.** File-picker paths come only from main's own dialog; dropped files reach main as bytes and a bare name (`import-files.ts`). The renderer never hands main a path (spec §8.10.3).
 - **Identity.** The generic request channel refuses both identity routes. Export goes through main's `identity.export` channel, which returns the key only after the user confirms in a native dialog; the key lives in the export dialog's state, is cleared on close, and a copy is cleared from the clipboard after 60 s. The public key is read once per node URL in main, which keeps only the public half and refuses over plain http to another machine. Import is an RTK mutation (`track: false`) to main's `identity.import`, which sends only to the bundled node (§8.5.4).
+- **Own libraries** (spec §4.8.3, §8.9.1). `components/library/own-libraries.tsx` on the Libraries page lists `GET /identity/libraries` (active, retired, and the listens library), creates one with an optional name and discriminator, retires one after a permanent-action confirmation, and picks which active recordstore's profile the about editor shows. The listens library and retired libraries are never offered for retirement. A node without the endpoint (404) hides the panel. `identity:library-created` and `identity:library-retired` invalidate libraries.
 - **Browsing.** The track list is virtualized over the whole result; only the 200-row pages near the viewport are subscribed. Search, sort, and tag filtering are node queries (§8.8.2).
 - **Electron-free modules.** `node-client.ts`, `api-path.ts`, `connection-store.ts`, `node-events.ts`, `node-session.ts`, `snapshot-store.ts`, `audio-downloads.ts`, `import-files.ts`, `request-policy.ts`, `identity-access.ts`, `clipboard-expiry.ts`, `node-connection.ts`, `node-auth.ts`, `authed-call.ts`, `token-store.ts`, and everything in `bundled/` except `bundled-node.ts` import nothing from Electron, so tests drive them under Bun.
 - **State.** Server data lives only in the RTK Query cache; slices hold client state (`connection`, `player`, `ui`, `replication`, `imports`, `notifications`).
