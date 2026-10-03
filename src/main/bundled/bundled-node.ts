@@ -11,7 +11,7 @@
 // empties; record-node always exits explicitly, on SIGTERM and on error.
 
 import { randomUUID } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
 
@@ -97,6 +97,15 @@ export const save_data_dir = async (user_data: string, data_dir: string): Promis
 export const logs_dir = (user_data: string): string =>
   app.commandLine.hasSwitch('user-data-dir') ? join(user_data, 'logs') : app.getPath('logs')
 
+// The pinned ffmpeg and fpcalc (cli/build-toolchain.sh): Resources/bin in a
+// packaged app, toolchain/bin in a checkout that has built them; otherwise
+// none, and record-node looks on PATH (spec §8.2.6).
+export const bundled_toolchain = (app_root: string): { ffmpeg_path: string, fpcalc_path: string } | null => {
+  const bin = app.isPackaged ? join(process.resourcesPath, 'bin') : join(app_root, 'toolchain', 'bin')
+  const paths = { ffmpeg_path: join(bin, 'ffmpeg'), fpcalc_path: join(bin, 'fpcalc') }
+  return existsSync(paths.ffmpeg_path) && existsSync(paths.fpcalc_path) ? paths : null
+}
+
 export const create_bundled_node = ({ user_data, on_state }: { user_data: string, on_state: (state: BundledState) => void }) => {
   const app_root = app.getAppPath()
   const config_path = join(user_data, 'bundled-node.json')
@@ -108,6 +117,7 @@ export const create_bundled_node = ({ user_data, on_state }: { user_data: string
     config_path,
     version: pinned_version(app_root),
     env: process.env,
+    toolchain: bundled_toolchain(app_root),
     lock_for: (data_dir) => create_node_lock({ data_dir, app_pid: process.pid, owner, probe: os_process_probe, app_marker: process.execPath }),
     log: create_node_log({ log_dir: logs_dir(user_data) }),
     // The last port, so the node's URL stays the same across launches when it can.

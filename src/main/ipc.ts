@@ -83,7 +83,7 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     }
     return await test_connection({ node_url: checked.data.node_url as string })
   })
-  handle(IPC_CHANNELS.request, async (input) => await serve_generic_request({ input, node_url: node_url() }))
+  handle(IPC_CHANNELS.request, async (input) => await serve_generic_request({ input, node_url: node_url(), mode: store.get().mode }))
   const audio_downloads = create_audio_downloads({ download: async ({ cid, signal }) => await get_audio({ node_url: node_url(), cid, signal }) })
   handle(IPC_CHANNELS.get_audio, async (input) => {
     const { cid, request_id } = is_plain_object(input) ? input : {}

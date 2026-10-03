@@ -66,7 +66,7 @@ try {
   // A fresh profile starts in bundled mode; check it, then switch to the
   // in-process node, which holds the tracks the rest of the walk uses. The
   // smoke's dialog stubs below replace the ones the bundled checks set.
-  await run_bundled_checks({ app, window, step, remote_url: node.node_url, user_data_dir })
+  await run_bundled_checks({ app, window, step, remote_url: node.node_url, user_data_dir, audio_path: node.make_audio({ name: 'Smoke Bundled.flac', seed: 9 }) })
   await nav(window, 'Tracks')
   await settled(window)
 

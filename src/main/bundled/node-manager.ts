@@ -60,7 +60,7 @@ export const probe_health = async (url: string): Promise<Health | null> => {
 }
 
 export const create_node_manager = ({
-  spawn_child, cli_path, data_dir: initial_data_dir, config_path, version, env, lock_for, log, on_state,
+  spawn_child, cli_path, data_dir: initial_data_dir, config_path, version, env, toolchain = null, lock_for, log, on_state,
   preferred_port = async () => null,
   pick_port = choose_port,
   health = probe_health,
@@ -75,6 +75,8 @@ export const create_node_manager = ({
   cli_path: string
   data_dir: string
   config_path: string
+  // The bundled ffmpeg and fpcalc; null leaves record-node to find them on PATH.
+  toolchain?: { ffmpeg_path: string, fpcalc_path: string } | null
   version: string
   env: NodeJS.ProcessEnv
   // The data-directory lock for a directory; a new one after a relocation.
@@ -234,7 +236,7 @@ export const create_node_manager = ({
     await mkdir(data_dir, { recursive: true })
     // Loopback only and no browser origins (spec §8.4.2, §8.7.5): record-node
     // binds 127.0.0.1 by default, and this config pins it.
-    await writeFile(config_path, `${JSON.stringify({ host: '127.0.0.1', port, cors_origins: [] })}\n`, { mode: 0o600 })
+    await writeFile(config_path, `${JSON.stringify({ host: '127.0.0.1', port, cors_origins: [], ...toolchain })}\n`, { mode: 0o600 })
     await checkpoint('config')
     if (stale()) return
     const listening = { port: null as number | null }

@@ -17,6 +17,7 @@ import { request_node } from '#main/node-client.ts'
 import { open_node_events, type NodeEvents } from '#main/node-events.ts'
 import { create_identity_access } from '#main/identity-access.ts'
 import { serve_generic_request } from '#main/request-policy.ts'
+import { URL_IMPORT_OFF_IN_BUNDLED } from '#shared/bundled.ts'
 import { open_snapshot_store } from '#main/snapshot-store.ts'
 import type { About, Library, Track, TrackList } from '#renderer/api/types.ts'
 import type { NodeEventMessage, NodeRequest } from '#shared/bridge.ts'
@@ -163,10 +164,21 @@ describe('identity', () => {
 
   test('the generic request channel refuses both identity routes', async () => {
     for (const input of [{ method: 'get', path_template: '/identity/export' }, { method: 'post', path_template: '/identity/import', body: { private_key: 'ab' } }]) {
-      const result = await serve_generic_request({ input, node_url: node.node_url })
+      const result = await serve_generic_request({ input, node_url: node.node_url, mode: 'remote' })
       expect(!result.ok && result.failure.kind).toBe('refused')
     }
-    expect((await serve_generic_request({ input: { method: 'get', path_template: '/settings' }, node_url: node.node_url })).ok).toBe(true)
+    expect((await serve_generic_request({ input: { method: 'get', path_template: '/settings' }, node_url: node.node_url, mode: 'remote' })).ok).toBe(true)
+  })
+
+  test('the generic request channel refuses URL import in bundled mode, before the node sees it', async () => {
+    const input = { method: 'post', path_template: '/import/url', body: { url: 'https://example.test/track' } }
+    let calls = 0
+    const call = async () => { calls++; return { ok: true as const, data: null } }
+    const bundled = await serve_generic_request({ input, node_url: node.node_url, mode: 'bundled', call })
+    expect(!bundled.ok && bundled.failure).toEqual({ kind: 'refused', message: URL_IMPORT_OFF_IN_BUNDLED })
+    expect(calls).toBe(0)
+    expect((await serve_generic_request({ input, node_url: node.node_url, mode: 'remote', call })).ok).toBe(true)
+    expect(calls).toBe(1)
   })
 
   test('main\'s identity channel returns the key only after the user confirms, and imports only into a bundled node', async () => {

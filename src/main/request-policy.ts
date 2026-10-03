@@ -2,10 +2,12 @@
 // yaml (build_api_path), except the identity routes. Those carry the private
 // key, so they go only through main's own identity channels, which confirm
 // an export with the user in a native dialog and send an import only to the
-// bundled node (spec §8.10.1, §8.5.3, §8.5.4). Imports nothing from Electron.
+// bundled node (spec §8.10.1, §8.5.3, §8.5.4). URL import is refused in
+// bundled mode, which ships no yt-dlp. Imports nothing from Electron.
 
 import { API_ROUTES } from '#shared/api-routes.ts'
-import type { NodeRequest, NodeResult } from '#shared/bridge.ts'
+import type { ConnectionMode, NodeRequest, NodeResult } from '#shared/bridge.ts'
+import { URL_IMPORT_OFF_IN_BUNDLED } from '#shared/bundled.ts'
 import { request_node } from './node-client.ts'
 
 const METHODS = new Set<string>(API_ROUTES.map(({ method }) => method))
@@ -32,14 +34,18 @@ export const refused_on_generic_channel = (request: Pick<NodeRequest, 'method' |
     ? 'Identity export and import go through their own confirmed actions, not a plain request.'
     : null
 
-export const serve_generic_request = async ({ input, node_url, call = request_node }: {
+export const refused_in_mode = (request: Pick<NodeRequest, 'method' | 'path_template'>, mode: ConnectionMode): string | null =>
+  mode === 'bundled' && request.method === 'post' && request.path_template === '/import/url' ? URL_IMPORT_OFF_IN_BUNDLED : null
+
+export const serve_generic_request = async ({ input, node_url, mode, call = request_node }: {
   input: unknown
   node_url: string | null
+  mode: ConnectionMode
   call?: typeof request_node
 }): Promise<NodeResult<unknown>> => {
   const request = check_node_request(input)
   if (request === null) return refuse('Malformed node request.')
-  const refusal = refused_on_generic_channel(request)
+  const refusal = refused_on_generic_channel(request) ?? refused_in_mode(request, mode)
   if (refusal !== null) return refuse(refusal)
   return await call({ node_url, request })
 }

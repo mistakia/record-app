@@ -1,16 +1,15 @@
 // The packaged macOS app (`bun run package:mac` first), installed from its
 // .dmg: it launches with its fuses set, serves the renderer from app://,
 // starts the bundled record-node through utilityProcess, and plays a track
-// from it. The node's data directory is seeded beforehand by an in-process
-// record-node, since the bundled node cannot ingest until ffmpeg and fpcalc
-// ship. Playwright's Electron launcher needs the inspect arguments the fuses
+// from it, then ingests a file through its bundled ffmpeg and fpcalc. The
+// node's data directory is seeded beforehand by an in-process record-node. Playwright's Electron launcher needs the inspect arguments the fuses
 // turn off, so the app is driven over the Chrome DevTools Protocol instead.
 // Needs ffmpeg and fpcalc for the seed. RECORD_PACKAGED_ARCH=x86_64 runs the
 // Intel slice under Rosetta. Runs under Node:
 // node test/e2e/packaged-smoke.ts [path to .dmg or .app]
 
 import { execFileSync, spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,7 +18,7 @@ import { chromium, type Page } from 'playwright-core'
 import { create_peer, start_peer, stop_peer } from 'record-node'
 
 import { is_alive } from '#main/bundled/process-probe.ts'
-import { bundled_state } from './bundled-run.ts'
+import { bundled_state, check_bundled_ingest } from './bundled-run.ts'
 
 const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const { version } = JSON.parse(await readFile(join(APP_ROOT, 'package.json'), 'utf8')) as { version: string }
@@ -108,6 +107,14 @@ try {
     const later = await window.getByTestId('player-position').innerText()
     step('playback', { first, later, state: await window.getByTestId('player-bar').getAttribute('data-state') })
     if (first === later) throw new Error('playback did not advance')
+
+    // The bundled toolchain from Resources/bin: the preflight accepts it and a file ingests.
+    const config = JSON.parse(await readFile(join(profile, 'bundled-node.json'), 'utf8')) as { ffmpeg_path?: string, fpcalc_path?: string }
+    step('bundled toolchain paths', config)
+    if (!(config.ffmpeg_path ?? '').startsWith(join(await realpath(app_path), 'Contents', 'Resources', 'bin'))) throw new Error('the bundled node is not using the packaged ffmpeg')
+    const ingest_audio = join(work_dir, 'Packaged Ingest.flac')
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'anoisesrc=d=8:c=brown:seed=11:a=0.3', '-metadata', 'title=Packaged Ingest', ingest_audio])
+    await check_bundled_ingest({ window, step, audio_path: ingest_audio, title: 'Packaged Ingest', tracks_before: 1 })
 
     await window.getByRole('navigation').getByRole('link', { name: 'Diagnostics', exact: true }).click()
     step('diagnostics', (await window.getByTestId('diagnostics').innerText()).split('\n').slice(0, 30).join(' | '))

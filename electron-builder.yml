@@ -20,6 +20,15 @@ files:
   - '!node_modules/**/{test,tests,__tests__,docs,example,examples}/**'
 asar: true
 
+# The pinned ingest tools and their notices (cli/build-toolchain.sh), beside
+# the asar so the bundled node can run them; electron-builder signs them with
+# the app once a signing identity exists.
+extraResources:
+  - from: toolchain/bin
+    to: bin
+  - from: toolchain/licenses
+    to: licenses
+
 npmRebuild: false
 nodeGypRebuild: false
 buildDependenciesFromSource: false
@@ -35,6 +44,9 @@ mac:
   # Unsigned: no Developer ID identity yet, so no hardened-runtime signature
   # and no notarization. The fuses below still apply.
   identity: null
+  binaries:
+    - Contents/Resources/bin/ffmpeg
+    - Contents/Resources/bin/fpcalc
   minimumSystemVersion: '12.0'
   # libp2p's WebRTC transport loads node-datachannel's prebuilt binary when
   # record-node starts, picking @node-datachannel/darwin-<arch> at runtime.
