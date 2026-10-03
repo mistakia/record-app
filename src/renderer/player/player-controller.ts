@@ -17,14 +17,30 @@ const engine = create_audio_engine({
 engine.subscribe((snapshot) => { store.dispatch(engine_updated(snapshot)) })
 
 export const play_track = (track: Track): void => {
-  store.dispatch(track_selected({ track_id: track.id, audio_cid: track.audio_cid, title: track.title ?? null, artist: track.artist ?? null }))
+  store.dispatch(track_selected({
+    track_id: track.id,
+    audio_cid: track.audio_cid,
+    title: track.title ?? null,
+    artist: track.artist ?? null,
+    duration_seconds: track.duration_seconds ?? null
+  }))
   engine.play({ cid: track.audio_cid }).catch(() => {})
 }
 
 export const toggle_playback = (): void => {
   const { state } = engine.get_snapshot()
-  if (state === 'playing') engine.pause()
-  else engine.resume().catch(() => {})
+  if (state === 'playing') {
+    engine.pause()
+    return
+  }
+  // Nothing loaded yet, as after a restore or an error: load the cued track
+  // and start where it left off.
+  const { track, position_seconds } = store.getState().player
+  if ((state === 'idle' || state === 'error') && track !== null) {
+    engine.play({ cid: track.audio_cid, start_at: position_seconds }).catch(() => {})
+    return
+  }
+  engine.resume().catch(() => {})
 }
 
 export const seek_playback = (position_seconds: number): void => { engine.seek(position_seconds) }

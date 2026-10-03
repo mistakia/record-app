@@ -6,6 +6,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 
 import styles from './connection-settings.module.css'
+import { SnapshotControls } from '#renderer/components/common/snapshot-controls.tsx'
 import { stop_playback } from '#renderer/player/player-controller.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { connection_loaded } from '#renderer/store/connection.ts'
@@ -77,47 +78,50 @@ export const ConnectionSettings = () => {
   }
 
   return (
-    <form className={styles.form} onSubmit={submit}>
-      <h1>Connection</h1>
-      <fieldset className={styles.modes}>
-        <legend>Mode</legend>
-        <label>
-          <input type='radio' name='mode' value='bundled' disabled />
-          Bundled node (not available yet)
+    <>
+      <form className={styles.form} onSubmit={submit}>
+        <h1>Connection</h1>
+        <fieldset className={styles.modes}>
+          <legend>Mode</legend>
+          <label>
+            <input type='radio' name='mode' value='bundled' disabled />
+            Bundled node (not available yet)
+          </label>
+          <label>
+            <input type='radio' name='mode' value='remote' checked readOnly />
+            Remote node
+          </label>
+        </fieldset>
+        <label className={styles.field}>
+          Node URL
+          <input
+            name='node_url'
+            type='text'
+            placeholder='http://127.0.0.1:3000'
+            spellCheck={false}
+            value={node_url}
+            onChange={(event) => { set_node_url(event.target.value) }}
+          />
         </label>
-        <label>
-          <input type='radio' name='mode' value='remote' checked readOnly />
-          Remote node
-        </label>
-      </fieldset>
-      <label className={styles.field}>
-        Node URL
-        <input
-          name='node_url'
-          type='text'
-          placeholder='http://127.0.0.1:3000'
-          spellCheck={false}
-          value={node_url}
-          onChange={(event) => { set_node_url(event.target.value) }}
-        />
-      </label>
-      {node_url !== '' && !checked.ok && <p className={styles.error}>{checked.reason}</p>}
-      {checked.ok && checked.warning !== null && <p className={styles.warning}>{checked.warning}</p>}
-      <div className={styles.actions}>
-        <button type='button' disabled={!checked.ok || testing} onClick={() => { run_test().catch(() => {}) }}>
-          {testing ? 'Testing' : 'Test connection'}
-        </button>
-        <button type='submit' disabled={!checked.ok || saving}>{saving ? 'Saving' : 'Save'}</button>
-        <button type='button' disabled={saving} onClick={cancel}>Cancel</button>
-      </div>
-      {test_result?.ok === true && (
-        <p className={styles.success} data-testid='connection-test-result'>
-          Connected to peer {test_result.data.peer_id}
-          {test_result.data.version !== null && ` (record-node ${test_result.data.version})`}
-        </p>
-      )}
-      {test_result?.ok === false && <p className={styles.error} data-testid='connection-test-result'>{test_result.failure.message}</p>}
-      {save_error !== null && <p className={styles.error}>{save_error}</p>}
-    </form>
+        {node_url !== '' && !checked.ok && <p className={styles.error}>{checked.reason}</p>}
+        {checked.ok && checked.warning !== null && <p className={styles.warning}>{checked.warning}</p>}
+        <div className={styles.actions}>
+          <button type='button' disabled={!checked.ok || testing} onClick={() => { run_test().catch(() => {}) }}>
+            {testing ? 'Testing' : 'Test connection'}
+          </button>
+          <button type='submit' disabled={!checked.ok || saving}>{saving ? 'Saving' : 'Save'}</button>
+          <button type='button' disabled={saving} onClick={cancel}>Cancel</button>
+        </div>
+        {test_result?.ok === true && (
+          <p className={styles.success} data-testid='connection-test-result'>
+            Connected to peer {test_result.data.peer_id}
+            {test_result.data.version !== null && ` (record-node ${test_result.data.version})`}
+          </p>
+        )}
+        {test_result?.ok === false && <p className={styles.error} data-testid='connection-test-result'>{test_result.failure.message}</p>}
+        {save_error !== null && <p className={styles.error}>{save_error}</p>}
+      </form>
+      <SnapshotControls />
+    </>
   )
 }

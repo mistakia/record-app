@@ -7,7 +7,9 @@ import { useState } from 'react'
 import styles from './tracks.module.css'
 import { TRACK_PAGE_SIZE, type Library } from '#renderer/api/types.ts'
 import { TrackRow } from '#renderer/components/track/track-row.tsx'
-import { node_api } from '#renderer/store/api.ts'
+import { node_api, track_page_args } from '#renderer/store/api.ts'
+import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
+import { library_selected } from '#renderer/store/ui.ts'
 
 const library_label = (library: Library): string => {
   const name = library.alias ?? library.name ?? library.address
@@ -16,14 +18,11 @@ const library_label = (library: Library): string => {
 }
 
 export const Tracks = () => {
-  const [library_address, set_library_address] = useState('')
+  const dispatch = use_app_dispatch()
+  const library_address = use_app_selector((state) => state.ui.library_address)
   const [page, set_page] = useState(0)
   const libraries = node_api.endpoints.get_libraries.useQuery()
-  const tracks = node_api.endpoints.get_tracks.useQuery({
-    offset: page * TRACK_PAGE_SIZE,
-    limit: TRACK_PAGE_SIZE,
-    ...(library_address === '' ? {} : { library_addresses: [library_address] })
-  })
+  const tracks = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address, page }))
 
   const total = tracks.data?.total ?? 0
   const page_count = Math.max(1, Math.ceil(total / TRACK_PAGE_SIZE))
@@ -36,7 +35,7 @@ export const Tracks = () => {
           aria-label='Library'
           value={library_address}
           onChange={(event) => {
-            set_library_address(event.target.value)
+            dispatch(library_selected(event.target.value))
             set_page(0)
           }}
         >

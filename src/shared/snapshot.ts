@@ -27,6 +27,7 @@ export interface SnapshotQueueEntry {
   audio_cid: string
   title: string | null
   artist: string | null
+  duration_seconds: number | null
 }
 
 export interface HibernationSnapshot {

@@ -4,12 +4,14 @@ import { useDispatch, useSelector } from 'react-redux'
 import { node_api } from './api.ts'
 import { connection_slice } from './connection.ts'
 import { player_slice } from './player.ts'
+import { ui_slice } from './ui.ts'
 
 export const store = configureStore({
   reducer: {
     [node_api.reducerPath]: node_api.reducer,
     connection: connection_slice.reducer,
-    player: player_slice.reducer
+    player: player_slice.reducer,
+    ui: ui_slice.reducer
   },
   middleware: (get_default_middleware) => get_default_middleware().concat(node_api.middleware)
 })

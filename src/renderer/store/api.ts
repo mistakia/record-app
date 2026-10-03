@@ -4,7 +4,7 @@
 import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react'
 
 import type { NodeFailure, NodeRequest } from '#shared/bridge.ts'
-import type { Library, Settings, TrackList } from '#renderer/api/types.ts'
+import { TRACK_PAGE_SIZE, type Library, type Settings, type TrackList } from '#renderer/api/types.ts'
 import { select_writes_allowed, type ConnectionState } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
 
@@ -24,6 +24,14 @@ export interface GetTracksArgs {
   limit: number
   library_addresses?: string[]
 }
+
+// The one place track-list query args are built, so the hibernation
+// snapshot seeds exactly the cache entry the track list reads.
+export const track_page_args = ({ library_address, page }: { library_address: string, page: number }): GetTracksArgs => ({
+  offset: page * TRACK_PAGE_SIZE,
+  limit: TRACK_PAGE_SIZE,
+  ...(library_address === '' ? {} : { library_addresses: [library_address] })
+})
 
 export const node_api = createApi({
   reducerPath: 'node_api',

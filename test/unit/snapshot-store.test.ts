@@ -42,7 +42,7 @@ const snapshot = (overrides: Partial<HibernationSnapshot> = {}): HibernationSnap
   route: '/tracks',
   libraries: [{ address: '/record/a/record', name: 'Own', is_own: true }],
   active: { library_address: '', total: 200, tracks: Array.from({ length: 200 }, (_, index) => track(index)) },
-  queue: { entries: [{ track_id: 'x', audio_cid: 'audio0', title: 'Track 0', artist: 'Artist' }], index: 0, position_seconds: 12 },
+  queue: { entries: [{ track_id: 'x', audio_cid: 'audio0', title: 'Track 0', artist: 'Artist', duration_seconds: 120 }], index: 0, position_seconds: 12 },
   ...overrides
 })
 

@@ -36,6 +36,20 @@ const playing_engine = async () => {
   return { engine, ...mock }
 }
 
+describe('audio engine play', () => {
+  test('starts at start_at, clamped to the track', async () => {
+    for (const [start_at, expected] of [[4, 4], [-3, 0], [99, 10]] as Array<[number, number]>) {
+      const mock = create_mock_context()
+      const engine = create_audio_engine({ load_audio: async () => new ArrayBuffer(8), create_context: () => mock.context, tick_ms: 60_000 })
+      const played = engine.play({ cid: 'bafy', start_at })
+      mock.release_resumes()
+      await played
+      expect(mock.started).toEqual([expected])
+      expect(engine.get_snapshot().position_seconds).toBe(expected)
+    }
+  })
+})
+
 describe('audio engine resume', () => {
   test('resumes a paused track from where it paused', async () => {
     const { engine, started, release_resumes } = await playing_engine()

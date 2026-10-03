@@ -5,7 +5,8 @@ import { use_app_selector } from '#renderer/store/index.ts'
 
 export const PlayerBar = () => {
   const player = use_app_selector((state) => state.player)
-  const can_toggle = player.state === 'playing' || player.state === 'paused' || player.state === 'ended'
+  const can_toggle = player.state === 'playing' || player.state === 'paused' || player.state === 'ended' ||
+    ((player.state === 'idle' || player.state === 'error') && player.track !== null)
 
   return (
     <footer className={styles.bar} data-testid='player-bar' data-state={player.state}>

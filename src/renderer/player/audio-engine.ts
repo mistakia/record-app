@@ -13,7 +13,8 @@ export interface EngineSnapshot {
 }
 
 export interface AudioEngine {
-  play: (input: { cid: string }) => Promise<void>
+  // start_at resumes a restored position (seconds into the track).
+  play: (input: { cid: string, start_at?: number }) => Promise<void>
   pause: () => void
   resume: () => Promise<void>
   seek: (position_seconds: number) => void
@@ -100,7 +101,7 @@ export const create_audio_engine = ({ load_audio, create_context = () => new Aud
   }
 
   return {
-    play: async ({ cid }) => {
+    play: async ({ cid, start_at = 0 }) => {
       const token = ++load_token
       stop_source()
       buffer = null
@@ -116,8 +117,9 @@ export const create_audio_engine = ({ load_audio, create_context = () => new Aud
         await resumed
         if (token !== load_token) return
         buffer = decoded
-        emit({ state: 'playing', duration_seconds: decoded.duration })
-        start_source(0)
+        const offset = clamp(start_at, 0, decoded.duration)
+        emit({ state: 'playing', duration_seconds: decoded.duration, position_seconds: offset })
+        start_source(offset)
       } catch (error) {
         if (token !== load_token) return
         emit({ state: 'error', error: error instanceof Error ? error.message : String(error) })
