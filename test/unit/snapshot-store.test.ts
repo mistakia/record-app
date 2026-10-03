@@ -125,3 +125,43 @@ describe('snapshot store', () => {
     expect(logged).toHaveLength(1)
   })
 })
+
+describe('snapshot store bounds and write ordering', () => {
+  test('refuses arrays past their bounds', async () => {
+    const { store } = await open_store()
+    const many = <T>(count: number, item: T): T[] => Array.from({ length: count }, () => item)
+    for (const input of [
+      snapshot({ libraries: many(1_001, { address: 'x' }) }),
+      snapshot({ active: { library_address: '', total: 0, tracks: many(501, track(0)) } }),
+      snapshot({ queue: { entries: many(10_001, { queue_id: 'q', track_id: 'x', audio_cid: 'a', title: null, artist: null, duration_seconds: null, library_address: '' }), index: 0, position_seconds: 0, repeat: 'off', shuffle: false } })
+    ]) {
+      expect(store.update({ snapshot: input, node_url: NODE_URL }).ok).toBe(false)
+    }
+  })
+
+  test('an async write still in flight does not land over a later flush_sync, and they use different temporary files', async () => {
+    const { store, snapshot_path } = await open_store()
+    store.update({ snapshot: snapshot({ route: '/older' }), node_url: NODE_URL })
+    const flushing = store.flush()
+    store.update({ snapshot: snapshot({ route: '/newer' }), node_url: NODE_URL })
+    store.flush_sync()
+    await flushing
+    expect((JSON.parse(await readFile(snapshot_path, 'utf8')) as HibernationSnapshot).route).toBe('/newer')
+    const { readdir } = await import('node:fs/promises')
+    expect((await readdir(join(snapshot_path, '..'))).filter((name) => name.endsWith('.tmp'))).toEqual([])
+  })
+
+  test('lowering the budget while a write is queued refits the newest snapshot, and the settings file is replaced atomically', async () => {
+    const { store, snapshot_path, settings_path } = await open_store()
+    store.update({ snapshot: snapshot({ route: '/first' }), node_url: NODE_URL })
+    await store.flush()
+    store.update({ snapshot: snapshot({ route: '/second' }), node_url: NODE_URL })
+    const flushing = store.flush()
+    const budget = store.set_budget({ budget_bytes: 2000 })
+    await Promise.all([flushing, budget])
+    const on_disk = JSON.parse(await readFile(snapshot_path, 'utf8')) as HibernationSnapshot
+    expect(on_disk).toMatchObject({ route: '/second', active: null })
+    expect(JSON.parse(await readFile(settings_path, 'utf8'))).toEqual({ budget_bytes: 2000 })
+    expect(await Bun.file(`${settings_path}.tmp`).exists()).toBe(false)
+  })
+})
