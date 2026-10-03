@@ -4,8 +4,10 @@ import { HashRouter, Navigate, NavLink, Route, Routes } from 'react-router'
 import styles from './app.module.css'
 import { Toaster } from '#renderer/components/common/toaster.tsx'
 import { BackupPrompt } from '#renderer/components/identity/backup-prompt.tsx'
+import { BundledBanner } from '#renderer/components/layout/bundled-banner.tsx'
 import { ConnectionBanner, ConnectionStatus } from '#renderer/components/layout/connection-banner.tsx'
 import { PlayerBar } from '#renderer/components/player/player-bar.tsx'
+import { use_bundled_node } from '#renderer/hooks/use-bundled-node.ts'
 import { current_route, use_hibernation } from '#renderer/hooks/use-hibernation.ts'
 import { use_hotkeys } from '#renderer/hooks/use-hotkeys.ts'
 import { use_node_events } from '#renderer/hooks/use-node-events.ts'
@@ -27,6 +29,7 @@ export const App = () => {
   const dispatch = use_app_dispatch()
   const config = use_app_selector((state) => state.connection.config)
   use_node_events()
+  use_bundled_node()
   use_hibernation()
   use_media_session()
 
@@ -35,7 +38,7 @@ export const App = () => {
   useEffect(() => {
     const load = async () => {
       const [loaded, snapshot] = await Promise.all([window.record.connection.get(), window.record.snapshot.load()])
-      if (snapshot !== null && snapshot.node_url === loaded.node_url) {
+      if (snapshot !== null && snapshot.node_key === loaded.node_key) {
         await restore_snapshot({ dispatch, snapshot })
         if (RESTORABLE_ROUTES.has(snapshot.route) && current_route() === '/') window.location.hash = snapshot.route
       }
@@ -47,7 +50,7 @@ export const App = () => {
   if (config === null) return <div className={styles.loading}>Loading</div>
   return (
     <HashRouter>
-      <Shell configured={config.node_url !== null} />
+      <Shell configured={config.node_key !== null} />
     </HashRouter>
   )
 }
@@ -72,6 +75,7 @@ const Shell = ({ configured }: { configured: boolean }) => {
         <ConnectionStatus />
       </nav>
       <ConnectionBanner />
+      <BundledBanner />
       <BackupPrompt />
       <main className={styles.content}>
         <Routes>

@@ -29,6 +29,7 @@ export const Importer = () => {
   const dispatch = use_app_dispatch()
   const store = useStore<RootState>()
   const writes_allowed = use_app_selector(select_writes_allowed)
+  const ingest_disabled = use_app_selector((state) => state.connection.config?.mode === 'bundled' ? state.bundled.state?.ingest_disabled ?? null : null)
   const imports = use_app_selector((state) => state.imports.items)
   const [url, set_url] = useState('')
   const [cid, set_cid] = useState('')
@@ -93,6 +94,12 @@ export const Importer = () => {
     <section className={styles.page}>
       <h1>Import</h1>
       {!writes_allowed && <p className={styles.muted}>Imports are paused until the app has caught up with the node.</p>}
+      {ingest_disabled !== null && (
+        <p className={styles.error} data-testid='ingest-disabled'>
+          The bundled node cannot ingest yet: {ingest_disabled}. Adding by CID still works; file and URL imports will fail until the pinned
+          tools ship with the app.
+        </p>
+      )}
       <div
         className={dragging ? `${styles.drop} ${styles.dragging}` : styles.drop}
         data-testid='drop-zone'

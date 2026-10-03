@@ -37,7 +37,8 @@ export interface SnapshotQueueEntry {
 
 export interface HibernationSnapshot {
   version: typeof SNAPSHOT_VERSION
-  node_url: string
+  // Which node the snapshot shows (ConnectionView.node_key).
+  node_key: string
   written_at_ms: number
   // Last-visited route, as the hash router path.
   route: string

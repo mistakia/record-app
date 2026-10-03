@@ -45,14 +45,14 @@ export const build_snapshot = ({ state, route, previous_active = null }: {
   route: string
   previous_active?: SnapshotActive
 }): Omit<HibernationSnapshot, 'written_at_ms'> | null => {
-  const node_url = state.connection.config?.node_url ?? null
+  const node_key = state.connection.config?.node_key ?? null
   const libraries = node_api.endpoints.get_libraries.select()(state).data
-  if (node_url === null || libraries === undefined) return null
+  if (node_key === null || libraries === undefined) return null
   const { page: first_page, library_address } = select_active_page(state)
   const { queue, position_seconds } = state.player
   return {
     version: SNAPSHOT_VERSION,
-    node_url,
+    node_key,
     route,
     libraries: libraries as unknown as Array<Record<string, unknown>>,
     active: first_page !== undefined

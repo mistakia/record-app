@@ -39,14 +39,14 @@ export const compressed_public_key = (marshaled: string): string => {
 // Spec §8.5.7: the key inline as its first and last six hex characters.
 export const truncate_key = (key: string): string => key.length <= 14 ? key : `${key.slice(0, 6)}…${key.slice(-6)}`
 
-// The last export time per node URL (Layer C). A time, never the key.
-const export_time_key = (node_url: string): string => `record:last-identity-export:${node_url}`
+// The last export time per node (by node key; Layer C). A time, never the key.
+const export_time_key = (node_key: string): string => `record:last-identity-export:${node_key}`
 
-export const read_last_export = (node_url: string): number | null => {
-  const value = Number(window.localStorage.getItem(export_time_key(node_url)))
+export const read_last_export = (node_key: string): number | null => {
+  const value = Number(window.localStorage.getItem(export_time_key(node_key)))
   return Number.isFinite(value) && value > 0 ? value : null
 }
 
-export const record_export = (node_url: string): void => {
-  window.localStorage.setItem(export_time_key(node_url), String(Date.now()))
+export const record_export = (node_key: string): void => {
+  window.localStorage.setItem(export_time_key(node_key), String(Date.now()))
 }

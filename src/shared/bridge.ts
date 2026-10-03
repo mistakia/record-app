@@ -8,8 +8,16 @@ export type ConnectionMode = 'bundled' | 'remote'
 
 export interface ConnectionConfig {
   mode: ConnectionMode
-  // Null until the user saves one; the app opens on connection settings.
+  // The remote node's URL; kept while in bundled mode, so switching back
+  // offers it again. Null until the user saves one.
   node_url: string | null
+}
+
+// The saved config as the renderer sees it, plus the key that names the node
+// for the hibernation snapshot and other per-node state: the remote URL, or
+// 'bundled' for the bundled node, whose port can change between launches.
+export interface ConnectionView extends ConnectionConfig {
+  node_key: string | null
 }
 
 export type ApiRoute = typeof API_ROUTES[number]
@@ -94,8 +102,8 @@ export interface ImportAck {
 
 export interface RecordBridge {
   connection: {
-    get: () => Promise<ConnectionConfig>
-    save: (config: ConnectionConfig) => Promise<NodeResult<ConnectionConfig>>
+    get: () => Promise<ConnectionView>
+    save: (config: ConnectionConfig) => Promise<NodeResult<ConnectionView>>
     test: (config: ConnectionConfig) => Promise<NodeResult<ConnectionTest>>
   }
   request: (request: NodeRequest) => Promise<NodeResult<unknown>>

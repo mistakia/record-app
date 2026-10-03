@@ -2,14 +2,16 @@
 // untrusted and re-validated here (spec §8.10.3), and only the app's own
 // window may call.
 
-import { BrowserWindow, clipboard, dialog, ipcMain, type IpcMainInvokeEvent } from 'electron'
+import { BrowserWindow, clipboard, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 
 import { IPC_CHANNELS, type NodeResult } from '#shared/bridge.ts'
 import { create_audio_downloads } from './audio-downloads.ts'
+import type { create_node_manager } from './bundled/node-manager.ts'
 import { create_secret_clipboard } from './clipboard-expiry.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { get_audio, test_connection } from './node-client.ts'
+import { node_key_of, type create_node_connection } from './node-connection.ts'
 import type { NodeSession } from './node-session.ts'
 import { serve_generic_request } from './request-policy.ts'
 import { create_identity_access } from './identity-access.ts'
@@ -23,12 +25,15 @@ const refuse = (message: string): NodeResult<never> => ({ ok: false, failure: { 
 const is_plain_object = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
+export const register_ipc = ({ store, connection, manager, session, snapshots, is_app_frame }: {
   store: ConnectionStore
+  connection: ReturnType<typeof create_node_connection>
+  manager: ReturnType<typeof create_node_manager>
   session: NodeSession
   snapshots: SnapshotStore
   is_app_frame: (url: string) => boolean
-}): void => {
+}): { forget_identity: () => void } => {
+  const node_url = (): string | null => connection.node_url()
   const handle = (channel: string, handler: (input: unknown, event: IpcMainInvokeEvent) => Promise<unknown>): void => {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, input: unknown) => {
       const url = event.senderFrame?.url
@@ -38,7 +43,7 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
   }
 
   const identity = create_identity_access({
-    get_connection: () => store.get(),
+    get_connection: () => ({ mode: store.get().mode, node_url: node_url() }),
     confirm_export: async ({ node_url, cleartext }) => {
       const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
       const options = {
@@ -54,25 +59,30 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
       return response === 1
     }
   })
-  handle(IPC_CHANNELS.connection_get, async () => store.get())
-  // Save is the teardown-and-reinitialize point (spec §8.3.5): the event
-  // connection restarts, and a different node URL wipes the snapshot (§8.8.3).
+  handle(IPC_CHANNELS.connection_get, async () => connection.view())
+  // Save is the teardown-and-reinitialize point (spec §8.3.4, §8.3.5): a
+  // mode switch stops or starts the bundled node, the event connection moves
+  // to the new node, and a different node wipes the snapshot (§8.8.3).
   handle(IPC_CHANNELS.connection_save, async (input) => {
-    const previous_url = store.get().node_url
+    const previous_key = node_key_of(store.get())
     const saved = await store.save(input)
     if (!saved.ok) return saved
-    if (saved.data.node_url !== previous_url) await snapshots.wipe()
+    if (node_key_of(saved.data) !== previous_key) await snapshots.wipe()
     identity.forget()
-    session.start(saved.data.node_url)
-    return saved
+    await connection.switched()
+    return { ok: true, data: connection.view() }
   })
   handle(IPC_CHANNELS.connection_test, async (input) => {
     const checked = check_connection_config(input)
     if (!checked.ok) return checked
+    if (checked.data.mode === 'bundled') {
+      const { url } = manager.get_state()
+      return url === null ? refuse('The bundled node is not running.') : await test_connection({ node_url: url })
+    }
     return await test_connection({ node_url: checked.data.node_url as string })
   })
-  handle(IPC_CHANNELS.request, async (input) => await serve_generic_request({ input, node_url: store.get().node_url }))
-  const audio_downloads = create_audio_downloads({ download: async ({ cid, signal }) => await get_audio({ node_url: store.get().node_url, cid, signal }) })
+  handle(IPC_CHANNELS.request, async (input) => await serve_generic_request({ input, node_url: node_url() }))
+  const audio_downloads = create_audio_downloads({ download: async ({ cid, signal }) => await get_audio({ node_url: node_url(), cid, signal }) })
   handle(IPC_CHANNELS.get_audio, async (input) => {
     const { cid, request_id } = is_plain_object(input) ? input : {}
     if (typeof cid !== 'string' || !CID.test(cid)) return refuse('Malformed audio CID.')
@@ -89,9 +99,9 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
     const options = { title: 'Import audio files', properties: ['openFile', 'multiSelections'] as Array<'openFile' | 'multiSelections'>, filters: [{ name: 'Audio', extensions: AUDIO_EXTENSIONS }] }
     const chosen = window === null ? await dialog.showOpenDialog(options) : await dialog.showOpenDialog(window, options)
     if (chosen.canceled || chosen.filePaths.length === 0) return { ok: true, data: null }
-    return await import_chosen_paths({ node_url: store.get().node_url, paths: chosen.filePaths })
+    return await import_chosen_paths({ node_url: node_url(), paths: chosen.filePaths })
   })
-  handle(IPC_CHANNELS.import_upload_files, async (input) => await import_dropped_files({ node_url: store.get().node_url, input }))
+  handle(IPC_CHANNELS.import_upload_files, async (input) => await import_dropped_files({ node_url: node_url(), input }))
   handle(IPC_CHANNELS.identity_export, async () => await identity.export_identity())
   const secret_clipboard = create_secret_clipboard({
     clipboard: { readText: async () => await clipboard.readText(), writeText: async (text) => { await clipboard.writeText(text) }, clear: () => { clipboard.clear() } }
@@ -104,15 +114,22 @@ export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
   handle(IPC_CHANNELS.identity_import, async (input) => await identity.import_identity(input))
   handle(IPC_CHANNELS.identity_public_key, async () => await identity.public_key())
 
+  handle(IPC_CHANNELS.bundled_get_state, async () => manager.get_state())
+  handle(IPC_CHANNELS.bundled_restart, async () => { await manager.restart() })
+  handle(IPC_CHANNELS.bundled_open_data_dir, async () => { await shell.openPath(manager.get_state().data_dir) })
+  handle(IPC_CHANNELS.bundled_open_log, async () => { shell.showItemInFolder(manager.get_state().log_path) })
+
   handle(IPC_CHANNELS.events_get_state, async () => session.get_state())
   handle(IPC_CHANNELS.events_reconnect_now, async () => { session.reconnect_now() })
 
-  handle(IPC_CHANNELS.snapshot_load, async () => await snapshots.load(store.get().node_url))
-  handle(IPC_CHANNELS.snapshot_update, async (input) => snapshots.update({ snapshot: input, node_url: store.get().node_url }))
+  handle(IPC_CHANNELS.snapshot_load, async () => await snapshots.load(node_key_of(store.get())))
+  handle(IPC_CHANNELS.snapshot_update, async (input) => snapshots.update({ snapshot: input, node_key: node_key_of(store.get()) }))
   handle(IPC_CHANNELS.snapshot_get_info, async () => snapshots.get_info())
   handle(IPC_CHANNELS.snapshot_set_budget, async (input) => await snapshots.set_budget(input))
   handle(IPC_CHANNELS.snapshot_reset, async () => {
     await snapshots.wipe()
     return snapshots.get_info()
   })
+
+  return { forget_identity: () => { identity.forget() } }
 }

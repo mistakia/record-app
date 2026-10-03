@@ -19,8 +19,9 @@ export const Identity = () => {
   const [exporting, set_exporting] = useState(false)
   const [, set_export_count] = useState(0)
   const node_url = config?.node_url ?? ''
+  const node_key = config?.node_key ?? ''
   const mode = config?.mode ?? 'remote'
-  const last_export = read_last_export(node_url)
+  const last_export = read_last_export(node_key)
   const own = libraries.data?.filter(({ is_own }) => is_own) ?? []
 
   // Chapter 7 serves the public key only together with the private key, so
@@ -58,7 +59,7 @@ export const Identity = () => {
       </div>
       <h2>Import</h2>
       <ImportForm mode={mode} />
-      {exporting && <ExportDialog node_url={node_url} on_close={() => { set_exporting(false); set_export_count((count) => count + 1) }} />}
+      {exporting && <ExportDialog node_key={node_key} on_close={() => { set_exporting(false); set_export_count((count) => count + 1) }} />}
     </section>
   )
 }

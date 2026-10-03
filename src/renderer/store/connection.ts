@@ -4,13 +4,13 @@
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
-import type { ConnectionConfig, EventsState } from '#shared/bridge.ts'
+import type { ConnectionView, EventsState } from '#shared/bridge.ts'
 
 export type Freshness = 'stale' | 'reconciling' | 'fresh'
 
 export interface ConnectionState {
   // Null until the first connection.get resolves.
-  config: ConnectionConfig | null
+  config: ConnectionView | null
   events: EventsState | null
   freshness: Freshness
   reconciled_connection_id: number
@@ -22,7 +22,7 @@ export const connection_slice = createSlice({
   name: 'connection',
   initialState: initial_state,
   reducers: {
-    connection_loaded: (state, action: PayloadAction<ConnectionConfig>) => {
+    connection_loaded: (state, action: PayloadAction<ConnectionView>) => {
       state.config = action.payload
     },
     events_state_changed: (state, action: PayloadAction<EventsState>) => {

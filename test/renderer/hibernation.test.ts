@@ -43,12 +43,12 @@ const other: QueueEntry = { ...entry, queue_id: 'q2', track_id: 'b'.repeat(64), 
 describe('hibernation snapshot', () => {
   test('is null before the library list has loaded', () => {
     store.dispatch(node_api.util.resetApiState())
-    store.dispatch(connection_loaded({ mode: 'remote', node_url: NODE_URL }))
+    store.dispatch(connection_loaded({ mode: 'remote', node_url: NODE_URL, node_key: NODE_URL }))
     expect(build_snapshot({ state: store.getState(), route: '/tracks' })).toBeNull()
   })
 
   test('captures the libraries, the active first page, and the queue, and restores them into the cache', async () => {
-    store.dispatch(connection_loaded({ mode: 'remote', node_url: NODE_URL }))
+    store.dispatch(connection_loaded({ mode: 'remote', node_url: NODE_URL, node_key: NODE_URL }))
     store.dispatch(library_selected(ADDRESS))
     await store.dispatch(node_api.util.upsertQueryData('get_libraries', undefined, [library]))
     await store.dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address: ADDRESS, page: 0 }), { items: [track], total: 1 }))

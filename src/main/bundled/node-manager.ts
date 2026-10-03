@@ -10,13 +10,15 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
 
 import type { BundledState } from '#shared/bridge.ts'
+import { MAX_FAILED_RESTARTS } from '#shared/bundled.ts'
 import type { create_node_lock } from './node-lock.ts'
 import type { create_node_log } from './node-log.ts'
 
 const RESTART_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000]
 const RESTART_MAX_DELAY_MS = 30_000
-export const MAX_FAILED_RESTARTS = 5
 const INGEST_DISABLED = /ingest disabled: (.*)/
+
+export { MAX_FAILED_RESTARTS }
 
 export const restart_delay_ms = (attempt: number): number =>
   RESTART_DELAYS_MS[attempt] ?? Math.min(RESTART_MAX_DELAY_MS, 8_000 * 2 ** (attempt - RESTART_DELAYS_MS.length + 1))
