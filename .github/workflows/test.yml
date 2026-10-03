@@ -1,0 +1,48 @@
+name: Test
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.0
+
+      # No dependency lifecycle script runs: package.json carries an empty
+      # trustedDependencies, and --ignore-scripts covers the root package too.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      # Electron's binary download is its own postinstall, which never runs
+      # above; this is the one explicit, named step that fetches it.
+      - name: Download the Electron binary
+        run: bun run setup:electron
+
+      # The integration test ingests one file into an in-process record-node,
+      # which needs ffmpeg and fpcalc. record-node's own suite checks the
+      # pinned versions; here any version will do, so the preflight is
+      # bypassed below.
+      - name: Install ffmpeg and fpcalc
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg libchromaprint-tools
+
+      - name: Verify (lint and typecheck)
+        run: bun run verify
+
+      - name: Test
+        env:
+          RECORD_TOOLCHAIN_PREFLIGHT: bypass
+        run: bun test
+
+      - name: Build
+        run: bun run build
