@@ -88,7 +88,7 @@ export const create_bundled_node = ({ user_data, on_state }: { user_data: string
     config_path,
     version: pinned_version(app_root),
     env: process.env,
-    lock: create_node_lock({ data_dir, app_pid: process.pid, owner: randomUUID(), probe: os_process_probe, node_marker: CLI_RELATIVE, app_marker: process.execPath }),
+    lock: create_node_lock({ data_dir, app_pid: process.pid, owner: randomUUID(), probe: os_process_probe, app_marker: process.execPath }),
     log: create_node_log({ log_dir: app.getPath('logs') }),
     // The last port, so the node's URL stays the same across launches when it can.
     preferred_port: async () => {

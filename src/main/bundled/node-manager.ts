@@ -22,6 +22,8 @@ const RESTART_DELAYS_MS = [0, 1_000, 2_000, 4_000, 8_000]
 const RESTART_MAX_DELAY_MS = 30_000
 const INGEST_DISABLED = /ingest disabled: (.*)/
 const LISTENING = /listening on http:\/\/127\.0\.0\.1:(\d+)\//
+// Launches on a fresh port after another process held the chosen one.
+export const MAX_PORT_RETRIES = 3
 
 export { MAX_FAILED_RESTARTS }
 
@@ -107,6 +109,10 @@ export const create_node_manager = ({
   let child: ChildHandle | null = null
   // Bumped by every stop; a start that sees it change gives up.
   let generation = 0
+  // Fresh-port relaunches since the node last came up; and whether the next
+  // launch must skip the remembered port because something else holds it.
+  let port_retries = 0
+  let avoid_port: number | null = null
   let queue: Promise<unknown> = Promise.resolve()
   const timers = new Set<ReturnType<typeof setTimeout>>()
 
@@ -145,13 +151,22 @@ export const create_node_manager = ({
         if (answer !== null && pin !== null && answer.peer_id !== pin.peer_id) {
           child = null
           current.kill()
-          fail(`Another node answered on the bundled node's port (peer ${answer.peer_id}, expected ${pin.peer_id}). It was not used.`)
+          // Before our child announced the port, the answer came from another
+          // process holding it: try a fresh port. After, the data directory
+          // itself holds a different node than the one pinned.
+          if (listening.port === port) {
+            fail(`The data directory holds a different node than before (peer ${answer.peer_id}, expected ${pin.peer_id}). It was not used.`)
+          } else {
+            relaunch_on_fresh_port(port, `Another process answered on port ${port} (peer ${answer.peer_id}).`)
+          }
           return
         }
         if (answer !== null && listening.port === port && current.alive()) {
           const next_pin: NodePin = { peer_id: answer.peer_id, own_library_address: answer.own_library_address }
           if (pin === null || pin.own_library_address !== next_pin.own_library_address) await write_pin(data_dir, next_pin)
           if (child !== current) return
+          port_retries = 0
+          avoid_port = null
           set_state({ status: 'running', url, retry_at_ms: null, error: null, node_key_pin: next_pin })
           // A node that stays up this long has recovered; count from zero again.
           later(stable_after_ms, () => { if (child === current) set_state({ failed_restarts: 0 }) })
@@ -167,11 +182,27 @@ export const create_node_manager = ({
     check()
   }
 
-  const on_exit = (current: ChildHandle) => (code: number | null, signal: string | null): void => {
+  const relaunch_on_fresh_port = (taken_port: number, reason: string): void => {
+    port_retries++
+    if (port_retries > MAX_PORT_RETRIES) {
+      fail(`${reason} The bundled node could not get a port of its own after ${MAX_PORT_RETRIES} tries.`)
+      return
+    }
+    avoid_port = taken_port
+    const relaunch_generation = generation
+    set_state({ status: 'starting', url: null, pid: null, error: reason })
+    serialize(async () => { if (generation === relaunch_generation && child === null) await launch(relaunch_generation) })
+      .catch((error: unknown) => { fail(String(error)) })
+  }
+
+  const on_exit = (current: ChildHandle, listening: { port: number | null }, port: number) => (code: number | null, signal: string | null): void => {
     lock.record_child(null).catch(() => {})
     if (child !== current) return
     child = null
     clear_timers()
+    // It never got as far as listening: likely the port was taken. Next time,
+    // a fresh one.
+    if (listening.port === null) avoid_port = port
     const failed_restarts = state.failed_restarts + 1
     const how = signal === null ? `exit code ${code ?? 'unknown'}` : `signal ${signal}`
     if (failed_restarts > MAX_FAILED_RESTARTS) {
@@ -192,7 +223,8 @@ export const create_node_manager = ({
   async function launch (started_generation: number): Promise<void> {
     const stale = (): boolean => started_generation !== generation
     log.clear_tail()
-    const port = await pick_port(state.port ?? await preferred_port())
+    const remembered = state.port ?? await preferred_port()
+    const port = await pick_port(remembered !== null && remembered === avoid_port ? null : remembered)
     await checkpoint('port')
     if (stale()) return
     await mkdir(data_dir, { recursive: true })
@@ -204,7 +236,7 @@ export const create_node_manager = ({
     const listening = { port: null as number | null }
     const current = spawn_child({ cli_path, args: ['--port', String(port), '--data-dir', data_dir, '--config', config_path], env: build_child_env(env) })
     child = current
-    current.on_exit(on_exit(current))
+    current.on_exit(on_exit(current, listening, port))
     current.stdout?.on('data', (data: Buffer) => {
       const text = String(data)
       log.append('out', text)
