@@ -8,6 +8,8 @@ import { API_ROUTES } from '#shared/api-routes.ts'
 import { IPC_CHANNELS, type NodeRequest, type NodeResult } from '#shared/bridge.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { get_audio, request_node, test_connection } from './node-client.ts'
+import type { NodeSession } from './node-session.ts'
+import type { SnapshotStore } from './snapshot-store.ts'
 
 const METHODS = new Set<string>(API_ROUTES.map(({ method }) => method))
 const CID = /^[A-Za-z0-9]{1,128}$/
@@ -28,8 +30,10 @@ const check_node_request = (input: unknown): NodeRequest | null => {
   return { method, path_template, params, query, body } as NodeRequest
 }
 
-export const register_ipc = ({ store, is_app_frame }: {
+export const register_ipc = ({ store, session, snapshots, is_app_frame }: {
   store: ConnectionStore
+  session: NodeSession
+  snapshots: SnapshotStore
   is_app_frame: (url: string) => boolean
 }): void => {
   const handle = (channel: string, handler: (input: unknown) => Promise<unknown>): void => {
@@ -41,7 +45,16 @@ export const register_ipc = ({ store, is_app_frame }: {
   }
 
   handle(IPC_CHANNELS.connection_get, async () => store.get())
-  handle(IPC_CHANNELS.connection_save, async (input) => await store.save(input))
+  // Save is the teardown-and-reinitialize point (spec §8.3.5): the event
+  // connection restarts, and a different node URL wipes the snapshot (§8.8.3).
+  handle(IPC_CHANNELS.connection_save, async (input) => {
+    const previous_url = store.get().node_url
+    const saved = await store.save(input)
+    if (!saved.ok) return saved
+    if (saved.data.node_url !== previous_url) await snapshots.wipe()
+    session.start(saved.data.node_url)
+    return saved
+  })
   handle(IPC_CHANNELS.connection_test, async (input) => {
     const checked = check_connection_config(input)
     if (!checked.ok) return checked
@@ -56,5 +69,17 @@ export const register_ipc = ({ store, is_app_frame }: {
     const cid = is_plain_object(input) ? input.cid : undefined
     if (typeof cid !== 'string' || !CID.test(cid)) return refuse('Malformed audio CID.')
     return await get_audio({ node_url: store.get().node_url, cid })
+  })
+
+  handle(IPC_CHANNELS.events_get_state, async () => session.get_state())
+  handle(IPC_CHANNELS.events_reconnect_now, async () => { session.reconnect_now() })
+
+  handle(IPC_CHANNELS.snapshot_load, async () => await snapshots.load(store.get().node_url))
+  handle(IPC_CHANNELS.snapshot_update, async (input) => snapshots.update({ snapshot: input, node_url: store.get().node_url }))
+  handle(IPC_CHANNELS.snapshot_get_info, async () => snapshots.get_info())
+  handle(IPC_CHANNELS.snapshot_set_budget, async (input) => await snapshots.set_budget(input))
+  handle(IPC_CHANNELS.snapshot_reset, async () => {
+    await snapshots.wipe()
+    return snapshots.get_info()
   })
 }

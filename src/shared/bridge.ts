@@ -2,6 +2,7 @@
 // values that cross IPC. Every function here is re-validated in main.
 
 import type { API_ROUTES } from './api-routes.ts'
+import type { HibernationSnapshot, SnapshotInfo } from './snapshot.ts'
 
 export type ConnectionMode = 'bundled' | 'remote'
 
@@ -44,6 +45,24 @@ export interface ConnectionTest {
   version: string | null
 }
 
+// The event connection (spec §8.7.7). `idle` means no node is configured;
+// each transition to `open` carries a new connection_id, which is the
+// renderer's cue to reconcile.
+export interface EventsState {
+  status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed'
+  node_url: string | null
+  connection_id: number
+  attempt: number
+  retry_at_ms: number | null
+  last_error: string | null
+}
+
+// One node event, `{ type, payload }`, forwarded as the node sent it.
+export interface NodeEventMessage {
+  type: string
+  payload: Record<string, unknown>
+}
+
 export interface RecordBridge {
   connection: {
     get: () => Promise<ConnectionConfig>
@@ -52,6 +71,23 @@ export interface RecordBridge {
   }
   request: (request: NodeRequest) => Promise<NodeResult<unknown>>
   get_audio: (input: { cid: string }) => Promise<NodeResult<ArrayBuffer>>
+  events: {
+    get_state: () => Promise<EventsState>
+    reconnect_now: () => Promise<void>
+    // Each returns its unsubscribe function.
+    on_event: (listener: (message: NodeEventMessage) => void) => () => void
+    on_state: (listener: (state: EventsState) => void) => () => void
+  }
+  snapshot: {
+    // The snapshot for the configured node, or null.
+    load: () => Promise<HibernationSnapshot | null>
+    // Hands main the current snapshot; main writes it to disk every 30 s
+    // when it changed, and on shutdown.
+    update: (snapshot: HibernationSnapshot) => Promise<NodeResult<SnapshotInfo>>
+    get_info: () => Promise<SnapshotInfo>
+    set_budget: (input: { budget_bytes: number }) => Promise<NodeResult<SnapshotInfo>>
+    reset: () => Promise<SnapshotInfo>
+  }
 }
 
 export const IPC_CHANNELS = {
@@ -59,5 +95,14 @@ export const IPC_CHANNELS = {
   connection_save: 'record:connection:save',
   connection_test: 'record:connection:test',
   request: 'record:request',
-  get_audio: 'record:get-audio'
+  get_audio: 'record:get-audio',
+  events_get_state: 'record:events:get-state',
+  events_reconnect_now: 'record:events:reconnect-now',
+  events_message: 'record:events:message',
+  events_state: 'record:events:state',
+  snapshot_load: 'record:snapshot:load',
+  snapshot_update: 'record:snapshot:update',
+  snapshot_get_info: 'record:snapshot:get-info',
+  snapshot_set_budget: 'record:snapshot:set-budget',
+  snapshot_reset: 'record:snapshot:reset'
 } as const
