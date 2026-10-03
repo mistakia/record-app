@@ -33,67 +33,31 @@ const wait_for = async (condition: () => boolean, timeout_ms = 30_000) => {
   }
 }
 
-// Why a pid answers kill(pid, 0): what it is, its parent, every process
-// still running record-node, and this process's whole subtree. Read straight
-// off /proc, so it works under a display-less Electron in CI.
-const proc_rows = (): Array<{ pid: number, ppid: number, state: string, cmd: string }> => {
-  const rows: Array<{ pid: number, ppid: number, state: string, cmd: string }> = []
-  for (const entry of readdirSync('/proc')) {
-    if (!/^\d+$/.test(entry)) continue
-    const pid = Number(entry)
-    let state = '?'
-    let ppid = -1
-    let cmd = ''
+// Why a pid answers kill(pid, 0): what it is and every process still running
+// record-node, read straight off /proc. /proc is Linux-only; elsewhere the
+// stop either leaves nothing (macOS) or the diagnostic is out of reach.
+const process_diagnostic = (pid: number): string => {
+  if (process.platform !== 'linux') return '(no /proc on this platform)'
+  const line = (at: number): string => {
     try {
-      const stat = readFileSync(`/proc/${pid}/stat`, 'utf8')
+      const stat = readFileSync(`/proc/${at}/stat`, 'utf8')
       const close = stat.lastIndexOf(')')
-      if (close !== -1) state = stat[close + 2] ?? '?'
+      const state = close === -1 ? '?' : stat[close + 2] ?? '?'
       const ppid_match = /\)\s+\S+\s+(\d+)/.exec(stat)
-      if (ppid_match !== null) ppid = Number(ppid_match[1])
-    } catch {}
-    try { cmd = readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0').filter(Boolean).join(' ') } catch {}
-    rows.push({ pid, ppid, state, cmd })
-  }
-  return rows
-}
-
-const descendants_of = (rows: Array<{ pid: number, ppid: number, state: string, cmd: string }>, root: number): Array<{ pid: number, ppid: number, state: string, cmd: string }> => {
-  const by_ppid = new Map<number, Array<{ pid: number, ppid: number, state: string, cmd: string }>>()
-  for (const row of rows) {
-    const bucket = by_ppid.get(row.ppid)
-    if (bucket === undefined) by_ppid.set(row.ppid, [row])
-    else bucket.push(row)
-  }
-  const collected: Array<{ pid: number, ppid: number, state: string, cmd: string }> = []
-  const stack = [root]
-  while (stack.length > 0) {
-    const current = stack.pop() as number
-    for (const row of by_ppid.get(current) ?? []) {
-      collected.push(row)
-      stack.push(row.pid)
+      const cmd = readFileSync(`/proc/${at}/cmdline`, 'utf8').split('\0').filter(Boolean).join(' ')
+      return `${state === 'Z' ? 'ZOMBIE' : `state ${state}`} ppid ${ppid_match === null ? '?' : ppid_match[1]} cmd [${cmd}]`
+    } catch {
+      return '(gone)'
     }
   }
-  return collected
-}
-
-const process_diagnostic = (pid: number): string => {
-  const rows = proc_rows()
-  const node = rows.find((row) => row.pid === pid)
-  const parent = node === undefined ? undefined : rows.find((row) => row.pid === node.ppid)
-  const line = (row: { pid: number, ppid: number, state: string, cmd: string } | undefined): string =>
-    row === undefined ? '(gone)' : `${row.pid} ${
-      row.state.endsWith('Z') ? 'ZOMBIE' : `state ${row.state}`
-    } ppid ${row.ppid} cmd [${row.cmd}]`
-  const record_node = rows.filter((row) => row.cmd.includes('record-node') && row.cmd.includes('cli.js'))
-  const mine = descendants_of(rows, process.pid)
-  return [
-    `reported pid: ${line(node)}`,
-    `its parent: ${line(parent)}`,
-    `still running record-node cli.js: ${record_node.length === 0 ? 'none' : ''}`,
-    ...record_node.map((row) => `  ${line(row)}`),
-    `subtree of this harness (${process.pid}): ${mine.length === 0 ? 'none' : ''}`,
-    ...mine.map((row) => `  ${line(row)}`)
-  ].join('\n')
+  const record_node: string[] = []
+  for (const entry of readdirSync('/proc')) {
+    if (!/^\d+$/.test(entry)) continue
+    let cmd = ''
+    try { cmd = readFileSync(`/proc/${entry}/cmdline`, 'utf8').split('\0').filter(Boolean).join(' ') } catch {}
+    if (cmd.includes('record-node') && cmd.includes('cli.js')) record_node.push(`${entry} ${line(Number(entry))}`)
+  }
+  return `reported pid ${pid}: ${line(pid)}\nstill running record-node: ${record_node.length === 0 ? 'none' : '\n' + record_node.join('\n')}`
 }
 
 const make_manager = async (root: string, options: Partial<Parameters<typeof create_node_manager>[0]> = {}) => {
