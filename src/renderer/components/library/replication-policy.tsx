@@ -30,6 +30,11 @@ const MODE_TEXT: Record<ReplicationMode, string> = {
   index_only: 'Keep only the track list; fetch audio when played and let it go later.'
 }
 
+const is_known_mode = (mode: unknown): mode is ReplicationMode => typeof mode === 'string' && Object.hasOwn(MODE_LABELS, mode)
+
+// A mode a newer node reports is shown by its own name, never hidden.
+export const mode_label = (mode: string): string => is_known_mode(mode) ? MODE_LABELS[mode] : `(unknown mode: ${mode})`
+
 export const ReplicationPolicyDialog = ({ library, on_close }: { library: Library, on_close: () => void }) => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
@@ -37,27 +42,33 @@ export const ReplicationPolicyDialog = ({ library, on_close }: { library: Librar
   const sample = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address: library.address, page: 0 }))
   const [mode, set_mode] = useState<ReplicationMode | null>(null)
   const [filter, set_filter] = useState<unknown>(null)
+  const [initialised, set_initialised] = useState(false)
   const [saving, set_saving] = useState(false)
 
-  // Start from the stored policy once it arrives.
+  // Start from the stored filter once the policy arrives, even when a mode
+  // was picked before it did.
   useEffect(() => {
-    if (policy.data === undefined || mode !== null) return
-    set_mode(policy.data.mode)
+    if (policy.data === undefined || initialised) return
+    set_initialised(true)
     set_filter(policy.data.filter)
-  }, [policy.data, mode])
+  }, [policy.data, initialised])
 
-  const current = mode ?? policy.data?.mode ?? library.replication_mode ?? 'full'
+  const stored_mode: string = policy.data?.mode ?? library.replication_mode ?? 'full'
+  const current: string = mode ?? stored_mode
+  const known = is_known_mode(current)
   const filter_ok = current !== 'selective' || (filter !== null && filter !== undefined && filter_problems(filter).length === 0)
-  const estimate = sample.data === undefined
+  const stored_filter_fails = policy.data?.filter !== null && policy.data?.filter !== undefined && filter_problems(policy.data.filter).length > 0
+  const estimate = sample.data === undefined || !known || !filter_ok
     ? null
     : estimate_storage({ mode: current, filter, sample: sample.data.items, track_count: library.track_count, library_address: library.address })
 
   const save = async () => {
+    if (!known) return
     set_saving(true)
     const saved = await report_write({
       dispatch,
-      write: dispatch(node_api.endpoints.set_replication_policy.initiate({ address: library.address, mode: current, ...(current === 'selective' ? { filter } : {}) })),
-      success: `Replication for ${library_name(library)} set to ${MODE_LABELS[current].toLowerCase()}.`
+      write: dispatch(node_api.endpoints.set_replication_policy.initiate({ address: library.address, mode: current as ReplicationMode, ...(current === 'selective' ? { filter } : {}) })),
+      success: `Replication for ${library_name(library)} set to ${mode_label(current).toLowerCase()}.`
     })
     set_saving(false)
     if (saved !== null) on_close()
@@ -86,19 +97,25 @@ export const ReplicationPolicyDialog = ({ library, on_close }: { library: Librar
             fields={REPLICATION_FIELDS}
           />
         )}
-        {current === 'selective' && filter === null && <p className={styles.error}>Selective replication needs a filter.</p>}
+        {!known && <p className={styles.error}>The node reports a mode this app does not know, {mode_label(current)}. Choose one above to change it.</p>}
+        {stored_filter_fails && <p className={styles.error}>The stored filter has parts this app cannot read, so it may select nothing.</p>}
+        {current === 'selective' && !filter_ok && <p className={styles.error}>Selective replication needs a complete filter.</p>}
         <p className={styles.estimate} data-testid='storage-estimate'>
-          {estimate === null
-            ? 'Estimating storage.'
-            : current === 'index_only'
-              ? 'Audio is kept only while recently played.'
-              : `About ${format_bytes(estimate.bytes)} of audio kept on this device` +
-                (estimate.sampled < library.track_count ? `, estimated from ${estimate.sampled} of ${library.track_count} tracks` : '') +
-                (current === 'selective' ? ` (${estimate.matched} of ${estimate.sampled} sampled tracks match).` : '.')}
+          {!known
+            ? 'No estimate for an unknown mode.'
+            : !filter_ok
+                ? 'Finish the filter to see an estimate.'
+                : estimate === null
+                  ? 'Estimating storage.'
+                  : current === 'index_only'
+                    ? 'Audio is kept only while recently played.'
+                    : `About ${format_bytes(estimate.bytes)} of audio kept on this device` +
+                    (estimate.sampled < library.track_count ? `, estimated from the ${estimate.sampled} most recently added of ${library.track_count} tracks` : '') +
+                    (current === 'selective' ? ` (${estimate.matched} of ${estimate.sampled} sampled tracks match).` : '.')}
         </p>
         <div className={styles.actions}>
           <button type='button' onClick={on_close}>Cancel</button>
-          <button type='button' disabled={!writes_allowed || saving || !filter_ok || policy.data === undefined} onClick={() => { save().catch(() => {}) }}>
+          <button type='button' disabled={!writes_allowed || saving || !known || !filter_ok || policy.data === undefined} onClick={() => { save().catch(() => {}) }}>
             {saving ? 'Saving' : 'Save'}
           </button>
         </div>

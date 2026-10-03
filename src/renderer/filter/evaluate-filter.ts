@@ -10,7 +10,7 @@ import { filter_problems, type FilterSpec, type Scalar } from './filter-spec.ts'
 const resolve = (subject: unknown, path: string): unknown => {
   let value: unknown = subject
   for (const step of path.split('.')) {
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined
+    if (typeof value !== 'object' || value === null || Array.isArray(value) || !Object.hasOwn(value, step)) return undefined
     value = (value as Record<string, unknown>)[step]
   }
   return value

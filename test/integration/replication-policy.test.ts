@@ -51,8 +51,10 @@ describe('replication policy', () => {
   })
 
   test('refuses a filter the node cannot evaluate, and an own library\'s change', async () => {
-    const bad = await send({ method: 'put', path_template: '/libraries/{address}/replication-policy', params: { address: linked }, body: { mode: 'selective', filter: { type: 'regex', pattern: 'x' } } })
-    expect(bad).toMatchObject({ ok: false, failure: { status: 400 } })
+    for (const filter of [{ type: 'regex', pattern: 'x' }, { type: 'match', fields: {} }]) {
+      const bad = await send({ method: 'put', path_template: '/libraries/{address}/replication-policy', params: { address: linked }, body: { mode: 'selective', filter } })
+      expect(bad).toMatchObject({ ok: false, failure: { status: 400 } })
+    }
     const own = node.peer.identity().own_address
     expect(await policy_of(own)).toMatchObject({ mode: 'full' })
     const refused = await send({ method: 'put', path_template: '/libraries/{address}/replication-policy', params: { address: own }, body: { mode: 'index_only' } })

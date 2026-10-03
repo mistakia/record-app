@@ -9,7 +9,7 @@ import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { OwnLibraries } from '#renderer/components/library/own-libraries.tsx'
-import { MODE_LABELS, ReplicationPolicyDialog } from '#renderer/components/library/replication-policy.tsx'
+import { mode_label, ReplicationPolicyDialog } from '#renderer/components/library/replication-policy.tsx'
 import { current_progress, is_replicating, library_category, library_name, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
@@ -75,7 +75,7 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink, on_policy }
       <td data-testid='replication-mode'>
         {library.replication_mode === null || library.replication_mode === undefined
           ? 'None'
-          : <span className={styles.mode}>{MODE_LABELS[library.replication_mode] ?? library.replication_mode}</span>}
+          : <span className={styles.mode}>{mode_label(library.replication_mode)}</span>}
         {category !== 'own' && library.is_linked && (
           <button type='button' className={styles.change} disabled={!writes_allowed} onClick={() => { on_policy(library) }}>Change</button>
         )}

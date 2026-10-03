@@ -36,6 +36,10 @@ describe('evaluate_filter', () => {
     expect(evaluate_filter({ type: 'or', filters: [{ type: 'match', fields: { tags: 'techno' } }, { type: 'match', fields: { artist: 'x' } }] }, subject)).toBe(false)
     expect(evaluate_filter({ type: 'not', filter: { type: 'regex', pattern: 'x' } }, subject)).toBe(false)
     expect(evaluate_filter({ type: 'match', fields: { tags: 'house' }, modifier: 'i' }, subject)).toBe(false)
+    expect(evaluate_filter({ type: 'not', filter: { type: 'match', fields: { tags: 'techno' }, modifier: 'i' } }, subject)).toBe(false)
+    // Paths go through maps only: not into arrays, not up the prototype chain.
+    expect(evaluate_filter({ type: 'match', fields: { 'tags.0': 'house' } }, subject)).toBe(false)
+    expect(evaluate_filter({ type: 'match', fields: { '__proto__.__proto__': null } }, subject)).toBe(false)
   })
 })
 
