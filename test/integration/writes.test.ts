@@ -172,7 +172,7 @@ describe('identity', () => {
 
   test('the generic request channel refuses URL import and resolve in bundled mode, before the node sees them', async () => {
     for (const input of [
-      { method: 'post', path_template: '/import/url', body: { url: 'https://example.test/track' } },
+      { method: 'post', path_template: '/import/url', body: { url: 'https://example.test/track', library_address: '/record/z/target' } },
       { method: 'get', path_template: '/resolve', query: { url: 'https://example.test/track' } }
     ]) {
       let calls = 0

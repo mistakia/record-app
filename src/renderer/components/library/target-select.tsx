@@ -9,13 +9,15 @@ import { useState } from 'react'
 
 import styles from './target-select.module.css'
 import { library_name } from './library-category.ts'
-import { default_target, write_targets, type WriteAction, type WriteTarget } from '#renderer/library/write-targets.ts'
+import { resolve_target, write_targets, type TargetResolution, type WriteAction, type WriteTarget } from '#renderer/library/write-targets.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { write_target_used } from '#renderer/store/ui.ts'
 
 export interface WriteTargetChoice {
   targets: WriteTarget[]
+  resolution: TargetResolution
+  // Null while loading, when there is none, or when the chosen one is gone.
   target: WriteTarget | null
   choose: (library_address: string) => void
   // Call after a write succeeds, so the next write defaults to the same library.
@@ -35,13 +37,17 @@ export const use_write_target = ({ action, preferred = null, exclude = [] }: {
   const [chosen, set_chosen] = useState<string | null>(null)
   const targets = write_targets({ libraries: libraries.data ?? [], held: held.data ?? [], action })
     .filter(({ library_address }) => !exclude.includes(library_address))
-  const target = targets.find(({ library_address }) => library_address === chosen) ?? default_target({ targets, recent, preferred })
+  // A 404 from an older node settles the capability list as empty (§8.7.6).
+  const loading = libraries.isLoading || held.isLoading
+  const resolution = resolve_target({ targets, chosen, recent, preferred, loading })
+  const target = resolution.kind === 'target' ? resolution.target : null
   const name_of = (library_address: string): string => {
     const library = libraries.data?.find(({ address }) => address === library_address)
     return library === undefined ? library_address : library_name(library)
   }
   return {
     targets,
+    resolution,
     target,
     choose: set_chosen,
     used: (used_target) => { dispatch(write_target_used(used_target.library_address)) },
@@ -50,7 +56,8 @@ export const use_write_target = ({ action, preferred = null, exclude = [] }: {
 }
 
 export const TargetSelect = ({ choice, label = 'Into' }: { choice: WriteTargetChoice, label?: string }) => {
-  const { targets, target, choose, name_of } = choice
+  const { targets, target, resolution, choose, name_of } = choice
+  if (resolution.kind === 'loading') return <span className={styles.none} data-testid='write-target'>Finding the libraries you can write to.</span>
   if (targets.length === 0) return <span className={styles.none} data-testid='write-target'>No library you can write to.</span>
   const describe = (candidate: WriteTarget): string => `${name_of(candidate.library_address)}${candidate.category === 'shared' ? ' (shared)' : ''}`
   if (targets.length === 1 && target !== null) return <span className={styles.single} data-testid='write-target'>{label} {describe(target)}</span>
@@ -58,8 +65,12 @@ export const TargetSelect = ({ choice, label = 'Into' }: { choice: WriteTargetCh
     <label className={styles.select}>
       {label}
       <select aria-label='Target library' data-testid='write-target' value={target?.library_address ?? ''} onChange={(event) => { choose(event.target.value) }}>
+        {target === null && <option value=''>Choose a library</option>}
         {targets.map((candidate) => <option key={candidate.library_address} value={candidate.library_address}>{describe(candidate)}</option>)}
       </select>
+      {resolution.kind === 'chosen_gone' && (
+        <span className={styles.gone} role='alert'>You can no longer write to {name_of(resolution.library_address)}. Choose another library.</span>
+      )}
     </label>
   )
 }

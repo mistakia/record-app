@@ -4,7 +4,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import type { Capability, Library } from '#renderer/api/types.ts'
-import { choose_capability, default_target, target_fields, write_targets } from '#renderer/library/write-targets.ts'
+import { choose_capability, default_target, resolve_target, target_fields, write_targets } from '#renderer/library/write-targets.ts'
 
 const library = (overrides: Partial<Library>): Library => ({
   id: overrides.address ?? 'x',
@@ -72,9 +72,23 @@ describe('write targets', () => {
       capability({ capability_id: 'other-library', library_address: '/record/z/elsewhere' }),
       capability({ capability_id: 'unknown-verb', actions: ['library.future_verb'] })
     ]
-    expect(choose_capability({ held, library_address: '/record/z/shared', action: 'library.append_track' })?.capability_id).toBe('later')
-    expect(choose_capability({ held: [...held, capability({ capability_id: 'forever' })], library_address: '/record/z/shared', action: 'library.append_track' })?.capability_id).toBe('forever')
-    expect(choose_capability({ held: [held[0] as Capability], library_address: '/record/z/shared', action: 'library.append_track' })?.capability_id).toBe('filtered')
+    expect(choose_capability({ held, library_address: '/record/z/shared', action: 'library.append_track', now: 0 })?.capability_id).toBe('later')
+    expect(choose_capability({ held: [...held, capability({ capability_id: 'forever' })], library_address: '/record/z/shared', action: 'library.append_track', now: 0 })?.capability_id).toBe('forever')
+    expect(choose_capability({ held: [held[0] as Capability], library_address: '/record/z/shared', action: 'library.append_track', now: 0 })?.capability_id).toBe('filtered')
+  })
+
+  test('an expiry passed since the list was fetched rules a capability out', () => {
+    const held = [capability({ capability_id: 'lapsed', expires_at_ms: 1_000 })]
+    expect(choose_capability({ held, library_address: '/record/z/shared', action: 'library.append_track', now: 999 })?.capability_id).toBe('lapsed')
+    expect(choose_capability({ held, library_address: '/record/z/shared', action: 'library.append_track', now: 1_000 })).toBeNull()
+  })
+
+  test('resolves nothing while loading or when the chosen library is no longer a target, never a silent fallback', () => {
+    const targets = write_targets({ libraries: LIBRARIES, held: [capability({})], action: 'library.append_track' })
+    expect(resolve_target({ targets, chosen: null, recent: null, loading: true })).toEqual({ kind: 'loading' })
+    expect(resolve_target({ targets, chosen: '/record/z/gone', recent: null, loading: false })).toEqual({ kind: 'chosen_gone', library_address: '/record/z/gone' })
+    expect(resolve_target({ targets, chosen: '/record/z/shared', recent: null, loading: false })).toMatchObject({ kind: 'target', target: { capability_id: 'cap' } })
+    expect(resolve_target({ targets: [], chosen: null, recent: null, loading: false })).toEqual({ kind: 'none' })
   })
 
   test('defaults to the preferred library, then the last used, then the first own one', () => {

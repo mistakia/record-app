@@ -20,18 +20,6 @@ export const MAX_DROP_CALL_BYTES = 2 * 1024 ** 3
 
 const refuse = (message: string): NodeResult<never> => ({ ok: false, failure: { kind: 'refused', message } })
 
-// A write target from the renderer: absent, or a library address and an
-// optional capability id, both plain printable text the node then judges.
-const PRINTABLE = /^[\x21-\x7e]{1,512}$/
-export const check_import_target = (input: unknown): { ok: true, target: ImportTarget | undefined } | { ok: false } => {
-  if (input === undefined || input === null) return { ok: true, target: undefined }
-  if (typeof input !== 'object' || Array.isArray(input)) return { ok: false }
-  const { library_address, capability_id } = input as Record<string, unknown>
-  if (typeof library_address !== 'string' || !PRINTABLE.test(library_address)) return { ok: false }
-  if (capability_id !== undefined && (typeof capability_id !== 'string' || !PRINTABLE.test(capability_id))) return { ok: false }
-  return { ok: true, target: capability_id === undefined ? { library_address } : { library_address, capability_id } }
-}
-
 // A dropped file's name, reduced to a safe base name with an audio
 // extension, or null.
 export const clean_upload_name = (name: unknown): string | null => {

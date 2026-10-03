@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 
-import styles from './tag-editor.module.css'
+import styles from './adopt-dialog.module.css'
 import type { Track } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { TargetSelect, use_write_target } from '#renderer/components/library/target-select.tsx'
@@ -38,7 +38,7 @@ export const AdoptDialog = ({ track, viewed_library, on_close }: { track: Track,
 
   return (
     <Dialog open title={`Adopt: ${track.title ?? 'Untitled'}`} on_close={on_close}>
-      <div className={styles.editor} data-testid='adopt-dialog'>
+      <div className={styles.dialog} data-testid='adopt-dialog'>
         <p>Copy this track into one of your libraries, or a shared library you can add tracks to.</p>
         <TargetSelect choice={choice} />
         <div className={styles.actions}>

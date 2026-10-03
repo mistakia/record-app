@@ -13,3 +13,7 @@
 .none {
   color: var(--muted);
 }
+
+.gone {
+  color: var(--danger);
+}

@@ -5,7 +5,9 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
-import { check_import_target, import_chosen_paths } from '#main/import-files.ts'
+import { import_chosen_paths } from '#main/import-files.ts'
+import { serve_generic_request } from '#main/request-policy.ts'
+import { check_write_target, refused_without_target } from '#main/write-target.ts'
 import { request_node } from '#main/node-client.ts'
 import { write_targets } from '#renderer/library/write-targets.ts'
 import type { Library, Track, TrackList } from '#renderer/api/types.ts'
@@ -63,18 +65,23 @@ describe('write targets', () => {
   })
 
   test('file import lands in the library named', async () => {
-    const checked = check_import_target({ library_address: second })
-    if (!checked.ok) throw new Error('target refused')
-    const ack = await import_chosen_paths({ node_url: node.node_url, paths: [node.make_audio({ name: 'Into Second.flac', seed: 22 })], target: checked.target })
+    const target = check_write_target({ library_address: second })
+    if (target === null) throw new Error('target refused')
+    const ack = await import_chosen_paths({ node_url: node.node_url, paths: [node.make_audio({ name: 'Into Second.flac', seed: 22 })], target })
     expect(ack.ok).toBe(true)
     await wait_for(async () => (await tracks_in(second)).some(({ title }) => title === 'Into Second'), 'import into the second library')
     expect((await tracks_in(first)).some(({ title }) => title === 'Into Second')).toBe(false)
   }, 30_000)
 
-  test('main refuses a malformed import target', () => {
-    for (const bad of ['x', [], { library_address: 3 }, { library_address: 'has space' }, { library_address: '/ok', capability_id: '' }]) {
-      expect(check_import_target(bad).ok).toBe(false)
+  test('main refuses a missing or malformed target, on imports and on the generic channel\'s targeted writes', async () => {
+    for (const bad of [undefined, null, 'x', [], { library_address: 3 }, { library_address: 'has space' }, { library_address: '/ok', capability_id: '' }]) {
+      expect(check_write_target(bad)).toBeNull()
     }
-    expect(check_import_target(undefined)).toEqual({ ok: true, target: undefined })
+    expect(check_write_target({ library_address: '/ok', capability_id: 'cap' })).toEqual({ library_address: '/ok', capability_id: 'cap' })
+    expect(refused_without_target({ method: 'post', path_template: '/tags', body: { track_id: 'a', tag: 'b' } })).not.toBeNull()
+    expect(refused_without_target({ method: 'delete', path_template: '/tags', query: { track_id: 'a', tag: 'b', library_address: '/ok' } })).toBeNull()
+    expect(refused_without_target({ method: 'get', path_template: '/tracks' })).toBeNull()
+    const refused = await serve_generic_request({ input: { method: 'post', path_template: '/tracks', body: { content_cid: 'x' } }, node_url: node.node_url, mode: 'remote' })
+    expect(refused).toMatchObject({ ok: false, failure: { kind: 'refused' } })
   })
 })

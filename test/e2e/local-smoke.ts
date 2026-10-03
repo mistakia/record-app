@@ -140,7 +140,7 @@ try {
   const [alpha] = (await node.peer.list_tracks({ offset: 0, limit: 10, shuffle: false, sort: 'title', order: 'asc', query: 'Alpha' })).items
   await window.getByLabel('Add by content CID').fill(alpha?.content_cid ?? '')
   await window.getByRole('button', { name: 'Add track' }).click()
-  await toast(window, 'Added to your library.')
+  await toast(window, /^Added to /)
   const total = (await node.peer.list_tracks({ offset: 0, limit: 1, shuffle: false, sort: 'added_at', order: 'desc' })).total
   step('tracks on the node after ingest', total)
   if (total !== 5) throw new Error('ingest did not add three tracks')

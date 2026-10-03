@@ -21,7 +21,7 @@ const subscribe = <T>(channel: string, listener: (payload: T) => void): () => vo
 }
 
 const copy_target = (target: ImportTarget | undefined): ImportTarget | undefined =>
-  target === undefined ? undefined : { library_address: target.library_address, ...(target.capability_id === undefined ? {} : { capability_id: target.capability_id }) }
+  target === undefined || target === null ? undefined : { library_address: target.library_address, ...(target.capability_id === undefined ? {} : { capability_id: target.capability_id }) }
 
 const bridge: RecordBridge = {
   connection: {
