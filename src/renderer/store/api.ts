@@ -81,6 +81,18 @@ export const node_api = createApi({
       query: () => ({ method: 'get', path_template: '/libraries' }),
       providesTags: ['libraries']
     }),
+    // The identity library's heads, which the head-check compares (§8.8.5).
+    // A node without the endpoint (404) has none to compare: heads null.
+    get_identity_heads: build.query<{ heads: string[] | null }, void>({
+      queryFn: async () => {
+        const result = await window.record.request({ method: 'get', path_template: '/identity/meta-log', query: { offset: 0, limit: 1 } })
+        if (result.ok) {
+          const heads = (result.data as { heads?: unknown } | null)?.heads
+          return { data: { heads: Array.isArray(heads) ? heads.filter((head): head is string => typeof head === 'string') : null } }
+        }
+        return result.failure.kind === 'http' && result.failure.status === 404 ? { data: { heads: null } } : { error: result.failure }
+      }
+    }),
     // Every own library, active and retired, the listens library included.
     get_own_libraries: build.query<Library[], void>({
       query: () => ({ method: 'get', path_template: '/identity/libraries' }),
@@ -138,7 +150,7 @@ export const node_api = createApi({
     // binding on every device of the identity.
     pin_track: build.mutation<unknown, { cid: string, pinned: boolean }>({
       query: ({ cid, pinned }) => ({ method: pinned ? 'post' : 'delete', path_template: '/tracks/{cid}/pin', params: { cid } }),
-      invalidatesTags: ['tracks']
+      invalidatesTags: ['tracks', 'listens']
     }),
     // Ingest by CID, and adoption of a track from another library (§8.6.7).
     add_track_by_cid: build.mutation<Track, { content_cid: string } & TargetFields>({

@@ -46,8 +46,10 @@ export const use_node_events = (): void => {
       dispatch(events_state_changed(state))
       if (state.status !== 'open' || state.connection_id <= reconciled_up_to) return
       reconciled_up_to = state.connection_id
-      // Pending event invalidations are covered by the full refetch.
-      batcher.cancel()
+      // The reconcile refetches only what moved, so events still pending are
+      // applied now rather than dropped.
+      const pending = batcher.drain()
+      if (pending.length > 0) dispatch(node_api.util.invalidateTags(pending))
       dispatch(reconcile({ connection_id: state.connection_id })).catch(() => {})
     }
 
@@ -64,9 +66,12 @@ export const use_node_events = (): void => {
     })
     window.record.events.get_state().then(apply_state).catch(() => {})
     // Spec §8.8.5: a head-check every 5 minutes while connected and fresh.
+    let checking = false
     const head_check_timer = setInterval(() => {
       const { events, freshness } = get_state().connection
-      if (events?.status === 'open' && freshness === 'fresh') dispatch(head_check()).catch(() => {})
+      if (checking || events?.status !== 'open' || freshness !== 'fresh') return
+      checking = true
+      dispatch(head_check()).catch(() => {}).finally(() => { checking = false })
     }, HEAD_CHECK_INTERVAL_MS)
     return () => {
       clearInterval(head_check_timer)

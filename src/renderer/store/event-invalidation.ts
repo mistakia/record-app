@@ -31,7 +31,7 @@ export const tags_for_event = (type: string): NodeApiTag[] => {
 export const create_invalidation_batcher = ({ flush, interval_ms = 1000 }: {
   flush: (tags: NodeApiTag[]) => void
   interval_ms?: number
-}): { add: (tags: NodeApiTag[]) => void, cancel: () => void } => {
+}): { add: (tags: NodeApiTag[]) => void, drain: () => NodeApiTag[], cancel: () => void } => {
   const pending = new Set<NodeApiTag>()
   let timer: ReturnType<typeof setTimeout> | null = null
   return {
@@ -44,6 +44,14 @@ export const create_invalidation_batcher = ({ flush, interval_ms = 1000 }: {
         pending.clear()
         flush(tags_to_flush)
       }, interval_ms)
+    },
+    // The pending tags, handed over instead of flushed later.
+    drain: () => {
+      if (timer !== null) clearTimeout(timer)
+      timer = null
+      const tags = [...pending]
+      pending.clear()
+      return tags
     },
     cancel: () => {
       if (timer !== null) clearTimeout(timer)
