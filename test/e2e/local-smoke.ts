@@ -86,7 +86,7 @@ try {
 
   // Tagging through the context menu, then the tag filter.
   await rows(window).filter({ hasText: 'Smoke Alpha' }).click({ button: 'right' })
-  await window.getByRole('menuitem', { name: 'Edit tags' }).click()
+  await window.getByRole('menuitem', { name: 'Tags' }).click()
   await window.getByLabel('New tag').fill('smoke-tag')
   await window.getByRole('button', { name: 'Add', exact: true }).click()
   await window.getByTestId('tag-editor').getByText('smoke-tag').waitFor()
@@ -140,7 +140,7 @@ try {
   const [alpha] = (await node.peer.list_tracks({ offset: 0, limit: 10, shuffle: false, sort: 'title', order: 'asc', query: 'Alpha' })).items
   await window.getByLabel('Add by content CID').fill(alpha?.content_cid ?? '')
   await window.getByRole('button', { name: 'Add track' }).click()
-  await toast(window, 'Added to your library.')
+  await toast(window, /^Added to /)
   const total = (await node.peer.list_tracks({ offset: 0, limit: 1, shuffle: false, sort: 'added_at', order: 'desc' })).total
   step('tracks on the node after ingest', total)
   if (total !== 5) throw new Error('ingest did not add three tracks')

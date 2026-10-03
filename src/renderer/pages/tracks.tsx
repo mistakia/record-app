@@ -8,6 +8,7 @@ import styles from './tracks.module.css'
 import type { Track } from '#renderer/api/types.ts'
 import type { MenuItem } from '#renderer/components/common/context-menu.tsx'
 import { library_category, library_name, own_library_address } from '#renderer/components/library/library-category.ts'
+import { AdoptDialog } from '#renderer/components/track/adopt-dialog.tsx'
 import { TagEditor } from '#renderer/components/track/tag-editor.tsx'
 import { TagFilter } from '#renderer/components/track/tag-filter.tsx'
 import { TrackList } from '#renderer/components/track/track-list.tsx'
@@ -33,6 +34,7 @@ export const Tracks = () => {
   const filters = use_app_selector((state) => state.ui.filters)
   const [search, set_search] = useState(filters.query)
   const [tagging, set_tagging] = useState<Track | null>(null)
+  const [adopting, set_adopting] = useState<Track | null>(null)
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const first_page = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address, page: 0, filters }))
   const own_address = own_library_address(libraries.data)
@@ -54,7 +56,8 @@ export const Tracks = () => {
     { label: 'Play', on_select: () => { play_tracks({ tracks: [track], start_index: 0, library_address: listen_library }) } },
     { label: 'Play next', on_select: () => { add_to_queue({ tracks: [track], at: 'next', library_address: listen_library }) } },
     { label: 'Add to queue', on_select: () => { add_to_queue({ tracks: [track], at: 'end', library_address: listen_library }) } },
-    { label: track.have_track ? 'Edit tags' : 'Show tags', on_select: () => { set_tagging(track) } }
+    { label: 'Tags', on_select: () => { set_tagging(track) } },
+    { label: 'Adopt to library', on_select: () => { set_adopting(track) } }
   ]
 
   return (
@@ -107,7 +110,8 @@ export const Tracks = () => {
         on_queue={({ track, at }) => { add_to_queue({ tracks: [track], at, library_address: listen_library }) }}
         menu_items={menu_items}
       />
-      {tagging !== null && <TagEditor track={tagging} own_address={own_address} on_close={() => { set_tagging(null) }} />}
+      {tagging !== null && <TagEditor track={tagging} viewed_library={library_address} on_close={() => { set_tagging(null) }} />}
+      {adopting !== null && <AdoptDialog track={adopting} viewed_library={library_address} on_close={() => { set_adopting(null) }} />}
     </section>
   )
 }

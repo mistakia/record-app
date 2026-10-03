@@ -16,6 +16,7 @@ export type Peer = Schemas['Peer']
 export type ImportAck = Schemas['ImportAck']
 export type ListenCount = Schemas['ListenCount']
 export type ApiError = Schemas['Error']
+export type Capability = Schemas['Capability']
 
 interface LibraryAddressPayload { library_address: string }
 
@@ -40,6 +41,8 @@ interface NodeEventPayloads {
   'library:peer-left': LibraryAddressPayload & { peer_id: string }
   'identity:library-created': { library: Library }
   'identity:library-retired': LibraryAddressPayload
+  'capability:issued': { capability: Capability }
+  'capability:revoked': { capability: Capability }
   'peer:joined': { peer_id: string, peer_count: number }
   'peer:left': { peer_id: string, peer_count: number }
   'import:starting': { import_id: string, source: 'file' | 'url', file_count: number }

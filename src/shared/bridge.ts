@@ -145,6 +145,11 @@ export interface ImportAck {
   file_count?: number
 }
 
+export interface ImportTarget {
+  library_address: string
+  capability_id?: string
+}
+
 export interface RecordBridge {
   connection: {
     get: () => Promise<ConnectionView>
@@ -169,10 +174,11 @@ export interface RecordBridge {
     on_state: (listener: (state: EventsState) => void) => () => void
   }
   import: {
-    // Opens main's file picker; null when the user cancels.
-    choose_files: () => Promise<NodeResult<ImportAck | null>>
+    // Opens main's file picker; null when the user cancels. target names
+    // the library to ingest into (chapter 7 write targets).
+    choose_files: (input: { target?: ImportTarget }) => Promise<NodeResult<ImportAck | null>>
     // Files the user dropped, as their bytes and bare names, never paths.
-    upload_files: (files: Array<{ name: string, data: ArrayBuffer }>) => Promise<NodeResult<ImportAck>>
+    upload_files: (input: { files: Array<{ name: string, data: ArrayBuffer }>, target?: ImportTarget }) => Promise<NodeResult<ImportAck>>
   }
   identity: {
     // The key pair, after the user confirms in main's native dialog. The

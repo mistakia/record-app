@@ -10,6 +10,7 @@ import { API_ROUTES } from '#shared/api-routes.ts'
 import type { ConnectionMode, NodeRequest, NodeResult } from '#shared/bridge.ts'
 import { URL_IMPORT_OFF_IN_BUNDLED } from '#shared/bundled.ts'
 import { request_node } from './node-client.ts'
+import { refused_without_target } from './write-target.ts'
 
 const METHODS = new Set<string>(API_ROUTES.map(({ method }) => method))
 const IDENTITY_ROUTES = new Set(['get /identity/export', 'post /identity/import'])
@@ -48,7 +49,7 @@ export const serve_generic_request = async ({ input, node_url, mode, call = requ
 }): Promise<NodeResult<unknown>> => {
   const request = check_node_request(input)
   if (request === null) return refuse('Malformed node request.')
-  const refusal = refused_on_generic_channel(request) ?? refused_in_mode(request, mode)
+  const refusal = refused_on_generic_channel(request) ?? refused_in_mode(request, mode) ?? refused_without_target(request)
   if (refusal !== null) return refuse(refusal)
   return await call({ node_url, request })
 }

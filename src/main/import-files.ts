@@ -9,7 +9,7 @@ import { stat } from 'node:fs/promises'
 import { basename, extname } from 'node:path'
 
 import type { NodeResult } from '#shared/bridge.ts'
-import { import_files, type ImportAck } from './node-client.ts'
+import { import_files, type ImportAck, type ImportTarget } from './node-client.ts'
 
 export const AUDIO_EXTENSIONS = ['mp3', 'm4a', 'aac', 'flac', 'ogg', 'oga', 'opus', 'wav', 'aif', 'aiff', 'wma', 'webm', 'mp4']
 export const MAX_IMPORT_FILES = 200
@@ -31,10 +31,11 @@ export const clean_upload_name = (name: unknown): string | null => {
   return base
 }
 
-export const import_chosen_paths = async ({ node_url, token, paths }: {
+export const import_chosen_paths = async ({ node_url, token, paths, target }: {
   node_url: string | null
   token?: string | null | undefined
   paths: string[]
+  target?: ImportTarget | undefined
 }): Promise<NodeResult<ImportAck>> => {
   if (paths.length === 0 || paths.length > MAX_IMPORT_FILES) return refuse(`Choose between 1 and ${MAX_IMPORT_FILES} files.`)
   const files: Array<{ name: string, blob: Blob }> = []
@@ -46,13 +47,14 @@ export const import_chosen_paths = async ({ node_url, token, paths }: {
     // A file-backed blob, streamed into the upload rather than read whole.
     files.push({ name, blob: await openAsBlob(path) })
   }
-  return await import_files({ node_url, token, files })
+  return await import_files({ node_url, token, files, target })
 }
 
-export const import_dropped_files = async ({ node_url, token, input, max_call_bytes = MAX_DROP_CALL_BYTES }: {
+export const import_dropped_files = async ({ node_url, token, input, target, max_call_bytes = MAX_DROP_CALL_BYTES }: {
   node_url: string | null
   token?: string | null | undefined
   input: unknown
+  target?: ImportTarget | undefined
   max_call_bytes?: number
 }): Promise<NodeResult<ImportAck>> => {
   if (!Array.isArray(input) || input.length === 0 || input.length > MAX_IMPORT_FILES) return refuse(`Drop between 1 and ${MAX_IMPORT_FILES} files.`)
@@ -67,5 +69,5 @@ export const import_dropped_files = async ({ node_url, token, input, max_call_by
     if (total_bytes > max_call_bytes) return refuse(`Dropped files are uploaded one at a time; this upload is over ${max_call_bytes} bytes.`)
     files.push({ name: clean, blob: new Blob([data]) })
   }
-  return await import_files({ node_url, token, files })
+  return await import_files({ node_url, token, files, target })
 }

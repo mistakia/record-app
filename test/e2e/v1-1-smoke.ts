@@ -1,6 +1,7 @@
 // The built app (`bun run build` first) against an in-process record-node,
 // walking the record-docs v1.1 surfaces: own-library management (create,
-// the listens library, retire, profile choice). Writes stay on the
+// the listens library, retire, profile choice) and write targets (the
+// importer's selector, adoption into a chosen library, tagging into it). Writes stay on the
 // in-process node. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
 // record-node's pins. Runs under Node: node test/e2e/v1-1-smoke.ts
@@ -51,6 +52,37 @@ try {
   await created.getByRole('button', { name: 'Profile' }).click()
   await window.getByTestId('about-editor').locator('input[name=name]').and(window.locator('[value="Smoke Mixes"]')).waitFor()
   step('profile', 'switched to the new library')
+
+  // Write targets: two own libraries now, so writes offer a selector.
+  await nav(window, 'Import')
+  const import_target = window.getByTestId('write-target')
+  await import_target.waitFor()
+  const import_options = await import_target.locator('option').allInnerTexts()
+  step('import targets', import_options)
+  if (import_options.length !== 2 || !import_options.includes('Smoke Mixes')) throw new Error('the importer does not offer both own libraries')
+  await nav(window, 'Tracks')
+  const row = window.getByTestId('track-row').filter({ hasText: 'V11 Alpha' })
+  await row.click({ button: 'right' })
+  await window.getByRole('menuitem', { name: 'Adopt to library' }).click()
+  const adopt = window.getByTestId('adopt-dialog')
+  await adopt.getByLabel('Target library').selectOption({ label: 'Smoke Mixes' })
+  await adopt.getByRole('button', { name: 'Adopt', exact: true }).click()
+  await toast(window, 'Adopted into Smoke Mixes.')
+  await window.getByLabel('Library', { exact: true }).selectOption({ label: 'Smoke Mixes (own, 1 tracks)' })
+  await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
+  step('adopted', 'V11 Alpha is in Smoke Mixes')
+  await row.click({ button: 'right' })
+  await window.getByRole('menuitem', { name: 'Tags' }).click()
+  const editor = window.getByTestId('tag-editor')
+  // Viewing Smoke Mixes, the tag goes there by default.
+  if (await editor.getByLabel('Target library').inputValue() !== (await window.getByLabel('Library', { exact: true }).inputValue())) throw new Error('the tag target is not the viewed library')
+  await editor.getByLabel('New tag').fill('v11-tag')
+  await editor.getByRole('button', { name: 'Add', exact: true }).click()
+  await editor.getByRole('button', { name: 'Remove tag v11-tag' }).waitFor()
+  step('tagged', (await editor.locator('li').allInnerTexts()).join(' | '))
+  await editor.getByRole('button', { name: 'Done' }).click()
+  await nav(window, 'Libraries')
+
   await created.getByRole('button', { name: 'Retire' }).click()
   await window.getByRole('dialog').getByRole('button', { name: 'Retire permanently' }).click()
   await toast(window, /^Retired /)
