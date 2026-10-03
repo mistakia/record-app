@@ -101,6 +101,9 @@ const run = async () => {
     let env_text = ''
     env_child.stdout?.on('data', (data) => { env_text += String(data) })
     await env_child.exited
+    // On Linux the exit can land before the last stdout chunk, and a utility
+    // child's stdout never reports its end, so wait for a whole line.
+    for (let waited = 0; !env_text.endsWith('\n') && waited < 2_000; waited += 20) await new Promise((resolve) => setTimeout(resolve, 20))
     const child_env = JSON.parse(env_text) as Record<string, string>
     check('no NODE_OPTIONS in the child', child_env.NODE_OPTIONS === undefined, Object.keys(child_env).sort())
 

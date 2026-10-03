@@ -7,6 +7,7 @@ import { create_invalidation_batcher, tags_for_event } from '#renderer/store/eve
 import { store } from '#renderer/store/index.ts'
 import { reconcile, reconcile_retry_delay_ms } from '#renderer/store/reconcile.ts'
 import { mark_libraries, moved_libraries, tags_for_moved } from '#renderer/store/library-heads.ts'
+import { reset_head_baseline } from '#renderer/store/head-check.ts'
 import { track_page_args } from '#renderer/store/api.ts'
 import { mark_restored_page } from '#renderer/snapshot/restored.ts'
 import type { Library } from '#renderer/api/types.ts'
@@ -47,6 +48,7 @@ const answer_all = (result: NodeResult<unknown>) => { for (const { resolve } of 
 const settle = async () => { await new Promise((resolve) => setTimeout(resolve, 5)) }
 
 afterEach(() => {
+  reset_head_baseline()
   answer_all({ ok: true, data: [] })
   store.dispatch(node_api.util.resetApiState())
 })
