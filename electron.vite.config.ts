@@ -16,6 +16,9 @@ const relax_csp_for_dev_server = (): Plugin => ({
 
 export default defineConfig({
   main: {
+    // A release build refuses Chromium's remote debugging switches; only a
+    // build made for the packaged smoke (RECORD_TEST_BUILD=1) accepts them.
+    define: { __RECORD_TEST_BUILD__: JSON.stringify(process.env.RECORD_TEST_BUILD === '1') },
     build: { sourcemap: false }
   },
   preload: {

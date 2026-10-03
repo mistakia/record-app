@@ -1,19 +1,24 @@
-// The packaged macOS app (`bun run package:mac` first), installed from its
-// .dmg: it launches with its fuses set, serves the renderer from app://,
-// starts the bundled record-node through utilityProcess, and plays a track
-// from it, then ingests a file through its bundled ffmpeg and fpcalc. The
-// node's data directory is seeded beforehand by an in-process record-node. Playwright's Electron launcher needs the inspect arguments the fuses
-// turn off, so the app is driven over the Chrome DevTools Protocol instead.
-// Needs ffmpeg and fpcalc for the seed. RECORD_PACKAGED_ARCH=x86_64 runs the
-// Intel slice under Rosetta. Runs under Node:
-// node test/e2e/packaged-smoke.ts [path to .dmg or .app]
+// The packaged macOS app, installed from its .dmg. Needs both builds:
+// `bun run package:mac` (the release, in release/) and `bun run
+// package:mac:test` (the same app with the test-build marker, in
+// release-test/). Both carry exactly the expected fuses, read back from the
+// binary. The release refuses to start with remote debugging. The test build,
+// which accepts it, is driven over the Chrome DevTools Protocol (Playwright's
+// Electron launcher needs the inspect arguments the fuses turn off): it
+// serves the renderer from app://, starts the bundled record-node through
+// utilityProcess, plays a track, and ingests a file through its bundled
+// ffmpeg and fpcalc. The node's data directory is seeded beforehand by an
+// in-process record-node, which needs ffmpeg and fpcalc.
+// RECORD_PACKAGED_ARCH=x86_64 runs the Intel slice under Rosetta. Runs under
+// Node: node test/e2e/packaged-smoke.ts [test .dmg] [release .dmg]
 
-import { execFileSync, spawn } from 'node:child_process'
+import { execFileSync, spawn, spawnSync } from 'node:child_process'
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { FuseState, FuseV1Options, getCurrentFuseWire } from '@electron/fuses'
 import { chromium, type Page } from 'playwright-core'
 import { create_peer, start_peer, stop_peer } from 'record-node'
 
@@ -23,7 +28,22 @@ import { bundled_state, check_bundled_ingest } from './bundled-run.ts'
 const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const { version } = JSON.parse(await readFile(join(APP_ROOT, 'package.json'), 'utf8')) as { version: string }
 const arch = process.env.RECORD_PACKAGED_ARCH ?? process.arch.replace('x64', 'x86_64')
-const target = process.argv[2] ?? join(APP_ROOT, 'release', `Record-${version}-universal.dmg`)
+const test_dmg = process.argv[2] ?? join(APP_ROOT, 'release-test', `Record-${version}-universal.dmg`)
+const release_dmg = process.argv[3] ?? join(APP_ROOT, 'release', `Record-${version}-universal.dmg`)
+
+// electron-builder.yml's electronFuses, with WasmTrapHandlers at Electron's
+// default (on), which electron-builder does not set.
+const EXPECTED_FUSES: Record<string, boolean> = {
+  [FuseV1Options.RunAsNode]: false,
+  [FuseV1Options.EnableCookieEncryption]: true,
+  [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+  [FuseV1Options.EnableNodeCliInspectArguments]: false,
+  [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
+  [FuseV1Options.OnlyLoadAppFromAsar]: true,
+  [FuseV1Options.LoadBrowserProcessSpecificV8Snapshot]: false,
+  [FuseV1Options.GrantFileProtocolExtraPrivileges]: false,
+  [FuseV1Options.WasmTrapHandlers]: true
+}
 
 const step = (label: string, detail: unknown = ''): void => { console.log(`${label}:`, detail) }
 const wait_for = async <T>(read: () => Promise<T | null>, label: string, timeout_ms = 60_000): Promise<T> => {
@@ -37,16 +57,36 @@ const wait_for = async <T>(read: () => Promise<T | null>, label: string, timeout
 }
 
 const work_dir = await mkdtemp(join(tmpdir(), 'record-app-packaged-'))
-let mount: string | null = null
+const mounts: string[] = []
+
+// Install: mount the .dmg read-only, and run the app from it.
+const install = async (dmg: string, name: string): Promise<{ app_path: string, binary: string }> => {
+  const mount = join(work_dir, name)
+  execFileSync('hdiutil', ['attach', dmg, '-nobrowse', '-readonly', '-mountpoint', mount], { stdio: 'ignore' })
+  mounts.push(mount)
+  const app_path = join(mount, 'Record.app')
+  return { app_path, binary: join(app_path, 'Contents', 'MacOS', 'Record') }
+}
+
+const check_fuses = async (app_path: string, label: string): Promise<void> => {
+  const wire = await getCurrentFuseWire(app_path)
+  const read = Object.fromEntries(Object.entries(wire).filter(([key]) => key !== 'version').map(([key, state]) => [key, state === FuseState.ENABLE]))
+  step(`${label} fuses`, Object.fromEntries(Object.entries(read).map(([key, on]) => [FuseV1Options[Number(key)] ?? key, on])))
+  if (JSON.stringify(read) !== JSON.stringify(EXPECTED_FUSES)) throw new Error(`the ${label} fuses differ from the expected set`)
+}
+
 try {
-  // Install: mount the .dmg read-only and run the app from it.
-  let app_path = target
-  if (target.endsWith('.dmg')) {
-    mount = join(work_dir, 'mount')
-    execFileSync('hdiutil', ['attach', target, '-nobrowse', '-readonly', '-mountpoint', mount], { stdio: 'ignore' })
-    app_path = join(mount, 'Record.app')
-  }
-  const binary = join(app_path, 'Contents', 'MacOS', 'Record')
+  // The release build: its fuses, and its refusal of remote debugging.
+  const release = await install(release_dmg, 'release')
+  await check_fuses(release.app_path, 'release')
+  const release_profile = join(work_dir, 'release-profile')
+  const refused = spawnSync('arch', [`-${arch}`, release.binary, `--user-data-dir=${release_profile}`, '--remote-debugging-port=0'], { encoding: 'utf8', timeout: 30_000 })
+  const port_file = await readFile(join(release_profile, 'DevToolsActivePort'), 'utf8').catch(() => null)
+  step('release with --remote-debugging-port', { exit_code: refused.status, signal: refused.signal, stderr: refused.stderr.trim().split('\n').at(-1), devtools_port_file: port_file !== null })
+  if (refused.status !== 1 || port_file !== null) throw new Error('the release build ran with remote debugging')
+
+  const { app_path, binary } = await install(test_dmg, 'test')
+  await check_fuses(app_path, 'test build')
   step('app', { binary, archs: execFileSync('lipo', ['-archs', binary], { encoding: 'utf8' }).trim() })
 
   // Seed the bundled node's data directory with one playable track.
@@ -134,6 +174,6 @@ try {
   }
   console.log('packaged smoke passed')
 } finally {
-  if (mount !== null) execFileSync('hdiutil', ['detach', mount, '-quiet'])
+  for (const mount of mounts) execFileSync('hdiutil', ['detach', mount, '-quiet'])
   await rm(work_dir, { recursive: true, force: true })
 }

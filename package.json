@@ -29,15 +29,18 @@
     "gen:api": "openapi-typescript node_modules/record-node/dist/api/7-http-api.yaml -o src/renderer/api/generated-types.ts && node cli/generate-api-routes.mjs",
     "smoke:remote": "node test/e2e/remote-smoke.ts",
     "smoke:local": "node test/e2e/local-smoke.ts",
-    "package:mac": "bun run audit && bun run build:toolchain && bun install --frozen-lockfile --ignore-scripts --os=darwin --cpu='*' && electron-vite build && electron-builder --mac --publish never",
+    "package:mac": "bun run package:prepare && electron-vite build && electron-builder --mac --publish never",
     "smoke:packaged": "node test/e2e/packaged-smoke.ts",
     "audit": "node cli/check-audit.ts",
-    "build:toolchain": "bash cli/build-toolchain.sh"
+    "build:toolchain": "bash cli/build-toolchain.sh",
+    "package:prepare": "bun run audit && bun run build:toolchain && bun install --frozen-lockfile --ignore-scripts --os=darwin --cpu='*'",
+    "package:mac:test": "bun run package:prepare && RECORD_TEST_BUILD=1 electron-vite build && electron-builder --mac --publish never -c.directories.output=release-test"
   },
   "dependencies": {
     "record-node": "git+https://github.com/mistakia/record-node.git#80e40a1278bac1203a333a0e05c1d44a279655f5"
   },
   "devDependencies": {
+    "@electron/fuses": "2.1.3",
     "@reduxjs/toolkit": "2.12.0",
     "@tanstack/react-virtual": "3.14.13",
     "@types/bun": "1.4.2",

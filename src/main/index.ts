@@ -17,6 +17,16 @@ import { open_snapshot_store } from './snapshot-store.ts'
 import { create_update_service, UPDATE_FEED_URL } from './updates.ts'
 import { create_main_window, guard_web_contents } from './window.ts'
 
+// Chromium's remote debugging would let any local process drive the app and
+// reach the bridge, so a packaged release build exits on it before any window
+// exists. The packaged smoke's own build (package:mac:test) bakes in the
+// marker that allows it; nothing a user can set at run time does.
+const DEBUGGING_SWITCHES = ['remote-debugging-port', 'remote-debugging-pipe', 'remote-debugging-address']
+if (app.isPackaged && !__RECORD_TEST_BUILD__ && DEBUGGING_SWITCHES.some((name) => app.commandLine.hasSwitch(name))) {
+  console.error('Record does not run with remote debugging enabled.')
+  app.exit(1)
+}
+
 const PRELOAD_PATH = join(import.meta.dirname, '../preload/index.cjs')
 const RENDERER_ROOT = join(import.meta.dirname, '../renderer')
 // electron-vite sets this under `dev` only.

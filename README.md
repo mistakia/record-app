@@ -47,6 +47,7 @@ bun run build    # production build into out/
 bun run start    # run the production build
 bun run build:toolchain   # the pinned ffmpeg and fpcalc into toolchain/ (macOS)
 bun run package:mac   # unsigned universal .dmg and update .zip into release/
+bun run package:mac:test   # the same app, built to accept remote debugging, into release-test/
 ```
 
 `build:toolchain` (`cli/build-toolchain.sh`) builds ffmpeg 7.1.1 from FFmpeg's release tarball for both architectures. It is LGPL, with only the containers the app imports, and comes out at about 5.6 MB universal. It also fetches chromaprint's universal fpcalc 1.5.1. Every download is pinned by SHA-256. The same commit and Xcode give the same bytes, and `toolchain/BUILD-INFO.txt` records the configure line and output hashes. The packaged app carries both tools in `Resources/bin` and their notices in `Resources/licenses`. A development run uses `toolchain/bin` when it exists. `test/toolchain/compare-ffmpeg.sh` checks that this ffmpeg tag-strips every importable container to the same bytes as a default-configured 7.1.1 build. Those bytes are what the content CID hashes.
@@ -68,7 +69,7 @@ The integration test starts record-node in process and ingests a fixture, which 
 
 `bun run smoke:local` starts its own record-node in process and walks every write in the built app against it: search, sort, and the tag filter; tagging; import by file picker, drop, URL, and CID; linking, connecting, and unlinking a library; the library profile; identity export (then checks no file in the app profile holds the key); listens, peers, a hotkey, and a gapless transition with its listen and Media Session. In bundled mode it ingests a dropped file through the pinned toolchain, which on macOS must be built first (`bun run build:toolchain`). It needs `ffmpeg` and `fpcalc` for the in-process node, like the integration test. CI runs it under `xvfb-run`.
 
-`bun run smoke:packaged` mounts the packaged `.dmg` and runs the app from it. It checks that the fuses keep `ELECTRON_RUN_AS_NODE` off and that the bundled node runs as a utility process loading its own architecture's native binary. It then plays a track from a data directory seeded in process, and ingests a file through the packaged ffmpeg and fpcalc. Set `RECORD_PACKAGED_ARCH=x86_64` to run the Intel slice under Rosetta.
+`bun run smoke:packaged` mounts both packaged `.dmg` files. It reads every fuse back from both and expects an exact match, and checks that the release build exits rather than run with `--remote-debugging-port`. It then drives the test build, the only one that accepts remote debugging, which is baked in at build time. It checks that `ELECTRON_RUN_AS_NODE` stays off and that the bundled node runs as a utility process loading its own architecture's native binary. It then plays a track from a data directory seeded in process, and ingests a file through the packaged ffmpeg and fpcalc. Set `RECORD_PACKAGED_ARCH=x86_64` to run the Intel slice under Rosetta. The Package workflow runs both packages and both slices on macOS, by hand or on a `v*` tag.
 
 ## Security
 
