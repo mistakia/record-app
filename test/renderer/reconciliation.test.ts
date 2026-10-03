@@ -103,20 +103,20 @@ describe('reconcile and the write gate', () => {
   test('the base query refuses a write while stale without calling main, and sends it once fresh', async () => {
     const with_write = node_api.injectEndpoints({
       endpoints: (build) => ({
-        record_listen: build.mutation<unknown, void>({
+        test_write: build.mutation<unknown, void>({
           query: () => ({ method: 'post', path_template: '/listens', body: { track_id: 'x', library_address: 'y' } })
         })
       })
     })
     store.dispatch(events_state_changed({ ...open_state(4), status: 'reconnecting' }))
-    const refused = await store.dispatch(with_write.endpoints.record_listen.initiate())
+    const refused = await store.dispatch(with_write.endpoints.test_write.initiate())
     expect(refused.error).toMatchObject({ kind: 'refused' })
     expect(requests).toHaveLength(0)
 
     store.dispatch(events_state_changed(open_state(5)))
     await store.dispatch(reconcile({ connection_id: 5 }))
     expect(select_writes_allowed(store.getState())).toBe(true)
-    const sent = store.dispatch(with_write.endpoints.record_listen.initiate())
+    const sent = store.dispatch(with_write.endpoints.test_write.initiate())
     await settle()
     expect(requests.map(({ request }) => request.method)).toEqual(['post'])
     answer_all({ ok: true, data: null })

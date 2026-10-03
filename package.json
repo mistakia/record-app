@@ -23,11 +23,12 @@
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "test": "bun test",
-    "typecheck": "tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json",
+    "typecheck": "tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json && tsc -p tsconfig.e2e.json",
     "lint": "eslint .",
     "verify": "bun run lint && bun run typecheck",
     "gen:api": "openapi-typescript node_modules/record-node/dist/api/7-http-api.yaml -o src/renderer/api/generated-types.ts && node cli/generate-api-routes.mjs",
-    "smoke:remote": "node test/e2e/remote-smoke.ts"
+    "smoke:remote": "node test/e2e/remote-smoke.ts",
+    "smoke:local": "node test/e2e/local-playback-smoke.ts"
   },
   "dependencies": {
     "@reduxjs/toolkit": "2.12.0",

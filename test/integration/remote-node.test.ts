@@ -154,6 +154,22 @@ describe('node client against an in-process record-node with cors_origins: []', 
     expect(events.get_state()).toMatchObject({ connection_id: before + 1, attempt: 0 })
   })
 
+  test('POST /listens records a listen for a track from the own library, and the track\'s listen_count rises', async () => {
+    const own_address = peer.identity().own_address
+    const [track] = (await request<TrackList>({ method: 'get', path_template: '/tracks', query: { offset: 0, limit: 1 } })).items
+    if (track === undefined) throw new Error('no track')
+    const listen = await request<{ track_id: string, count: number }>({
+      method: 'post',
+      path_template: '/listens',
+      body: { track_id: track.id, library_address: own_address }
+    })
+    expect(listen).toMatchObject({ track_id: track.id, count: track.listen_count + 1 })
+    const [after] = (await request<TrackList>({ method: 'get', path_template: '/tracks', query: { offset: 0, limit: 1 } })).items
+    expect(after?.listen_count).toBe(track.listen_count + 1)
+    const history = await request<TrackList>({ method: 'get', path_template: '/listens', query: { offset: 0, limit: 10 } })
+    expect(history.items.map(({ id }) => id)).toContain(track.id)
+  })
+
   test('refuses a route the pinned yaml does not have, without calling the node', async () => {
     const result = await request_node({ node_url, request: { method: 'get', path_template: '/admin' } as unknown as NodeRequest })
     expect(!result.ok && result.failure.kind).toBe('refused')

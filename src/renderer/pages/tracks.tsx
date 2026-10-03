@@ -7,6 +7,7 @@ import { useState } from 'react'
 import styles from './tracks.module.css'
 import { TRACK_PAGE_SIZE, type Library } from '#renderer/api/types.ts'
 import { TrackRow } from '#renderer/components/track/track-row.tsx'
+import { add_to_queue, play_tracks } from '#renderer/player/player-controller.ts'
 import { node_api, track_page_args } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { library_selected } from '#renderer/store/ui.ts'
@@ -24,6 +25,10 @@ export const Tracks = () => {
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const tracks = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address, page }))
 
+  // A listen records the library a track was played from: the selected one,
+  // or in the aggregated view the own library.
+  const listen_library = library_address !== '' ? library_address : libraries.data?.find(({ is_own }) => is_own)?.address ?? ''
+  const items = tracks.data?.items ?? []
   const total = tracks.data?.total ?? 0
   const page_count = Math.max(1, Math.ceil(total / TRACK_PAGE_SIZE))
   const error = tracks.error ?? libraries.error
@@ -53,10 +58,17 @@ export const Tracks = () => {
       {tracks.isLoading && <p className={styles.muted}>Loading tracks</p>}
       <table className={styles.table} aria-busy={tracks.isFetching}>
         <thead>
-          <tr><th>Title</th><th>Artist</th><th>Album</th><th>Duration</th></tr>
+          <tr><th>Title</th><th>Artist</th><th>Album</th><th>Duration</th><th /></tr>
         </thead>
         <tbody>
-          {tracks.data?.items.map((track) => <TrackRow key={track.id} track={track} />)}
+          {items.map((track, index) => (
+            <TrackRow
+              key={track.id}
+              track={track}
+              on_play={() => { play_tracks({ tracks: items, start_index: index, library_address: listen_library }) }}
+              on_queue={(at) => { add_to_queue({ tracks: [track], at, library_address: listen_library }) }}
+            />
+          ))}
         </tbody>
       </table>
     </section>

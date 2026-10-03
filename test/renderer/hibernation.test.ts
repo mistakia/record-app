@@ -5,7 +5,8 @@ import { build_snapshot, restore_snapshot } from '#renderer/snapshot/hibernation
 import { node_api, track_page_args } from '#renderer/store/api.ts'
 import { connection_loaded } from '#renderer/store/connection.ts'
 import { store } from '#renderer/store/index.ts'
-import { player_restored, track_selected } from '#renderer/store/player.ts'
+import { EMPTY_QUEUE, type QueueEntry } from '#renderer/player/queue-manager.ts'
+import { player_restored } from '#renderer/store/player.ts'
 import { library_selected } from '#renderer/store/ui.ts'
 
 const NODE_URL = 'http://127.0.0.1:3000'
@@ -28,6 +29,17 @@ const track: Track = {
   have_track: true
 }
 
+const entry: QueueEntry = {
+  queue_id: 'q1',
+  track_id: track.id,
+  audio_cid: 'audio',
+  title: 'Intro',
+  artist: 'SebastiAn',
+  duration_seconds: 51,
+  library_address: ADDRESS
+}
+const other: QueueEntry = { ...entry, queue_id: 'q2', track_id: 'b'.repeat(64), title: 'Other', duration_seconds: 20 }
+
 describe('hibernation snapshot', () => {
   test('is null before the library list has loaded', () => {
     store.dispatch(node_api.util.resetApiState())
@@ -42,18 +54,17 @@ describe('hibernation snapshot', () => {
     await store.dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address: ADDRESS, page: 0 }), { items: [track], total: 1 }))
     // A later page is never captured.
     await store.dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address: ADDRESS, page: 1 }), { items: [track], total: 1 }))
-    store.dispatch(track_selected({ track_id: track.id, audio_cid: 'audio', title: 'Intro', artist: 'SebastiAn', duration_seconds: 51 }))
-    store.dispatch(player_restored({ track: { track_id: track.id, audio_cid: 'audio', title: 'Intro', artist: 'SebastiAn', duration_seconds: 51 }, position_seconds: 17 }))
+    store.dispatch(player_restored({ queue: { ...EMPTY_QUEUE, entries: [entry, other], index: 1, repeat: 'all' }, position_seconds: 17 }))
 
     const snapshot = build_snapshot({ state: store.getState(), route: '/tracks' })
     if (snapshot === null) throw new Error('no snapshot')
     expect(snapshot.active?.tracks).toHaveLength(1)
     expect(snapshot.active?.tracks[0]).not.toHaveProperty('genre')
-    expect(snapshot.queue).toEqual({ entries: [{ track_id: track.id, audio_cid: 'audio', title: 'Intro', artist: 'SebastiAn', duration_seconds: 51 }], index: 0, position_seconds: 17 })
+    expect(snapshot.queue).toEqual({ entries: [entry, other], index: 1, position_seconds: 17, repeat: 'all', shuffle: false })
 
     store.dispatch(node_api.util.resetApiState())
     store.dispatch(library_selected(''))
-    store.dispatch(track_selected(null))
+    store.dispatch(player_restored({ queue: EMPTY_QUEUE, position_seconds: 0 }))
     await restore_snapshot({ dispatch: store.dispatch, snapshot: { ...snapshot, written_at_ms: 1 } })
     const state = store.getState()
     expect(state.ui.library_address).toBe(ADDRESS)
@@ -61,7 +72,8 @@ describe('hibernation snapshot', () => {
     const page = node_api.endpoints.get_tracks.select(track_page_args({ library_address: ADDRESS, page: 0 }))(state).data
     expect(page?.total).toBe(1)
     expect(page?.items[0]).toMatchObject({ id: track.id, title: 'Intro', audio_cid: 'audio', tags: track.tags })
-    expect(state.player).toMatchObject({ track: { track_id: track.id }, position_seconds: 17, duration_seconds: 51 })
+    expect(state.player.queue).toMatchObject({ entries: [entry, other], index: 1, repeat: 'all', shuffle: false, unshuffled: null })
+    expect(state.player).toMatchObject({ position_seconds: 17, duration_seconds: 20 })
   })
 
   test('keeps the last captured first page while it has left the cache, for the same library only', async () => {

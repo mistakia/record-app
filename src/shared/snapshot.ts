@@ -22,12 +22,17 @@ export interface SnapshotTrack {
   have_track: boolean
 }
 
+// One queue entry, as the queue manager holds it and the snapshot keeps it.
 export interface SnapshotQueueEntry {
+  // Unique per entry, so the same track can sit in the queue twice.
+  queue_id: string
   track_id: string
   audio_cid: string
   title: string | null
   artist: string | null
   duration_seconds: number | null
+  // The library the track was played from, which a listen records.
+  library_address: string
 }
 
 export interface HibernationSnapshot {
@@ -41,9 +46,14 @@ export interface HibernationSnapshot {
   // The first track page of the most recently active library ('' is the
   // aggregated view of all libraries). Evicted first when over budget.
   active: { library_address: string, total: number, tracks: SnapshotTrack[] } | null
-  // The playback queue and position. The queue holds the current track
-  // until the queue manager lands.
-  queue: { entries: SnapshotQueueEntry[], index: number, position_seconds: number } | null
+  // The playback queue in play order, the current index, and its position.
+  queue: {
+    entries: SnapshotQueueEntry[]
+    index: number
+    position_seconds: number
+    repeat: 'off' | 'one' | 'all'
+    shuffle: boolean
+  } | null
 }
 
 export interface SnapshotInfo {

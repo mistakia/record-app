@@ -6,6 +6,7 @@ import { ConnectionBanner, ConnectionStatus } from '#renderer/components/layout/
 import { PlayerBar } from '#renderer/components/player/player-bar.tsx'
 import { current_route, use_hibernation } from '#renderer/hooks/use-hibernation.ts'
 import { use_node_events } from '#renderer/hooks/use-node-events.ts'
+import { use_media_session } from '#renderer/hooks/use-player.ts'
 import { ConnectionSettings } from '#renderer/pages/connection-settings.tsx'
 import { Tracks } from '#renderer/pages/tracks.tsx'
 import { connection_loaded } from '#renderer/store/connection.ts'
@@ -19,6 +20,7 @@ export const App = () => {
   const config = use_app_selector((state) => state.connection.config)
   use_node_events()
   use_hibernation()
+  use_media_session()
 
   // Spec §8.8.3: the snapshot is read before any node query, so the first
   // render already shows the last-known surface, marked stale.

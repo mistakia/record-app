@@ -1,40 +1,44 @@
-// Player state mirrored from the audio engine, which owns playback itself.
+// Player state: the engine's snapshot mirrored in, and the queue. The
+// player controller is the only writer; components read.
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 import type { EngineSnapshot } from '#renderer/player/audio-engine.ts'
-import type { SnapshotQueueEntry } from '#shared/snapshot.ts'
-
-export type NowPlaying = SnapshotQueueEntry
+import { EMPTY_QUEUE, type QueueState } from '#renderer/player/queue-manager.ts'
 
 interface PlayerState extends EngineSnapshot {
-  track: NowPlaying | null
+  queue: QueueState
 }
 
 const initial_state: PlayerState = {
-  track: null,
   state: 'idle',
+  key: null,
+  play_id: 0,
   position_seconds: 0,
   duration_seconds: 0,
+  played_seconds: 0,
   volume: 1,
-  error: null
+  error: null,
+  queue: EMPTY_QUEUE
 }
 
 export const player_slice = createSlice({
   name: 'player',
   initialState: initial_state,
   reducers: {
-    track_selected: (state, action: PayloadAction<NowPlaying | null>) => {
-      state.track = action.payload
-    },
     engine_updated: (state, action: PayloadAction<EngineSnapshot>) => ({ ...state, ...action.payload }),
-    // From the hibernation snapshot: the track is cued at its position, not loaded.
-    player_restored: (state, action: PayloadAction<{ track: NowPlaying, position_seconds: number }>) => {
-      state.track = action.payload.track
-      state.position_seconds = action.payload.position_seconds
-      state.duration_seconds = action.payload.track.duration_seconds ?? 0
+    queue_changed: (state, action: PayloadAction<QueueState>) => {
+      state.queue = action.payload
+    },
+    // From the hibernation snapshot: the current entry is cued at its
+    // position, not loaded.
+    player_restored: (state, action: PayloadAction<{ queue: QueueState, position_seconds: number }>) => {
+      const { queue, position_seconds } = action.payload
+      state.queue = queue
+      state.position_seconds = position_seconds
+      state.duration_seconds = queue.entries[queue.index]?.duration_seconds ?? 0
     }
   }
 })
 
-export const { track_selected, engine_updated, player_restored } = player_slice.actions
+export const { engine_updated, queue_changed, player_restored } = player_slice.actions

@@ -55,6 +55,10 @@ export const node_api = createApi({
         query: { offset, limit, library_addresses }
       }),
       providesTags: ['tracks']
+    }),
+    // The one write of the playback path (spec §8.9.1 listen recording).
+    record_listen: build.mutation<unknown, { track_id: string, library_address: string }>({
+      query: ({ track_id, library_address }) => ({ method: 'post', path_template: '/listens', body: { track_id, library_address } })
     })
   })
 })

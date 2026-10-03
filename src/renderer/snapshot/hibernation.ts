@@ -49,7 +49,7 @@ export const build_snapshot = ({ state, route, previous_active = null }: {
   const libraries = node_api.endpoints.get_libraries.select()(state).data
   if (node_url === null || libraries === undefined) return null
   const { page: first_page, library_address } = select_active_page(state)
-  const { track, position_seconds } = state.player
+  const { queue, position_seconds } = state.player
   return {
     version: SNAPSHOT_VERSION,
     node_url,
@@ -58,7 +58,9 @@ export const build_snapshot = ({ state, route, previous_active = null }: {
     active: first_page !== undefined
       ? to_snapshot_active({ page: first_page, library_address })
       : previous_active?.library_address === library_address ? previous_active : null,
-    queue: track === null ? null : { entries: [track], index: 0, position_seconds }
+    queue: queue.entries.length === 0
+      ? null
+      : { entries: queue.entries, index: queue.index, position_seconds, repeat: queue.repeat, shuffle: queue.shuffle }
   }
 }
 
@@ -73,8 +75,10 @@ export const restore_snapshot = async ({ dispatch, snapshot }: { dispatch: AppDi
     const items = tracks.map((track) => ({ ...track, artists: [], genre: [], artwork: [], resolvers: [] }))
     await dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address, page: 0 }), { items, total }))
   }
-  const entry = snapshot.queue?.entries[snapshot.queue.index]
-  if (snapshot.queue !== null && entry !== undefined) {
-    dispatch(player_restored({ track: entry, position_seconds: snapshot.queue.position_seconds }))
+  if (snapshot.queue !== null) {
+    const { entries, index, position_seconds, repeat, shuffle } = snapshot.queue
+    const valid_index = index >= 0 && index < entries.length ? index : -1
+    // The order before a shuffle is not kept; turning shuffle off keeps this order.
+    dispatch(player_restored({ queue: { entries, index: valid_index, repeat, shuffle, unshuffled: null }, position_seconds }))
   }
 }

@@ -4,19 +4,11 @@
 // which moves to the front, and turning it off restores the order the
 // entries had before.
 
+import type { SnapshotQueueEntry } from '#shared/snapshot.ts'
+
 export type RepeatMode = 'off' | 'one' | 'all'
 
-export interface QueueEntry {
-  // Unique per entry, so the same track can sit in the queue twice.
-  queue_id: string
-  track_id: string
-  audio_cid: string
-  title: string | null
-  artist: string | null
-  duration_seconds: number | null
-  // The library the track was played from, which a listen records.
-  library_address: string
-}
+export type QueueEntry = SnapshotQueueEntry
 
 export interface QueueState {
   // In play order.
