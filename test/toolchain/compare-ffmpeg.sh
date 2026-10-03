@@ -18,8 +18,14 @@ REFERENCE="$REFERENCE_DIR/ffmpeg"
 SAMPLES="$(mktemp -d)"
 trap 'rm -rf "$SAMPLES"' EXIT
 
+# The reference build is reused across runs, so it must be ours: a 0700
+# directory, not a symlink, owned by this user (/private/tmp is shared).
+if [ -L "$REFERENCE_DIR" ] || { [ -e "$REFERENCE_DIR" ] && { [ ! -d "$REFERENCE_DIR" ] || [ "$(stat -f %u "$REFERENCE_DIR")" != "$(id -u)" ] || [ "$(stat -f %Lp "$REFERENCE_DIR")" != 700 ]; }; }; then
+  echo "Refusing $REFERENCE_DIR: it is not a 0700 directory owned by $(id -un); remove it if it is yours" >&2
+  exit 1
+fi
 if [ ! -x "$REFERENCE" ]; then
-  mkdir -p "$REFERENCE_DIR"
+  [ -d "$REFERENCE_DIR" ] || mkdir -m 700 "$REFERENCE_DIR"
   tar -xJf "$ROOT/toolchain/cache/ffmpeg-7.1.1.tar.xz" -C "$REFERENCE_DIR" --strip-components 1
   (cd "$REFERENCE_DIR" && ./configure --disable-autodetect --disable-network --disable-doc > /dev/null && make -j"$(sysctl -n hw.ncpu)" ffmpeg > /dev/null 2>&1)
 fi

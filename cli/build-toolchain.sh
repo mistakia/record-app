@@ -24,12 +24,18 @@ CACHE="$OUT/cache"
 WORK="$OUT/work"
 # ffmpeg records its configure line, paths included, in the binary, so it
 # builds at a fixed path: the same commit gives the same bytes in any checkout
-# (with the same Xcode clang, which -version also names).
+# (with the same Xcode clang, which -version also names). /private/tmp is
+# shared, so the root is created fresh, 0700 and ours, and refused if another
+# user or a symlink got there first.
 BUILD_ROOT=/private/tmp/record-app-ffmpeg-build
 
 FFMPEG_VERSION=7.1.1
 FFMPEG_URL="https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz"
 FFMPEG_SHA256=733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1
+# FFmpeg's release signing key; the tarball's signature must verify against
+# exactly this key, in a throwaway keyring, as well as match the SHA-256.
+FFMPEG_KEY_URL=https://ffmpeg.org/ffmpeg-devel.asc
+FFMPEG_KEY_FINGERPRINT=FCF986EA15E6E293A5644F10B4322F04D67658D8
 FPCALC_VERSION=1.5.1
 FPCALC_URL="https://github.com/acoustid/chromaprint/releases/download/v$FPCALC_VERSION/chromaprint-fpcalc-$FPCALC_VERSION-macos-universal.tar.gz"
 FPCALC_SHA256=d4d8faff4b5f7c558d9be053da47804f9501eaa6c2f87906a9f040f38d61c860
@@ -64,6 +70,52 @@ fetch() {
   echo "$sha  $file" | shasum -a 256 -c - > /dev/null || { echo "SHA-256 mismatch: $file" >&2; exit 1; }
 }
 
+# Refuses a pre-existing root that is a symlink, not a directory, not ours, or
+# not 0700; then recreates it. mkdir without -p fails if anyone recreates it
+# in between, and /private/tmp's sticky bit keeps others from removing ours.
+fresh_private_dir() {
+  local dir="$1"
+  if [ -L "$dir" ]; then echo "Refusing $dir: it is a symlink" >&2; exit 1; fi
+  if [ -e "$dir" ]; then
+    if [ ! -d "$dir" ] || [ "$(stat -f %u "$dir")" != "$(id -u)" ] || [ "$(stat -f %Lp "$dir")" != 700 ]; then
+      echo "Refusing $dir: it exists and is not a 0700 directory owned by $(id -un)" >&2
+      exit 1
+    fi
+    rm -rf "$dir"
+  fi
+  mkdir -m 700 "$dir"
+  if [ -L "$dir" ] || [ "$(stat -f %u "$dir")" != "$(id -u)" ] || [ "$(stat -f %Lp "$dir")" != 700 ]; then
+    echo "Refusing $dir: it changed while being created" >&2
+    exit 1
+  fi
+}
+
+# Fails closed: no gpg, a key with another fingerprint, or any signature but
+# a good one from that key stops the build.
+verify_ffmpeg_signature() {
+  command -v gpg > /dev/null || { echo "gpg is required to verify the FFmpeg tarball" >&2; exit 1; }
+  local keyring
+  keyring="$(mktemp -d)"
+  chmod 700 "$keyring"
+  curl -fsSL "$FFMPEG_KEY_URL" -o "$keyring/key.asc"
+  curl -fsSL "$FFMPEG_URL.asc" -o "$keyring/tarball.asc"
+  gpg --homedir "$keyring" --batch --quiet --import "$keyring/key.asc" 2> /dev/null
+  local imported
+  imported="$(gpg --homedir "$keyring" --batch --with-colons --fingerprint 2> /dev/null | awk -F: '$1 == "fpr" { print $10 }')"
+  if ! grep -qx "$FFMPEG_KEY_FINGERPRINT" <<< "$imported"; then
+    rm -rf "$keyring"
+    echo "The FFmpeg signing key does not have the pinned fingerprint" >&2
+    exit 1
+  fi
+  local status
+  status="$(gpg --homedir "$keyring" --batch --status-fd 1 --verify "$keyring/tarball.asc" "$CACHE/ffmpeg-$FFMPEG_VERSION.tar.xz" 2> /dev/null || true)"
+  rm -rf "$keyring"
+  if ! grep -q "^\[GNUPG:\] VALIDSIG .* $FFMPEG_KEY_FINGERPRINT\$" <<< "$status"; then
+    echo "The FFmpeg tarball's signature does not verify against $FFMPEG_KEY_FINGERPRINT" >&2
+    exit 1
+  fi
+}
+
 build_ffmpeg() {
   local arch="$1"
   local dir="$BUILD_ROOT/ffmpeg-$arch"
@@ -84,8 +136,10 @@ build_ffmpeg() {
   )
 }
 
-mkdir -p "$CACHE" "$WORK" "$BUILD_ROOT" "$OUT/bin" "$OUT/licenses"
+mkdir -p "$CACHE" "$WORK" "$OUT/bin" "$OUT/licenses"
+fresh_private_dir "$BUILD_ROOT"
 fetch "$FFMPEG_URL" "$FFMPEG_SHA256"
+verify_ffmpeg_signature
 fetch "$FPCALC_URL" "$FPCALC_SHA256"
 fetch "$CHROMAPRINT_SOURCE_URL" "$CHROMAPRINT_SOURCE_SHA256"
 
@@ -109,7 +163,7 @@ cp "$ROOT/resources/TOOLCHAIN-NOTICE.md" "$OUT/licenses/TOOLCHAIN-NOTICE.md"
 
 {
   echo "ffmpeg $FFMPEG_VERSION: $FFMPEG_URL"
-  echo "  source sha256 $FFMPEG_SHA256"
+  echo "  source sha256 $FFMPEG_SHA256, signature verified against $FFMPEG_KEY_FINGERPRINT"
   echo "  configure (each arch adds --arch, --target-os=darwin, --cc='clang -arch <arch>', and -mmacosx-version-min=$MACOS_MIN; x86_64 adds --enable-cross-compile on arm64 hosts and --disable-x86asm):"
   echo "    ${CONFIGURE_FLAGS[*]}"
   echo "  $("$OUT/bin/ffmpeg" -version | sed -n 2p)"

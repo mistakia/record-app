@@ -39,10 +39,11 @@ jobs:
 
       # The smoke seeds its data directory with an in-process record-node and
       # makes its test audio with these; the app itself ships its own pinned
-      # ffmpeg and fpcalc. Rosetta runs the Intel slice.
+      # ffmpeg and fpcalc. gpg verifies the FFmpeg tarball's signature, and
+      # Rosetta runs the Intel slice.
       - name: Install test tools and Rosetta
         run: |
-          brew install ffmpeg chromaprint
+          brew install ffmpeg chromaprint gnupg
           sudo softwareupdate --install-rosetta --agree-to-license
 
       # package:mac runs the audit gate and builds the toolchain first.
