@@ -9,11 +9,12 @@ import { select_writes_allowed, type ConnectionState } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
 
 const READ_METHODS = new Set(['get', 'head'])
+const WRITES_WAIT: NodeFailure = { kind: 'refused', message: 'Writes wait until the app has caught up with the node.' }
 
 const node_base_query: BaseQueryFn<NodeRequest, unknown, NodeFailure> = async (request, { getState }) => {
   // Spec §8.8.3: no write against stale state. Every write passes here.
   if (!READ_METHODS.has(request.method) && !select_writes_allowed(getState() as { connection: ConnectionState })) {
-    return { error: { kind: 'refused', message: 'Writes wait until the app has caught up with the node.' } }
+    return { error: WRITES_WAIT }
   }
   const result = await window.record.request(request)
   return result.ok ? { data: result.data } : { error: result.failure }
@@ -132,6 +133,17 @@ export const node_api = createApi({
     disconnect_library: build.mutation<unknown, string>({
       query: (address) => ({ method: 'post', path_template: '/libraries/{address}/disconnect', params: encode(address) }),
       invalidatesTags: ['libraries']
+    }),
+    // The key goes to main's identity channel, not the generic request, so
+    // the gate the base query applies is applied here. Dispatch with
+    // { track: false } so the key never sits in the mutation cache.
+    import_identity: build.mutation<unknown, { private_key: string }>({
+      queryFn: async ({ private_key }, { getState }) => {
+        if (!select_writes_allowed(getState() as { connection: ConnectionState })) return { error: WRITES_WAIT }
+        const result = await window.record.identity.import({ private_key })
+        return result.ok ? { data: result.data } : { error: result.failure }
+      },
+      invalidatesTags: ['libraries', 'tracks', 'tags', 'about', 'listens']
     }),
     update_about: build.mutation<About, { address: string, about: Partial<Omit<About, 'library_address'>> }>({
       query: ({ address, about }) => ({ method: 'post', path_template: '/libraries/{address}/about', params: encode(address), body: about }),

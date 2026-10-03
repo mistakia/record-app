@@ -4,13 +4,14 @@
 // path ever leaves the renderer (§8.10.3).
 
 import { useState, type DragEvent, type FormEvent } from 'react'
+import { useStore } from 'react-redux'
 
 import styles from './importer.module.css'
 import { is_cid } from '#renderer/components/library/cid.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { import_requested } from '#renderer/store/imports.ts'
-import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
+import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/store/index.ts'
 import { notified } from '#renderer/store/notifications.ts'
 import { report_write } from '#renderer/store/write.ts'
 import type { ImportAck, NodeResult } from '#shared/bridge.ts'
@@ -26,6 +27,7 @@ const is_web_url = (value: string): boolean => {
 
 export const Importer = () => {
   const dispatch = use_app_dispatch()
+  const store = useStore<RootState>()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const imports = use_app_selector((state) => state.imports.items)
   const [url, set_url] = useState('')
@@ -42,7 +44,16 @@ export const Importer = () => {
     dispatch(import_requested({ import_id: result.data.import_id, label, file_count: result.data.file_count ?? null }))
   }
 
+  // Checked when the action runs, not only through the disabled buttons:
+  // uploads go through their own channels, past the base query's gate.
+  const writes_allowed_now = (): boolean => {
+    if (select_writes_allowed(store.getState())) return true
+    dispatch(notified({ kind: 'error', message: 'Imports wait until the app has caught up with the node.' }))
+    return false
+  }
+
   const choose = async () => {
+    if (!writes_allowed_now()) return
     set_uploading(true)
     track_import(await window.record.import.choose_files(), 'Chosen files')
     set_uploading(false)
@@ -51,7 +62,7 @@ export const Importer = () => {
   const drop = async (event: DragEvent) => {
     event.preventDefault()
     set_dragging(false)
-    if (!writes_allowed) return
+    if (!writes_allowed_now()) return
     const files = [...event.dataTransfer.files]
     if (files.length === 0) return
     set_uploading(true)

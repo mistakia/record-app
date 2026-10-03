@@ -58,14 +58,28 @@ describe('identity export', () => {
     expect(storage.getItem('record:last-identity-export:http://127.0.0.1:3000')).not.toContain(PRIVATE_KEY)
   })
 
-  test('import needs the typed phrase and hex key before anything is sent', async () => {
-    const { import_identity, IMPORT_CONFIRMATION_PHRASE, truncate_key } = await import('#renderer/identity/identity.ts')
-    expect((await import_identity({ private_key: PRIVATE_KEY, confirmation: 'yes' })).ok).toBe(false)
-    expect((await import_identity({ private_key: 'not hex!', confirmation: IMPORT_CONFIRMATION_PHRASE })).ok).toBe(false)
+  test('import needs the typed phrase and hex key, waits for fresh data, and never keeps the key in the store', async () => {
+    const { check_import, IMPORT_CONFIRMATION_PHRASE, truncate_key } = await import('#renderer/identity/identity.ts')
+    const { store } = await import('#renderer/store/index.ts')
+    const { node_api } = await import('#renderer/store/api.ts')
+    const { events_state_changed, reconcile_finished } = await import('#renderer/store/connection.ts')
+    expect(check_import({ private_key: PRIVATE_KEY, confirmation: 'yes' })).not.toBeNull()
+    expect(check_import({ private_key: 'not hex!', confirmation: IMPORT_CONFIRMATION_PHRASE })).not.toBeNull()
+    expect(check_import({ private_key: PRIVATE_KEY, confirmation: ` ${IMPORT_CONFIRMATION_PHRASE.toUpperCase()} ` })).toBeNull()
+
+    const open = { status: 'open' as const, node_url: 'http://127.0.0.1:3000', connection_id: 70, attempt: 0, retry_at_ms: null, last_error: null }
+    store.dispatch(events_state_changed({ ...open, status: 'reconnecting' }))
+    const gated = await store.dispatch(node_api.endpoints.import_identity.initiate({ private_key: PRIVATE_KEY }, { track: false }))
+    expect(gated.error).toMatchObject({ kind: 'refused' })
     expect(imports).toHaveLength(0)
-    expect((await import_identity({ private_key: PRIVATE_KEY, confirmation: ` ${IMPORT_CONFIRMATION_PHRASE.toUpperCase()} ` })).ok).toBe(true)
+
+    store.dispatch(events_state_changed(open))
+    store.dispatch(reconcile_finished({ connection_id: 70, ok: true }))
+    const sent = await store.dispatch(node_api.endpoints.import_identity.initiate({ private_key: PRIVATE_KEY }, { track: false }))
+    expect(sent.error).toBeUndefined()
     expect(imports).toEqual([{ private_key: PRIVATE_KEY }])
     expect(requests).toHaveLength(0)
+    expect(JSON.stringify(store.getState())).not.toContain(PRIVATE_KEY)
     expect(truncate_key(PUBLIC_KEY)).toBe(`${PUBLIC_KEY.slice(0, 6)}…${PUBLIC_KEY.slice(-6)}`)
   })
 

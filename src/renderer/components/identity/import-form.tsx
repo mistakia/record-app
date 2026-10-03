@@ -5,11 +5,12 @@
 import { useState, type FormEvent } from 'react'
 
 import styles from './identity.module.css'
-import { IMPORT_CONFIRMATION_PHRASE, import_identity } from '#renderer/identity/identity.ts'
+import { check_import, IMPORT_CONFIRMATION_PHRASE } from '#renderer/identity/identity.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { notified } from '#renderer/store/notifications.ts'
+import { report_write } from '#renderer/store/write.ts'
 import type { ConnectionMode } from '#shared/bridge.ts'
 
 export const ImportForm = ({ mode }: { mode: ConnectionMode }) => {
@@ -30,17 +31,22 @@ export const ImportForm = ({ mode }: { mode: ConnectionMode }) => {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    set_busy(true)
-    const result = await import_identity({ private_key, confirmation })
-    set_busy(false)
-    if (!result.ok) {
-      dispatch(notified({ kind: 'error', message: result.failure.message }))
+    const problem = check_import({ private_key, confirmation })
+    if (problem !== null) {
+      dispatch(notified({ kind: 'error', message: problem }))
       return
     }
+    set_busy(true)
+    // track: false keeps the key out of the mutation cache.
+    const imported = await report_write({
+      dispatch,
+      write: dispatch(node_api.endpoints.import_identity.initiate({ private_key: private_key.trim() }, { track: false })),
+      success: 'Identity imported. Libraries now reflect the imported identity.'
+    })
+    set_busy(false)
+    if (imported === null) return
     set_private_key('')
     set_confirmation('')
-    dispatch(node_api.util.resetApiState())
-    dispatch(notified({ kind: 'info', message: 'Identity imported. Libraries now reflect the imported identity.' }))
   }
 
   return (

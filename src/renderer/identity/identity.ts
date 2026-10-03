@@ -17,12 +17,11 @@ export const export_identity = async (): Promise<NodeResult<ExportedIdentity>> =
 // phrase typed out, not just a click.
 export const IMPORT_CONFIRMATION_PHRASE = 'replace my identity'
 
-export const import_identity = async ({ private_key, confirmation }: { private_key: string, confirmation: string }): Promise<NodeResult<unknown>> => {
-  if (confirmation.trim().toLowerCase() !== IMPORT_CONFIRMATION_PHRASE) {
-    return { ok: false, failure: { kind: 'refused', message: `Type "${IMPORT_CONFIRMATION_PHRASE}" to confirm.` } }
-  }
-  if (!/^[0-9a-f]+$/i.test(private_key.trim())) return { ok: false, failure: { kind: 'refused', message: 'The key must be the hex text an export produced.' } }
-  return await window.record.identity.import({ private_key: private_key.trim() })
+// Why an import cannot go ahead yet, or null when it can.
+export const check_import = ({ private_key, confirmation }: { private_key: string, confirmation: string }): string | null => {
+  if (confirmation.trim().toLowerCase() !== IMPORT_CONFIRMATION_PHRASE) return `Type "${IMPORT_CONFIRMATION_PHRASE}" to confirm.`
+  if (!/^[0-9a-f]+$/i.test(private_key.trim())) return 'The key must be the hex text an export produced.'
+  return null
 }
 
 // The node returns keys libp2p-marshaled: a protobuf header (key type 2,
