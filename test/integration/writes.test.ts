@@ -80,6 +80,14 @@ describe('ingest', () => {
     expect((await finished(ack.data.import_id)).some(({ type }) => type === 'import:processed-file')).toBe(true)
   }, 60_000)
 
+  test('a drop call over its total cap (2 GiB by default) is refused in main before any upload', async () => {
+    const { MAX_DROP_CALL_BYTES } = await import('#main/import-files.ts')
+    expect(MAX_DROP_CALL_BYTES).toBe(2 * 1024 ** 3)
+    const part = new ArrayBuffer(600)
+    const result = await import_dropped_files({ node_url: node.node_url, input: [{ name: 'a.flac', data: part }, { name: 'b.flac', data: part }], max_call_bytes: 1000 })
+    expect(!result.ok && result.failure).toMatchObject({ kind: 'refused', message: expect.stringContaining('over 1000 bytes') })
+  })
+
   test('drops and choices that are not audio files are refused before any upload', async () => {
     expect((await import_dropped_files({ node_url: node.node_url, input: [{ name: '../../etc/passwd', data: new ArrayBuffer(4) }] })).ok).toBe(false)
     expect((await import_dropped_files({ node_url: node.node_url, input: 'not a list' })).ok).toBe(false)

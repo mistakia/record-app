@@ -24,8 +24,6 @@ const is_web_url = (value: string): boolean => {
   }
 }
 
-const describe_files = (names: string[]): string => names.length === 1 ? (names[0] ?? 'a file') : `${names.length} files`
-
 export const Importer = () => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
@@ -57,8 +55,11 @@ export const Importer = () => {
     const files = [...event.dataTransfer.files]
     if (files.length === 0) return
     set_uploading(true)
-    const payload = await Promise.all(files.map(async (file) => ({ name: file.name, data: await file.arrayBuffer() })))
-    track_import(await window.record.import.upload_files(payload), describe_files(files.map(({ name }) => name)))
+    // One file at a time: read it, send it, wait, and let it go, so at most
+    // one file's bytes are held here and in main at once.
+    for (const file of files) {
+      track_import(await window.record.import.upload_files([{ name: file.name, data: await file.arrayBuffer() }]), file.name)
+    }
     set_uploading(false)
   }
 
