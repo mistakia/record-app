@@ -1,0 +1,58 @@
+// Main process entry: one instance, one window, and the IPC bridge to the
+// node. All node traffic leaves from here, never from the renderer.
+
+import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
+
+import { app, BrowserWindow, session } from 'electron'
+
+import { open_connection_store } from './connection-store.ts'
+import { register_ipc } from './ipc.ts'
+import { create_main_window, guard_web_contents } from './window.ts'
+
+const PRELOAD_PATH = join(import.meta.dirname, '../preload/index.cjs')
+const RENDERER_FILE = join(import.meta.dirname, '../renderer/index.html')
+// electron-vite sets this under `dev` only.
+const DEV_SERVER_URL = app.isPackaged ? undefined : process.env.ELECTRON_RENDERER_URL
+
+const renderer = DEV_SERVER_URL === undefined ? { file: RENDERER_FILE } : { url: DEV_SERVER_URL }
+const renderer_url = DEV_SERVER_URL ?? pathToFileURL(RENDERER_FILE).href
+
+const is_app_frame = (url: string): boolean => url.split('#')[0] === renderer_url.split('#')[0] ||
+  (DEV_SERVER_URL !== undefined && new URL(url).origin === new URL(DEV_SERVER_URL).origin)
+
+const open_window = (): BrowserWindow => create_main_window({ preload_path: PRELOAD_PATH, renderer })
+
+// Started from whenReady rather than a top-level await, which would hold the
+// module's evaluation open and stall tooling that waits for it to finish.
+const start = async (): Promise<void> => {
+  // The renderer needs no browser permission (camera, notifications, ...).
+  // eslint-disable-next-line n/no-callback-literal -- Electron's callback takes the grant as a boolean
+  session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => { callback(false) })
+  const store = await open_connection_store({ file_path: join(app.getPath('userData'), 'connection.json') })
+  register_ipc({ store, is_app_frame })
+  open_window()
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) open_window()
+  })
+}
+
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    const [window] = BrowserWindow.getAllWindows()
+    if (window === undefined) return
+    if (window.isMinimized()) window.restore()
+    window.focus()
+  })
+  app.on('web-contents-created', (_event, contents) => { guard_web_contents(contents) })
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit()
+  })
+
+  app.whenReady().then(start).catch((error: unknown) => {
+    console.error(error)
+    app.quit()
+  })
+}
