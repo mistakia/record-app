@@ -30,6 +30,7 @@ describe('release gate', () => {
 
   test('refuses while the source-offer contact is a placeholder', () => {
     expect(run({ notice: `Ask at: ${SOURCE_OFFER_PLACEHOLDER}.` })[0]).toContain('source-offer')
+    expect(run({ notice: `${NOTICE}\n- The source-offer contact is a placeholder until named.` })[0]).toContain('source-offer')
   })
 
   // The repository as it stands: no secrets in this environment, so the

@@ -3,11 +3,15 @@ name: Package
 # The release path on macOS: the audit gate, the pinned toolchain, the
 # universal app, and the packaged smoke on both slices. macOS runner minutes
 # are metered, so this runs by hand and on version tags only, never on every
-# push. A run by hand builds unsigned and publishes nothing. A v* tag is a
-# release: the release gate refuses it before any build unless every signing
-# and notarization secret is set, the tag matches package.json's version, and
-# the source-offer contact is named. The app is then signed and notarized,
-# smoked, checked by cli/verify-release.sh, and published to GitHub Releases.
+# push. A run by hand, on any ref, builds unsigned and publishes nothing. A
+# pushed v* tag is a release: the release gate refuses it before any build
+# unless every signing and notarization secret is set, the tag matches
+# package.json's version, and the source-offer contact is named. Both the
+# release and the smoke's test build are then signed under the hardened
+# runtime, the release is notarized, both are smoked, cli/verify-release.sh
+# checks the release, and it is published to GitHub Releases. Signing runs
+# electron-builder's temporary keychain import, which suits only an ephemeral
+# hosted runner, never a self-hosted one.
 on:
   workflow_dispatch:
   push:
@@ -20,9 +24,10 @@ permissions:
 jobs:
   macos:
     runs-on: macos-15
-    timeout-minutes: 60
+    # Notarization alone can take half an hour.
+    timeout-minutes: 120
     env:
-      RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      RELEASE: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - name: Check out Git repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -63,17 +68,25 @@ jobs:
           brew install ffmpeg chromaprint gnupg
           sudo softwareupdate --install-rosetta --agree-to-license
 
-      # package:mac and package:mac:release run the audit gate and build the
+      # package:mac and package:prepare run the audit gate and build the
       # toolchain first.
-      - name: Package the unsigned build
+      - name: Package the unsigned builds
         if: env.RELEASE != 'true'
-        run: bun run package:mac
+        run: |
+          bun run package:mac
+          bun run package:mac:test
+
+      # Everything up to electron-builder runs without the secrets: the audit,
+      # the toolchain build, the install, and the bundling.
+      - name: Build the release
+        if: env.RELEASE == 'true'
+        run: bun run package:prepare && bunx electron-vite build
 
       # electron-builder imports the certificate into a temporary keychain,
       # signs with forceCodeSigning (no identity fails the build), and
       # notarizes with the API key, which lives only in the runner's temp
       # directory for this step.
-      - name: Package, sign, and notarize the release build
+      - name: Sign and notarize the release
         if: env.RELEASE == 'true'
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -86,10 +99,22 @@ jobs:
           trap 'rm -f "$APPLE_API_KEY"' EXIT
           (umask 077 && printf '%s' "$APPLE_API_KEY_P8" > "$APPLE_API_KEY")
           unset APPLE_API_KEY_P8
-          bun run package:mac:release
+          bunx electron-builder --mac --publish never -c.forceCodeSigning=true
 
-      - name: Package the test build
-        run: bun run package:mac:test
+      - name: Build the test build
+        if: env.RELEASE == 'true'
+        run: RECORD_TEST_BUILD=1 bunx electron-vite build
+
+      # Signed like the release, under the hardened runtime, so the smoke's
+      # functional drive (the utility process, native modules, and the bundled
+      # tools) runs under the same code-signing rules as the shipped app. It is
+      # not notarized and never published.
+      - name: Sign the test build
+        if: env.RELEASE == 'true'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: bunx electron-builder --mac --publish never -c.forceCodeSigning=true -c.mac.notarize=false -c.directories.output=release-test
 
       - name: Packaged smoke (Apple Silicon)
         env:
@@ -104,7 +129,7 @@ jobs:
 
       - name: Verify signature, notarization, and staple
         if: env.RELEASE == 'true'
-        run: bun run verify:release
+        run: bash cli/verify-release.sh
 
       - name: Keep the release files
         if: env.RELEASE == 'true'
@@ -121,9 +146,9 @@ jobs:
 
   # Only this job can write to the repository, and it holds no signing secret.
   # A version with a prerelease part (1.1.0-beta.1) is published as a GitHub
-  # prerelease, which electron-updater's stable channel never offers.
+  # prerelease, which the app's stable update channel never offers.
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: macos
     runs-on: ubuntu-latest
     timeout-minutes: 15

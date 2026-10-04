@@ -1,7 +1,7 @@
 # Packaging for macOS (spec §8.10.7): one universal app, as a .dmg to install
-# and a .zip for updates. package:mac:release signs it with the Developer ID
-# identity in CSC_LINK and notarizes it; package:mac and package:mac:test pass
-# -c.mac.identity=null and build it unsigned.
+# and a .zip for updates. The Package workflow signs a release with the
+# Developer ID identity in CSC_LINK and notarizes it; package:mac and
+# package:mac:test pass -c.mac.identity=null and build it unsigned.
 appId: org.record.app
 productName: Record
 copyright: Copyright © Record contributors

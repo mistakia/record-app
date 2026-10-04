@@ -29,5 +29,5 @@ You may replace either program with your own build of the same version, for exam
 
 These notes are for whoever builds Record. They are not part of the notice above.
 
-- The source-offer contact is a placeholder until the release owner names an address.
+- The source-offer contact is a placeholder until the release owner names an address. Remove this note then; `cli/check-release-gate.ts` refuses a release while either remains.
 - Follow-up: build fpcalc 1.5.1 from source against our own LGPL FFmpeg 4.4.1 in `cli/build-toolchain.sh`, as is already done for ffmpeg 7.1.1. The universal release binary is used until then.
