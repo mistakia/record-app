@@ -1,61 +1,96 @@
-// The update backend over electron-updater (spec §8.2.5, §8.10.10), reading
-// the feed electron-builder publishes to GitHub Releases: latest-mac.yml and
-// the universal .zip, over https. The updater is injected, so this module
-// imports nothing from Electron and tests drive it under Bun.
+// The update backend over GitHub Releases (spec §8.2.5, §8.10.10), read over
+// https from the GitHub REST API without credentials. Each release carries the
+// update .zip, update-manifest.json, and its Ed25519 signature; staging
+// verifies them in update-stage.ts, and the swap at quit is update-install.ts.
 //
-// setFeedURL replaces only the provider: a download still reads the
-// Resources/app-update.yml that electron-builder's github publish config
-// writes into the app, to name its cache directory.
+// Stable is the latest published non-prerelease release, from
+// releases/latest. Beta is the highest version among published releases that
+// are either stable or a beta prerelease (v1.1.0-beta.1), so a stable release
+// newer than the last beta reaches beta users too, and an alpha or rc
+// prerelease reaches no one. Versions are compared by semver precedence, and
+// the service decides whether one is newer than the running app.
 //
-// It never downloads or installs on its own: the update service asks for the
-// download, and electron-updater installs it when the user next quits. On
-// macOS Squirrel.Mac applies a payload only when its code signature satisfies
-// the running app's designated requirement, which pins the Developer ID team.
-//
-// Stable is the latest published non-prerelease GitHub release, from
-// releases/latest. electron-updater would follow prereleases whenever the
-// running version is one, so stable turns that off explicitly. Beta also takes
-// prereleases: electron-updater picks the newest entry of the releases feed,
-// so a stable release newer than the last beta reaches beta users too. From a
-// stable version that entry can be any prerelease, alpha included, so only
-// beta prereleases (v1.1.0-beta.1) are published. For a prerelease tag it asks
-// for beta-mac.yml first, which a github publish never writes, then reads the
-// release's latest-mac.yml. Neither channel sets updater.channel, which would
-// also allow downgrades.
-//
-// One feed serves every major version, so while a newer major waits for the
-// user's opt-in, a later release on the current major is not offered.
-//
-// Outside the packaged app electron-updater is inactive, and a check fails
-// rather than report one that never reached the feed.
+// The fetch and the macOS tools are injected, so tests drive it under Bun.
 
-import type { AppUpdater } from 'electron-updater'
-
-import type { UpdateBackend, UpdateChannel } from './updates.ts'
-
-export type Updater = Pick<AppUpdater, 'autoDownload' | 'autoInstallOnAppQuit' | 'allowPrerelease' | 'allowDowngrade' | 'logger' | 'setFeedURL' | 'checkForUpdates' | 'downloadUpdate'>
+import { parse_public_key } from './update-signature.ts'
+import { stage_update, type AppInspection, type Fetch } from './update-stage.ts'
+import { compare_versions, type UpdateBackend, type UpdateChannel } from './updates.ts'
 
 const GITHUB_REPOSITORY = /^https:\/\/github\.com\/([A-Za-z0-9-]+)\/([A-Za-z0-9._-]+?)(?<!\.git)$/
+const BETA = /^\d+\.\d+\.\d+-beta\.\d+$/
+const STABLE = /^\d+\.\d+\.\d+$/
 
-export const create_github_update_backend = ({ feed_url, channel, updater }: {
+interface GithubRelease {
+  tag_name: string
+  draft: boolean
+  prerelease: boolean
+  assets: Array<{ name: string, browser_download_url: string }>
+}
+
+const version_of = (release: GithubRelease): string => release.tag_name.replace(/^v/, '')
+
+const offered = (release: GithubRelease, channel: UpdateChannel): boolean => {
+  if (release.draft) return false
+  const version = version_of(release)
+  if (STABLE.test(version)) return !release.prerelease
+  return channel === 'beta' && release.prerelease && BETA.test(version)
+}
+
+export const select_release = (releases: GithubRelease[], channel: UpdateChannel): GithubRelease | null =>
+  releases.filter((release) => offered(release, channel))
+    .reduce<GithubRelease | null>((best, release) => best === null || compare_versions(version_of(release), version_of(best)) > 0 ? release : best, null)
+
+export const create_github_update_backend = ({ feed_url, public_key, channel, app_id, staging_dir, install, fetch = globalThis.fetch, extract, inspect }: {
   feed_url: string
+  public_key: string
   channel: UpdateChannel
-  updater: Updater
+  app_id: string
+  staging_dir: string
+  // Hands the staged bundle to the swap helper (update-install.ts).
+  install: (staged_app_path: string) => void
+  fetch?: Fetch
+  extract?: (zip_path: string, dir: string) => Promise<void>
+  inspect?: (app_path: string) => Promise<AppInspection>
 }): UpdateBackend => {
   const match = GITHUB_REPOSITORY.exec(feed_url)
   if (match === null) throw new Error('The update feed is not a GitHub repository URL.')
-  updater.autoDownload = false
-  updater.autoInstallOnAppQuit = true
-  updater.allowPrerelease = channel === 'beta'
-  updater.allowDowngrade = false
-  updater.logger = null
-  updater.setFeedURL({ provider: 'github', owner: match[1] as string, repo: match[2] as string })
+  const key = parse_public_key(public_key)
+  const api = `https://api.github.com/repos/${match[1] as string}/${match[2] as string}`
+  let found: GithubRelease | null = null
+  let staged_app_path: string | null = null
+
+  const get_json = async (url: string): Promise<unknown> => {
+    const response = await fetch(url, { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Record' } })
+    if (response.status === 404) return null
+    if (!response.ok) throw new Error(`The release feed answered HTTP ${response.status}.`)
+    return await response.json()
+  }
+
   return {
     check: async () => {
-      const result = await updater.checkForUpdates()
-      if (result === null) throw new Error('Updates run only in the packaged app.')
-      return result.isUpdateAvailable ? { version: result.updateInfo.version } : null
+      const body = channel === 'stable'
+        ? await get_json(`${api}/releases/latest`)
+        : await get_json(`${api}/releases?per_page=50`)
+      const releases = (body === null ? [] : Array.isArray(body) ? body : [body]) as GithubRelease[]
+      found = select_release(releases, channel)
+      return found === null ? null : { version: version_of(found) }
     },
-    download: async () => { await updater.downloadUpdate() }
+    download: async () => {
+      if (found === null) throw new Error('No release was found to download.')
+      staged_app_path = await stage_update({
+        assets: new Map(found.assets.map(({ name, browser_download_url }) => [name, browser_download_url])),
+        version: version_of(found),
+        app_id,
+        public_key: key,
+        staging_dir,
+        fetch,
+        ...(extract === undefined ? {} : { extract }),
+        ...(inspect === undefined ? {} : { inspect })
+      })
+    },
+    install: () => {
+      if (staged_app_path === null) throw new Error('No update is staged.')
+      install(staged_app_path)
+    }
   }
 }

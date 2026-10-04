@@ -3,13 +3,14 @@ import { describe, expect, test } from 'bun:test'
 import { CHECK_INTERVAL_MS, compare_versions, create_update_service, type UpdateBackend } from '#main/updates.ts'
 
 const fake_backend = (releases: Array<string | null>) => {
-  const calls = { checks: 0, downloads: 0 }
+  const calls = { checks: 0, downloads: 0, installs: 0 }
   const backend: UpdateBackend = {
     check: async () => {
       const version = releases[Math.min(calls.checks++, releases.length - 1)] ?? null
       return version === null ? null : { version }
     },
-    download: async () => { calls.downloads++ }
+    download: async () => { calls.downloads++ },
+    install: () => { calls.installs++ }
   }
   return { backend, calls }
 }
@@ -19,12 +20,14 @@ const manual_interval = () => {
   return { runs, set_interval: (run: () => void, ms: number) => { runs.push({ run, ms }); return runs.length } }
 }
 
+const KEY = 'pinned-key'
+
 const settle = async () => { await new Promise((resolve) => setTimeout(resolve, 0)) }
 
 describe('update service', () => {
   test('with no feed it is off and never creates a backend', () => {
     let created = 0
-    const service = create_update_service({ feed_url: null, channel: 'stable', current_version: '1.0.0', create_backend: () => { created++; return fake_backend([]).backend } })
+    const service = create_update_service({ public_key: KEY, feed_url: null, channel: 'stable', current_version: '1.0.0', create_backend: () => { created++; return fake_backend([]).backend } })
     service.start()
     expect(service.get_state()).toEqual({ status: 'off', reason: 'No update feed is configured.' })
     expect(created).toBe(0)
@@ -32,7 +35,7 @@ describe('update service', () => {
 
   test('refuses a feed that is not https', () => {
     let created = 0
-    const service = create_update_service({ feed_url: 'http://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: () => { created++; return fake_backend([]).backend } })
+    const service = create_update_service({ public_key: KEY, feed_url: 'http://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: () => { created++; return fake_backend([]).backend } })
     service.start()
     expect(service.get_state().status).toBe('off')
     expect(created).toBe(0)
@@ -41,7 +44,7 @@ describe('update service', () => {
   test('checks at startup and every 4 hours, and downloads a newer minor for the next quit', async () => {
     const { backend, calls } = fake_backend([null, '1.1.0'])
     const timers = manual_interval()
-    const service = create_update_service({ feed_url: 'https://updates.example.test', channel: 'beta', current_version: '1.0.0', create_backend: () => backend, set_interval: timers.set_interval })
+    const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'beta', current_version: '1.0.0', create_backend: () => backend, set_interval: timers.set_interval })
     service.start()
     await settle()
     expect(service.get_state().status).toBe('idle')
@@ -49,19 +52,19 @@ describe('update service', () => {
     timers.runs[0]?.run()
     await settle()
     expect(service.get_state()).toEqual({ status: 'ready', version: '1.1.0' })
-    expect(calls).toEqual({ checks: 2, downloads: 1 })
+    expect(calls).toEqual({ checks: 2, downloads: 1, installs: 0 })
   })
 
   test('a newer major waits for opt-in, and an older version is never taken', async () => {
     const older = fake_backend(['0.9.0'])
-    const keep = create_update_service({ feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: () => older.backend, set_interval: manual_interval().set_interval })
+    const keep = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: () => older.backend, set_interval: manual_interval().set_interval })
     keep.start()
     await settle()
     expect(keep.get_state().status).toBe('idle')
     expect(older.calls.downloads).toBe(0)
 
     const next_major = fake_backend(['2.0.0'])
-    const service = create_update_service({ feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.4.2', create_backend: () => next_major.backend, set_interval: manual_interval().set_interval })
+    const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.4.2', create_backend: () => next_major.backend, set_interval: manual_interval().set_interval })
     service.start()
     await settle()
     expect(service.get_state()).toEqual({ status: 'major_available', version: '2.0.0' })
@@ -82,14 +85,14 @@ describe('update service', () => {
   test('takes 1.0.0-alpha.0 to 1.0.0, beta.1 to beta.2, and beta.9 to beta.10', async () => {
     for (const [current, release] of [['1.0.0-alpha.0', '1.0.0'], ['1.2.0-beta.1', '1.2.0-beta.2'], ['1.2.0-beta.9', '1.2.0-beta.10']] as const) {
       const { backend, calls } = fake_backend([release])
-      const service = create_update_service({ feed_url: 'https://updates.example.test', channel: 'beta', current_version: current, create_backend: () => backend, set_interval: manual_interval().set_interval })
+      const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'beta', current_version: current, create_backend: () => backend, set_interval: manual_interval().set_interval })
       service.start()
       await settle()
       expect([current, service.get_state()]).toEqual([current, { status: 'ready', version: release }])
       expect(calls.downloads).toBe(1)
     }
     const { backend } = fake_backend(['1.2.0-beta.9'])
-    const older = create_update_service({ feed_url: 'https://updates.example.test', channel: 'beta', current_version: '1.2.0-beta.10', create_backend: () => backend, set_interval: manual_interval().set_interval })
+    const older = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'beta', current_version: '1.2.0-beta.10', create_backend: () => backend, set_interval: manual_interval().set_interval })
     older.start()
     await settle()
     expect(older.get_state().status).toBe('idle')
@@ -97,10 +100,37 @@ describe('update service', () => {
 
   test('a prerelease of the next major still waits for opt-in', async () => {
     const { backend, calls } = fake_backend(['2.0.0-beta.1'])
-    const service = create_update_service({ feed_url: 'https://updates.example.test', channel: 'beta', current_version: '1.9.0', create_backend: () => backend, set_interval: manual_interval().set_interval })
+    const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'beta', current_version: '1.9.0', create_backend: () => backend, set_interval: manual_interval().set_interval })
     service.start()
     await settle()
     expect(service.get_state()).toEqual({ status: 'major_available', version: '2.0.0-beta.1' })
     expect(calls.downloads).toBe(0)
+  })
+
+  test('with no pinned key, or a copy that cannot replace itself, it is off and never creates a backend', () => {
+    let created = 0
+    const create_backend = () => { created++; return fake_backend([]).backend }
+    const unkeyed = create_update_service({ public_key: null, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend })
+    unkeyed.start()
+    expect(unkeyed.get_state()).toEqual({ status: 'off', reason: 'No update signing key is pinned.' })
+    const stuck = create_update_service({ public_key: KEY, unavailable_reason: 'Read-only volume.', feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend })
+    stuck.start()
+    expect(stuck.get_state()).toEqual({ status: 'off', reason: 'Read-only volume.' })
+    expect(created).toBe(0)
+  })
+
+  test('installs a staged release once, at quit, and nothing before one is staged', async () => {
+    const { backend, calls } = fake_backend([null, '1.1.0'])
+    const timers = manual_interval()
+    const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: () => backend, set_interval: timers.set_interval })
+    service.start()
+    await settle()
+    service.install_on_quit()
+    expect(calls.installs).toBe(0)
+    timers.runs[0]?.run()
+    await settle()
+    service.install_on_quit()
+    service.install_on_quit()
+    expect(calls.installs).toBe(1)
   })
 })

@@ -11,7 +11,7 @@
 // (Electron: the package ships as the runtime binary, while its npm
 // dependencies only download it), or `build`. An unclassified devDependency
 // fails, so a new one cannot slip in unexamined. The production dependencies
-// (record-node and electron-updater) are shipped with their closure.
+// (record-node) are shipped with their closure.
 //
 // An allowlist entry covers one advisory for one installed package version,
 // names the scope it was justified for (an entry written for build-only use
