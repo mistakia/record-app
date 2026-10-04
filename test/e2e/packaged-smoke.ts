@@ -78,9 +78,10 @@ const install = async (dmg: string, name: string): Promise<{ app_path: string, b
   return { app_path, binary: join(app_path, 'Contents', 'MacOS', 'Record') }
 }
 
-// Under Rosetta every step is several times slower: on the hosted runner the
-// release took over 30 s to refuse --remote-debugging-port, and here an ingest
-// outlasted 60 s. So every wait on the Intel slice is scaled.
+// Under Rosetta every step is several times slower: the release's refusal of
+// --remote-debugging-port took 20 to 25 s on an M-series Mac, against 1 s
+// natively, and did not finish within 30 s on the hosted runner. So every
+// wait on the Intel slice is scaled.
 const slow = (ms: number): number => (arch === 'x86_64' ? 4 * ms : ms)
 
 const check_fuses = async (app_path: string, label: string): Promise<void> => {
