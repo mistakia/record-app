@@ -78,6 +78,12 @@ const install = async (dmg: string, name: string): Promise<{ app_path: string, b
   return { app_path, binary: join(app_path, 'Contents', 'MacOS', 'Record') }
 }
 
+// Under Rosetta every step is several times slower: the release's refusal of
+// --remote-debugging-port took 20 to 25 s on an M-series Mac, against 1 s
+// natively, and did not finish within 30 s on the hosted runner. So every
+// wait on the Intel slice is scaled.
+const slow = (ms: number): number => (arch === 'x86_64' ? 4 * ms : ms)
+
 const check_fuses = async (app_path: string, label: string): Promise<void> => {
   const wire = await getCurrentFuseWire(app_path)
   const read = Object.fromEntries(Object.entries(wire).filter(([key]) => key !== 'version').map(([key, state]) => [key, state === FuseState.ENABLE]))
@@ -90,10 +96,17 @@ try {
   const release = await install(release_dmg, 'release')
   await check_fuses(release.app_path, 'release')
   const release_profile = join(work_dir, 'release-profile')
-  const refused = spawnSync('arch', [`-${arch}`, release.binary, `--user-data-dir=${release_profile}`, '--remote-debugging-port=0'], { encoding: 'utf8', timeout: 30_000 })
+  // A release that ignored the switch would run until the timeout, so a
+  // timeout fails too.
+  const launched_at = Date.now()
+  const refused = spawnSync('arch', [`-${arch}`, release.binary, `--user-data-dir=${release_profile}`, '--remote-debugging-port=0'], { encoding: 'utf8', timeout: slow(30_000) })
   const port_file = await readFile(join(release_profile, 'DevToolsActivePort'), 'utf8').catch(() => null)
-  step('release with --remote-debugging-port', { exit_code: refused.status, signal: refused.signal, stderr: refused.stderr.trim().split('\n').at(-1), devtools_port_file: port_file !== null })
-  if (refused.status !== 1 || port_file !== null) throw new Error('the release build ran with remote debugging')
+  const timed_out = (refused.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT'
+  step('release with --remote-debugging-port', { exit_code: refused.status, signal: refused.signal, timed_out, seconds: Math.round((Date.now() - launched_at) / 1000), stderr: refused.stderr?.trim().split('\n').at(-1), devtools_port_file: port_file !== null })
+  if (port_file !== null) throw new Error('the release build ran with remote debugging')
+  if (timed_out) throw new Error(`the release build did not exit within ${slow(30_000) / 1000} s of being given --remote-debugging-port`)
+  if (refused.error !== undefined) throw refused.error
+  if (refused.status !== 1) throw new Error(`the release build ended with ${refused.signal ?? `exit ${refused.status}`}, not exit 1, on --remote-debugging-port`)
 
   const { app_path, binary } = await install(test_dmg, 'test')
   await check_fuses(app_path, 'test build')
@@ -111,15 +124,15 @@ try {
   await mkdir(profile)
   await writeFile(join(profile, 'bundled-settings.json'), JSON.stringify({ data_dir }))
 
-  const app = spawn('arch', [`-${arch}`, binary, `--user-data-dir=${profile}`, '--remote-debugging-port=0'], { stdio: 'ignore' })
+  const app = spawn('arch', [`-${arch}`, binary, `--user-data-dir=${profile}`, '--remote-debugging-port=0'], { stdio: 'ignore', env: { ...process.env, RECORD_TEST_STARTUP_TIMEOUT_MS: String(slow(30_000)) } })
   const exited = new Promise<number | null>((resolve) => { app.once('exit', resolve) })
   try {
     const port = await wait_for(async () => {
       const text = await readFile(join(profile, 'DevToolsActivePort'), 'utf8').catch(() => '')
       return text === '' ? null : text.split('\n')[0] ?? null
-    }, 'the DevTools port')
+    }, 'the DevTools port', slow(60_000))
     const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`)
-    const window = await wait_for(async () => browser.contexts().flatMap((context) => context.pages()).find((page) => page.url().startsWith('app://record/')) ?? null, 'the app window') as Page
+    const window = await wait_for(async () => browser.contexts().flatMap((context) => context.pages()).find((page) => page.url().startsWith('app://record/')) ?? null, 'the app window', slow(60_000)) as Page
     const console_errors: string[] = []
     window.on('console', (message) => { if (message.type() === 'error') console_errors.push(message.text()) })
     step('renderer origin', await window.evaluate(() => location.origin))
@@ -129,7 +142,7 @@ try {
       const state = await bundled_state(window)
       if (state.status === 'failed') throw new Error(`the bundled node failed: ${JSON.stringify(state)}`)
       return state.status === 'running' ? state : null
-    }, 'the bundled node')
+    }, 'the bundled node', slow(60_000))
     const child_command = execFileSync('ps', ['-o', 'command=', '-p', String(running.pid)], { encoding: 'utf8' }).trim()
     step('bundled node', { pid: running.pid, url: running.url, version: running.version, data_dir: running.data_dir, ingest_disabled: running.ingest_disabled })
     // Which of node-datachannel's two binaries the child loaded shows the slice it runs.
@@ -142,16 +155,16 @@ try {
     // The RunAsNode fuse is off: the variable starts a second app instance on
     // this profile, which hands off to this one and exits, instead of
     // running the script as Node.
-    const as_node = execFileSync(binary, ['-e', 'process.stdout.write("ran-as-node")', `--user-data-dir=${profile}`], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, encoding: 'utf8', timeout: 30_000 })
+    const as_node = execFileSync('arch', [`-${arch}`, binary, '-e', 'process.stdout.write("ran-as-node")', `--user-data-dir=${profile}`], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, encoding: 'utf8', timeout: slow(30_000) })
     step('ELECTRON_RUN_AS_NODE', as_node.includes('ran-as-node') ? 'honored' : 'ignored')
     if (as_node.includes('ran-as-node')) throw new Error('the RunAsNode fuse is on')
 
     // Play the seeded track.
-    await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: 30_000 })
+    await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: slow(30_000) })
     await window.getByRole('navigation').getByRole('link', { name: 'Tracks', exact: true }).click()
     const row = window.getByTestId('track-row').filter({ hasText: 'Packaged Smoke' })
     await row.getByRole('button', { name: 'Packaged Smoke', exact: true }).click()
-    await window.locator('[data-testid=player-bar][data-state=playing]').waitFor({ timeout: 30_000 })
+    await window.locator('[data-testid=player-bar][data-state=playing]').waitFor({ timeout: slow(30_000) })
     const first = await window.getByTestId('player-position').innerText()
     await window.waitForTimeout(3_000)
     const later = await window.getByTestId('player-position').innerText()
@@ -164,7 +177,7 @@ try {
     if (!(config.ffmpeg_path ?? '').startsWith(join(await realpath(app_path), 'Contents', 'Resources', 'bin'))) throw new Error('the bundled node is not using the packaged ffmpeg')
     const ingest_audio = join(work_dir, 'Packaged Ingest.flac')
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'anoisesrc=d=8:c=brown:seed=11:a=0.3', '-metadata', 'title=Packaged Ingest', ingest_audio])
-    await check_bundled_ingest({ window, step, audio_path: ingest_audio, title: 'Packaged Ingest', tracks_before: 1 })
+    await check_bundled_ingest({ window, step, audio_path: ingest_audio, title: 'Packaged Ingest', tracks_before: 1, slow })
 
     await window.getByRole('navigation').getByRole('link', { name: 'Diagnostics', exact: true }).click()
     step('diagnostics', (await window.getByTestId('diagnostics').innerText()).split('\n').slice(0, 30).join(' | '))
@@ -174,7 +187,7 @@ try {
     // Quitting stops the child with the app.
     app.kill('SIGTERM')
     step('app exit code', await exited)
-    await wait_for(async () => (is_alive(running.pid as number) ? null : true), 'the child to exit', 10_000)
+    await wait_for(async () => (is_alive(running.pid as number) ? null : true), 'the child to exit', slow(10_000))
     step('child after quit', 'gone')
   } finally {
     if (app.exitCode === null && app.signalCode === null) {
@@ -183,6 +196,11 @@ try {
     }
   }
   console.log('packaged smoke passed')
+} catch (error) {
+  // The bundled node's log is gone with the work directory, so show its tail.
+  const node_log = await readFile(join(work_dir, 'profile', 'logs', 'node.log'), 'utf8').catch(() => null)
+  if (node_log !== null) console.error(`bundled node log (last 40 lines):\n${node_log.trimEnd().split('\n').slice(-40).join('\n')}`)
+  throw error
 } finally {
   for (const mount of mounts) await detach(mount)
   await rm(work_dir, { recursive: true, force: true })

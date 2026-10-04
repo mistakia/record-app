@@ -105,7 +105,7 @@ export const bundled_toolchain = (app_root: string): { ffmpeg_path: string, fpca
   return existsSync(paths.ffmpeg_path) && existsSync(paths.fpcalc_path) ? paths : null
 }
 
-export const create_bundled_node = ({ user_data, on_state }: { user_data: string, on_state: (state: BundledState) => void }) => {
+export const create_bundled_node = ({ user_data, on_state, startup_timeout_ms }: { user_data: string, on_state: (state: BundledState) => void, startup_timeout_ms?: number }) => {
   const app_root = app.getAppPath()
   const config_path = join(user_data, 'bundled-node.json')
   return create_node_manager({
@@ -123,6 +123,7 @@ export const create_bundled_node = ({ user_data, on_state }: { user_data: string
       const port = read_json(config_path)?.port
       return typeof port === 'number' && port > 0 ? port : null
     },
+    ...(startup_timeout_ms === undefined ? {} : { startup_timeout_ms }),
     on_state
   })
 }
