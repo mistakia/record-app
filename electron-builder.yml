@@ -1,7 +1,6 @@
 # Packaging for macOS (spec §8.10.7): one universal app, as a .dmg to install
-# and a .zip for updates. The Package workflow signs a release with the
-# Developer ID identity in CSC_LINK and notarizes it; package:mac and
-# package:mac:test pass -c.mac.identity=null and build it unsigned.
+# and a .zip for updates. Every build, release included, is ad-hoc signed and
+# carries no Developer ID identity, so no person's name ships in the app.
 appId: org.record.app
 productName: Record
 copyright: Copyright © Record contributors
@@ -22,8 +21,7 @@ files:
 asar: true
 
 # The pinned ingest tools and their notices (cli/build-toolchain.sh), beside
-# the asar so the bundled node can run them; electron-builder signs them with
-# the app.
+# the asar so the bundled node can run them.
 extraResources:
   - from: toolchain/bin
     to: bin
@@ -42,12 +40,9 @@ mac:
       arch: universal
   category: public.app-category.music
   icon: resources/icon.png
-  # A signed build runs under the hardened runtime with electron-builder's
-  # default entitlements: allow-jit, allow-unsigned-executable-memory, and
-  # disable-library-validation.
-  binaries:
-    - Contents/Resources/bin/ffmpeg
-    - Contents/Resources/bin/fpcalc
+  # No identity: electron-builder skips Developer ID signing and notarization,
+  # and resetAdHocDarwinSignature below gives the app its ad-hoc signature.
+  identity: null
   minimumSystemVersion: '12.0'
   # libp2p's WebRTC transport loads node-datachannel's prebuilt binary when
   # record-node starts, picking @node-datachannel/darwin-<arch> at runtime.

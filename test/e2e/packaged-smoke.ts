@@ -1,7 +1,6 @@
 // The packaged macOS app, installed from its .dmg. Needs both builds: the
-// release in release/ (`bun run package:mac`, or the Package workflow's signed
-// build on a tag) and the same app with the test-build marker in
-// release-test/ (`bun run package:mac:test`, likewise). Both carry exactly the expected fuses, read back from the
+// release in release/ (`bun run package:mac`) and the same app with the
+// test-build marker in release-test/ (`bun run package:mac:test`). Both carry exactly the expected fuses, read back from the
 // binary. The release refuses to start with remote debugging. The test build,
 // which accepts it, is driven over the Chrome DevTools Protocol (Playwright's
 // Electron launcher needs the inspect arguments the fuses turn off): it
@@ -59,7 +58,7 @@ const wait_for = async <T>(read: () => Promise<T | null>, label: string, timeout
 const work_dir = await mkdtemp(join(tmpdir(), 'record-app-packaged-'))
 const mounts: string[] = []
 
-// A signed app's volume can stay busy for a few seconds after it quits while
+// An app's volume can stay busy for a few seconds after it quits while
 // macOS assesses it, so the detach retries before forcing.
 const detach = async (mount: string): Promise<void> => {
   for (let attempt = 0; attempt < 10; attempt++) {

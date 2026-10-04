@@ -3,8 +3,8 @@ title: record-app Repository Graph Entry
 type: text
 description: >-
   Graph entry for record-app, the Electron and React 19 client of record-node per spec chapter 8.
-  Both operating modes and the record-docs v1.1 surfaces work; a signed release waits on operator
-  credentials.
+  Both operating modes and the record-docs v1.1 surfaces work; releases ship ad-hoc signed, with no
+  Developer ID identity.
 base_uri: user:repository/active/record-app/ABOUT.md
 created_at: '2026-05-13T18:03:58.003Z'
 entity_id: 3f6fd760-c279-487e-aa92-b7ba7455869b
@@ -14,7 +14,7 @@ relations:
   - follows [[user:guideline/directory-markdown-standards.md]]
 tags:
   - user:tag/record-project.md
-updated_at: '2026-10-03T22:30:36.710Z'
+updated_at: '2026-10-04T13:05:07.247Z'
 ---
 
 ## Purpose
@@ -31,7 +31,7 @@ The Record ecosystem spans several repos. This one is the user-facing desktop ap
 
 **Tag**: [[user:tag/record-project.md]] — entities across the Record ecosystem.
 
-**Rebuild plan**: [[user:task/record/record-app-rebuild.md]] — phases, scope, and what waits on a signed release.
+**Rebuild plan**: [[user:task/record/record-app-rebuild.md]] — phases, scope, and the release and update path.
 
 **Sibling repositories**:
 
