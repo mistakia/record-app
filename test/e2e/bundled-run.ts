@@ -31,12 +31,14 @@ const wait_running = async (window: Page, not_pid: number | null = null): Promis
 // preflight, a dropped file is ingested end to end, and URL import says it is
 // off. On macOS the toolchain must be built (cli/build-toolchain.sh); elsewhere
 // (Linux CI) there is none, and the page must say ingest is off instead.
-export const check_bundled_ingest = async ({ window, step, audio_path, title, tracks_before = 0 }: {
+export const check_bundled_ingest = async ({ window, step, audio_path, title, tracks_before = 0, slow = (ms) => ms }: {
   window: Page
   step: (label: string, detail?: unknown) => void
   audio_path: string
   title: string
   tracks_before?: number
+  // Scales the waits, for a slice under Rosetta.
+  slow?: (ms: number) => number
 }): Promise<void> => {
   const state = await bundled_state(window)
   await window.getByRole('navigation').getByRole('link', { name: 'Import', exact: true }).click()
@@ -48,6 +50,8 @@ export const check_bundled_ingest = async ({ window, step, audio_path, title, tr
   if (state.ingest_disabled !== null) throw new Error(`the bundled node refused its toolchain: ${state.ingest_disabled} (run cli/build-toolchain.sh)`)
   step('bundled toolchain', 'accepted by the preflight')
   const dropped = { name: basename(audio_path), base64: (await readFile(audio_path)).toString('base64') }
+  // A drop before the page can write is refused, as the enabled picker shows.
+  await window.locator('[data-testid=drop-zone] button:enabled').waitFor({ timeout: slow(10_000) })
   await window.evaluate(async ({ name, base64 }) => {
     const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))
     const transfer = new DataTransfer()
@@ -55,10 +59,10 @@ export const check_bundled_ingest = async ({ window, step, audio_path, title, tr
     document.querySelector('[data-testid=drop-zone]')?.dispatchEvent(new DragEvent('drop', { dataTransfer: transfer, bubbles: true, cancelable: true }))
   }, dropped)
   const item = window.locator('[data-testid=import-item][data-finished=true]').last()
-  await item.waitFor({ timeout: 60_000 })
+  await item.waitFor({ timeout: slow(60_000) })
   step('bundled file import', (await item.innerText()).replaceAll('\n', ' | '))
   await window.getByRole('navigation').getByRole('link', { name: 'Tracks', exact: true }).click()
-  await window.getByTestId('track-total').filter({ hasText: new RegExp(`^${tracks_before + 1} tracks$`) }).waitFor({ timeout: 30_000 })
+  await window.getByTestId('track-total').filter({ hasText: new RegExp(`^${tracks_before + 1} tracks$`) }).waitFor({ timeout: slow(30_000) })
   await window.getByTestId('track-row').filter({ hasText: title }).first().waitFor()
   step('bundled library after ingest', `${tracks_before + 1} tracks, including ${title}`)
 }

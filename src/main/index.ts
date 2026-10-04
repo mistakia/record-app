@@ -69,6 +69,10 @@ const start = async (): Promise<void> => {
   })
   const manager = create_bundled_node({
     user_data,
+    // The packaged smoke runs the test build's Intel slice under Rosetta,
+    // where the node starts several times slower than on any user's Mac, so
+    // only a test build takes a longer startup limit from the environment.
+    ...(__RECORD_TEST_BUILD__ && Number(process.env.RECORD_TEST_STARTUP_TIMEOUT_MS) > 0 ? { startup_timeout_ms: Number(process.env.RECORD_TEST_STARTUP_TIMEOUT_MS) } : {}),
     on_state: (state) => {
       broadcast(IPC_CHANNELS.bundled_state, state)
       connection.sync()
