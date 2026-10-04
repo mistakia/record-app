@@ -12,11 +12,19 @@
 // macOS Squirrel.Mac applies a payload only when its code signature satisfies
 // the running app's designated requirement, which pins the Developer ID team.
 //
-// Only the stable channel has a release mapping: the latest published,
-// non-prerelease GitHub release. electron-updater would follow prereleases
-// whenever the running version is one, so that is turned off explicitly. One
-// feed serves every major version, so while a newer major waits for the user's
-// opt-in, a later release on the current major is not offered.
+// Stable is the latest published non-prerelease GitHub release, from
+// releases/latest. electron-updater would follow prereleases whenever the
+// running version is one, so stable turns that off explicitly. Beta also takes
+// prereleases: electron-updater picks the newest entry of the releases feed,
+// so a stable release newer than the last beta reaches beta users too. From a
+// stable version that entry can be any prerelease, alpha included, so only
+// beta prereleases (v1.1.0-beta.1) are published. For a prerelease tag it asks
+// for beta-mac.yml first, which a github publish never writes, then reads the
+// release's latest-mac.yml. Neither channel sets updater.channel, which would
+// also allow downgrades.
+//
+// One feed serves every major version, so while a newer major waits for the
+// user's opt-in, a later release on the current major is not offered.
 //
 // Outside the packaged app electron-updater is inactive, and a check fails
 // rather than report one that never reached the feed.
@@ -36,10 +44,9 @@ export const create_github_update_backend = ({ feed_url, channel, updater }: {
 }): UpdateBackend => {
   const match = GITHUB_REPOSITORY.exec(feed_url)
   if (match === null) throw new Error('The update feed is not a GitHub repository URL.')
-  if (channel !== 'stable') throw new Error(`The ${channel} update channel has no releases yet.`)
   updater.autoDownload = false
   updater.autoInstallOnAppQuit = true
-  updater.allowPrerelease = false
+  updater.allowPrerelease = channel === 'beta'
   updater.allowDowngrade = false
   updater.logger = null
   updater.setFeedURL({ provider: 'github', owner: match[1] as string, repo: match[2] as string })

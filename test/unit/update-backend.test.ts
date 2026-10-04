@@ -29,7 +29,7 @@ const fake_updater = (available: string | null, { inactive = false } = {}) => {
 }
 
 describe('GitHub update backend', () => {
-  test('reads the repository releases, stable only, downloading and installing only on request and at quit', () => {
+  test('reads the repository releases, stable without prereleases, downloading and installing only on request and at quit', () => {
     const { updater, calls } = fake_updater(null)
     create_github_update_backend({ feed_url: FEED, channel: 'stable', updater })
     expect(calls.feeds).toEqual([{ provider: 'github', owner: 'mistakia', repo: 'record-app' }])
@@ -40,13 +40,20 @@ describe('GitHub update backend', () => {
     expect(updater.logger).toBeNull()
   })
 
-  test('refuses a feed that is not a GitHub repository, and the beta channel', () => {
+  test('takes prereleases on the beta channel, and still never downgrades', () => {
+    const { updater, calls } = fake_updater(null)
+    updater.allowPrerelease = false
+    create_github_update_backend({ feed_url: FEED, channel: 'beta', updater })
+    expect(calls.feeds).toEqual([{ provider: 'github', owner: 'mistakia', repo: 'record-app' }])
+    expect(updater.allowPrerelease).toBe(true)
+    expect(updater.allowDowngrade).toBe(false)
+    expect(updater.autoDownload).toBe(false)
+  })
+
+  test('refuses a feed that is not a GitHub repository', () => {
     for (const feed_url of ['http://github.com/mistakia/record-app', 'https://example.org/mistakia/record-app', 'https://github.com/mistakia', 'https://github.com/mistakia/record-app/releases', 'https://github.com/mistakia/record-app.git']) {
       expect(() => create_github_update_backend({ feed_url, channel: 'stable', updater: fake_updater(null).updater })).toThrow('not a GitHub repository URL')
     }
-    const { updater, calls } = fake_updater(null)
-    expect(() => create_github_update_backend({ feed_url: FEED, channel: 'beta', updater })).toThrow('beta update channel')
-    expect(calls.feeds).toEqual([])
   })
 
   test('reports the newer release, or none', async () => {
