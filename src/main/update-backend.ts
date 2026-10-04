@@ -1,6 +1,7 @@
 // The update backend over electron-updater (spec §8.2.5, §8.10.10), reading
-// the feed electron-builder publishes to GitHub Releases: latest-mac.yml and
-// the universal .zip, over https. The updater is injected, so this module
+// the feed electron-builder publishes to GitHub Releases: the channel file
+// (latest-mac.yml, or beta-mac.yml for a beta version) and the universal .zip,
+// over https. The updater is injected, so this module
 // imports nothing from Electron and tests drive it under Bun.
 //
 // setFeedURL replaces only the provider: a download still reads the
@@ -12,11 +13,16 @@
 // macOS Squirrel.Mac applies a payload only when its code signature satisfies
 // the running app's designated requirement, which pins the Developer ID team.
 //
-// Only the stable channel has a release mapping: the latest published,
-// non-prerelease GitHub release. electron-updater would follow prereleases
-// whenever the running version is one, so that is turned off explicitly. One
-// feed serves every major version, so while a newer major waits for the user's
-// opt-in, a later release on the current major is not offered.
+// Stable is the latest published non-prerelease GitHub release, from
+// releases/latest. electron-updater would follow prereleases whenever the
+// running version is one, so stable turns that off explicitly. Beta also takes
+// prereleases (tags like v1.1.0-beta.1): electron-updater picks the newest
+// entry of the releases feed and reads its beta-mac.yml, falling back to
+// latest-mac.yml, so a stable release newer than the last beta reaches beta
+// users too. Neither channel sets updater.channel, which would also allow
+// downgrades. One feed serves every major version, so while a newer major
+// waits for the user's opt-in, a later release on the current major is not
+// offered.
 //
 // Outside the packaged app electron-updater is inactive, and a check fails
 // rather than report one that never reached the feed.
@@ -36,10 +42,9 @@ export const create_github_update_backend = ({ feed_url, channel, updater }: {
 }): UpdateBackend => {
   const match = GITHUB_REPOSITORY.exec(feed_url)
   if (match === null) throw new Error('The update feed is not a GitHub repository URL.')
-  if (channel !== 'stable') throw new Error(`The ${channel} update channel has no releases yet.`)
   updater.autoDownload = false
   updater.autoInstallOnAppQuit = true
-  updater.allowPrerelease = false
+  updater.allowPrerelease = channel === 'beta'
   updater.allowDowngrade = false
   updater.logger = null
   updater.setFeedURL({ provider: 'github', owner: match[1] as string, repo: match[2] as string })

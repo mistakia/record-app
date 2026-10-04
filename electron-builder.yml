@@ -74,7 +74,8 @@ electronFuses:
   resetAdHocDarwinSignature: true
 
 # GitHub Releases on v* tags (the Package workflow). electron-builder only
-# writes the update feed from this: latest-mac.yml beside the .zip, and
+# writes the update feed from this: the channel file beside the .zip
+# (latest-mac.yml, or beta-mac.yml for a version like 1.1.0-beta.1), and
 # app-update.yml into the app. Every build runs with --publish never; the
 # workflow uploads the release itself.
 publish:
