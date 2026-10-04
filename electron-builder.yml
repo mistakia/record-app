@@ -1,6 +1,7 @@
 # Packaging for macOS (spec §8.10.7): one universal app, as a .dmg to install
-# and a .zip for updates. Unsigned until the operator supplies a Developer ID
-# identity; publish stays off until a release target and feed URL exist.
+# and a .zip for updates. package:mac:release signs it with the Developer ID
+# identity in CSC_LINK and notarizes it; package:mac and package:mac:test pass
+# -c.mac.identity=null and build it unsigned.
 appId: org.record.app
 productName: Record
 copyright: Copyright © Record contributors
@@ -22,7 +23,7 @@ asar: true
 
 # The pinned ingest tools and their notices (cli/build-toolchain.sh), beside
 # the asar so the bundled node can run them; electron-builder signs them with
-# the app once a signing identity exists.
+# the app.
 extraResources:
   - from: toolchain/bin
     to: bin
@@ -41,9 +42,9 @@ mac:
       arch: universal
   category: public.app-category.music
   icon: resources/icon.png
-  # Unsigned: no Developer ID identity yet, so no hardened-runtime signature
-  # and no notarization. The fuses below still apply.
-  identity: null
+  # A signed build runs under the hardened runtime with electron-builder's
+  # default entitlements: allow-jit, allow-unsigned-executable-memory, and
+  # disable-library-validation.
   binaries:
     - Contents/Resources/bin/ffmpeg
     - Contents/Resources/bin/fpcalc
@@ -69,9 +70,14 @@ electronFuses:
   loadBrowserProcessSpecificV8Snapshot: false
   grantFileProtocolExtraPrivileges: false
   # Flipping a fuse breaks the ad-hoc signature; arm64 refuses to launch an
-  # app without one, so it is re-applied.
+  # app without one, so an unsigned build has it re-applied.
   resetAdHocDarwinSignature: true
 
-# No release target or update feed yet: nothing is published and no
-# app-update.yml is written into the app.
-publish: null
+# GitHub Releases on v* tags (the Package workflow). electron-builder only
+# writes the update feed from this: latest-mac.yml beside the .zip, and
+# app-update.yml into the app. Every build runs with --publish never; the
+# workflow uploads the release itself.
+publish:
+  provider: github
+  owner: mistakia
+  repo: record-app

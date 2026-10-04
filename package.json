@@ -31,12 +31,15 @@
     "smoke:local": "node test/e2e/local-smoke.ts",
     "smoke:auth": "node test/e2e/auth-smoke.ts",
     "smoke:v1-1": "node test/e2e/v1-1-smoke.ts",
-    "package:mac": "bun run package:prepare && electron-vite build && electron-builder --mac --publish never",
+    "package:mac": "bun run package:prepare && electron-vite build && electron-builder --mac --publish never -c.mac.identity=null",
+    "package:mac:release": "bun run package:prepare && electron-vite build && electron-builder --mac --publish never -c.forceCodeSigning=true",
+    "check:release": "node cli/check-release-gate.ts",
+    "verify:release": "bash cli/verify-release.sh",
     "smoke:packaged": "node test/e2e/packaged-smoke.ts",
     "audit": "node cli/check-audit.ts",
     "build:toolchain": "bash cli/build-toolchain.sh",
     "package:prepare": "bun run audit && bun run build:toolchain && bun install --frozen-lockfile --ignore-scripts --os=darwin --cpu='*'",
-    "package:mac:test": "bun run package:prepare && RECORD_TEST_BUILD=1 electron-vite build && electron-builder --mac --publish never -c.directories.output=release-test"
+    "package:mac:test": "bun run package:prepare && RECORD_TEST_BUILD=1 electron-vite build && electron-builder --mac --publish never -c.mac.identity=null -c.directories.output=release-test"
   },
   "dependencies": {
     "record-node": "git+https://github.com/mistakia/record-node.git#7eaf6c3081649c725b0641af891aeef71867b010"

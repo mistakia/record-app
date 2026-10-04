@@ -1,9 +1,13 @@
 name: Package
 
 # The release path on macOS: the audit gate, the pinned toolchain, the
-# unsigned universal app, and the packaged smoke on both slices. macOS runner
-# minutes are metered, so this runs by hand and on version tags only, never on
-# every push. Nothing is signed or published yet.
+# universal app, and the packaged smoke on both slices. macOS runner minutes
+# are metered, so this runs by hand and on version tags only, never on every
+# push. A run by hand builds unsigned and publishes nothing. A v* tag is a
+# release: the release gate refuses it before any build unless every signing
+# and notarization secret is set, the tag matches package.json's version, and
+# the source-offer contact is named. The app is then signed and notarized,
+# smoked, checked by cli/verify-release.sh, and published to GitHub Releases.
 on:
   workflow_dispatch:
   push:
@@ -17,6 +21,8 @@ jobs:
   macos:
     runs-on: macos-15
     timeout-minutes: 60
+    env:
+      RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - name: Check out Git repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -25,6 +31,17 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
+
+      # Fails closed with no secrets set, naming the missing ones.
+      - name: Release gate
+        if: env.RELEASE == 'true'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: node cli/check-release-gate.ts "$GITHUB_REF_NAME"
 
       - name: Install bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -46,9 +63,30 @@ jobs:
           brew install ffmpeg chromaprint gnupg
           sudo softwareupdate --install-rosetta --agree-to-license
 
-      # package:mac runs the audit gate and builds the toolchain first.
-      - name: Package the release build
+      # package:mac and package:mac:release run the audit gate and build the
+      # toolchain first.
+      - name: Package the unsigned build
+        if: env.RELEASE != 'true'
         run: bun run package:mac
+
+      # electron-builder imports the certificate into a temporary keychain,
+      # signs with forceCodeSigning (no identity fails the build), and
+      # notarizes with the API key, which lives only in the runner's temp
+      # directory for this step.
+      - name: Package, sign, and notarize the release build
+        if: env.RELEASE == 'true'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          export APPLE_API_KEY="$RUNNER_TEMP/apple-api-key.p8"
+          trap 'rm -f "$APPLE_API_KEY"' EXIT
+          (umask 077 && printf '%s' "$APPLE_API_KEY_P8" > "$APPLE_API_KEY")
+          unset APPLE_API_KEY_P8
+          bun run package:mac:release
 
       - name: Package the test build
         run: bun run package:mac:test
@@ -63,3 +101,46 @@ jobs:
           RECORD_TOOLCHAIN_PREFLIGHT: bypass
           RECORD_PACKAGED_ARCH: x86_64
         run: bun run smoke:packaged
+
+      - name: Verify signature, notarization, and staple
+        if: env.RELEASE == 'true'
+        run: bun run verify:release
+
+      - name: Keep the release files
+        if: env.RELEASE == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.blockmap
+            release/latest-mac.yml
+
+  # Only this job can write to the repository, and it holds no signing secret.
+  # A version with a prerelease part (1.1.0-beta.1) is published as a GitHub
+  # prerelease, which electron-updater's stable channel never offers.
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: macos
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch the release files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release
+          path: release
+
+      - name: Publish to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          prerelease=()
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then prerelease=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" release/* --verify-tag --title "Record ${GITHUB_REF_NAME#v}" --generate-notes "${prerelease[@]}"
