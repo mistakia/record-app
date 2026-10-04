@@ -91,9 +91,9 @@ try {
   await check_fuses(release.app_path, 'release')
   const release_profile = join(work_dir, 'release-profile')
   // A cold first launch under Rosetta translates the whole framework, which
-  // took over 30 s on the hosted runner; the test build's launch below waits
-  // as long. A release that ignored the switch
-  // would also run until the timeout, so a timeout still fails.
+  // took over 30 s on the hosted runner, so this and the test build's launch
+  // below allow 120 s. A release that ignored the switch would also run until
+  // the timeout, so a timeout still fails.
   const refused = spawnSync('arch', [`-${arch}`, release.binary, `--user-data-dir=${release_profile}`, '--remote-debugging-port=0'], { encoding: 'utf8', timeout: 120_000 })
   const port_file = await readFile(join(release_profile, 'DevToolsActivePort'), 'utf8').catch(() => null)
   step('release with --remote-debugging-port', { exit_code: refused.status, signal: refused.signal, stderr: refused.stderr.trim().split('\n').at(-1), devtools_port_file: port_file !== null })
