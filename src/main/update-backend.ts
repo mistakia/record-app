@@ -1,7 +1,6 @@
 // The update backend over electron-updater (spec §8.2.5, §8.10.10), reading
-// the feed electron-builder publishes to GitHub Releases: the channel file
-// (latest-mac.yml, or beta-mac.yml for a beta version) and the universal .zip,
-// over https. The updater is injected, so this module
+// the feed electron-builder publishes to GitHub Releases: latest-mac.yml and
+// the universal .zip, over https. The updater is injected, so this module
 // imports nothing from Electron and tests drive it under Bun.
 //
 // setFeedURL replaces only the provider: a download still reads the
@@ -16,13 +15,16 @@
 // Stable is the latest published non-prerelease GitHub release, from
 // releases/latest. electron-updater would follow prereleases whenever the
 // running version is one, so stable turns that off explicitly. Beta also takes
-// prereleases (tags like v1.1.0-beta.1): electron-updater picks the newest
-// entry of the releases feed and reads its beta-mac.yml, falling back to
-// latest-mac.yml, so a stable release newer than the last beta reaches beta
-// users too. Neither channel sets updater.channel, which would also allow
-// downgrades. One feed serves every major version, so while a newer major
-// waits for the user's opt-in, a later release on the current major is not
-// offered.
+// prereleases: electron-updater picks the newest entry of the releases feed,
+// so a stable release newer than the last beta reaches beta users too. From a
+// stable version that entry can be any prerelease, alpha included, so only
+// beta prereleases (v1.1.0-beta.1) are published. For a prerelease tag it asks
+// for beta-mac.yml first, which a github publish never writes, then reads the
+// release's latest-mac.yml. Neither channel sets updater.channel, which would
+// also allow downgrades.
+//
+// One feed serves every major version, so while a newer major waits for the
+// user's opt-in, a later release on the current major is not offered.
 //
 // Outside the packaged app electron-updater is inactive, and a check fails
 // rather than report one that never reached the feed.

@@ -142,7 +142,7 @@ jobs:
             release/*.dmg
             release/*.zip
             release/*.blockmap
-            release/*-mac.yml
+            release/latest-mac.yml
 
   # Only this job can write to the repository, and it holds no signing secret.
   # A version with a prerelease part (1.1.0-beta.1) is published as a GitHub
