@@ -39,6 +39,7 @@
     "package:mac:test": "bun run package:prepare && RECORD_TEST_BUILD=1 electron-vite build && electron-builder --mac --publish never -c.directories.output=release-test"
   },
   "dependencies": {
+    "electron-updater": "6.8.10",
     "record-node": "git+https://github.com/mistakia/record-node.git#7eaf6c3081649c725b0641af891aeef71867b010"
   },
   "devDependencies": {
