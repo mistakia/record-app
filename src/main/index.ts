@@ -4,6 +4,7 @@
 import { join } from 'node:path'
 
 import { app, BrowserWindow, powerMonitor, session } from 'electron'
+import electron_updater from 'electron-updater'
 
 import { IPC_CHANNELS } from '#shared/bridge.ts'
 import { APP_ORIGIN, register_app_scheme, serve_app_files } from './app-protocol.ts'
@@ -16,6 +17,7 @@ import { create_node_connection } from './node-connection.ts'
 import { create_node_session } from './node-session.ts'
 import { open_snapshot_store } from './snapshot-store.ts'
 import { create_token_store } from './token-store.ts'
+import { create_github_update_backend } from './update-backend.ts'
 import { create_update_service, UPDATE_FEED_URL } from './updates.ts'
 import { create_main_window, guard_web_contents } from './window.ts'
 
@@ -85,7 +87,7 @@ const start = async (): Promise<void> => {
     feed_url: UPDATE_FEED_URL,
     channel: 'stable',
     current_version: app.getVersion(),
-    create_backend: () => { throw new Error('No update backend is installed.') }
+    create_backend: (feed) => create_github_update_backend({ ...feed, updater: electron_updater.autoUpdater })
   })
   updates.start()
   const diagnostics = create_diagnostics({ user_data, store, manager, connection, updates })

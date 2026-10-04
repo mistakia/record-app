@@ -11,8 +11,8 @@ directories:
   buildResources: resources
 
 # Main, preload, and the renderer are bundled by electron-vite into out/;
-# the only runtime dependency is record-node, which the bundled node runs
-# from inside the asar through utilityProcess.
+# the runtime dependencies are record-node, which the bundled node runs from
+# inside the asar through utilityProcess, and electron-updater.
 files:
   - out/**
   - package.json

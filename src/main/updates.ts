@@ -5,12 +5,15 @@
 // user makes; it never restarts the app itself. A newer major version waits
 // for the user's opt-in, and an older one is never taken.
 //
-// The backend is injected: electron-updater (with Squirrel.Mac verifying the
-// payload's Developer ID signature) is added once the feed and signing exist.
+// The backend is injected: update-backend.ts, electron-updater over GitHub
+// Releases, with Squirrel.Mac verifying the payload's Developer ID signature.
 
 export type UpdateChannel = 'stable' | 'beta'
 
-// The release feed (an https URL), or null while updates are off.
+// The release feed, the GitHub repository whose releases carry it
+// (https://github.com/mistakia/record-app), or null while updates are off. It
+// stays null until a signed release is published, since an unsigned app
+// cannot verify an update.
 export const UPDATE_FEED_URL: string | null = null
 
 export const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000
