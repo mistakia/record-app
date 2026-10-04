@@ -125,14 +125,16 @@ verify_ffmpeg_signature() {
 build_ffmpeg() {
   local arch="$1"
   local dir="$BUILD_ROOT/ffmpeg-$arch"
-  local cross=()
-  [ "$arch" = "$(uname -m)" ] || cross=(--enable-cross-compile)
+  # One array, never an empty one: macOS's /bin/bash 3.2 treats "${empty[@]}"
+  # as unbound under set -u.
+  local flags=("${CONFIGURE_FLAGS[@]}")
+  [ "$arch" = "$(uname -m)" ] || flags+=(--enable-cross-compile)
   rm -rf "$dir"
   mkdir -p "$dir"
   tar -xJf "$CACHE/ffmpeg-$FFMPEG_VERSION.tar.xz" -C "$dir" --strip-components 1
   (
     cd "$dir"
-    ./configure "${CONFIGURE_FLAGS[@]}" "${cross[@]}" --arch="$arch" --target-os=darwin \
+    ./configure "${flags[@]}" --arch="$arch" --target-os=darwin \
       --cc="clang -arch $arch" \
       --extra-cflags="-mmacosx-version-min=$MACOS_MIN -ffile-prefix-map=$dir=ffmpeg-$FFMPEG_VERSION" \
       --extra-ldflags="-mmacosx-version-min=$MACOS_MIN" \
