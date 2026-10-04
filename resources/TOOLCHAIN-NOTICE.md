@@ -21,7 +21,7 @@ This software uses code of [FFmpeg](https://ffmpeg.org), licensed under the [GNU
 
 ## Source offer
 
-You can get the complete corresponding source code of both programs from the links above. For three years after we distribute this version of Record, we will also provide a copy on request. It costs no more than the cost of physically performing the distribution. Ask at: [source-offer contact, named before release].
+You can get the complete corresponding source code of both programs from the links above. For three years after we distribute this version of Record, we will also provide a copy on request. It costs no more than the cost of physically performing the distribution. Ask at: <chunk.bull.motor@usecloaked.com>.
 
 You may replace either program with your own build of the same version, for example to change it, by putting it in place of the file in `Resources/bin`. Record's ingest accepts only these exact versions.
 
@@ -29,5 +29,4 @@ You may replace either program with your own build of the same version, for exam
 
 These notes are for whoever builds Record. They are not part of the notice above.
 
-- The source-offer contact is a placeholder until the release owner names an address. Remove this note then; `cli/check-release-gate.ts` refuses a release while either remains.
 - Follow-up: build fpcalc 1.5.1 from source against our own LGPL FFmpeg 4.4.1 in `cli/build-toolchain.sh`, as is already done for ffmpeg 7.1.1. The universal release binary is used until then.
