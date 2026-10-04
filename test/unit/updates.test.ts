@@ -25,14 +25,6 @@ const KEY = 'pinned-key'
 const settle = async () => { await new Promise((resolve) => setTimeout(resolve, 0)) }
 
 describe('update service', () => {
-  test('with no feed it is off and never creates a backend', () => {
-    let created = 0
-    const service = create_update_service({ public_key: KEY, feed_url: null, channel: 'stable', current_version: '1.0.0', create_backend: () => { created++; return fake_backend([]).backend } })
-    service.start()
-    expect(service.get_state()).toEqual({ status: 'off', reason: 'No update feed is configured.' })
-    expect(created).toBe(0)
-  })
-
   test('refuses a feed that is not https', () => {
     let created = 0
     const service = create_update_service({ public_key: KEY, feed_url: 'http://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: () => { created++; return fake_backend([]).backend } })
@@ -107,12 +99,9 @@ describe('update service', () => {
     expect(calls.downloads).toBe(0)
   })
 
-  test('with no pinned key, or a copy that cannot replace itself, it is off and never creates a backend', () => {
+  test('a copy that cannot replace itself is off and never creates a backend', () => {
     let created = 0
     const create_backend = () => { created++; return fake_backend([]).backend }
-    const unkeyed = create_update_service({ public_key: null, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend })
-    unkeyed.start()
-    expect(unkeyed.get_state()).toEqual({ status: 'off', reason: 'No update signing key is pinned.' })
     const stuck = create_update_service({ public_key: KEY, unavailable_reason: 'Read-only volume.', feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend })
     stuck.start()
     expect(stuck.get_state()).toEqual({ status: 'off', reason: 'Read-only volume.' })

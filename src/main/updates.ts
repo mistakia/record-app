@@ -12,15 +12,13 @@
 
 export type UpdateChannel = 'stable' | 'beta'
 
-// The release feed, the GitHub repository whose releases carry it
-// (https://github.com/mistakia/record-app), or null while updates are off.
-export const UPDATE_FEED_URL: string | null = null
+// The release feed, the GitHub repository whose releases carry it.
+export const UPDATE_FEED_URL = 'https://github.com/mistakia/record-app'
 
 // The project's Ed25519 update public key, raw 32 bytes in base64, as
-// `node cli/update-signing-key.ts generate` prints it; null until the release
-// owner generates the key pair and stores the private half as the
-// UPDATE_SIGNING_KEY repository secret. Updates stay off while it is null.
-export const UPDATE_PUBLIC_KEY: string | null = null
+// `node cli/update-signing-key.ts generate` printed it. Its private half is the
+// UPDATE_SIGNING_KEY repository secret.
+export const UPDATE_PUBLIC_KEY = 'FlkOlLO5fz5m92HVHVRM2XKIDjiR//0o7TVh8mHKIEY='
 
 export const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000
 
@@ -82,8 +80,8 @@ const major = (version: string): number => parse_version(version).core[0] ?? 0
 const newer = (a: string, b: string): boolean => compare_versions(a, b) > 0
 
 export const create_update_service = ({ feed_url, public_key, unavailable_reason = null, channel, current_version, create_backend, now = Date.now, set_interval = setInterval, clear_interval = clearInterval }: {
-  feed_url: string | null
-  public_key: string | null
+  feed_url: string
+  public_key: string
   // Why this copy of the app cannot replace itself (update-install.ts), or
   // null when it can.
   unavailable_reason?: string | null
@@ -94,15 +92,11 @@ export const create_update_service = ({ feed_url, public_key, unavailable_reason
   set_interval?: (run: () => void, ms: number) => unknown
   clear_interval?: (timer: never) => void
 }) => {
-  let state: UpdateStatus = feed_url === null
-    ? { status: 'off', reason: 'No update feed is configured.' }
-    : !feed_url.startsWith('https://')
-        ? { status: 'off', reason: 'The update feed is not an https URL.' }
-        : public_key === null
-          ? { status: 'off', reason: 'No update signing key is pinned.' }
-          : unavailable_reason !== null
-            ? { status: 'off', reason: unavailable_reason }
-            : { status: 'idle', checked_at_ms: null }
+  let state: UpdateStatus = !feed_url.startsWith('https://')
+    ? { status: 'off', reason: 'The update feed is not an https URL.' }
+    : unavailable_reason !== null
+      ? { status: 'off', reason: unavailable_reason }
+      : { status: 'idle', checked_at_ms: null }
   let backend: UpdateBackend | null = null
   let timer: unknown = null
   let running = false
@@ -132,7 +126,7 @@ export const create_update_service = ({ feed_url, public_key, unavailable_reason
   return {
     get_state: (): UpdateStatus => state,
     start: (): void => {
-      if (state.status === 'off' || feed_url === null || public_key === null || backend !== null) return
+      if (state.status === 'off' || backend !== null) return
       try {
         backend = create_backend({ feed_url, public_key, channel })
       } catch (error) {

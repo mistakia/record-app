@@ -8,8 +8,8 @@ name: Package
 # release gate refuses it before any build unless the tag matches
 # package.json's version, the source-offer contact is named, and the update
 # feed and public key are pinned. After the smoke, cli/verify-release.sh checks
-# the release, the update .zip's manifest is signed with the project's Ed25519
-# update key, and it is published to GitHub Releases.
+# the release. The publish job then signs the update .zip's manifest with the
+# project's Ed25519 update key and publishes it to GitHub Releases.
 on:
   workflow_dispatch:
   push:
@@ -80,14 +80,6 @@ jobs:
         if: env.RELEASE == 'true'
         run: bash cli/verify-release.sh
 
-      # The one step that reads the update signing key. The sign script refuses
-      # a key whose public half is not the one pinned in src/main/updates.ts.
-      - name: Sign the update
-        if: env.RELEASE == 'true'
-        env:
-          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
-        run: node cli/update-signing-key.ts sign "release/Record-${GITHUB_REF_NAME#v}-universal-mac.zip"
-
       - name: Keep the release files
         if: env.RELEASE == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -98,10 +90,11 @@ jobs:
           path: |
             release/*.dmg
             release/*.zip
-            release/update-manifest.json
-            release/update-manifest.json.sig
 
-  # Only this job can write to the repository.
+  # Only this job can write to the repository, and only it reads the update
+  # signing key. It installs no dependencies: the sign script uses node:crypto
+  # and refuses a key whose public half is not the one pinned in
+  # src/main/updates.ts.
   # A version with a prerelease part (1.1.0-beta.1) is published as a GitHub
   # prerelease, which only the app's beta update channel takes.
   publish:
@@ -112,11 +105,24 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+
       - name: Fetch the release files
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release
           path: release
+
+      - name: Sign the update
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: node cli/update-signing-key.ts sign "release/Record-${GITHUB_REF_NAME#v}-universal-mac.zip"
 
       - name: Publish to GitHub Releases
         env:

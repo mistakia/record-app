@@ -23,7 +23,7 @@ describe('update signing key', () => {
     expect(manifest).toEqual({ app_id: 'org.record.app', version: '1.1.0', file: 'Record-1.1.0-universal-mac.zip', sha256: expect.stringMatching(/^[0-9a-f]{64}$/), size: 9 })
   })
 
-  test('refuses to sign with a key that is not the pinned one, or with none pinned', async () => {
+  test('refuses to sign with a key that is not the pinned one', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'record-key-'))
     const pinned = generate_key(join(dir, 'pinned.pem'))
     generate_key(join(dir, 'other.pem'))
@@ -31,6 +31,5 @@ describe('update signing key', () => {
     writeFileSync(zip_path, 'zip')
     const private_key_pem = readFileSync(join(dir, 'other.pem'), 'utf8')
     expect(() => sign_update({ zip_path, private_key_pem, pinned_public_key: pinned, version: '1.0.0' })).toThrow('does not match the pinned')
-    expect(() => sign_update({ zip_path, private_key_pem, pinned_public_key: null, version: '1.0.0' })).toThrow('No update public key is pinned')
   })
 })

@@ -37,12 +37,11 @@ export const generate_key = (private_key_path: string): string => {
 export const sign_update = ({ zip_path, private_key_pem, pinned_public_key, version }: {
   zip_path: string
   private_key_pem: string
-  pinned_public_key: string | null
+  pinned_public_key: string
   version: string
 }): { manifest_path: string, signature_path: string } => {
   const private_key = createPrivateKey(private_key_pem)
   if (private_key.asymmetricKeyType !== 'ed25519') throw new Error('UPDATE_SIGNING_KEY is not an Ed25519 private key.')
-  if (pinned_public_key === null) throw new Error('No update public key is pinned in src/main/updates.ts.')
   if (raw_public_key(createPublicKey(private_key)) !== pinned_public_key) throw new Error('UPDATE_SIGNING_KEY does not match the pinned update public key.')
   const zip = readFileSync(zip_path)
   const manifest = serialize_manifest({
