@@ -6,9 +6,10 @@ name: Package
 # push. Every build is ad-hoc signed with no Developer ID identity, and a run by
 # hand, on any ref, publishes nothing. A pushed v* tag is a release: the
 # release gate refuses it before any build unless the tag matches
-# package.json's version and the source-offer contact is named. After the
-# smoke, cli/verify-release.sh checks the release, and it is published to
-# GitHub Releases.
+# package.json's version, the source-offer contact is named, and the update
+# feed and public key are pinned. After the smoke, cli/verify-release.sh checks
+# the release, the update .zip's manifest is signed with the project's Ed25519
+# update key, and it is published to GitHub Releases.
 on:
   workflow_dispatch:
   push:
@@ -79,6 +80,14 @@ jobs:
         if: env.RELEASE == 'true'
         run: bash cli/verify-release.sh
 
+      # The one step that reads the update signing key. The sign script refuses
+      # a key whose public half is not the one pinned in src/main/updates.ts.
+      - name: Sign the update
+        if: env.RELEASE == 'true'
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: node cli/update-signing-key.ts sign "release/Record-${GITHUB_REF_NAME#v}-universal-mac.zip"
+
       - name: Keep the release files
         if: env.RELEASE == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -89,12 +98,12 @@ jobs:
           path: |
             release/*.dmg
             release/*.zip
-            release/*.blockmap
-            release/latest-mac.yml
+            release/update-manifest.json
+            release/update-manifest.json.sig
 
   # Only this job can write to the repository.
   # A version with a prerelease part (1.1.0-beta.1) is published as a GitHub
-  # prerelease, which the app's stable update channel never offers.
+  # prerelease, which only the app's beta update channel takes.
   publish:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: macos
