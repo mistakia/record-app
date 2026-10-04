@@ -10,8 +10,8 @@ directories:
   buildResources: resources
 
 # Main, preload, and the renderer are bundled by electron-vite into out/;
-# the runtime dependencies are record-node, which the bundled node runs from
-# inside the asar through utilityProcess, and electron-updater.
+# the runtime dependency is record-node, which the bundled node runs from
+# inside the asar through utilityProcess.
 files:
   - out/**
   - package.json
@@ -50,9 +50,6 @@ mac:
   # both, identical; the universal merge keeps them as they are.
   x64ArchFiles: Contents/Resources/app.asar.unpacked/node_modules/@node-datachannel/**
 
-dmg:
-  writeUpdateInfo: false
-
 # Electron's recommended fuse settings (https://www.electronjs.org/docs/latest/tutorial/fuses).
 # The bundled node runs through utilityProcess, so RunAsNode can be off.
 electronFuses:
@@ -68,11 +65,11 @@ electronFuses:
   # app without one, so an unsigned build has it re-applied.
   resetAdHocDarwinSignature: true
 
-# GitHub Releases on v* tags (the Package workflow). electron-builder only
-# writes the update feed from this: latest-mac.yml beside the .zip, and
-# app-update.yml into the app. Every build runs with --publish never; the
-# workflow uploads the release itself.
-publish:
-  provider: github
-  owner: mistakia
-  repo: record-app
+# No differential updates, so no .dmg blockmap.
+dmg:
+  writeUpdateInfo: false
+
+# No electron-builder publishing or update feed: the Package workflow uploads
+# the release itself, with the signed update manifest (cli/update-signing-key.ts)
+# that the app's own updater reads.
+publish: null

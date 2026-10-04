@@ -6,9 +6,10 @@ name: Package
 # push. Every build is ad-hoc signed with no Developer ID identity, and a run by
 # hand, on any ref, publishes nothing. A pushed v* tag is a release: the
 # release gate refuses it before any build unless the tag matches
-# package.json's version and the source-offer contact is named. After the
-# smoke, cli/verify-release.sh checks the release, and it is published to
-# GitHub Releases.
+# package.json's version, the source-offer contact is named, and the update
+# feed and public key are pinned. After the smoke, cli/verify-release.sh checks
+# the release. The publish job then signs the update .zip's manifest with the
+# project's Ed25519 update key and publishes it to GitHub Releases.
 on:
   workflow_dispatch:
   push:
@@ -89,12 +90,13 @@ jobs:
           path: |
             release/*.dmg
             release/*.zip
-            release/*.blockmap
-            release/latest-mac.yml
 
-  # Only this job can write to the repository.
+  # Only this job can write to the repository, and only it reads the update
+  # signing key. It installs no dependencies: the sign script uses node:crypto
+  # and refuses a key whose public half is not the one pinned in
+  # src/main/updates.ts.
   # A version with a prerelease part (1.1.0-beta.1) is published as a GitHub
-  # prerelease, which the app's stable update channel never offers.
+  # prerelease, which only the app's beta update channel takes.
   publish:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: macos
@@ -103,11 +105,24 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+
       - name: Fetch the release files
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release
           path: release
+
+      - name: Sign the update
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: node cli/update-signing-key.ts sign "release/Record-${GITHUB_REF_NAME#v}-universal-mac.zip"
 
       - name: Publish to GitHub Releases
         env:

@@ -1,29 +1,35 @@
-// Over-the-air updates (spec §8.2.5, §8.10.10), off until a release feed
-// exists: with no feed URL the service never creates a backend, so nothing
-// contacts a network. With one, it checks at startup and every 4 hours,
-// downloads in the background, and leaves the install to the next quit the
-// user makes; it never restarts the app itself. A newer major version waits
-// for the user's opt-in, and an older one is never taken.
+// Over-the-air updates (spec §8.2.5, §8.10.10), off until both a release feed
+// and the pinned update key are set: without them the service never creates a
+// backend, so nothing contacts a network. With them, it checks at startup and
+// every 4 hours, downloads and stages in the background, and installs at the
+// next quit the user makes; it never restarts the app itself. A newer major
+// version waits for the user's opt-in, and an older one is never taken.
 //
-// The backend is injected: update-backend.ts, electron-updater over GitHub
-// Releases, with Squirrel.Mac verifying the payload's Developer ID signature.
+// The backend is injected: update-backend.ts reads GitHub Releases and stages
+// an update only after its signed manifest verifies against the pinned key
+// (update-signature.ts), and update-install.ts swaps the bundle once the app
+// has exited.
 
 export type UpdateChannel = 'stable' | 'beta'
 
-// The release feed, the GitHub repository whose releases carry it
-// (https://github.com/mistakia/record-app), or null while updates are off. It
-// stays null until a signed release is published, since an unsigned app
-// cannot verify an update.
-export const UPDATE_FEED_URL: string | null = null
+// The release feed, the GitHub repository whose releases carry it.
+export const UPDATE_FEED_URL = 'https://github.com/mistakia/record-app'
+
+// The project's Ed25519 update public key, raw 32 bytes in base64, as
+// `node cli/update-signing-key.ts generate` printed it. Its private half is the
+// UPDATE_SIGNING_KEY repository secret.
+export const UPDATE_PUBLIC_KEY = 'FlkOlLO5fz5m92HVHVRM2XKIDjiR//0o7TVh8mHKIEY='
 
 export const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000
 
 export interface UpdateBackend {
   // The newest release on the channel, or null when there is none.
   check: () => Promise<{ version: string } | null>
-  // Fetches the release found by the last check; the backend installs it
-  // when the app quits.
+  // Fetches, verifies, and stages the release found by the last check.
   download: () => Promise<void>
+  // Hands the staged release to a helper that swaps it in once the app has
+  // exited. Called at most once, at quit, and only after a download.
+  install: () => void
 }
 
 export type UpdateStatus =
@@ -73,23 +79,28 @@ const major = (version: string): number => parse_version(version).core[0] ?? 0
 
 const newer = (a: string, b: string): boolean => compare_versions(a, b) > 0
 
-export const create_update_service = ({ feed_url, channel, current_version, create_backend, now = Date.now, set_interval = setInterval, clear_interval = clearInterval }: {
-  feed_url: string | null
+export const create_update_service = ({ feed_url, public_key, unavailable_reason = null, channel, current_version, create_backend, now = Date.now, set_interval = setInterval, clear_interval = clearInterval }: {
+  feed_url: string
+  public_key: string
+  // Why this copy of the app cannot replace itself (update-install.ts), or
+  // null when it can.
+  unavailable_reason?: string | null
   channel: UpdateChannel
   current_version: string
-  create_backend: (input: { feed_url: string, channel: UpdateChannel }) => UpdateBackend
+  create_backend: (input: { feed_url: string, public_key: string, channel: UpdateChannel }) => UpdateBackend
   now?: () => number
   set_interval?: (run: () => void, ms: number) => unknown
   clear_interval?: (timer: never) => void
 }) => {
-  let state: UpdateStatus = feed_url === null
-    ? { status: 'off', reason: 'No update feed is configured.' }
-    : !feed_url.startsWith('https://')
-        ? { status: 'off', reason: 'The update feed is not an https URL.' }
-        : { status: 'idle', checked_at_ms: null }
+  let state: UpdateStatus = !feed_url.startsWith('https://')
+    ? { status: 'off', reason: 'The update feed is not an https URL.' }
+    : unavailable_reason !== null
+      ? { status: 'off', reason: unavailable_reason }
+      : { status: 'idle', checked_at_ms: null }
   let backend: UpdateBackend | null = null
   let timer: unknown = null
   let running = false
+  let installed = false
 
   const check = async (): Promise<void> => {
     if (backend === null || running || state.status === 'ready' || state.status === 'downloading') return
@@ -115,9 +126,9 @@ export const create_update_service = ({ feed_url, channel, current_version, crea
   return {
     get_state: (): UpdateStatus => state,
     start: (): void => {
-      if (state.status === 'off' || feed_url === null || backend !== null) return
+      if (state.status === 'off' || backend !== null) return
       try {
-        backend = create_backend({ feed_url, channel })
+        backend = create_backend({ feed_url, public_key, channel })
       } catch (error) {
         state = { status: 'error', message: error instanceof Error ? error.message : String(error) }
         return
@@ -140,6 +151,16 @@ export const create_update_service = ({ feed_url, channel, current_version, crea
     stop: (): void => {
       if (timer !== null) clear_interval(timer as never)
       timer = null
+    },
+    // At the user's quit: a staged release is handed to the swap helper once.
+    install_on_quit: (): void => {
+      if (backend === null || state.status !== 'ready' || installed) return
+      installed = true
+      try {
+        backend.install()
+      } catch (error) {
+        state = { status: 'error', message: error instanceof Error ? error.message : String(error) }
+      }
     }
   }
 }

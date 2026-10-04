@@ -4,13 +4,12 @@
 import { join } from 'node:path'
 
 import { app, BrowserWindow, powerMonitor, session } from 'electron'
-import electron_updater from 'electron-updater'
 
 import { IPC_CHANNELS } from '#shared/bridge.ts'
 import { APP_ORIGIN, register_app_scheme, serve_app_files } from './app-protocol.ts'
 import { open_connection_store } from './connection-store.ts'
 import { register_ipc } from './ipc.ts'
-import { create_bundled_node } from './bundled/bundled-node.ts'
+import { create_bundled_node, logs_dir } from './bundled/bundled-node.ts'
 import { create_diagnostics } from './diagnostics.ts'
 import { create_node_auth } from './node-auth.ts'
 import { create_node_connection } from './node-connection.ts'
@@ -18,7 +17,8 @@ import { create_node_session } from './node-session.ts'
 import { open_snapshot_store } from './snapshot-store.ts'
 import { create_token_store } from './token-store.ts'
 import { create_github_update_backend } from './update-backend.ts'
-import { create_update_service, UPDATE_FEED_URL } from './updates.ts'
+import { app_bundle_path, install_unavailable_reason, spawn_swap_helper } from './update-install.ts'
+import { create_update_service, UPDATE_FEED_URL, UPDATE_PUBLIC_KEY } from './updates.ts'
 import { create_main_window, guard_web_contents } from './window.ts'
 
 // Chromium's remote debugging would let any local process drive the app and
@@ -87,11 +87,22 @@ const start = async (): Promise<void> => {
     on_node_changed: () => { forget_identity() },
     on_view_changed: (view) => { broadcast(IPC_CHANNELS.connection_view, view) }
   })
+  const app_path = app.isPackaged ? app_bundle_path(process.execPath) : null
   const updates = create_update_service({
     feed_url: UPDATE_FEED_URL,
+    public_key: UPDATE_PUBLIC_KEY,
+    unavailable_reason: install_unavailable_reason({ platform: process.platform, app_path }),
     channel: 'stable',
     current_version: app.getVersion(),
-    create_backend: (feed) => create_github_update_backend({ ...feed, updater: electron_updater.autoUpdater })
+    create_backend: (feed) => create_github_update_backend({
+      ...feed,
+      app_id: 'org.record.app',
+      staging_dir: join(user_data, 'update-staging'),
+      install: (staged_app_path) => {
+        if (app_path === null) return
+        spawn_swap_helper({ pid: process.pid, app_path, staged_app_path, log_path: join(logs_dir(user_data), 'update.log') })
+      }
+    })
   })
   updates.start()
   const diagnostics = create_diagnostics({ user_data, store, manager, connection, updates })
@@ -100,6 +111,8 @@ const start = async (): Promise<void> => {
   const snapshot_timer = setInterval(() => { snapshots.flush().catch(() => {}) }, SNAPSHOT_WRITE_INTERVAL_MS)
   app.on('before-quit', () => {
     clearInterval(snapshot_timer)
+    updates.stop()
+    updates.install_on_quit()
     node_session.stop()
     snapshots.flush_sync()
   })
