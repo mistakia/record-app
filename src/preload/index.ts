@@ -4,7 +4,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 
-import { IPC_CHANNELS, type BundledState, type ConnectionSave, type ConnectionView, type EventsState, type ImportTarget, type NodeEventMessage, type NodeRequest, type RecordBridge } from '#shared/bridge.ts'
+import { IPC_CHANNELS, type BundledState, type ConnectionSave, type ConnectionView, type EventsState, type ImportTarget, type NodeEventMessage, type NodeRequest, type RecordBridge, type UpdateChannel } from '#shared/bridge.ts'
 import type { HibernationSnapshot } from '#shared/snapshot.ts'
 
 const require_object = (value: unknown, name: string): void => {
@@ -86,6 +86,12 @@ const bridge: RecordBridge = {
   },
   diagnostics: {
     get: async () => await ipcRenderer.invoke(IPC_CHANNELS.diagnostics_get)
+  },
+  updates: {
+    set_channel: async (channel: UpdateChannel) => {
+      if (channel !== 'stable' && channel !== 'beta') throw new TypeError('channel must be stable or beta')
+      return await ipcRenderer.invoke(IPC_CHANNELS.updates_set_channel, channel)
+    }
   },
   snapshot: {
     load: async () => await ipcRenderer.invoke(IPC_CHANNELS.snapshot_load),

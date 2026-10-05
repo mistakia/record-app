@@ -14,6 +14,7 @@ import { create_diagnostics } from './diagnostics.ts'
 import { create_node_auth } from './node-auth.ts'
 import { create_node_connection } from './node-connection.ts'
 import { create_node_session } from './node-session.ts'
+import { open_settings_store } from './settings-store.ts'
 import { open_snapshot_store } from './snapshot-store.ts'
 import { create_token_store } from './token-store.ts'
 import { create_github_update_backend } from './update-backend.ts'
@@ -63,6 +64,7 @@ const start = async (): Promise<void> => {
     snapshot_path: join(user_data, 'snapshot.json'),
     settings_path: join(user_data, 'snapshot-settings.json')
   })
+  const settings = await open_settings_store({ file_path: join(user_data, 'settings.json') })
   const node_session = create_node_session({
     broadcast,
     on_unauthorized: (sent) => { connection.unauthorized(sent) }
@@ -92,7 +94,7 @@ const start = async (): Promise<void> => {
     feed_url: UPDATE_FEED_URL,
     public_key: UPDATE_PUBLIC_KEY,
     unavailable_reason: install_unavailable_reason({ platform: process.platform, app_path }),
-    channel: 'stable',
+    channel: settings.get().update_channel,
     current_version: app.getVersion(),
     create_backend: (feed) => create_github_update_backend({
       ...feed,
@@ -106,7 +108,7 @@ const start = async (): Promise<void> => {
   })
   updates.start()
   const diagnostics = create_diagnostics({ user_data, store, manager, connection, updates })
-  forget_identity = register_ipc({ store, connection, manager, session: node_session, snapshots, diagnostics, is_app_frame }).forget_identity
+  forget_identity = register_ipc({ store, connection, manager, session: node_session, snapshots, diagnostics, settings, updates, is_app_frame }).forget_identity
   // Spec §8.8.3: written every 30 s when it changed, and on clean shutdown.
   const snapshot_timer = setInterval(() => { snapshots.flush().catch(() => {}) }, SNAPSHOT_WRITE_INTERVAL_MS)
   app.on('before-quit', () => {

@@ -6,6 +6,10 @@ import type { HibernationSnapshot, SnapshotInfo } from './snapshot.ts'
 
 export type ConnectionMode = 'bundled' | 'remote'
 
+// The update channel (spec §8.2.5): stable, or beta, which also takes beta
+// prereleases.
+export type UpdateChannel = 'stable' | 'beta'
+
 export interface ConnectionConfig {
   mode: ConnectionMode
   // The remote node's URL; kept while in bundled mode, so switching back
@@ -131,8 +135,9 @@ export interface Diagnostics {
   user_data: string
   logs_dir: string
   bundled: BundledState
-  // Spec §8.2.5; off until a release feed exists.
-  updates: { status: string, detail: string | null }
+  // Spec §8.2.5; off until a release feed exists. channel is the one the
+  // service checks, as the user last chose it.
+  updates: { status: string, detail: string | null, channel: UpdateChannel }
   memory: {
     main_rss_bytes: number
     total_working_set_bytes: number
@@ -207,6 +212,11 @@ export interface RecordBridge {
   diagnostics: {
     get: () => Promise<Diagnostics>
   }
+  updates: {
+    // The update channel (spec §8.2.5) the app checks. Read-side is the
+    // Diagnostics payload (the poll carries it), so this changes it.
+    set_channel: (channel: UpdateChannel) => Promise<NodeResult<UpdateChannel>>
+  }
   snapshot: {
     // The snapshot for the configured node, or null.
     load: () => Promise<HibernationSnapshot | null>
@@ -245,6 +255,7 @@ export const IPC_CHANNELS = {
   bundled_open_log: 'record:bundled:open-log',
   bundled_choose_data_dir: 'record:bundled:choose-data-dir',
   diagnostics_get: 'record:diagnostics:get',
+  updates_set_channel: 'record:updates:set-channel',
   snapshot_load: 'record:snapshot:load',
   snapshot_update: 'record:snapshot:update',
   snapshot_get_info: 'record:snapshot:get-info',

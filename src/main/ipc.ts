@@ -12,9 +12,11 @@ import { create_secret_clipboard } from './clipboard-expiry.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_write_target } from './write-target.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
+import { type SettingsStore } from './settings-store.ts'
 import { get_audio, request_node, test_connection } from './node-client.ts'
 import type { create_node_connection } from './node-connection.ts'
 import type { NodeSession } from './node-session.ts'
+import type { create_update_service } from './updates.ts'
 import { serve_generic_request } from './request-policy.ts'
 import { create_identity_access } from './identity-access.ts'
 import type { SnapshotStore } from './snapshot-store.ts'
@@ -38,13 +40,15 @@ const entered_token = (input: unknown): { ok: true, token: string | undefined } 
   return checked.ok ? { ok: true, token: checked.token } : { ok: false, result: refuse(checked.reason) }
 }
 
-export const register_ipc = ({ store, connection, manager, session, snapshots, diagnostics, is_app_frame }: {
+export const register_ipc = ({ store, connection, manager, session, snapshots, diagnostics, settings, updates, is_app_frame }: {
   store: ConnectionStore
   connection: ReturnType<typeof create_node_connection>
   manager: ReturnType<typeof create_node_manager>
   session: NodeSession
   snapshots: SnapshotStore
   diagnostics: ReturnType<typeof create_diagnostics>
+  settings: SettingsStore
+  updates: ReturnType<typeof create_update_service>
   is_app_frame: (url: string) => boolean
 }): { forget_identity: () => void } => {
   const authed = create_authed_call({ target: connection.target, unauthorized: connection.unauthorized })
@@ -191,6 +195,14 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
   handle(IPC_CHANNELS.bundled_choose_data_dir, async () => await diagnostics.choose_data_dir())
   handle(IPC_CHANNELS.diagnostics_get, async () => diagnostics.collect())
   handle(IPC_CHANNELS.bundled_open_log, async () => { shell.showItemInFolder(manager.get_state().log_path) })
+
+  // The update channel (spec §8.2.5); the setting is saved first, and only a
+  // saved change reaches the service.
+  handle(IPC_CHANNELS.updates_set_channel, async (input) => {
+    const saved = await settings.set_channel(input)
+    if (saved.ok) updates.set_channel(saved.data)
+    return saved
+  })
 
   handle(IPC_CHANNELS.events_get_state, async () => session.get_state())
   handle(IPC_CHANNELS.events_reconnect_now, async () => { session.reconnect_now() })
