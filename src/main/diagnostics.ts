@@ -36,7 +36,8 @@ export const create_diagnostics = ({ user_data, store, manager, connection, upda
       bundled: manager.get_state(),
       updates: {
         status: update.status,
-        detail: update.status === 'off' ? update.reason : update.status === 'error' ? update.message : 'version' in update ? update.version : null
+        detail: update.status === 'off' ? update.reason : update.status === 'error' ? update.message : 'version' in update ? update.version : null,
+        channel: updates.get_channel()
       },
       memory: {
         main_rss_bytes: process.memoryUsage().rss,

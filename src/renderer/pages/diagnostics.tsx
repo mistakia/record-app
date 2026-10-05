@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react'
 
 import styles from './diagnostics.module.css'
-import type { Diagnostics as DiagnosticsData } from '#shared/bridge.ts'
+import type { Diagnostics as DiagnosticsData, UpdateChannel } from '#shared/bridge.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
 const REFRESH_MS = 5000
@@ -19,11 +19,39 @@ const duration = (ms: number): string => {
   return hours > 0 ? `${hours} h ${minutes} min` : minutes > 0 ? `${minutes} min ${seconds % 60} s` : `${seconds} s`
 }
 
+const CHANNEL_LABELS: Record<UpdateChannel, string> = {
+  stable: 'Stable releases',
+  beta: 'Beta releases'
+}
+
 export const Diagnostics = () => {
   const [data, set_data] = useState<DiagnosticsData | null>(null)
   const [now, set_now] = useState(Date.now())
+  const [channel_saving, set_channel_saving] = useState(false)
+  const [channel_error, set_channel_error] = useState<string | null>(null)
   const events = use_app_selector((state) => state.connection.events)
   const freshness = use_app_selector((state) => state.connection.freshness)
+
+  // The update channel a user picks (spec §8.2.5), shown from the next poll
+  // and the payload the save returns.
+  const set_channel = async (channel: UpdateChannel): Promise<void> => {
+    if (data === null || channel === data.updates.channel) return
+    set_channel_saving(true)
+    set_channel_error(null)
+    try {
+      const saved = await window.record.updates.set_channel(channel)
+      if (saved.ok) {
+        set_data({ ...data, updates: { ...data.updates, channel: saved.data } })
+      } else {
+        set_channel_error(saved.failure.message)
+      }
+    } catch {
+      // The realistic failure is the settings write itself rejecting.
+      set_channel_error('The update channel could not be saved.')
+    } finally {
+      set_channel_saving(false)
+    }
+  }
 
   useEffect(() => {
     let live = true
@@ -56,6 +84,18 @@ export const Diagnostics = () => {
         <dt>App data</dt><dd><code>{data.user_data}</code></dd>
         <dt>Logs</dt><dd><code>{data.logs_dir}</code></dd>
         <dt>Updates</dt><dd data-testid='diagnostics-updates'>{data.updates.status}{data.updates.detail === null ? '' : `: ${data.updates.detail}`}</dd>
+        <dt>Update channel</dt>
+        <dd>
+          <fieldset className={styles.channels} disabled={channel_saving}>
+            {(['stable', 'beta'] as const).map((value) => (
+              <label key={value}>
+                <input type='radio' name='update-channel' value={value} checked={data.updates.channel === value} onChange={() => { set_channel(value).catch(() => {}) }} />
+                {CHANNEL_LABELS[value]}
+              </label>
+            ))}
+          </fieldset>
+          {channel_error !== null && <p className={styles.channel_error}>{channel_error}</p>}
+        </dd>
       </dl>
       <h2>Connection</h2>
       <dl className={styles.details}>

@@ -37,3 +37,24 @@
 .row {
   display: contents;
 }
+
+.channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.channels label {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.channel_error {
+  margin: 4px 0 0;
+  color: #b00020;
+  font-size: 12px;
+}

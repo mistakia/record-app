@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { CHECK_INTERVAL_MS, compare_versions, create_update_service, type UpdateBackend } from '#main/updates.ts'
+import { CHECK_INTERVAL_MS, compare_versions, create_update_service, type UpdateBackend, type UpdateChannel } from '#main/updates.ts'
 
 const fake_backend = (releases: Array<string | null>) => {
   const calls = { checks: 0, downloads: 0, installs: 0 }
@@ -121,5 +121,130 @@ describe('update service', () => {
     service.install_on_quit()
     service.install_on_quit()
     expect(calls.installs).toBe(1)
+  })
+
+  describe('update channel (spec 8.2.5)', () => {
+    test('set_channel rebuilds the backend for the new channel and checks again', async () => {
+      const channels: string[] = []
+      const { backend, calls } = fake_backend([null, '1.1.0'])
+      const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: (input) => { channels.push(input.channel); return backend }, set_interval: manual_interval().set_interval })
+      service.start()
+      await settle()
+      expect(channels).toEqual(['stable'])
+      service.set_channel('beta')
+      await settle()
+      expect(channels).toEqual(['stable', 'beta'])
+      expect(calls.checks).toBe(2)
+      expect(service.get_channel()).toBe('beta')
+      // The rebuilt backend's check ran and staged the newer release.
+      expect(service.get_state()).toEqual({ status: 'ready', version: '1.1.0' })
+    })
+
+    test('is a no-op for the same channel, rebuilding nothing', async () => {
+      const channels: string[] = []
+      const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: (input) => { channels.push(input.channel); return fake_backend([]).backend } })
+      service.start()
+      await settle()
+      service.set_channel('stable')
+      await settle()
+      expect(channels).toEqual(['stable'])
+    })
+
+    test('changes nothing while the service is off; the channel is kept for when it can start', async () => {
+      let created = 0
+      const service = create_update_service({ public_key: KEY, unavailable_reason: 'Read-only volume.', feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: () => { created++; return fake_backend([]).backend } })
+      service.start()
+      expect(service.get_state()).toEqual({ status: 'off', reason: 'Read-only volume.' })
+      service.set_channel('beta')
+      expect(service.get_state()).toEqual({ status: 'off', reason: 'Read-only volume.' })
+      expect(created).toBe(0)
+      expect(service.get_channel()).toBe('beta')
+    })
+
+    test('drops a staged release when the channel changes, so it never installs at quit', async () => {
+      const calls = { checks: 0, downloads: 0, installs: 0 }
+      const release_for = [null, '1.1.0', null]
+      const backend: UpdateBackend = {
+        check: async () => {
+          const version = release_for[Math.min(calls.checks++, release_for.length - 1)] ?? null
+          return version === null ? null : { version }
+        },
+        download: async () => { calls.downloads++ },
+        install: () => { calls.installs++ }
+      }
+      const timers = manual_interval()
+      const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: () => backend, set_interval: timers.set_interval })
+      service.start()
+      await settle()
+      timers.runs[0]?.run()
+      await settle()
+      expect(service.get_state()).toEqual({ status: 'ready', version: '1.1.0' })
+      expect(calls.downloads).toBe(1)
+      service.set_channel('beta')
+      await settle()
+      expect(service.get_state()).toEqual({ status: 'idle', checked_at_ms: expect.any(Number) })
+      service.install_on_quit()
+      expect(calls.installs).toBe(0)
+    })
+
+    test('a channel change before start is the channel the backend is built with', async () => {
+      const built: UpdateChannel[] = []
+      const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend: (input) => { built.push(input.channel); return fake_backend([]).backend } })
+      service.set_channel('beta')
+      expect(service.get_state().status).toBe('idle')
+      service.start()
+      await settle()
+      expect(built).toEqual(['beta'])
+      expect(service.get_channel()).toBe('beta')
+    })
+
+    test('a backend that cannot be built for the new channel reports it', async () => {
+      const attempts: UpdateChannel[] = []
+      const service = create_update_service({
+        public_key: KEY,
+        feed_url: 'https://updates.example.test',
+        channel: 'stable',
+        current_version: '1.0.0',
+        create_backend: (input) => {
+          attempts.push(input.channel)
+          if (input.channel === 'beta') throw new Error('bad feed')
+          return fake_backend([]).backend
+        }
+      })
+      service.start()
+      await settle()
+      service.set_channel('beta')
+      expect(service.get_state()).toEqual({ status: 'error', message: 'bad feed' })
+      expect(attempts).toEqual(['stable', 'beta'])
+    })
+
+    test('a channel switch during an in-flight check discards the stale result and still checks the new channel', async () => {
+      const built: UpdateChannel[] = []
+      const release_holder: { release: ((found: { version: string } | null) => void) | null } = { release: null }
+      const create_backend = (input: { channel: UpdateChannel }) => {
+        built.push(input.channel)
+        return {
+          // The stable backend's startup check hangs until the test releases it.
+          check: async () => {
+            if (built.length === 1) return await new Promise<{ version: string } | null>((resolve) => { release_holder.release = resolve })
+            return null
+          },
+          download: async () => {},
+          install: () => {}
+        }
+      }
+      const service = create_update_service({ public_key: KEY, feed_url: 'https://updates.example.test', channel: 'stable', current_version: '1.0.0', create_backend, set_interval: manual_interval().set_interval })
+      service.start()
+      await settle()
+      expect(service.get_state().status).toBe('idle')
+      service.set_channel('beta')
+      expect(service.get_state().status).toBe('idle')
+      // The old check resolves after the switch with a newer release; it must
+      // not apply to the new channel, and the new channel's check must run.
+      release_holder.release?.({ version: '9.9.9' })
+      await settle()
+      expect(service.get_state()).toEqual({ status: 'idle', checked_at_ms: expect.any(Number) })
+      expect(built).toEqual(['stable', 'beta'])
+    })
   })
 })
