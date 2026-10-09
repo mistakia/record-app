@@ -106,3 +106,8 @@ export const describe_holders = ({ addresses, libraries }: { addresses: readonly
   return (['own', 'shared', 'linked', 'discovered'] as const).filter((category) => counts[category] > 0)
     .map((category) => `${counts[category]}${category === 'own' ? ' of' : ''} ${CATEGORY_LABELS[category]}`).join(', ')
 }
+
+// The libraries the sidebar lists under LIBRARIES, in its order: followed
+// ones and ones shared with you. g then 1 to 9 opens them by this order.
+export const sidebar_libraries = (libraries: readonly Library[] | undefined): Library[] =>
+  (libraries ?? []).filter((library) => !library.is_own && (library.is_linked || library.held_capability_ids.length > 0))

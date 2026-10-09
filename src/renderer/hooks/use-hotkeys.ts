@@ -1,13 +1,15 @@
 // The one keyboard dispatch point: every key press goes through
 // resolve_hotkey (hotkeys.ts), and its action routes to the player
-// controller, the shown track list's commands, or navigation.
+// controller, the shown track list's commands, or navigation. After g, the
+// next key goes to a page or a sidebar library (resolve_go) and is never
+// passed on; a click or leaving the window closes the lead.
 
 import { useEffect } from 'react'
 import { useStore } from 'react-redux'
 import { useNavigate } from 'react-router'
 
-import { resolve_hotkey, type HotkeyAction } from './hotkeys.ts'
-import { own_library_address } from '#renderer/components/library/library-category.ts'
+import { resolve_go, resolve_hotkey, type GoTarget, type HotkeyAction } from './hotkeys.ts'
+import { own_library_address, sidebar_libraries } from '#renderer/components/library/library-category.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import {
   next_track,
@@ -22,7 +24,7 @@ import type { RepeatMode } from '#renderer/player/queue-manager.ts'
 import { ROUTES, tracks_route } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
 import type { AppDispatch, RootState } from '#renderer/store/index.ts'
-import { queue_toggled, shortcuts_toggled } from '#renderer/store/ui.ts'
+import { help_toggled, lead_toggled, queue_toggled, shortcuts_toggled } from '#renderer/store/ui.ts'
 
 export const SEARCH_INPUT_ID = 'track-search'
 
@@ -40,6 +42,29 @@ export const use_hotkeys = (): void => {
   useEffect(() => {
     const dispatch = store.dispatch as AppDispatch
     const list = list_commands
+    const libraries = () => node_api.endpoints.get_libraries.select()(store.getState()).data
+    const PAGES: Record<Exclude<GoTarget, 'library'>, string> = {
+      tracks: ROUTES.tracks,
+      listens: ROUTES.listens,
+      libraries: ROUTES.libraries,
+      import: ROUTES.import,
+      identity: ROUTES.identity,
+      settings: ROUTES.settings
+    }
+    const go = (key: string): void => {
+      const target = resolve_go(key)
+      if (target === null) return
+      if (typeof target === 'object') {
+        const library = sidebar_libraries(libraries())[target.library]
+        if (library !== undefined) navigate(tracks_route({ library_address: library.address }))
+      } else if (target === 'library') {
+        const own = own_library_address(libraries())
+        navigate(own === null ? ROUTES.libraries : tracks_route({ library_address: own }))
+      } else {
+        navigate(PAGES[target])
+      }
+    }
+
     const run = (action: HotkeyAction, target: EventTarget | null): boolean => {
       const { player, ui } = store.getState()
       switch (action) {
@@ -90,13 +115,8 @@ export const use_hotkeys = (): void => {
         case 'toggle_queue': dispatch(queue_toggled()); return true
         case 'back': navigate(-1); return true
         case 'forward': navigate(1); return true
-        case 'go_home': navigate(ROUTES.tracks); return true
-        case 'go_library': {
-          const own = own_library_address(node_api.endpoints.get_libraries.select()(store.getState()).data)
-          navigate(own === null ? ROUTES.libraries : tracks_route({ library_address: own }))
-          return true
-        }
-        case 'go_identity': navigate(ROUTES.identity); return true
+        case 'lead': dispatch(lead_toggled(true)); return true
+        case 'show_help': dispatch(help_toggled()); return true
         case 'go_settings': navigate(ROUTES.settings); return true
         case 'import_files': navigate(`${ROUTES.import}?pick=1`); return true
         case 'show_shortcuts': dispatch(shortcuts_toggled()); return true
@@ -104,6 +124,14 @@ export const use_hotkeys = (): void => {
     }
 
     const on_keydown = (event: KeyboardEvent): void => {
+      if (store.getState().ui.lead_open) {
+        // A bare modifier is part of the next key, not the next key.
+        if (['Shift', 'Meta', 'Control', 'Alt'].includes(event.key)) return
+        event.preventDefault()
+        dispatch(lead_toggled(false))
+        if (event.key !== 'Escape' && !event.metaKey && !event.ctrlKey && !event.altKey) go(event.key)
+        return
+      }
       const action = resolve_hotkey({
         key: event.key,
         meta: event.metaKey,
@@ -112,12 +140,20 @@ export const use_hotkeys = (): void => {
         shift: event.shiftKey,
         in_field: is_field(event.target),
         dialog_open: document.querySelector('dialog[open]') !== null,
-        menu_open: document.querySelector('[role=menu]') !== null
+        menu_open: document.querySelector('[role=menu]') !== null,
+        list_shown: list() !== null
       })
       if (action === null) return
       if (run(action, event.target)) event.preventDefault()
     }
+    const close_lead = (): void => { if (store.getState().ui.lead_open) dispatch(lead_toggled(false)) }
     window.addEventListener('keydown', on_keydown)
-    return () => { window.removeEventListener('keydown', on_keydown) }
+    window.addEventListener('mousedown', close_lead)
+    window.addEventListener('blur', close_lead)
+    return () => {
+      window.removeEventListener('keydown', on_keydown)
+      window.removeEventListener('mousedown', close_lead)
+      window.removeEventListener('blur', close_lead)
+    }
   }, [navigate, store])
 }
