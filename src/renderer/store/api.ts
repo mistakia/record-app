@@ -133,8 +133,14 @@ export const node_api = createApi({
       query: ({ library_addresses }) => ({ method: 'get', path_template: '/tags', query: { library_addresses } }),
       providesTags: (_result, _error, { library_addresses }) => library_ids(library_addresses).map((id) => ({ type: 'tags' as const, id }))
     }),
-    get_about: build.query<About, string>({
-      query: (address) => ({ method: 'get', path_template: '/libraries/{address}/about', params: encode(address) }),
+    // A library that never set a profile answers 404: null, not a failure,
+    // which would keep reconcile from ever marking the data fresh.
+    get_about: build.query<About | null, string>({
+      queryFn: async (address) => {
+        const result = await window.record.request({ method: 'get', path_template: '/libraries/{address}/about', params: encode(address) })
+        if (result.ok) return { data: result.data as About }
+        return result.failure.kind === 'http' && result.failure.status === 404 ? { data: null } : { error: result.failure }
+      },
       providesTags: (_result, _error, address) => [{ type: 'about' as const, id: address }]
     }),
     get_listens: build.query<TrackList, { offset: number, limit: number }>({

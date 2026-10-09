@@ -33,14 +33,13 @@ export const AboutEditor = ({ address, note, default_name }: { address: string, 
   const [saving, set_saving] = useState(false)
 
   useEffect(() => {
-    if (about.data === undefined) return
+    if (about.data === undefined || about.data === null) return
     set_draft({ name: about.data.name ?? '', bio: about.data.bio ?? '', location: about.data.location ?? '', avatar: about.data.avatar ?? '' })
   }, [about.data])
 
   const avatar_valid = draft.avatar.trim() === '' || is_cid(draft.avatar.trim())
-  // A library that never set a profile answers 404: an empty profile.
-  const no_profile_yet = about.error !== undefined && 'status' in about.error && about.error.status === 404
-  const loaded = about.data !== undefined || no_profile_yet
+  // Null is a library that never set a profile: an empty one.
+  const loaded = about.data !== undefined
 
   const save = async (event: FormEvent) => {
     event.preventDefault()

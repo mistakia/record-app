@@ -168,6 +168,31 @@ describe('reconcile and the write gate', () => {
     subscription.unsubscribe()
   })
 
+  test('a library without a profile (about 404) does not keep the data stale', async () => {
+    const about = store.dispatch(node_api.endpoints.get_about.initiate('/record/no-profile'))
+    const answer = () => {
+      for (const { request, resolve } of requests.splice(0)) {
+        resolve(request.path_template === '/libraries/{address}/about'
+          ? { ok: false, failure: { kind: 'http', status: 404, code: 'NOT_FOUND', message: 'no profile' } }
+          : { ok: true, data: [] })
+      }
+    }
+    await settle()
+    answer()
+    await about
+    expect(node_api.endpoints.get_about.select('/record/no-profile')(store.getState()).data).toBeNull()
+
+    store.dispatch(events_state_changed(open_state(4)))
+    const reconciling = store.dispatch(reconcile({ connection_id: 4, wait: async () => { await settle(); answer() } }))
+    for (let round = 0; round < 3; round++) {
+      await settle()
+      answer()
+    }
+    await reconciling
+    expect(store.getState().connection.freshness).toBe('fresh')
+    about.unsubscribe()
+  })
+
   test('the base query refuses a write while stale without calling main, and sends it once fresh', async () => {
     const with_write = node_api.injectEndpoints({
       endpoints: (build) => ({
