@@ -183,6 +183,7 @@
 /* A loading row: the row's grid, a pulsing bar in each text column. */
 .skeleton {
   display: grid;
+  min-width: var(--track-min-width);
   grid-template-columns: var(--track-columns);
   align-items: center;
   gap: 0 var(--space-sm);

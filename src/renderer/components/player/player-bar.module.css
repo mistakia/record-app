@@ -16,11 +16,11 @@
 
 .now_playing {
   display: flex;
-  flex: 0 0 35%;
+  flex: 0 1 35%;
   min-width: 0;
   align-items: center;
   height: 100%;
-  padding: 5px 0;
+  padding: 5px var(--space-base) 5px 0;
   overflow: hidden;
   font-size: var(--font-size-base);
 }
@@ -111,10 +111,13 @@
   white-space: nowrap;
 }
 
+/* Never narrower than its seven 40px controls; the thirds beside it give
+   way instead. */
 .center {
   display: flex;
-  flex: 0 0 30%;
-  min-width: 0;
+  flex: 0 0 auto;
+  width: 30%;
+  min-width: 280px;
   flex-direction: column;
 }
 
@@ -233,13 +236,14 @@
 
 .from {
   display: flex;
-  flex: 0 0 35%;
+  flex: 0 1 35%;
   min-width: 0;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-base);
   height: 100%;
-  padding: 5px 0;
+  padding: 5px var(--space-sm) 5px var(--space-base);
+  overflow: hidden;
   font-size: var(--font-size-base);
 }
 
@@ -284,6 +288,7 @@
 
 .source {
   display: flex;
+  flex: 0 1 auto;
   min-width: 0;
   align-items: center;
   gap: 0;
@@ -299,9 +304,9 @@
   text-shadow: var(--text-glow-display);
 }
 
-.source > :last-child {
+.source > :last-child:not(:only-child) {
   flex: none;
-  margin: 0 var(--space-sm);
+  margin-left: var(--space-sm);
 }
 
 .source_text {
@@ -332,6 +337,3 @@
   text-transform: uppercase;
 }
 
-.source_text:only-child {
-  margin-right: var(--space-sm);
-}
