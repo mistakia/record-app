@@ -5,7 +5,7 @@
     "": {
       "name": "record-app",
       "dependencies": {
-        "record-node": "git+https://github.com/mistakia/record-node.git#51b8e04c68cce9915d985c03f2528b7a5461fc56",
+        "record-node": "git+https://github.com/mistakia/record-node.git#a58c8765a5263de330617e6476ce055d63e160a8",
       },
       "devDependencies": {
         "@electron/fuses": "2.1.3",
@@ -691,7 +691,7 @@
 
     "birnam": ["birnam@1.0.0", "", { "dependencies": { "multiformats": "^14.0.0", "weald": "^1.1.2" } }, "sha512-lropqEwi52w2aoOQQ+V4MGc8KP5mVef9DaEKv73dkVXb8UN6moQ7j/f19NesXPYt/l+8MkkHtMBAQsBKR8BqgQ=="],
 
-    "bitboot": ["bitboot@github:tintfoundation/bitboot#64ec963", { "dependencies": { "bittorrent-dht": "11.0.12" } }, "tintfoundation-bitboot-64ec963", "sha512-EuCc2JAkW0npL1wbHACjUoXCIBQng/V6wNnCqT9LrmWxAtXzbDsgmBrGUAEnUoECKEA/HPRtuP8Z3B3WXeThOA=="],
+    "bitboot": ["bitboot@github:tintfoundation/bitboot#ee81e28", { "dependencies": { "bittorrent-dht": "11.0.12" } }, "tintfoundation-bitboot-ee81e28", "sha512-h0Lf6hDhKuwwm1vMHGVr54Rqmxllv8IkfhD/2WPXdAIgrc+tCUPjMtUhX6vthIlDRCSdypSULlrPuJLGa4uk7A=="],
 
     "bittorrent-dht": ["bittorrent-dht@11.0.12", "", { "dependencies": { "bencode": "^4.0.1", "debug": "^4.4.3", "k-bucket": "^5.1.0", "k-rpc": "^5.1.0", "last-one-wins": "^1.0.4", "lru": "^3.1.0", "randombytes": "^2.1.0", "record-cache": "^1.2.0" } }, "sha512-bFmQq874HMIBon/6KNMf/U1OG+UxJ0UzI9oPra2IRlZLuPA7VwBiA7uEpWaO2ww8G76OFjxB1p1XCOS94FuCPQ=="],
 
@@ -1647,7 +1647,7 @@
 
     "record-cache": ["record-cache@1.2.0", "", { "dependencies": { "b4a": "^1.3.1" } }, "sha512-kyy3HWCez2WrotaL3O4fTn0rsIdfRKOdQQcEJ9KpvmKmbffKVvwsloX063EgRUlpJIXHiDQFhJcTbZequ2uTZw=="],
 
-    "record-node": ["record-node@github:mistakia/record-node#51b8e04", { "dependencies": { "@helia/bitswap": "4.0.19", "@helia/libp2p": "2.1.4", "@helia/utils": "3.0.5", "@ipld/dag-cbor": "9.2.6", "@ipld/dag-pb": "4.2.0", "@libp2p/autonat": "3.0.28", "@libp2p/bootstrap": "12.0.32", "@libp2p/circuit-relay-v2": "4.2.13", "@libp2p/crypto": "5.1.23", "@libp2p/dcutr": "3.0.28", "@libp2p/gossipsub": "17.1.2", "@libp2p/identify": "4.1.14", "@libp2p/interface": "3.3.0", "@libp2p/kad-dht": "16.4.5", "@libp2p/mdns": "12.0.32", "@libp2p/noise": "17.0.3", "@libp2p/peer-id": "6.0.15", "@libp2p/ping": "3.1.13", "@libp2p/pnet": "3.0.29", "@libp2p/tcp": "11.0.28", "@libp2p/upnp-nat": "4.0.28", "@libp2p/utils": "7.4.1", "@libp2p/yamux": "8.0.3", "@multiformats/multiaddr": "13.0.3", "@noble/curves": "2.0.1", "@noble/hashes": "2.0.1", "ajv": "8.20.0", "bitboot": "git+https://github.com/tintfoundation/bitboot.git#64ec96380f4f3c0f2668cda731d57d6a29849c7c", "blockstore-core": "7.0.1", "blockstore-fs": "4.0.1", "datastore-core": "12.0.1", "datastore-fs": "12.0.1", "express": "5.2.1", "express-openapi-validator": "5.6.2", "file-type": "22.1.1", "helia": "7.1.15", "ipfs-unixfs": "13.1.2", "ipfs-unixfs-importer": "17.1.1", "libp2p": "3.3.11", "morgan": "1.12.1", "multer": "2.4.0", "multiformats": "13.4.0", "music-metadata": "11.16.1", "record-resolver": "git+https://github.com/mistakia/record-resolver.git#94c5daa7676c92f9d497fc68b3f69643785714cc", "socks": "2.8.10", "swagger-ui-express": "5.0.1", "ws": "8.21.3", "yaml": "2.9.1" }, "bin": { "record-node": "./dist/cli.js" } }, "mistakia-record-node-51b8e04", "sha512-JQCRP2p+R6vuj2Cw8LJqNjK3kAC3dfrzJl+4y+oX0lmURQBG3vvhtqeiIZyd4Rx6OODK0oLifiiFntD4LU/k8Q=="],
+    "record-node": ["record-node@github:mistakia/record-node#a58c876", { "dependencies": { "@helia/bitswap": "4.0.19", "@helia/libp2p": "2.1.4", "@helia/utils": "3.0.5", "@ipld/dag-cbor": "9.2.6", "@ipld/dag-pb": "4.2.0", "@libp2p/autonat": "3.0.28", "@libp2p/bootstrap": "12.0.32", "@libp2p/circuit-relay-v2": "4.2.13", "@libp2p/crypto": "5.1.23", "@libp2p/dcutr": "3.0.28", "@libp2p/gossipsub": "17.1.2", "@libp2p/identify": "4.1.14", "@libp2p/interface": "3.3.0", "@libp2p/kad-dht": "16.4.5", "@libp2p/mdns": "12.0.32", "@libp2p/noise": "17.0.3", "@libp2p/peer-id": "6.0.15", "@libp2p/ping": "3.1.13", "@libp2p/pnet": "3.0.29", "@libp2p/tcp": "11.0.28", "@libp2p/upnp-nat": "4.0.28", "@libp2p/utils": "7.4.1", "@libp2p/yamux": "8.0.3", "@multiformats/multiaddr": "13.0.3", "@noble/curves": "2.0.1", "@noble/hashes": "2.0.1", "ajv": "8.20.0", "bitboot": "git+https://github.com/tintfoundation/bitboot.git#ee81e28235c188b08dc16f5bf70aa2612bb13cbe", "blockstore-core": "7.0.1", "blockstore-fs": "4.0.1", "datastore-core": "12.0.1", "datastore-fs": "12.0.1", "express": "5.2.1", "express-openapi-validator": "5.6.2", "file-type": "22.1.1", "helia": "7.1.15", "ipfs-unixfs": "13.1.2", "ipfs-unixfs-importer": "17.1.1", "libp2p": "3.3.11", "morgan": "1.12.1", "multer": "2.4.0", "multiformats": "13.4.0", "music-metadata": "11.16.1", "record-resolver": "git+https://github.com/mistakia/record-resolver.git#94c5daa7676c92f9d497fc68b3f69643785714cc", "socks": "2.8.10", "swagger-ui-express": "5.0.1", "ws": "8.21.3", "yaml": "2.9.1" }, "bin": { "record-node": "./dist/cli.js" } }, "mistakia-record-node-a58c876", "sha512-fPP8ioCBujvblDpki6ZZ84H/URjGdJp/bTKDjBjyeDS7k68TqGV2kpfQbJo0UbhZ+simJu2ZZeC4Z0VMtwyIJQ=="],
 
     "record-resolver": ["record-resolver@github:mistakia/record-resolver#94c5daa", { "bin": { "record-resolver": "./dist/cli.js" } }, "mistakia-record-resolver-94c5daa", "sha512-jMrnYFKami/5lQ6XPA2fCwseU9vQu0tL4eV8EgRXmMpMvFyJiYc6ewuTJIMdu/G4HMiIKFm695UegszMcjt/6A=="],
 
