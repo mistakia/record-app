@@ -99,18 +99,24 @@ try {
   const rendered_rows = await rows(window).count()
   const started = Date.now()
   await scroller.evaluate((element) => { element.scrollTop = element.scrollHeight })
-  await rows(window).last().waitFor()
-  await window.waitForFunction(() => document.querySelectorAll('[data-testid=track-list] [role=row][aria-busy=true]').length === 0, undefined, { timeout: 30_000 })
+  // The last row itself, loaded: rows still on screen from the top would
+  // pass any wait that runs before the list re-renders at the end.
+  await window.locator(`[data-row='${total - 1}'] [data-testid=track-row]`).waitFor({ timeout: 120_000 })
   console.log('virtual list:', { total, rows_in_dom_at_top: rendered_rows, rows_in_dom_at_end: await rows(window).count(), last_rows: (await titles(window)).slice(-3), filled_in_ms: Date.now() - started })
   if (rendered_rows > 120) throw new Error('the list rendered more rows than a window')
   await scroller.evaluate((element) => { element.scrollTop = 0 })
 
   // A header click sorts ascending; a second reverses it.
   const sort_by_title = window.getByTestId('track-list').getByRole('button', { name: 'Title' })
+  // Each wait first sees the header's new sort, which renders with the new
+  // view, so it cannot pass on the rows of the one before.
+  const title_sorted = (order: string) => window.getByTestId('track-list').locator(`[role=columnheader][aria-sort=${order}]`, { hasText: 'Title' }).waitFor()
   await sort_by_title.click()
+  await title_sorted('ascending')
   await settled(window)
   console.log('sorted by title ascending, first rows:', (await titles(window)).slice(0, 3))
   await sort_by_title.click()
+  await title_sorted('descending')
   await settled(window)
   console.log('sorted by title descending, first rows:', (await titles(window)).slice(0, 3))
   // Back to the default view, newest first: the sidebar's all-tracks link.
@@ -121,6 +127,9 @@ try {
   if (await tag_buttons.count() > 0) {
     const tag = (await tag_buttons.first().innerText()).replace(/\s+\d+$/, '')
     await tag_buttons.first().click()
+    // The tag shows pressed in the same render as the filtered view, so the
+    // wait that follows cannot pass on the unfiltered list.
+    await window.getByTestId('tag-filter').locator('[aria-pressed=true]').first().waitFor()
     await settled(window)
     console.log(`tag filter "${tag}":`, await window.getByTestId('track-total').textContent())
     await window.getByRole('button', { name: 'Clear filters' }).click()
@@ -130,6 +139,9 @@ try {
   }
 
   await window.getByLabel('Search tracks').fill(artist)
+  // The debounced search lands in the route with its view; the unfiltered
+  // list may already show a row by the artist.
+  await window.waitForFunction(() => location.hash.includes('q='))
   await window.locator('[data-testid=track-row]', { hasText: artist }).first().waitFor({ timeout: 30_000 })
   await settled(window)
   console.log(`search "${artist}":`, await window.getByTestId('track-total').textContent())
