@@ -12,7 +12,7 @@ import { row_location } from './track-pages.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
-import { describe_holders, library_category, library_name, short_address } from '#renderer/components/library/library-category.ts'
+import { CATEGORY_LABELS, describe_holders, library_category, library_name, short_address } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
@@ -73,7 +73,7 @@ export const Inspector = ({ source, on_close }: { source: ListSource, on_close: 
                 <ul className={styles.list}>
                   {track.library_addresses?.map((address) => {
                     const library = libraries?.find((candidate) => candidate.address === address)
-                    return <li key={address}>{name_of(address)} <span className={styles.quiet}>{library === undefined ? 'discovered' : library_category(library)}</span></li>
+                    return <li key={address}>{name_of(address)} <span className={styles.quiet}>{CATEGORY_LABELS[library === undefined ? 'discovered' : library_category(library)]}</span></li>
                   })}
                 </ul>
               </section>

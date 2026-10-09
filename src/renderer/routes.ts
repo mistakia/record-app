@@ -8,6 +8,10 @@ export const ROUTES = {
   tracks: '/tracks',
   listens: '/listens',
   libraries: '/libraries',
+  link_library: '/libraries/link',
+  new_library: '/libraries/new',
+  library_profile: '/library/profile',
+  library_sharing: '/library/sharing',
   import: '/import',
   identity: '/identity',
   settings: '/settings'
@@ -47,6 +51,14 @@ export const parse_track_view = (search: URLSearchParams): TrackView => {
     }
   }
 }
+
+// An own library's management tabs, beside its track list.
+export type LibraryTab = 'tracks' | 'profile' | 'sharing'
+
+export const library_route = ({ tab, library_address }: { tab: LibraryTab, library_address: string }): string =>
+  tab === 'tracks'
+    ? tracks_route({ library_address })
+    : `${tab === 'profile' ? ROUTES.library_profile : ROUTES.library_sharing}?${new URLSearchParams({ library: library_address }).toString()}`
 
 export const settings_route = (section?: SettingsSection): string =>
   section === undefined ? ROUTES.settings : `${ROUTES.settings}?section=${section}`
