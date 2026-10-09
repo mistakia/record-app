@@ -328,7 +328,7 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 ### Library context menu, track context menu
 
 - Track: Play, Play next, Add to queue, Remove from queue (when queued), Add tag, Adopt to library, Pin or Unpin, Remove from library, Copy CID. Shortcuts right-aligned in tertiary.
-- Library: Connect or Disconnect, Unlink (confirms), Edit, Copy address.
+- Library: Pause or Resume (replication), Unlink (confirms), Edit, Copy address.
 
 ### Libraries (paper)
 
