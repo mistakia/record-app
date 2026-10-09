@@ -194,7 +194,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 - **RECORD** — Tracks (every library, aggregated) and Recently Played (listens).
 - **MY LIBRARY** — Tracks and Libraries of the user's own library. With more than one own active library, MY LIBRARY lists each by name.
 - **LIBRARIES** — linked and held-capability libraries; this list takes the remaining height and scrolls under a sticky heading that hosts `[+]`, which opens the Link a library flow. Each row: a 24px avatar, the name, and on hover a `…` that opens the library menu (connect or disconnect, unlink, edit, copy address). A library that is replicating shows a quiet tertiary gauge after its name.
-- **Footer** — the identity's profile and the Settings gear, over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings. The identity has no profile of its own (spec §8.6.9), so it goes by its default own library's About name and avatar. Until it is named, it goes by a default read from its public key (`identity/default-name.ts`): a two-word handle (`amber heron`) and a 5×5 mirrored pattern in the avatar, the same on every device, never written to the profile. Either opens Identity, whose first section edits that profile. The gear is a 16px hairline SVG (`components/layout/settings-icon.tsx`) in secondary ink, accent on hover and on the Settings page, labelled `Settings`.
+- **Footer** — the identity's profile and the Settings gear, over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings. The identity has no profile of its own (spec §8.6.9), so it goes by its default own library's About name and avatar. Until it is named, it goes by a two-word handle read from its public key (`identity/default-name.ts`, `amber heron`), the same on every device, never written to the profile. Until it has an image, its avatar is its default library's pattern. Either opens Identity, whose first section edits that profile. The gear is a 16px hairline SVG (`components/layout/settings-icon.tsx`) in secondary ink, accent on hover and on the Settings page, labelled `Settings`.
 - Active item: `--color-selected` ink at 600 on the `--color-surface` paper (the item lifts to the page's paper, as legacy's white-on-grey). Hover: `--color-surface-hover`.
 
 ### Page column (paper)
@@ -322,7 +322,7 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 ### Artwork and avatars
 
 - Artwork with no image is legacy's vinyl disc: a circle in `--color-border` with a centre label in `--color-accent-wash`; an image covers it. The disc is the one round shape on paper, because it depicts an object, not a control.
-- Library and identity avatars are square, 1px `--color-border-light`, falling back to the name's first letter in Departure Mono on `--color-surface-sunken`; an unnamed identity shows its key pattern instead.
+- Library and identity avatars are square, 1px `--color-border-light`, on `--color-surface-sunken`. Without an image, an avatar is a 5×5 mirrored pattern in secondary ink, 60% of the square, read from the library's address (`components/common/avatar-pattern.ts`), so a library looks the same on every device and to every peer. The identity shows its default library's.
 - Inside a screen, artwork keeps its own colors under the glass.
 
 ### Library context menu, track context menu

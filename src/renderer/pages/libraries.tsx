@@ -59,7 +59,7 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
     <tr data-testid='library-row' data-category={category}>
       <td>
         <Link className={styles.name} to={tracks_route({ library_address: library.address })}>
-          <Avatar name={library_name(library)} size={20} cid={library.avatar} />
+          <Avatar address={library.address} size={20} cid={library.avatar} />
           <span className={styles.label}>{library_name(library)}</span>
           {library.is_retired && <span className={styles.note}>retired</span>}
         </Link>
@@ -111,7 +111,7 @@ const OwnRow = ({ library, show_address }: { library: Library, show_address: boo
     <tr data-testid='own-library-row' data-retired={library.is_retired} data-type={library.library_type}>
       <td>
         <Link className={styles.name} to={listens ? ROUTES.listens : tracks_route({ library_address: library.address })}>
-          <Avatar name={name} size={20} cid={library.avatar} />
+          <Avatar address={library.address} size={20} cid={library.avatar} />
           <span className={styles.label}>{name}</span>
           {library.is_retired && <span className={styles.note}>retired</span>}
         </Link>

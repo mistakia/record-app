@@ -142,7 +142,7 @@ export const PlayerBar = () => {
                   {source.subtitle !== null && <span className={styles.subtitle}>{source.subtitle}</span>}
                   <span className={styles.kicker}>Playing from</span>
                 </span>
-                {source_library !== undefined && <Avatar name={source.label} size={65} cid={source_library.avatar} />}
+                {source_library !== undefined && <Avatar address={source_library.address} size={65} cid={source_library.avatar} />}
               </button>
             )}
           </div>

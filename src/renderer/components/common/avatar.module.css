@@ -7,8 +7,6 @@
   border: 1px solid var(--color-border-light);
   background: var(--color-surface-sunken);
   color: var(--color-text-secondary);
-  font-family: var(--font-display);
-  line-height: 1;
 }
 
 .avatar img {

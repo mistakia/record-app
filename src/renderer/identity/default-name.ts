@@ -1,7 +1,8 @@
-// What an identity goes by before it names itself: a two-word handle and a
-// 5×5 mirrored pattern, both read from its public key, so the same identity
-// looks the same on every device and two identities rarely look alike. A
-// display default only; nothing is written to the profile.
+// What an identity goes by before it names itself: a two-word handle read
+// from its public key, so the same identity reads the same on every device
+// and two identities rarely share one. A display default only; nothing is
+// written to the profile. Its avatar is its default library's pattern
+// (components/common/avatar-pattern.ts).
 
 const ADJECTIVES = [
   'amber', 'ashen', 'bright', 'brisk', 'calm', 'cedar', 'clear', 'coral',
@@ -32,15 +33,4 @@ const key_bytes = (public_key: string): number[] =>
 export const key_handle = (public_key: string): string => {
   const bytes = key_bytes(public_key)
   return `${ADJECTIVES[(bytes[0] ?? 0) % ADJECTIVES.length]} ${NOUNS[(bytes[1] ?? 0) % NOUNS.length]}`
-}
-
-// Row-major 5×5 cells, the right two columns mirroring the left two.
-export const key_pattern = (public_key: string): boolean[] => {
-  const bytes = key_bytes(public_key).slice(2)
-  const cells: boolean[] = []
-  for (let row = 0; row < 5; row++) {
-    const half = [0, 1, 2].map((column) => ((bytes[row * 3 + column] ?? 0) & 1) === 1)
-    cells.push(half[0] ?? false, half[1] ?? false, half[2] ?? false, half[1] ?? false, half[0] ?? false)
-  }
-  return cells
 }
