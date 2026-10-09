@@ -8,6 +8,7 @@ import { TRACK_PAGE_SIZE, type About, type Capability, type ReplicationMode, typ
 import { select_writes_allowed, type ConnectionState } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
 import { library_ids } from './cache-ids.ts'
+import { compressed_public_key } from '#renderer/identity/identity.ts'
 
 const READ_METHODS = new Set(['get', 'head'])
 const WRITES_WAIT: NodeFailure = { kind: 'refused', message: 'Writes wait until the app has caught up with the node.' }
@@ -92,6 +93,16 @@ export const node_api = createApi({
         }
         return result.failure.kind === 'http' && result.failure.status === 404 ? { data: { heads: null } } : { error: result.failure }
       }
+    }),
+    // The identity's public key, through main's identity channel, which
+    // keeps it per node. Tagged with the libraries, which an identity import
+    // invalidates.
+    get_public_key: build.query<string, void>({
+      queryFn: async () => {
+        const result = await window.record.identity.public_key()
+        return result.ok ? { data: compressed_public_key(result.data.public_key) } : { error: result.failure }
+      },
+      providesTags: ['libraries']
     }),
     // Every own library, active and retired, the listens library included.
     get_own_libraries: build.query<Library[], void>({

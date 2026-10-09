@@ -11,6 +11,7 @@ import { HistoryNav } from './history-nav.tsx'
 import { SettingsIcon } from './settings-icon.tsx'
 import type { Library } from '#renderer/api/types.ts'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
+import { key_handle, key_pattern } from '#renderer/identity/default-name.ts'
 import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
 import { ConnectionStatus } from '#renderer/components/layout/connection-banner.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
@@ -59,7 +60,9 @@ export const Sidebar = () => {
   // The identity has no profile of its own (spec §8.6.9): it goes by its
   // default own library's About name and avatar.
   const identity = own_active[0]
-  const identity_name = identity?.name ?? null
+  const public_key = node_api.endpoints.get_public_key.useQuery().data
+  // Unnamed, it goes by the handle and pattern its key gives it.
+  const identity_name = identity?.name ?? (public_key === undefined ? null : key_handle(public_key))
 
   return (
     <nav className={styles.sidebar} aria-label='Library'>
@@ -113,10 +116,8 @@ export const Sidebar = () => {
       <div className={styles.footer}>
         <div className={styles.footer_row}>
           <Link to={ROUTES.identity} className={styles.identity} aria-label='Identity' aria-current={is_current(ROUTES.identity) ? 'page' : undefined}>
-            <Avatar name={identity_name ?? ''} size={28} cid={identity?.avatar} />
-            {identity_name === null
-              ? <span className={`${styles.name} ${styles.unnamed}`}>add a name</span>
-              : <span className={styles.name}>{identity_name}</span>}
+            <Avatar name={identity?.name ?? ''} size={28} cid={identity?.avatar} pattern={public_key === undefined ? undefined : key_pattern(public_key)} />
+            {identity_name !== null && <span className={styles.name}>{identity_name}</span>}
           </Link>
           <Link to={ROUTES.settings} className={styles.gear} aria-label='Settings' title='Settings' aria-current={is_current(ROUTES.settings) ? 'page' : undefined}><SettingsIcon /></Link>
         </div>
