@@ -22,8 +22,7 @@
   flex: 1;
   min-height: 0;
   flex-direction: column;
-  background-image: linear-gradient(var(--color-paper-texture) 1px, transparent 1px);
-  background-size: 2px 2px;
+  background: var(--color-surface-ruling);
 }
 
 .body {

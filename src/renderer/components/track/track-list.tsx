@@ -13,10 +13,9 @@ import { COLUMNS, grid_template, NO_HIDDEN_COLUMNS, type ColumnId } from './colu
 import { register_list_commands } from './list-commands.ts'
 import { PageSubscription, select_list_page, type ListSource } from './list-source.ts'
 import { pages_for_rows, row_location } from './track-pages.ts'
-import { TrackRow, type RowPlayState } from './track-row.tsx'
+import { TrackRow, TrackRowSkeleton, type RowPlayState } from './track-row.tsx'
 import type { Track } from '#renderer/api/types.ts'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
-import { SkeletonBar } from '#renderer/components/common/skeleton.tsx'
 import { use_view_pref } from '#renderer/prefs/view-prefs.ts'
 import { node_api, type SortOrder, type TrackSort } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/store/index.ts'
@@ -38,6 +37,17 @@ export interface ListActions {
   // the pane. Each answers whether it closed anything.
   clear_search: () => boolean
   close_pane: () => boolean
+}
+
+// The first page loading: skeleton rows on the list's column grid.
+export const TrackListSkeleton = ({ rows = 12 }: { rows?: number }) => {
+  const [hidden] = use_view_pref<readonly ColumnId[]>('hidden-columns', NO_HIDDEN_COLUMNS)
+  const visible = COLUMNS.filter(({ id }) => !hidden.includes(id))
+  return (
+    <div className={styles.list} style={{ '--track-columns': grid_template(visible) } as React.CSSProperties} aria-busy='true' aria-label='Loading' data-testid='skeleton'>
+      {Array.from({ length: rows }, (_, index) => <TrackRowSkeleton key={index} index={index} columns={visible} />)}
+    </div>
+  )
 }
 
 export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
@@ -195,7 +205,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
             return (
               <div key={row.key} id={`track-row-${row.index}`} data-row={row.index} className={styles.slot} style={{ height: row.size, transform: `translateY(${row.start}px)` }}>
                 {track === undefined || page_tracks === undefined
-                  ? <div className={styles.placeholder} role='row' aria-busy='true'><SkeletonBar index={row.index} /></div>
+                  ? <TrackRowSkeleton index={row.index} columns={visible} />
                   : (
                     <TrackRow
                       track={track}
