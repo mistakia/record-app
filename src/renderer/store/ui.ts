@@ -15,9 +15,13 @@ interface UiState {
   queue_open: boolean
   // The ? shortcut overlay.
   shortcuts_open: boolean
+  // The g lead: the next key goes to a page or a sidebar library.
+  lead_open: boolean
+  // The page's help popover.
+  help_open: boolean
 }
 
-const initial_state: UiState = { library_address: '', filters: DEFAULT_TRACK_FILTERS, recent_write_target: null, queue_open: false, shortcuts_open: false }
+const initial_state: UiState = { library_address: '', filters: DEFAULT_TRACK_FILTERS, recent_write_target: null, queue_open: false, shortcuts_open: false, lead_open: false, help_open: false }
 
 export const ui_slice = createSlice({
   name: 'ui',
@@ -42,8 +46,14 @@ export const ui_slice = createSlice({
     },
     shortcuts_toggled: (state, action: PayloadAction<boolean | undefined>) => {
       state.shortcuts_open = action.payload ?? !state.shortcuts_open
+    },
+    lead_toggled: (state, action: PayloadAction<boolean>) => {
+      state.lead_open = action.payload
+    },
+    help_toggled: (state, action: PayloadAction<boolean | undefined>) => {
+      state.help_open = action.payload ?? !state.help_open
     }
   }
 })
 
-export const { view_changed, library_selected, write_target_used, queue_toggled, shortcuts_toggled } = ui_slice.actions
+export const { view_changed, library_selected, write_target_used, queue_toggled, shortcuts_toggled, lead_toggled, help_toggled } = ui_slice.actions

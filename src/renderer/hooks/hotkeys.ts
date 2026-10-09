@@ -1,8 +1,9 @@
 // The keyboard model (STYLE.md § Keyboard Model) as one table: each row is
-// a binding, its keys as the ? overlay and Settings show them, and the key
-// presses it answers. resolve_hotkey reads the same table, so the shown
-// keys cannot drift from the bindings. Keys typed into a field, or while a
-// dialog or menu is open, are never shortcuts; Escape is the one key that
+// a binding, its keys as the ? overlay and Settings show them, where it is
+// live, and the key presses it answers. resolve_hotkey reads the same table,
+// so the shown keys cannot drift from the bindings. Navigation sits behind
+// the g lead (GO_KEYS), one key after it. Keys typed into a field, or while
+// a dialog or menu is open, are never shortcuts; Escape is the one key that
 // always reaches the app.
 
 export type HotkeyAction =
@@ -12,7 +13,7 @@ export type HotkeyAction =
   | 'focus_search' | 'escape'
   | 'toggle_playback' | 'previous_track' | 'next_track' | 'seek_back' | 'seek_forward'
   | 'volume_down' | 'volume_up' | 'cycle_repeat' | 'toggle_shuffle' | 'toggle_queue'
-  | 'back' | 'forward' | 'go_home' | 'go_library' | 'go_identity' | 'go_settings' | 'import_files' | 'show_shortcuts'
+  | 'back' | 'forward' | 'go_settings' | 'import_files' | 'lead' | 'show_help' | 'show_shortcuts'
 
 export interface KeyPress {
   key: string
@@ -23,6 +24,8 @@ export interface KeyPress {
   in_field: boolean
   dialog_open: boolean
   menu_open?: boolean
+  // A track list is mounted, so the list's keys are live.
+  list_shown: boolean
 }
 
 // One key press a binding answers. Letters match either case; shift 'any'
@@ -33,53 +36,82 @@ interface Combo {
   shift?: boolean | 'any'
 }
 
+// Where a binding is live: 'list' keys only while a track list is mounted
+// (it registers its commands, list-commands.ts), 'app' keys everywhere.
+export type HotkeyScope = 'list' | 'app'
+
 export interface Hotkey {
   keys: string
   label: string
   action: HotkeyAction
+  scope: HotkeyScope
   combos: Combo[]
 }
 
 const k = (key: string, modifiers: Omit<Combo, 'key'> = {}): Combo => ({ key, ...modifiers })
 
 export const HOTKEYS: readonly Hotkey[] = [
-  { keys: 'j or ↓', label: 'Move the cursor down', action: 'cursor_down', combos: [k('j'), k('ArrowDown')] },
-  { keys: 'k or ↑', label: 'Move the cursor up', action: 'cursor_up', combos: [k('k'), k('ArrowUp')] },
-  { keys: 'Home', label: 'First row', action: 'cursor_first', combos: [k('Home')] },
-  { keys: 'End', label: 'Last row', action: 'cursor_last', combos: [k('End')] },
-  { keys: 'Shift+j or Shift+↓', label: 'Extend the selection down', action: 'extend_down', combos: [k('j', { shift: true }), k('ArrowDown', { shift: true })] },
-  { keys: 'Shift+k or Shift+↑', label: 'Extend the selection up', action: 'extend_up', combos: [k('k', { shift: true }), k('ArrowUp', { shift: true })] },
-  { keys: 'Shift+Home', label: 'Extend the selection to the first row', action: 'extend_first', combos: [k('Home', { shift: true })] },
-  { keys: 'Shift+End', label: 'Extend the selection to the last row', action: 'extend_last', combos: [k('End', { shift: true })] },
-  { keys: 'x', label: 'Toggle the row in the selection', action: 'toggle_selection', combos: [k('x')] },
-  { keys: 'Enter', label: 'Play from the cursor; the list continues after the queue', action: 'play_cursor', combos: [k('Enter')] },
-  { keys: 'n', label: 'Play next', action: 'play_next', combos: [k('n')] },
-  { keys: 'q', label: 'Add to the end of the queue', action: 'add_to_queue', combos: [k('q')] },
-  { keys: 't', label: 'Tag the row or the selection', action: 'tag', combos: [k('t')] },
-  { keys: 'f', label: 'Adopt into your library', action: 'adopt', combos: [k('f')] },
-  { keys: 'i', label: 'Show or hide the details pane', action: 'toggle_inspector', combos: [k('i')] },
-  { keys: '. or Shift+F10', label: 'Open the row menu', action: 'open_menu', combos: [k('.'), k('F10', { shift: true })] },
-  { keys: '/ or Cmd+F', label: 'Search', action: 'focus_search', combos: [k('/'), k('f', { command: true })] },
-  { keys: 'Esc', label: 'Close the menu, then clear the search, the selection, the pane', action: 'escape', combos: [k('Escape')] },
-  { keys: 'Space', label: 'Play or pause', action: 'toggle_playback', combos: [k(' ')] },
-  { keys: 'Cmd+←', label: 'Previous track', action: 'previous_track', combos: [k('ArrowLeft', { command: true })] },
-  { keys: 'Cmd+→', label: 'Next track', action: 'next_track', combos: [k('ArrowRight', { command: true })] },
-  { keys: 'Shift+←', label: 'Seek back 5 seconds', action: 'seek_back', combos: [k('ArrowLeft', { shift: true })] },
-  { keys: 'Shift+→', label: 'Seek forward 5 seconds', action: 'seek_forward', combos: [k('ArrowRight', { shift: true })] },
-  { keys: '-', label: 'Volume down', action: 'volume_down', combos: [k('-')] },
-  { keys: '=', label: 'Volume up', action: 'volume_up', combos: [k('='), k('+', { shift: 'any' })] },
-  { keys: 'r', label: 'Cycle repeat: off, all, one', action: 'cycle_repeat', combos: [k('r')] },
-  { keys: 's', label: 'Shuffle on or off', action: 'toggle_shuffle', combos: [k('s')] },
-  { keys: 'Shift+Q', label: 'Show or hide the queue', action: 'toggle_queue', combos: [k('q', { shift: true })] },
-  { keys: 'Cmd+[', label: 'Back', action: 'back', combos: [k('[', { command: true })] },
-  { keys: 'Cmd+]', label: 'Forward', action: 'forward', combos: [k(']', { command: true })] },
-  { keys: 'h', label: 'All tracks', action: 'go_home', combos: [k('h')] },
-  { keys: 'l', label: 'My library', action: 'go_library', combos: [k('l')] },
-  { keys: 'a', label: 'Identity', action: 'go_identity', combos: [k('a')] },
-  { keys: ', or Cmd+,', label: 'Settings', action: 'go_settings', combos: [k(','), k(',', { command: true })] },
-  { keys: 'Cmd+O', label: 'Import files', action: 'import_files', combos: [k('o', { command: true })] },
-  { keys: '?', label: 'Show these shortcuts', action: 'show_shortcuts', combos: [k('?', { shift: 'any' })] }
+  { keys: 'j or ↓', label: 'Move the cursor down', action: 'cursor_down', scope: 'list', combos: [k('j'), k('ArrowDown')] },
+  { keys: 'k or ↑', label: 'Move the cursor up', action: 'cursor_up', scope: 'list', combos: [k('k'), k('ArrowUp')] },
+  { keys: 'Home', label: 'First row', action: 'cursor_first', scope: 'list', combos: [k('Home')] },
+  { keys: 'End', label: 'Last row', action: 'cursor_last', scope: 'list', combos: [k('End')] },
+  { keys: 'Shift+j or Shift+↓', label: 'Extend the selection down', action: 'extend_down', scope: 'list', combos: [k('j', { shift: true }), k('ArrowDown', { shift: true })] },
+  { keys: 'Shift+k or Shift+↑', label: 'Extend the selection up', action: 'extend_up', scope: 'list', combos: [k('k', { shift: true }), k('ArrowUp', { shift: true })] },
+  { keys: 'Shift+Home', label: 'Extend the selection to the first row', action: 'extend_first', scope: 'list', combos: [k('Home', { shift: true })] },
+  { keys: 'Shift+End', label: 'Extend the selection to the last row', action: 'extend_last', scope: 'list', combos: [k('End', { shift: true })] },
+  { keys: 'x', label: 'Toggle the row in the selection', action: 'toggle_selection', scope: 'list', combos: [k('x')] },
+  { keys: 'Enter', label: 'Play from the cursor; the list continues after the queue', action: 'play_cursor', scope: 'list', combos: [k('Enter')] },
+  { keys: 'n', label: 'Play next', action: 'play_next', scope: 'list', combos: [k('n')] },
+  { keys: 'q', label: 'Add to the end of the queue', action: 'add_to_queue', scope: 'list', combos: [k('q')] },
+  { keys: 't', label: 'Tag the row or the selection', action: 'tag', scope: 'list', combos: [k('t')] },
+  { keys: 'f', label: 'Adopt into your library', action: 'adopt', scope: 'list', combos: [k('f')] },
+  { keys: 'i', label: 'Show or hide the details pane', action: 'toggle_inspector', scope: 'list', combos: [k('i')] },
+  { keys: '. or Shift+F10', label: 'Open the row menu', action: 'open_menu', scope: 'list', combos: [k('.'), k('F10', { shift: true })] },
+  { keys: '/ or Cmd+F', label: 'Search', action: 'focus_search', scope: 'app', combos: [k('/'), k('f', { command: true })] },
+  { keys: 'Esc', label: 'Close the menu, then clear the search, the selection, the pane', action: 'escape', scope: 'app', combos: [k('Escape')] },
+  { keys: 'Space', label: 'Play or pause', action: 'toggle_playback', scope: 'app', combos: [k(' ')] },
+  { keys: 'Cmd+←', label: 'Previous track', action: 'previous_track', scope: 'app', combos: [k('ArrowLeft', { command: true })] },
+  { keys: 'Cmd+→', label: 'Next track', action: 'next_track', scope: 'app', combos: [k('ArrowRight', { command: true })] },
+  { keys: 'Shift+←', label: 'Seek back 5 seconds', action: 'seek_back', scope: 'app', combos: [k('ArrowLeft', { shift: true })] },
+  { keys: 'Shift+→', label: 'Seek forward 5 seconds', action: 'seek_forward', scope: 'app', combos: [k('ArrowRight', { shift: true })] },
+  { keys: '-', label: 'Volume down', action: 'volume_down', scope: 'app', combos: [k('-')] },
+  { keys: '=', label: 'Volume up', action: 'volume_up', scope: 'app', combos: [k('='), k('+', { shift: 'any' })] },
+  { keys: 'r', label: 'Cycle repeat: off, all, one', action: 'cycle_repeat', scope: 'app', combos: [k('r')] },
+  { keys: 's', label: 'Shuffle on or off', action: 'toggle_shuffle', scope: 'app', combos: [k('s')] },
+  { keys: 'Shift+Q', label: 'Show or hide the queue', action: 'toggle_queue', scope: 'app', combos: [k('q', { shift: true })] },
+  { keys: 'Cmd+[', label: 'Back', action: 'back', scope: 'app', combos: [k('[', { command: true })] },
+  { keys: 'Cmd+]', label: 'Forward', action: 'forward', scope: 'app', combos: [k(']', { command: true })] },
+  { keys: 'g', label: 'Go to a page or a library: the next key says where', action: 'lead', scope: 'app', combos: [k('g')] },
+  { keys: 'Cmd+,', label: 'Settings', action: 'go_settings', scope: 'app', combos: [k(',', { command: true })] },
+  { keys: 'Cmd+O', label: 'Import files', action: 'import_files', scope: 'app', combos: [k('o', { command: true })] },
+  { keys: 'Cmd+?', label: 'Help for this page', action: 'show_help', scope: 'app', combos: [k('?', { command: true, shift: 'any' }), k('/', { command: true, shift: true })] },
+  { keys: '?', label: 'Show these shortcuts', action: 'show_shortcuts', scope: 'app', combos: [k('?', { shift: 'any' })] }
 ]
+
+// The keys after g (STYLE.md § Keyboard Model): a page, or 1 to 9 for the
+// sidebar's libraries in the order it lists them.
+export type GoTarget = 'tracks' | 'listens' | 'library' | 'libraries' | 'import' | 'identity' | 'settings'
+
+export const GO_KEYS: ReadonlyArray<{ key: string, label: string, target: GoTarget }> = [
+  { key: 't', label: 'All tracks', target: 'tracks' },
+  { key: 'r', label: 'Recently played', target: 'listens' },
+  { key: 'l', label: 'My library', target: 'library' },
+  { key: 'b', label: 'Libraries', target: 'libraries' },
+  { key: 'i', label: 'Import', target: 'import' },
+  { key: 'a', label: 'Identity', target: 'identity' },
+  { key: ',', label: 'Settings', target: 'settings' }
+]
+
+export const MAX_JUMP_LABELS = 9
+
+// The key after g: a page, a sidebar library by its 0-based place, or null,
+// which closes the panel and does nothing.
+export const resolve_go = (key: string): GoTarget | { library: number } | null => {
+  const page = GO_KEYS.find((entry) => entry.key === key.toLowerCase())
+  if (page !== undefined) return page.target
+  const digit = /^[1-9]$/.test(key) ? Number(key) : 0
+  return digit >= 1 && digit <= MAX_JUMP_LABELS ? { library: digit - 1 } : null
+}
 
 const LETTER = /^[a-z]$/i
 
@@ -93,5 +125,5 @@ const matches = (combo: Combo, press: KeyPress): boolean => {
 export const resolve_hotkey = (press: KeyPress): HotkeyAction | null => {
   if (press.key === 'Escape') return press.dialog_open || press.menu_open === true ? null : 'escape'
   if (press.in_field || press.dialog_open || press.menu_open === true || press.alt) return null
-  return HOTKEYS.find(({ combos }) => combos.some((combo) => matches(combo, press)))?.action ?? null
+  return HOTKEYS.find(({ scope, combos }) => (scope === 'app' || press.list_shown) && combos.some((combo) => matches(combo, press)))?.action ?? null
 }

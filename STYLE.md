@@ -201,7 +201,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 
 - Fills the rest of the window above the player bar, with base's ruled texture: `--color-surface-ruling`, a `linear-gradient(var(--color-paper-texture) 1px, transparent 1px)` at `2px 2px`, fixed to the window so anything that masks it (a framed section's label) rules in step.
 - **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, the short address, an `OWNER` chip on an own library; on an own recordstore a centred `TRACKS │ PROFILE │ SHARING` tabline in reverse video (active tab filled `--color-selected`, base's tui tabline; a retired library has no `PROFILE`); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
-- **Help** — disclosed, never a banner. A tertiary lowercase `help` sits at the right end of the page head on every page that has help (`components/layout/help.tsx`). It opens a 340px paper popover under it (the overlay surface, border, 2px radius, and shadow): one or two sentences on what the page is for, then `every key ?`, which opens the shortcut overlay. Closed on every visit; `Esc`, a click elsewhere, or a new page closes it. Empty states still teach on their own.
+- **Help** — disclosed, never a banner. A tertiary lowercase `help` sits at the right end of the page head on every page that has help (`components/layout/help.tsx`); `Cmd+?` opens and closes it. It opens a 340px paper popover under it (the overlay surface, border, 2px radius, and shadow): one or two sentences on what the page is for, then `every key ?`, which opens the shortcut overlay. Closed on every visit; `Esc`, a click elsewhere, or a new page closes it. Empty states still teach on their own.
 - **Body** — width tiers by content kind, as on base's entity page: the track list fills the column, forms and settings 720px, reading text (about, descriptions) 66ch. Page padding `--space-lg`; sections stack with `--space-lg` to `--space-xl` between them.
 - **Inspector** — a 320px paper pane docked on the right of the page column, reflowing the list, opened with `i`.
 - **Ingest gauge** — while any import runs and Import is not the page, a small screen in the page's bottom-right corner reads `importing 3/10 [####------]` over the batch (every import seen running since the gauge was last empty). When the batch ends away from Import it holds `done 10`, or `!! 1 failed` when any file failed, for about 4 seconds, then goes; a batch that ends on Import is not held. It opens Import on click.
@@ -274,14 +274,17 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 | `r` / `s`               | Cycle repeat / toggle shuffle                            |
 | `Shift+Q`               | Toggle the queue                                         |
 | `Cmd+[` / `Cmd+]`       | Back / forward                                           |
-| `h`                     | Home: all tracks (legacy)                                |
-| `l`                     | My library (legacy)                                      |
-| `a`                     | Identity, the legacy account page (legacy)               |
-| `,` / `Cmd+,`           | Settings (legacy `s`, moved: `s` is shuffle)             |
+| `g`                     | Go: the next key says where (below)                      |
+| `Cmd+,`                 | Settings                                                 |
 | `Cmd+O`                 | Import files                                             |
+| `Cmd+?`                 | This page's help popover                                 |
 | `?`                     | Shortcut overlay                                         |
 
-Every shortcut is in the `HOTKEYS` table, which the `?` overlay and the Settings shortcut section both render, so neither can drift from the bindings.
+**Go, the `g` lead.** Navigation is rare next to the list and player verbs, so it sits one key behind `g` rather than spending bare letters. `g` opens a small paper panel at the top of the page column, `G THEN` over the keys; the next key is consumed, never passed on: `t` all tracks, `r` recently played, `l` my library, `b` libraries, `i` import, `a` identity, `,` settings, and `1`–`9` the sidebar's libraries in its order, whose avatars turn into those digits while the panel is up. `Esc`, any other key, a click, or leaving the window closes it.
+
+**Live keys.** The track list's keys (cursor, selection, play, queue, tag, adopt, inspector, row menu) are live only while a track list is mounted, so on another page they pass through. Every other key is live everywhere.
+
+Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys after `g` are in `GO_KEYS`. The `?` overlay and the Settings shortcut section both render them grouped — `IN A TRACK LIST`, `EVERYWHERE`, `AFTER G` — the overlay putting the track list's keys first on a page that shows one, so neither can drift from the bindings.
 
 ## Components
 

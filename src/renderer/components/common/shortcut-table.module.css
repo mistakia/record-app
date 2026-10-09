@@ -1,8 +1,30 @@
-.table {
+/* One grid for every group, so the key column lines up across them. */
+.groups {
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: var(--space-xxs) var(--space-lg);
-  margin: 0;
+}
+
+.group {
+  display: contents;
+}
+
+.group:first-child .title {
+  margin-top: 0;
+}
+
+.title {
+  grid-column: 1 / -1;
+  margin: var(--space-base) 0 var(--space-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.table {
+  display: contents;
 }
 
 .row {

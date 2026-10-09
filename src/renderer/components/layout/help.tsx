@@ -1,15 +1,16 @@
 // A page's help, disclosed on request (STYLE.md § Layout › Page column): a
 // quiet `help` in the page head that opens a small paper popover with what
 // the page is for and the way to every key. Closed by default, on every
-// visit; Esc or a click elsewhere closes it.
+// visit; Cmd+? opens and closes it from the keyboard, and Esc or a click
+// elsewhere closes it.
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { useLocation } from 'react-router'
 
 import styles from './help.module.css'
 import { ROUTES } from '#renderer/routes.ts'
-import { use_app_dispatch } from '#renderer/store/index.ts'
-import { shortcuts_toggled } from '#renderer/store/ui.ts'
+import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
+import { help_toggled, shortcuts_toggled } from '#renderer/store/ui.ts'
 
 const HELP: Record<string, string> = {
   [ROUTES.tracks]: 'Every track in your libraries and the ones you follow, in one list. j and k move, Enter plays, t tags, and i opens the details.',
@@ -27,24 +28,25 @@ const HELP: Record<string, string> = {
 export const HelpButton = () => {
   const dispatch = use_app_dispatch()
   const { pathname } = useLocation()
-  const [open, set_open] = useState(false)
+  const open = use_app_selector((state) => state.ui.help_open)
+  const set_open = (next: boolean): void => { dispatch(help_toggled(next)) }
   const root = useRef<HTMLDivElement>(null)
   const panel_id = useId()
   const text = HELP[pathname]
 
   // A new page starts with its help closed.
-  useEffect(() => { set_open(false) }, [pathname])
+  useEffect(() => { dispatch(help_toggled(false)) }, [pathname, dispatch])
   useEffect(() => {
     if (!open) return
-    const close_outside = (event: MouseEvent) => { if (!root.current?.contains(event.target as Node)) set_open(false) }
-    const close_on_escape = (event: KeyboardEvent) => { if (event.key === 'Escape') set_open(false) }
+    const close_outside = (event: MouseEvent) => { if (!root.current?.contains(event.target as Node)) dispatch(help_toggled(false)) }
+    const close_on_escape = (event: KeyboardEvent) => { if (event.key === 'Escape') dispatch(help_toggled(false)) }
     document.addEventListener('mousedown', close_outside)
     document.addEventListener('keydown', close_on_escape)
     return () => {
       document.removeEventListener('mousedown', close_outside)
       document.removeEventListener('keydown', close_on_escape)
     }
-  }, [open])
+  }, [open, dispatch])
 
   if (text === undefined) return null
   return (

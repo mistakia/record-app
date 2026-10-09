@@ -12,10 +12,11 @@ import { SettingsIcon } from './settings-icon.tsx'
 import type { Library } from '#renderer/api/types.ts'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
 import { key_handle } from '#renderer/identity/default-name.ts'
+import { MAX_JUMP_LABELS } from '#renderer/hooks/hotkeys.ts'
 import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
 import { ConnectionStatus } from '#renderer/components/layout/connection-banner.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
-import { current_progress, has_profile, is_replicating, library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
+import { current_progress, has_profile, is_replicating, library_name, own_libraries_of, sidebar_libraries } from '#renderer/components/library/library-category.ts'
 import { parse_track_view, ROUTES, settings_route, tracks_route } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -56,7 +57,9 @@ export const Sidebar = () => {
   const actions = use_library_actions()
   const [menu, set_menu] = useState<{ x: number, y: number, library: Library } | null>(null)
   const own_active = own_libraries_of({ own: own.data, libraries: libraries.data }).filter(has_profile)
-  const others = (libraries.data ?? []).filter((library) => !library.is_own && (library.is_linked || library.held_capability_ids.length > 0))
+  const others = sidebar_libraries(libraries.data)
+  // While g is up, the first nine carry the digit that opens them.
+  const lead_open = use_app_selector((state) => state.ui.lead_open)
   // The identity has no profile of its own (spec §8.6.9): it goes by its
   // default own library's About name and avatar.
   const identity = own_active[0]
@@ -87,12 +90,14 @@ export const Sidebar = () => {
           Libraries
           <Link to={ROUTES.link_library} className={styles.add} aria-label='Link a library'>[+]</Link>
         </h2>
-        {others.map((library) => {
+        {others.map((library, index) => {
           const to = tracks_route({ library_address: library.address })
           return (
             <div key={library.id} className={styles.library} aria-current={is_current(to) ? 'page' : undefined} data-testid='sidebar-library'>
               <Link to={to} className={styles.library_link}>
-                <Avatar address={library.address} size={24} cid={library.avatar} />
+                {lead_open && index < MAX_JUMP_LABELS
+                  ? <kbd className={styles.jump} data-testid='jump-label'>{index + 1}</kbd>
+                  : <Avatar address={library.address} size={24} cid={library.avatar} />}
                 <span className={styles.name}>{library_name(library)}</span>
                 <ReplicationGauge library={library} fetched_at={libraries.fulfilledTimeStamp} />
               </Link>
