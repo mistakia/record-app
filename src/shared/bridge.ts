@@ -159,6 +159,12 @@ export interface ImportAck {
   file_names?: string[]
 }
 
+// An image the node stored (POST /images), for a library's avatar.
+export interface StoredImage {
+  cid: string
+  mime: string
+}
+
 export interface ImportTarget {
   library_address: string
   capability_id?: string
@@ -182,6 +188,9 @@ export interface RecordBridge {
   cancel_audio: (input: { request_id: string }) => Promise<void>
   // Artwork and avatars by CID (GET /images/{cid}), with their type.
   get_image: (input: { cid: string }) => Promise<NodeResult<{ data: ArrayBuffer, mime: string }>>
+  // Opens main's image picker and stores the chosen image in the node;
+  // null when the user cancels.
+  choose_image: () => Promise<NodeResult<StoredImage | null>>
   events: {
     get_state: () => Promise<EventsState>
     reconnect_now: () => Promise<void>
@@ -258,6 +267,7 @@ export const IPC_CHANNELS = {
   get_audio: 'record:get-audio',
   cancel_audio: 'record:cancel-audio',
   get_image: 'record:get-image',
+  choose_image: 'record:choose-image',
   events_get_state: 'record:events:get-state',
   events_reconnect_now: 'record:events:reconnect-now',
   events_message: 'record:events:message',

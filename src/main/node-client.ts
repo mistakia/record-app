@@ -3,7 +3,7 @@
 // any request carrying one. Imports nothing from Electron, so the integration
 // tests drive it directly.
 
-import type { ConnectionTest, ImportAck, ImportTarget, NodeFailure, NodeRequest, NodeResult } from '#shared/bridge.ts'
+import type { ConnectionTest, ImportAck, ImportTarget, NodeFailure, NodeRequest, NodeResult, StoredImage } from '#shared/bridge.ts'
 import { build_api_path } from './api-path.ts'
 
 const REQUEST_TIMEOUT_MS = 15_000
@@ -11,6 +11,7 @@ const AUDIO_TIMEOUT_MS = 120_000
 const TEST_TIMEOUT_MS = 5_000
 // Uploading is bounded by the size of the files, so this is generous.
 const IMPORT_TIMEOUT_MS = 30 * 60_000
+const IMAGE_UPLOAD_TIMEOUT_MS = 2 * 60_000
 // The whole file crosses IPC and is decoded in memory, so refuse anything
 // larger rather than exhaust either process.
 export const MAX_AUDIO_BYTES = 1024 ** 3
@@ -188,6 +189,28 @@ export const test_connection = async ({ node_url, token }: { node_url: string, t
     return { ok: true, data: { peer_id: settings.peer_id, version: typeof settings.version === 'string' ? settings.version : null } }
   } catch {
     return { ok: false, failure: { kind: 'http', status: result.data.status, code: null, message: 'The URL answered, but not as a record-node: GET /api/settings returned no peer_id.' } }
+  }
+}
+
+// POST /api/images: one image into the node's content store, for an avatar.
+// The node sniffs it and answers with its CID and type.
+export const upload_image = async ({ node_url, token, name, blob }: {
+  node_url: string | null
+  token?: string | null | undefined
+  name: string
+  blob: Blob
+}): Promise<NodeResult<StoredImage>> => {
+  if (node_url === null) return not_configured
+  const form = new FormData()
+  form.append('file', blob, name)
+  const result = await fetch_node({ url: `${node_url}/api/images`, init: { method: 'POST', body: form, headers: { accept: 'application/json', ...auth_headers(token) } }, timeout_ms: IMAGE_UPLOAD_TIMEOUT_MS })
+  if (!result.ok) return result
+  try {
+    const stored = await result.data.json() as { cid?: unknown, mime?: unknown }
+    if (typeof stored.cid !== 'string' || typeof stored.mime !== 'string') throw new Error('no cid')
+    return { ok: true, data: { cid: stored.cid, mime: stored.mime } }
+  } catch {
+    return { ok: false, failure: { kind: 'http', status: result.data.status, code: null, message: 'The node stored the image but returned no CID.' } }
   }
 }
 

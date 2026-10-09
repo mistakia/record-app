@@ -9,6 +9,7 @@ import { create_audio_downloads } from './audio-downloads.ts'
 import type { create_node_manager } from './bundled/node-manager.ts'
 import type { create_diagnostics } from './diagnostics.ts'
 import { create_secret_clipboard } from './clipboard-expiry.ts'
+import { IMAGE_EXTENSIONS, upload_chosen_image } from './image-files.ts'
 import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './import-files.ts'
 import { check_write_target } from './write-target.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
@@ -150,6 +151,14 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     const cid = is_plain_object(input) ? input.cid : undefined
     if (typeof cid !== 'string' || !CID.test(cid)) return refuse('Malformed image CID.')
     return await authed(async ({ node_url, token }) => await get_image({ node_url, token, cid }))
+  })
+  handle(IPC_CHANNELS.choose_image, async (_input, event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    const options = { title: 'Choose an avatar image', properties: ['openFile'] as Array<'openFile'>, filters: [{ name: 'Images', extensions: IMAGE_EXTENSIONS }] }
+    const chosen = window === null ? await dialog.showOpenDialog(options) : await dialog.showOpenDialog(window, options)
+    const [path] = chosen.filePaths
+    if (chosen.canceled || path === undefined) return { ok: true, data: null }
+    return await authed(async ({ node_url, token }) => await upload_chosen_image({ node_url, token, path }))
   })
   handle(IPC_CHANNELS.cancel_audio, async (input) => {
     const request_id = is_plain_object(input) ? input.request_id : undefined
