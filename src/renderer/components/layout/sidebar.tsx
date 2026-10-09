@@ -11,7 +11,7 @@ import { HistoryNav } from './history-nav.tsx'
 import { SettingsIcon } from './settings-icon.tsx'
 import type { Library } from '#renderer/api/types.ts'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
-import { key_handle, key_pattern } from '#renderer/identity/default-name.ts'
+import { key_handle } from '#renderer/identity/default-name.ts'
 import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
 import { ConnectionStatus } from '#renderer/components/layout/connection-banner.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
@@ -61,7 +61,7 @@ export const Sidebar = () => {
   // default own library's About name and avatar.
   const identity = own_active[0]
   const public_key = node_api.endpoints.get_public_key.useQuery().data
-  // Unnamed, it goes by the handle and pattern its key gives it.
+  // Unnamed, it goes by the handle its key gives it.
   const identity_name = identity?.name ?? (public_key === undefined ? null : key_handle(public_key))
 
   return (
@@ -92,7 +92,7 @@ export const Sidebar = () => {
           return (
             <div key={library.id} className={styles.library} aria-current={is_current(to) ? 'page' : undefined} data-testid='sidebar-library'>
               <Link to={to} className={styles.library_link}>
-                <Avatar name={library_name(library)} size={24} cid={library.avatar} />
+                <Avatar address={library.address} size={24} cid={library.avatar} />
                 <span className={styles.name}>{library_name(library)}</span>
                 <ReplicationGauge library={library} fetched_at={libraries.fulfilledTimeStamp} />
               </Link>
@@ -116,7 +116,7 @@ export const Sidebar = () => {
       <div className={styles.footer}>
         <div className={styles.footer_row}>
           <Link to={ROUTES.identity} className={styles.identity} aria-label='Identity' aria-current={is_current(ROUTES.identity) ? 'page' : undefined}>
-            <Avatar name={identity?.name ?? ''} size={28} cid={identity?.avatar} pattern={public_key === undefined ? undefined : key_pattern(public_key)} />
+            <Avatar address={identity?.address ?? ''} size={28} cid={identity?.avatar} />
             {identity_name !== null && <span className={styles.name}>{identity_name}</span>}
           </Link>
           <Link to={ROUTES.settings} className={styles.gear} aria-label='Settings' title='Settings' aria-current={is_current(ROUTES.settings) ? 'page' : undefined}><SettingsIcon /></Link>

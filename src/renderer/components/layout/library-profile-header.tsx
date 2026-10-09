@@ -29,7 +29,7 @@ export const LibraryProfileHeader = ({ library, tab }: { library: Library, tab: 
   return (
     <div className={styles.profile} data-testid='library-profile'>
       <div className={styles.identity}>
-        <Avatar name={name} size={24} cid={library.avatar} />
+        <Avatar address={library.address} size={24} cid={library.avatar} />
         <span className={styles.name}>{name}</span>
         <LibraryAddress address={library.address} name={name} />
         {library.is_own && <span className={styles.chip}>Owner</span>}
