@@ -85,7 +85,7 @@ export const Sidebar = () => {
       <div className={styles.libraries}>
         <h2 className={`${styles.heading} ${styles.sticky}`}>
           Libraries
-          <Link to={`${ROUTES.libraries}?link=1`} className={styles.add} aria-label='Link a library'>[+]</Link>
+          <Link to={ROUTES.link_library} className={styles.add} aria-label='Link a library'>[+]</Link>
         </h2>
         {others.map((library) => {
           const to = tracks_route({ library_address: library.address })

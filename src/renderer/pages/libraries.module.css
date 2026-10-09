@@ -32,29 +32,40 @@
 }
 
 .name {
-  display: block;
-  overflow: hidden;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-sm);
   font-weight: 600;
   text-decoration: none;
+}
+
+.label {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.note {
+  flex: none;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+}
+
+.empty {
+  margin: 0;
+  color: var(--color-text-secondary);
 }
 
 .address,
 .scope {
   display: block;
+  padding-left: 28px;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
   overflow-wrap: anywhere;
   user-select: text;
-}
-
-.badge {
-  margin-right: var(--space-xs);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
 }
 
 .mode {
@@ -77,21 +88,6 @@
   color: var(--color-text-tertiary);
   letter-spacing: 0;
   text-transform: none;
-}
-
-.link {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-.link input:first-child {
-  flex: 2;
-  min-width: 0;
-}
-
-.link input {
-  flex: 1;
-  min-width: 0;
 }
 
 .error {

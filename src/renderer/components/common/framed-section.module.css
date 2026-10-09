@@ -80,7 +80,8 @@
   margin-left: auto;
 }
 
-.controls button {
+.controls button,
+.controls a {
   height: auto;
   padding: 0;
   border: none;
@@ -88,10 +89,12 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xxs);
   letter-spacing: 0;
+  text-decoration: none;
   text-transform: none;
 }
 
-.controls button:hover:not(:disabled) {
+.controls button:hover:not(:disabled),
+.controls a:hover {
   background: var(--color-surface-ruling), var(--color-surface-solid);
   color: var(--color-accent);
 }
