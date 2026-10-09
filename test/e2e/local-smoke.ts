@@ -178,11 +178,16 @@ try {
   step('tracks on the node after ingest', total)
   if (total !== 5) throw new Error('ingest did not add three tracks')
 
-  // Libraries: link, disconnect, connect, unlink, and the own about.
+  // Libraries: link through its step flow, disconnect, connect, unlink, and
+  // the own about.
   await nav(window, 'Libraries')
+  await window.getByRole('link', { name: 'Link a library' }).first().click()
   await window.getByLabel('Library address').fill(other.identity().own_address)
+  await window.getByRole('button', { name: 'Continue' }).click()
   await window.getByLabel('Alias').fill('Smoke Other')
-  await window.getByRole('button', { name: 'Link', exact: true }).click()
+  await window.getByRole('button', { name: 'Link library' }).click()
+  await window.getByTestId('library-profile').filter({ hasText: 'Smoke Other' }).waitFor()
+  await nav(window, 'Libraries')
   const linked = window.getByTestId('library-row').filter({ hasText: 'Smoke Other' })
   await linked.getByTestId('replication').filter({ hasText: 'Replicating' }).waitFor()
   step('linked library', (await linked.innerText()).replaceAll('\n', ' | ').replaceAll('\t', ' | '))
@@ -193,13 +198,13 @@ try {
   await linked.getByRole('button', { name: 'Unlink', exact: true }).click()
   await window.getByRole('dialog').getByRole('button', { name: 'Unlink' }).click()
   await linked.waitFor({ state: 'detached' })
-  await window.locator('input[name=name]').fill('Smoke Own')
+
+  // Identity: the profile it goes by, then the key.
+  await nav(window, 'Identity')
+  await window.getByTestId('identity-profile').locator('input[name=name]').fill('Smoke Own')
   await window.getByRole('button', { name: 'Save profile' }).click()
   await toast(window, 'Profile saved.')
   step('own about on the node', await node.peer.get_about(node.peer.identity().own_address))
-
-  // Identity.
-  await nav(window, 'Identity')
   step('key holder', await window.getByTestId('key-holder').innerText())
   await window.getByRole('button', { name: 'Show public key' }).click()
   step('public key', await window.getByTestId('public-key').locator('code').textContent())

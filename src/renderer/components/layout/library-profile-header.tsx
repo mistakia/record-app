@@ -1,6 +1,7 @@
 // A library's profile in the page head (legacy-v0's library header): avatar,
-// name, its short address (copies the whole one), OWNER on an own library, the TRACKS │ LIBRARIES tabline, and its
-// counts, which pulse while the node indexes it.
+// name, its short address (copies the whole one), OWNER on an own library,
+// an own recordstore's TRACKS │ PROFILE │ SHARING tabline, and its counts,
+// which pulse while the node indexes it.
 
 import { Link } from 'react-router'
 
@@ -8,11 +9,17 @@ import styles from './page-head.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
 import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
-import { current_progress, is_replicating, library_name } from '#renderer/components/library/library-category.ts'
-import { ROUTES, tracks_route } from '#renderer/routes.ts'
+import { current_progress, has_profile, is_replicating, library_name } from '#renderer/components/library/library-category.ts'
+import { library_route, type LibraryTab } from '#renderer/routes.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
-export const LibraryProfileHeader = ({ library, tab }: { library: Library, tab: 'tracks' | 'libraries' }) => {
+const TABS: Array<{ tab: LibraryTab, label: string }> = [
+  { tab: 'tracks', label: 'Tracks' },
+  { tab: 'profile', label: 'Profile' },
+  { tab: 'sharing', label: 'Sharing' }
+]
+
+export const LibraryProfileHeader = ({ library, tab }: { library: Library, tab: LibraryTab }) => {
   const live_progress = use_app_selector((state) => state.replication.progress[library.address])
   const linked_at = use_app_selector((state) => state.replication.linked_at[library.address])
   const progress = current_progress({ library, live_progress, libraries_fetched_at: undefined })
@@ -27,10 +34,11 @@ export const LibraryProfileHeader = ({ library, tab }: { library: Library, tab: 
         <LibraryAddress address={library.address} name={name} />
         {library.is_own && <span className={styles.chip}>Owner</span>}
       </div>
-      {library.is_own && (
+      {library.is_own && library.library_type === 'recordstore' && (
         <div className={styles.tabs} role='tablist'>
-          <Link role='tab' aria-selected={tab === 'tracks'} to={tracks_route({ library_address: library.address })}>Tracks</Link>
-          <Link role='tab' aria-selected={tab === 'libraries'} to={ROUTES.libraries}>Libraries</Link>
+          {TABS.filter(({ tab: shown }) => shown !== 'profile' || has_profile(library)).map(({ tab: shown, label }) => (
+            <Link key={shown} role='tab' aria-selected={tab === shown} to={library_route({ tab: shown, library_address: library.address })}>{label}</Link>
+          ))}
         </div>
       )}
       <div className={styles.meta}>
