@@ -20,6 +20,7 @@ import { use_media_session } from '#renderer/hooks/use-player.ts'
 import { Identity } from '#renderer/pages/identity.tsx'
 import { LibraryProfile, LibrarySharing } from '#renderer/pages/library-manage.tsx'
 import { LinkLibrary } from '#renderer/pages/link-library.tsx'
+import { IssueCapability } from '#renderer/pages/issue-capability.tsx'
 import { NewLibrary } from '#renderer/pages/new-library.tsx'
 import { Importer } from '#renderer/pages/importer.tsx'
 import { Libraries } from '#renderer/pages/libraries.tsx'
@@ -73,6 +74,7 @@ const NODE_PAGES: Array<{ path: string, element: ReactElement }> = [
   { path: ROUTES.new_library, element: <NewLibrary /> },
   { path: ROUTES.library_profile, element: <LibraryProfile /> },
   { path: ROUTES.library_sharing, element: <LibrarySharing /> },
+  { path: ROUTES.issue_capability, element: <IssueCapability /> },
   { path: ROUTES.import, element: <Importer /> },
   { path: ROUTES.identity, element: <Identity /> }
 ]

@@ -341,16 +341,17 @@ Libraries are grouped by the relationship, never labelled with the spec's catego
 
 Shared, following, and discovered rows carry replication state, mode with `change`, peers, one `Pause` or `Resume` for replication (whichever applies), unlink, and `…`. Every group previews five rows and ends in `show N more`; `show addresses` under the groups adds each row's short address. Where a category is named in a sentence it reads `yours`, `shared with you`, `followed`, `discovered`: the inspector says `in 2 of yours, 1 followed`.
 
-An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Sharing** (`WHO MAY WRITE`: the capabilities it has issued and the issue form, read-only once retired). Retiring lands on Sharing. The identity's own profile is also edited on Identity.
+An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Sharing** (`WHO MAY WRITE`: the capabilities it has issued, with `[issue]` on the stroke opening the Let someone write flow; read-only once retired). Retiring lands on Sharing. The identity's own profile is also edited on Identity.
 
 ### Step flows (paper)
 
-Linking a library and creating one are their own pages (`/libraries/link`, `/libraries/new`), one question at a time, so attention stays on the step:
+Linking a library, creating one, and letting someone write to one are their own pages (`/libraries/link`, `/libraries/new`, `/library/sharing/issue`), one question at a time, so attention stays on the step:
 
 - A 560px column, `--space-3xl` from the head: `STEP 1 OF 2` (xs tertiary uppercase), the question in Departure Mono 24px uppercase in `--color-text`, one 48px input at 15px, one line under it (a tertiary hint or an echo of what was understood, or the error with `!!` in `--color-error`), then `Cancel` or `Back` (ghost) on the left and the primary action on the right.
-- `Enter` continues and `Esc` goes back; the input takes focus on each step.
+- `Enter` continues, from a checkbox or radio too, and `Esc` goes back; the input takes focus on each step. A step whose answer is a choice lists it as 32px checkbox or radio rows at 15px in place of the input.
 - **Link a library** — the address, echoed as its readable form (`Found mixes · …8MnGCA`) or refused as not an address; then an optional alias. It lands on the library's tracks.
 - **New library** — the name (required); then the address name, suggested from the name (`late-night-mixes`), editable, with what it is and that it never changes. It lands on the library's Profile tab.
+- **Let someone write** — who (one or more public keys, echoed as `One identity: 0279be66…f81798`); what they may do (add tracks, add tags, edit the profile, grant to others; add tracks preselected, echoed as a sentence); for how long (until revoked, a day, a week, thirty days, or a date), with the write filter behind a `show advanced` strip. It lands back on Sharing.
 
 ### Settings (paper)
 

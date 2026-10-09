@@ -17,6 +17,7 @@ const TITLES: Record<string, string> = {
   [ROUTES.libraries]: 'Libraries',
   [ROUTES.link_library]: 'Link a library',
   [ROUTES.new_library]: 'New library',
+  [ROUTES.issue_capability]: 'Let someone write',
   [ROUTES.import]: 'Import',
   [ROUTES.identity]: 'Identity',
   [ROUTES.settings]: 'Settings'

@@ -4,10 +4,6 @@
   gap: var(--space-base);
 }
 
-.section h4 {
-  margin: 0;
-}
-
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -52,54 +48,6 @@
 
 .expired {
   color: var(--color-text-secondary);
-}
-
-.issue {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  max-width: 640px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.field textarea,
-.field input {
-  color: var(--color-text);
-  font-size: var(--font-size-base);
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.actions_set {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs) var(--space-base);
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
-.actions_set legend {
-  margin-bottom: var(--space-xs);
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.actions_set label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
 }
 
 .more {
