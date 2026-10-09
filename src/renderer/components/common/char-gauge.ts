@@ -4,5 +4,5 @@ export const char_gauge = (fraction: number, width = 10): string => {
   return `[${'#'.repeat(filled)}${'-'.repeat(width - filled)}]`
 }
 
-export const import_fraction = ({ completed, errors, file_count, finished }: { completed: number, errors: readonly string[], file_count: number | null, finished: boolean }): number =>
-  finished ? 1 : file_count === null || file_count === 0 ? 0 : (completed + errors.length) / file_count
+export const import_fraction = ({ settled, file_count, finished }: { settled: number, file_count: number | null, finished: boolean }): number =>
+  finished ? 1 : file_count === null || file_count === 0 ? 0 : settled / file_count

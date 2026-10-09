@@ -3,7 +3,7 @@
 // capabilities it has issued. The library is the route's ?library.
 
 import { useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router'
+import { Navigate, useNavigate, useSearchParams } from 'react-router'
 
 import styles from './library-manage.module.css'
 import type { Library } from '#renderer/api/types.ts'
@@ -33,17 +33,20 @@ const NotOwn = () => <p className={styles.muted}>This is not one of your librari
 
 export const LibraryProfile = () => {
   const dispatch = use_app_dispatch()
+  const navigate = useNavigate()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const { library, loading } = use_managed_library()
   const [retiring, set_retiring] = useState(false)
   if (loading) return null
   if (library === undefined) return <section className={styles.page}><NotOwn /></section>
-  // A retired library has no profile to edit; retiring lands here too.
-  if (!has_profile(library)) return <Navigate to={library_route({ tab: 'sharing', library_address: library.address })} replace />
+  const sharing = library_route({ tab: 'sharing', library_address: library.address })
+  // A retired library has no profile to edit, so a stale link goes on to Sharing.
+  if (!has_profile(library)) return <Navigate to={sharing} replace />
 
   const retire = async () => {
     set_retiring(false)
-    await report_write({ dispatch, write: dispatch(node_api.endpoints.retire_own_library.initiate(library.address)), success: `Retired ${library_name(library)}.` })
+    const retired = await report_write({ dispatch, write: dispatch(node_api.endpoints.retire_own_library.initiate(library.address)), success: `Retired ${library_name(library)}.` })
+    if (retired.ok) navigate(sharing, { replace: true })
   }
 
   return (

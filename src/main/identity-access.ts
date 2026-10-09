@@ -38,8 +38,8 @@ export const create_identity_access = ({ get_connection, confirm_export, call = 
   confirm_export: (input: { node_url: string, cleartext: boolean }) => Promise<boolean>
   call?: typeof request_node
 }) => {
-  // Public keys by node URL, so the private key crosses into main at most
-  // once per node just to show the public one. Only the public half is kept.
+  // Public keys by node URL, read once per node; an import or a forget
+  // drops them.
   const public_keys = new Map<string, string>()
 
   return {

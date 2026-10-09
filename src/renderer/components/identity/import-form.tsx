@@ -44,7 +44,7 @@ export const ImportForm = ({ mode }: { mode: ConnectionMode }) => {
       success: 'Identity imported. Libraries now reflect the imported identity.'
     })
     set_busy(false)
-    if (imported === null) return
+    if (!imported.ok) return
     set_private_key('')
     set_confirmation('')
   }

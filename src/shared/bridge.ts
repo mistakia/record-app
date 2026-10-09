@@ -154,6 +154,9 @@ export interface Diagnostics {
 export interface ImportAck {
   import_id: string
   file_count?: number
+  // The names the files were sent under, in batch order. The node's events
+  // name a file by its temp upload path, so these are the names to show.
+  file_names?: string[]
 }
 
 export interface ImportTarget {

@@ -74,7 +74,7 @@ export const ReplicationPolicyDialog = ({ library, on_close }: { library: Librar
       success: `Replication for ${library_name(library)} set to ${mode_label(current).toLowerCase()}.`
     })
     set_saving(false)
-    if (saved !== null) on_close()
+    if (saved.ok) on_close()
   }
 
   return (

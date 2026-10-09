@@ -361,7 +361,7 @@ The legacy settings page, restated for v1, as framed sections: Connection (mode,
 Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the write-target selector. Below them, progress in two parts (`components/import/import-list.tsx`):
 
 - **Running** — unfinished imports only, in a screen under `// IMPORTING`, one line each in fixed columns: status (`41%`, or `!! 2 failed` once a file has failed), the label (ellipsized), the count `7/10`, and the age `2m`, tabular. No screen when nothing runs.
-- **History** — finished imports on paper, newest first, in a framed section titled `HISTORY` with the count and `[clear]` (drops every finished import) on the stroke. Each is one row: a `▶` disclosure, the status word (`done` in secondary ink, or `!! 2 failed` in `--color-error`), the label, the tracks added, and the age since it finished. The disclosure, closed by default, opens the errors and then the added tracks under the label column, ten at a time behind `show N more`. A row with nothing to open has no `▶`.
+- **History** — finished imports on paper, newest first, in a framed section titled `HISTORY` with the count and `[clear]` (drops every finished import) on the stroke. Each is one row: a `▶` disclosure, the status word (`done` in secondary ink, or `!! 2 failed` in `--color-error`), the label, the tracks added, and the age since it finished. The disclosure, closed by default, opens the errors and then the added tracks under the label column, ten at a time behind `show N more`. An error names the file as the user chose it (`side-b.flac: …`), never the node's temp upload name. A row with nothing to open has no `▶`.
 
 ### Dialogs, context menu, toasts (paper overlays)
 

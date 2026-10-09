@@ -37,7 +37,7 @@ export const AdoptDialog = ({ track, viewed_library, on_close }: {
       success: `Adopted into ${choice.name_of(target.library_address)}.`
     })
     set_busy(false)
-    if (adopted === null) return
+    if (!adopted.ok) return
     choice.used(target)
     on_close()
   }

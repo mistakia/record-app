@@ -8,8 +8,8 @@ import { openAsBlob } from 'node:fs'
 import { readdir, stat } from 'node:fs/promises'
 import { basename, extname, join } from 'node:path'
 
-import type { NodeResult } from '#shared/bridge.ts'
-import { import_files, type ImportAck, type ImportTarget } from './node-client.ts'
+import type { ImportAck, ImportTarget, NodeResult } from '#shared/bridge.ts'
+import { import_files } from './node-client.ts'
 
 export const AUDIO_EXTENSIONS = ['mp3', 'm4a', 'aac', 'flac', 'ogg', 'oga', 'opus', 'wav', 'aif', 'aiff', 'wma', 'webm', 'mp4']
 export const MAX_IMPORT_FILES = 200
