@@ -9,14 +9,13 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { shallowEqual, useStore } from 'react-redux'
 
 import styles from './track-list.module.css'
-import { COLUMNS, grid_template, NO_HIDDEN_COLUMNS, type ColumnId } from './columns.ts'
+import { COLUMNS, grid_min_width, grid_template, NO_HIDDEN_COLUMNS, type ColumnId } from './columns.ts'
 import { register_list_commands } from './list-commands.ts'
 import { PageSubscription, select_list_page, type ListSource } from './list-source.ts'
 import { pages_for_rows, row_location } from './track-pages.ts'
-import { TrackRow, type RowHandlers, type RowPlayState } from './track-row.tsx'
+import { TrackRow, TrackRowSkeleton, type RowHandlers, type RowPlayState } from './track-row.tsx'
 import type { Track } from '#renderer/api/types.ts'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
-import { SkeletonBar } from '#renderer/components/common/skeleton.tsx'
 import { use_view_pref } from '#renderer/prefs/view-prefs.ts'
 import { node_api, type SortOrder, type TrackSort } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/store/index.ts'
@@ -69,6 +68,17 @@ export interface ListActions {
   close_pane: () => boolean
 }
 
+// The first page loading: skeleton rows on the list's column grid.
+export const TrackListSkeleton = ({ rows = 12 }: { rows?: number }) => {
+  const [hidden] = use_view_pref<readonly ColumnId[]>('hidden-columns', NO_HIDDEN_COLUMNS)
+  const visible = COLUMNS.filter(({ id }) => !hidden.includes(id))
+  return (
+    <div className={styles.list} style={{ '--track-columns': grid_template(visible), '--track-min-width': grid_min_width(visible) } as React.CSSProperties} aria-busy='true' aria-label='Loading' data-testid='skeleton'>
+      {Array.from({ length: rows }, (_, index) => <TrackRowSkeleton key={index} index={index} columns={visible} />)}
+    </div>
+  )
+}
+
 export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
   source: ListSource
   view_key: string
@@ -81,6 +91,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
   const dispatch = use_app_dispatch()
   const store = useStore<RootState>()
   const scroller = useRef<HTMLDivElement>(null)
+  const header = useRef<HTMLDivElement>(null)
   const [menu, set_menu] = useState<{ x: number, y: number, track: Track, row: number } | null>(null)
   const [columns_menu, set_columns_menu] = useState<{ x: number, y: number } | null>(null)
   const [hidden, set_hidden] = use_view_pref<readonly ColumnId[]>('hidden-columns', NO_HIDDEN_COLUMNS)
@@ -209,9 +220,10 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
       aria-busy={busy}
       aria-rowcount={total}
       data-testid='track-list'
-      style={{ '--track-columns': grid_template(visible) } as React.CSSProperties}
+      style={{ '--track-columns': grid_template(visible), '--track-min-width': grid_min_width(visible) } as React.CSSProperties}
     >
       <div
+        ref={header}
         className={styles.header}
         role='row'
         onContextMenu={(event) => {
@@ -240,7 +252,15 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
         <span role='columnheader' />
       </div>
       {subscribed.map((page) => <PageSubscription key={page} source={source} page={page} />)}
-      <div ref={scroller} className={styles.scroller} data-testid='track-scroller' tabIndex={0} aria-activedescendant={`track-row-${cursor.cursor}`}>
+      <div
+        ref={scroller}
+        className={styles.scroller}
+        data-testid='track-scroller'
+        tabIndex={0}
+        aria-activedescendant={`track-row-${cursor.cursor}`}
+        // The header sits outside the scroller; it follows sideways scrolling.
+        onScroll={(event) => { header.current?.style.setProperty('--scroll-x', `${event.currentTarget.scrollLeft}px`) }}
+      >
         <div className={styles.canvas} style={{ height: virtualizer.getTotalSize() }}>
           {rows.map((row) => {
             const { page, offset } = row_location(row.index)
@@ -249,7 +269,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
             return (
               <div key={row.key} id={`track-row-${row.index}`} data-row={row.index} className={styles.slot} style={{ height: row.size, transform: `translateY(${row.start}px)` }}>
                 {track === undefined || page_tracks === undefined
-                  ? <div className={styles.placeholder} role='row' aria-busy='true'><SkeletonBar index={row.index} /></div>
+                  ? <TrackRowSkeleton index={row.index} columns={visible} />
                   : (
                     <TrackRow
                       track={track}

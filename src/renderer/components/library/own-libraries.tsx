@@ -16,6 +16,7 @@ import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { AboutEditor } from './about-editor.tsx'
 import { can_retire, has_profile, library_name, own_libraries_of, own_library_address } from './library-category.ts'
+import { LibraryAddress } from './library-address.tsx'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -38,8 +39,8 @@ const OwnLibraryRow = ({ library, editing, managing, on_edit, on_manage, on_reti
   return (
     <tr data-testid='own-library-row' data-retired={library.is_retired} data-type={library.library_type}>
       <td>
-        <span className={styles.name}>{library.alias ?? library.name ?? (library.library_type === 'listens' ? 'Listens' : 'Unnamed library')}</span>
-        <span className={styles.address}>{library.address}</span>
+        <span className={styles.name}>{library.alias ?? library.name ?? (library.library_type === 'listens' ? 'Listens' : library_name(library))}</span>
+        <span className={styles.address}><LibraryAddress address={library.address} name={library_name(library)} /></span>
       </td>
       <td>
         {library.library_type === 'listens' && <span className={styles.badge} title='Listens are recorded here'>listens</span>}

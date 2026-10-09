@@ -15,13 +15,14 @@ Stack: Bun (install, tests), electron-vite (build), Electron (runtime), React 19
 ```bash
 bun install --frozen-lockfile --ignore-scripts
 bun run setup:electron      # Electron binary; its postinstall never runs
-bun run dev                 # electron-vite dev
+bun run dev                 # electron-vite dev; Electron flags go through node_modules/.bin/electron-vite dev -- --user-data-dir=<dir> (bun run drops them)
 bun run build               # production build into out/, no source maps
 bun run verify              # eslint + three tsc projects
 bun test                    # RECORD_TOOLCHAIN_PREFLIGHT=bypass when ffmpeg/fpcalc differ from record-node's pins
 bun run gen:api             # regenerate API types and the route allowlist after bumping record-node
 bun run smoke:remote        # built app against a running node, read-only (RECORD_NODE_URL; options in the script header)
 bun run smoke:local         # built app against its own in-process node: every write, gapless, identity export
+                            # a worktree has no toolchain/: symlink the main checkout's, or the bundled ingest check fails
 bun run smoke:auth          # built app against an in-process node that requires a bearer token
 bun run smoke:v1-1          # built app against an in-process node: the record-docs v1.1 surfaces
 bun run perf                # built app(s) against an in-process node seeded to 200,000 tracks (options in the script header)

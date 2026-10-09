@@ -1,4 +1,5 @@
-// The identity surface (spec §8.5.7, §8.9.1): who holds the key, the public
+// The identity surface (spec §8.5.7, §8.9.1): the profile the identity goes
+// by, which is its default own library's (§8.6.9), who holds the key, the public
 // key on request, the own libraries, the capabilities held from others, the
 // last export, and export and import.
 
@@ -9,7 +10,8 @@ import { HeldCapabilities } from '#renderer/components/capability/held-capabilit
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { ExportDialog } from '#renderer/components/identity/export-dialog.tsx'
 import { ImportForm } from '#renderer/components/identity/import-form.tsx'
-import { library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
+import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
+import { library_name, own_libraries_of, own_library_address } from '#renderer/components/library/library-category.ts'
 import { compressed_public_key, read_last_export, truncate_key } from '#renderer/identity/identity.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -27,6 +29,7 @@ export const Identity = () => {
   const mode = config?.mode ?? 'remote'
   const last_export = read_last_export(node_key)
   const own = own_libraries_of({ own: own_libraries.data, libraries: libraries.data })
+  const profile_address = own_library_address(own)
 
   // Chapter 7 serves the public key only together with the private key, so
   // it is read on request, in main, which passes on the public half alone.
@@ -42,6 +45,11 @@ export const Identity = () => {
 
   return (
     <section className={styles.page}>
+      {profile_address !== null && (
+        <FramedSection title='Profile' testid='identity-profile'>
+          <AboutEditor key={profile_address} address={profile_address} note='The name and avatar you go by. They are your default library’s profile, so peers who link it see them too.' />
+        </FramedSection>
+      )}
       <FramedSection title='Identity' testid='identity-section'>
         <dl className={styles.facts}>
           <dt>Key held by</dt>

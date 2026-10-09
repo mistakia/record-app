@@ -7,7 +7,7 @@ import { useEffect } from 'react'
 import { useStore } from 'react-redux'
 
 import type { Library } from '#renderer/api/types.ts'
-import { library_name } from '#renderer/components/library/library-category.ts'
+import { library_name, short_address } from '#renderer/components/library/library-category.ts'
 import type { EventsState } from '#shared/bridge.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { events_state_changed } from '#renderer/store/connection.ts'
@@ -29,7 +29,7 @@ export const describe_inert = ({ payload, libraries }: { payload: Record<string,
   if (count === 0 || libraries === undefined) return null
   const library = libraries.find(({ address }) => address === payload.library_address)
   if (library?.is_own === true) return null
-  const name = library === undefined ? String(payload.library_address) : library_name(library)
+  const name = library === undefined ? short_address(String(payload.library_address)) : library_name(library)
   return `A revoked capability made ${count} of your ${count === 1 ? 'change' : 'changes'} in ${name} no longer count: ` +
     'they were written after the library owner revoked it.'
 }

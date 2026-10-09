@@ -2,6 +2,7 @@
 // runs and Import is not the page, a small screen in the page column's
 // bottom-right corner shows the batch, and opens Import on click.
 
+import { shallowEqual } from 'react-redux'
 import { useLocation, useNavigate } from 'react-router'
 
 import styles from './ingest-gauge.module.css'
@@ -13,7 +14,8 @@ import { use_app_selector } from '#renderer/store/index.ts'
 export const IngestGauge = () => {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const running = use_app_selector((state) => state.imports.items.filter(({ finished }) => !finished))
+  // shallowEqual: filter returns a new array on every store update.
+  const running = use_app_selector((state) => state.imports.items.filter(({ finished }) => !finished), shallowEqual)
   if (running.length === 0 || pathname === ROUTES.import) return null
   const total = running.reduce((sum, { file_count }) => sum + (file_count ?? 1), 0)
   const done = running.reduce((sum, { completed, errors }) => sum + completed + errors.length, 0)

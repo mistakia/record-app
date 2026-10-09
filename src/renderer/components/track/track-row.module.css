@@ -179,3 +179,20 @@
 .chip:hover .chip_remove {
   display: inline-flex;
 }
+
+/* A loading row: the row's grid, a pulsing bar in each text column. */
+.skeleton {
+  display: grid;
+  min-width: var(--track-min-width);
+  grid-template-columns: var(--track-columns);
+  align-items: center;
+  gap: 0 var(--space-sm);
+  height: var(--row-height);
+  padding: 0 var(--space-lg) 0 var(--space-sm);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.skeleton_cell {
+  display: flex;
+  min-width: 0;
+}

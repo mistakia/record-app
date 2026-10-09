@@ -9,13 +9,12 @@ import { Link, useLocation, useNavigate } from 'react-router'
 
 import styles from './tracks.module.css'
 import { EmptyState } from '#renderer/components/common/empty-state.tsx'
-import { Skeleton } from '#renderer/components/common/skeleton.tsx'
 import { library_name, own_library_address } from '#renderer/components/library/library-category.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import { Inspector } from '#renderer/components/track/inspector.tsx'
 import { use_inspector_fit } from '#renderer/components/track/use-inspector-fit.ts'
 import { TagFilter } from '#renderer/components/track/tag-filter.tsx'
-import { TrackList } from '#renderer/components/track/track-list.tsx'
+import { TrackList, TrackListSkeleton } from '#renderer/components/track/track-list.tsx'
 import { use_tag_navigation, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
 import { SEARCH_INPUT_ID } from '#renderer/hooks/use-hotkeys.ts'
 import { play_tracks, toggle_shuffle_mode } from '#renderer/player/player-controller.ts'
@@ -104,7 +103,7 @@ export const Tracks = () => {
             id={SEARCH_INPUT_ID}
             type='search'
             aria-label='Search tracks'
-            placeholder='/ search'
+            placeholder='search'
             spellCheck={false}
             value={search}
             onChange={(event) => { set_search(event.target.value) }}
@@ -129,7 +128,7 @@ export const Tracks = () => {
       <TagFilter library_address={library_address} selected={filters.tags} on_toggle={(tag) => { go(with_tag_toggled(view, tag)) }} />
       {error !== undefined && <p className={styles.error}>!! {'message' in error ? error.message : 'The node request failed.'}</p>}
       {first_page.isLoading && first_page.data === undefined
-        ? <Skeleton />
+        ? <TrackListSkeleton />
         : first_page.isSuccess && total === 0
           ? filtered
             ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />

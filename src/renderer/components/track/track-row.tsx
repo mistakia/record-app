@@ -9,6 +9,7 @@ import styles from './track-row.module.css'
 import type { Column } from './columns.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
+import { ragged_width, SkeletonBar } from '#renderer/components/common/skeleton.tsx'
 
 export type RowPlayState = 'playing' | 'loading' | 'paused' | null
 
@@ -189,3 +190,38 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
     </div>
   )
 })
+
+// Ragged width ranges per column kind, in percent of the cell.
+const SKELETON_WIDTHS: Record<Column['id'], [number, number]> = {
+  artist: [35, 80],
+  album: [30, 75],
+  tags: [20, 55],
+  kbps: [55, 75],
+  time: [60, 80],
+  format: [60, 80],
+  listens: [25, 45]
+}
+
+// A loading row on the same column grid as TrackRow: a bar per column,
+// none under the adopt, +TAG, and menu columns.
+export const TrackRowSkeleton = ({ index, columns }: { index: number, columns: readonly Column[] }) => {
+  const bar = (column: Column, position: number) => {
+    const [min, max] = SKELETON_WIDTHS[column.id]
+    return (
+      <span key={column.id} className={styles.skeleton_cell}>
+        <SkeletonBar width={ragged_width(index, position, min, max)} row={index} align={column.align} />
+      </span>
+    )
+  }
+  return (
+    <div className={styles.skeleton} role='row' aria-busy='true' data-testid='track-row-skeleton'>
+      <span className={styles.skeleton_cell}><SkeletonBar width={ragged_width(index, 0, 40, 70)} row={index} align='end' /></span>
+      <span />
+      <span className={styles.skeleton_cell}><SkeletonBar width={ragged_width(index, 1, 40, 85)} row={index} /></span>
+      {columns.filter(({ lead }) => lead === true).map((column, position) => bar(column, position + 2))}
+      <span />
+      {columns.filter(({ lead }) => lead !== true).map((column, position) => bar(column, position + 10))}
+      <span />
+    </div>
+  )
+}

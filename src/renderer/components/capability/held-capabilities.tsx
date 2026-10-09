@@ -6,7 +6,8 @@
 
 import styles from './capabilities.module.css'
 import { CapabilityRow } from './library-capabilities.tsx'
-import { library_name } from '#renderer/components/library/library-category.ts'
+import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
+import { library_name, short_address } from '#renderer/components/library/library-category.ts'
 import { short_key } from '#renderer/library/capabilities.ts'
 import { set_left, use_left_libraries } from '#renderer/library/left-libraries.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -19,7 +20,7 @@ export const HeldCapabilities = () => {
   const left = use_left_libraries(node_key)
   const name_of = (address: string): string => {
     const library = libraries.data?.find((each) => each.address === address)
-    return library === undefined ? address : library_name(library)
+    return library === undefined ? short_address(address) : library_name(library)
   }
   const not_served = held.error !== undefined && 'status' in held.error && held.error.status === 404
   // Held from others: a grant in one of the identity's own libraries is not.
@@ -38,7 +39,7 @@ export const HeldCapabilities = () => {
           <div key={address} className={styles.held_library} data-testid='held-library' data-left={is_left}>
             <div className={styles.held_header}>
               <strong>{name_of(address)}</strong>
-              <span className={styles.muted}>{address}</span>
+              <LibraryAddress address={address} />
               {is_left
                 ? <button type='button' data-size='small' onClick={() => { set_left({ node_key, library_address: address, left: false }) }}>Rejoin</button>
                 : <button type='button' data-size='small' onClick={() => { set_left({ node_key, library_address: address, left: true }) }}>Leave shared library</button>}

@@ -181,8 +181,8 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 │            │                                                          │
 │ LIBRARIES [+]                                         [ingest gauge] │
 │ ◐ name   … ├──────────────────────────────────────────────────────────┤
-│ ◐ name   … │ player bar — 72px screen                                 │
-│ (avatar) ⚙ │ ☆ art title/artist │ ⟲ ⤨ |◀ ▶ ▶| QUEUE 4 · HISTORY │ from │
+│ ◐ name   … │ player bar — 75px screen                                 │
+│ ▢ name   ⚙ │ ☆ art title/artist │ ⟲ ⤨ |◀ ▶ ▶| QUEUE 4 · HISTORY │ from │
 │ 3 peers    │                    │ 0:41 ━━━━━━━━──── 3:12        │ lib ◐│
 └────────────┴──────────────────────────────────────────────────────────┘
 ```
@@ -194,25 +194,25 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 - **RECORD** — Tracks (every library, aggregated) and Recently Played (listens).
 - **MY LIBRARY** — Tracks and Libraries of the user's own library. With more than one own active library, MY LIBRARY lists each by name.
 - **LIBRARIES** — linked and held-capability libraries; this list takes the remaining height and scrolls under a sticky heading that hosts `[+]` (link a library). Each row: a 24px avatar, the name, and on hover a `…` that opens the library menu (connect or disconnect, unlink, edit, copy address). A library that is replicating shows a quiet tertiary gauge after its name.
-- **Footer** — the identity avatar (opens Identity) and a `⚙` (opens Settings), over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings.
+- **Footer** — the identity's profile and the Settings gear, over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings. The identity has no profile of its own (spec §8.6.9), so it goes by its default own library's About name and avatar; with no name set the avatar is blank and the label reads `add a name` in tertiary. Either opens Identity, whose first section edits that profile. The gear is a 16px hairline SVG (`components/layout/settings-icon.tsx`) in secondary ink, accent on hover and on the Settings page, labelled `Settings`.
 - Active item: `--color-selected` ink at 600 on the `--color-surface` paper (the item lifts to the page's paper, as legacy's white-on-grey). Hover: `--color-surface-hover`.
 
 ### Page column (paper)
 
-- Fills the rest of the window above the player bar, with base's ruled texture: a fixed, `pointer-events: none` overlay of `linear-gradient(var(--color-paper-texture) 1px, transparent 1px)` at `background-size: 2px 2px`.
-- **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, an `OWNER` chip on an own library; a centred `TRACKS │ LIBRARIES` tab pair in reverse video (active tab filled `--color-selected`, base's tui tabline); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
-- **Help banner** — a dismissible per-page framed section (`// HELP` on the stroke, `[x]` notch), shown until dismissed once, dismissal persisted. Never an accent fill.
+- Fills the rest of the window above the player bar, with base's ruled texture: `--color-surface-ruling`, a `linear-gradient(var(--color-paper-texture) 1px, transparent 1px)` at `2px 2px`, fixed to the window so anything that masks it (a framed section's label) rules in step.
+- **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, the short address, an `OWNER` chip on an own library; a centred `TRACKS │ LIBRARIES` tab pair in reverse video (active tab filled `--color-selected`, base's tui tabline); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
+- **Help banner** — a dismissible per-page framed section (`HELP` on the stroke, `[x]` notch), shown until dismissed once, dismissal persisted. Never an accent fill.
 - **Body** — width tiers by content kind, as on base's entity page: the track list fills the column, forms and settings 720px, reading text (about, descriptions) 66ch. Page padding `--space-lg`; sections stack with `--space-lg` to `--space-xl` between them.
 - **Inspector** — a 320px paper pane docked on the right of the page column, reflowing the list, opened with `i`.
 - **Ingest gauge** — while any import runs, a small screen in the page's bottom-right corner shows `[####------] 3/10`; it opens Import on click and goes away when the batch finishes.
 
 ### Player bar (screen)
 
-- 72px, under the page column only (left edge at the sidebar boundary), full width of that column. Hidden when nothing is playing and the queue is empty; slides up from the bottom over 0.28s when playback starts.
+- 75px, legacy-v0's height and proportions, under the page column only (left edge at the sidebar boundary), full width of that column. Hidden when nothing is playing and the queue is empty; slides up from the bottom over 0.28s when playback starts.
 - Thirds, as legacy (35% / 30% / 35%):
-  - **Now playing** — adopt `☆`, 56px artwork, then title (Departure Mono 18px, display glow), artist (dim), a 10px meta line `FLAC · 1411 KBPS`, and the track's tags dim. Right-click opens the track menu.
-  - **Transport** — repeat (`⟲` off / one / all, lit when on), shuffle (`⤨`), `|◀`, `▶` or `❚❚` (a spinner while loading), `▶|`; then `QUEUE 4` (count) and `HISTORY`. Under them the seek rule: elapsed, a 2px phosphor hairline with the buffered span in phosphor-faint and a 10px square thumb on hover, then duration, all tabular. Volume is a small hairline slider with a readout, after `HISTORY`.
-  - **Playing from** — right-aligned: the source (library name, or `ALL TRACKS`, with the active tag filter as a 10px subtitle) beside the library's 56px avatar. Clicking either returns to that track list with its filters.
+  - **Now playing** — a 40px adopt `★` column, 65px artwork (5px right margin), then title (13px, display glow) and artist (dim) on 14px lines, an 8px uppercase meta line `FLAC · 1411 KBPS`, and the track's tags as 18px chips 8px below, fading out at the right.
+  - **Transport** — legacy's row of 40px controls: repeat (off / all / one, lit when on), shuffle, `|◀`, `▶` or `▮▮` in a 1px outlined square (a spinner while loading), `▶|`, the queue with its queued count as a badge, and history. Under them the timeline: elapsed, a 5px phosphor bar over the buffered span with an 11px square thumb on hover, then duration, 10px tabular.
+  - **Playing from** — right-aligned: the volume hairline, then the source (library name, or `ALL TRACKS`, with the active tag filter as a 10px subtitle) over an 8px uppercase `PLAYING FROM`, beside the library's 65px avatar. Clicking either returns to that track list with its filters.
 
 ### Queue (screen overlay)
 
@@ -243,7 +243,7 @@ The "feng shui" of base, made concrete for a library: every legacy capability st
 - **Preview, then "show N more"** — lists inside a section preview a few items (5 libraries, 5 capabilities) and end in a tertiary `show 12 more`. Long text cuts at 120 characters with an inline `show more`.
 - **"show X" strips** — grouped secondary detail (stats, provenance) sits behind a full-width hairline strip: 11px lowercase tertiary `▸ show details`, raising to secondary on hover, the chevron turning over 0.15s. Closed by default.
 - **Empty values are omitted** — a field with no value is not rendered as a blank label; a section with nothing in it renders nothing while loading.
-- **Skeletons mirror the layout** — loading rows are 12px `--color-border-light` bars at ragged widths (30%, 58%, 84%), pulsing on a 1.4s ease-in-out cycle with staggered delays, no shimmer sweep. The hibernation snapshot usually makes them unnecessary; they cover a first launch.
+- **Skeletons mirror the layout** — a loading row sits on the track list's column grid, a 12px `--color-border-light` bar in each text column at a ragged width fixed per row and column (numbers right-aligned, none under adopt, `+TAG`, or the menu), pulsing on a 1.4s ease-in-out cycle with staggered delays, no shimmer sweep. The hibernation snapshot usually makes them unnecessary; they cover a first launch.
 - **Empty states teach** — a Departure Mono headline, one line of what to do, and the action: `EMPTY` / `Nothing here yet. Try connecting.` with `[connect]`.
 
 ## Keyboard Model
@@ -306,7 +306,7 @@ Every shortcut is in the `HOTKEYS` table, which the `?` overlay and the Settings
 
 ### Framed section (paper)
 
-Base's `tui-section`: a 1px `--color-border` frame with the title seated on the top stroke (`┌─ TITLE ─────┐`), the label masked by `--color-surface`, 10px uppercase tertiary. Folded, it is a single rule line with `▸`, the title, and a count. Border-hosted controls (a `[+]` add, a count, `[x]`) sit on the stroke the same way. Never give the label a contrasting chip background.
+Base's `tui-section`: a 1px `--color-border` frame with the title seated on the top stroke (`┌─ TITLE ─────┐`), the label masked by the surface it sits on (on the page, `--color-surface-ruling` over `--color-surface-solid`, so the ruling runs through it), 10px uppercase tertiary. Folded, it is a single rule line with `▸`, the title, and a count. Border-hosted controls (a `[+]` add, a count, `[x]`) sit on the stroke the same way. Never give the label a contrasting chip background.
 
 ### Buttons
 
@@ -322,7 +322,7 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 ### Artwork and avatars
 
 - Artwork with no image is legacy's vinyl disc: a circle in `--color-border` with a centre label in `--color-accent-wash`; an image covers it. The disc is the one round shape on paper, because it depicts an object, not a control.
-- Library and identity avatars are square, 1px `--color-border-light`, falling back to the name's first letter in Departure Mono on `--color-surface-sunken`.
+- Library and identity avatars are square, 1px `--color-border-light`, falling back to the name's first letter in Departure Mono on `--color-surface-sunken`, and to a blank square when there is no name.
 - Inside a screen, artwork keeps its own colors under the glass.
 
 ### Library context menu, track context menu
@@ -344,6 +344,10 @@ Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the wr
 - Dialog: framed-section title on the top stroke, `[x]` close notch on the stroke, 15px body, buttons right-aligned.
 - Context menu: 12px rows, hover and keyboard highlight are the hover wash with accent ink.
 - Toast: framed with the title on the stroke, an optional action button, a depleting 1px rule along the bottom edge for its lifetime (base's countdown idiom). Error toasts state the error in words; no colored edge.
+
+### Library address
+
+A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`.
 
 ### Connection status
 
@@ -371,7 +375,7 @@ Transitions: 0.15s on color and opacity, 0.28s `cubic-bezier(0.32, 0.72, 0, 1)` 
 
 ## Glyphs
 
-Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `≡` settings, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat and shuffle are the words `REPEAT` and `SHUFFLE`. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
+Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat, shuffle, queue, history, and the Settings gear have no glyph in either face, so they are drawn as 16px hairline SVGs (`components/player/transport-icons.tsx`, `components/layout/settings-icon.tsx`, a 1.25px square-capped stroke in `currentColor`); nothing else uses an icon. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
 
 ## OS Surface (macOS, Electron)
 
