@@ -22,7 +22,9 @@ const FIELDS: Array<{ key: keyof AboutDraft, label: string, max: number }> = [
 
 const or_null = (value: string): string | null => value.trim() === '' ? null : value.trim()
 
-export const AboutEditor = ({ address }: { address: string }) => {
+// `note` replaces the heading with a line of explanation, where the
+// surrounding section already names the profile.
+export const AboutEditor = ({ address, note }: { address: string, note?: string }) => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const about = node_api.endpoints.get_about.useQuery(address)
@@ -56,7 +58,7 @@ export const AboutEditor = ({ address }: { address: string }) => {
 
   return (
     <form className={styles.about} data-testid='about-editor' onSubmit={(event) => { save(event).catch(() => {}) }}>
-      <h2>Your library's profile</h2>
+      {note === undefined ? <h2>Your library's profile</h2> : <p className={styles.note}>{note}</p>}
       {FIELDS.map(({ key, label, max }) => (
         <label key={key} className={styles.field}>
           {label}
