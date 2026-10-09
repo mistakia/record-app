@@ -30,6 +30,13 @@ export const COLUMNS: readonly Column[] = [
 
 export const NO_HIDDEN_COLUMNS: readonly ColumnId[] = []
 
+// Beside the inspector the list loses these too, so it fits the narrower
+// column without scrolling sideways; the persisted choice is untouched.
+export const BESIDE_PANE_HIDDEN: readonly ColumnId[] = ['format', 'listens']
+
+export const visible_columns = (hidden: readonly ColumnId[], beside_pane = false): Column[] =>
+  COLUMNS.filter(({ id }) => !hidden.includes(id) && !(beside_pane && BESIDE_PANE_HIDDEN.includes(id)))
+
 // index, adopt, title, the lead columns, +TAG, the rest, the menu.
 const track_widths = (visible: readonly Column[]): string[] => [
   '4ch', '2ch', 'minmax(120px, 1.6fr)',

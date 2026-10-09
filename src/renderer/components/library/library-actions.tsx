@@ -51,8 +51,8 @@ export const use_library_actions = (): {
       ...(own
         ? []
         : [is_connected
-            ? { label: 'Disconnect', disabled: !writes_allowed, on_select: () => { set_connection(library, false) } }
-            : { label: 'Connect', disabled: !writes_allowed, on_select: () => { set_connection(library, true) } }]),
+            ? { label: 'Pause', disabled: !writes_allowed, on_select: () => { set_connection(library, false) } }
+            : { label: 'Resume', disabled: !writes_allowed, on_select: () => { set_connection(library, true) } }]),
       ...(library.is_linked && !own ? [{ label: 'Unlink', disabled: !writes_allowed, on_select: () => { set_unlinking(library) } }] : []),
       ...(library.is_linked && !own ? [{ label: 'Edit replication', disabled: !writes_allowed, on_select: () => { set_policy_for(library) } }] : []),
       { label: 'Copy address', on_select: () => { copy_text({ dispatch, text: library.address, label: 'the address' }).catch(() => {}) } }

@@ -32,7 +32,7 @@ export const Settings = () => {
       <div id='settings-shortcuts'><FramedSection title='Shortcuts' fold_id='settings-shortcuts' default_open={false}><ShortcutTable /></FramedSection></div>
       {configured && (
         <div id='settings-peers'>
-          <FramedSection title='Peers' fold_id='settings-peers' count={peers.data?.length}>
+          <FramedSection title='Peers' fold_id='settings-peers' default_open={false} count={peers.data?.length}>
             <PeersSection peers={peers.data} error={peers.error === undefined ? null : 'message' in peers.error ? peers.error.message : 'The node request failed.'} />
           </FramedSection>
         </div>

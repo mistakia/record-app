@@ -205,3 +205,9 @@
 .status:hover {
   color: var(--color-text-secondary);
 }
+
+/* Nav items run edge to edge and the sidebar clips at its edges, so the
+   focus ring is drawn inside them to stay a whole box. */
+.sidebar :focus-visible {
+  outline-offset: -2px;
+}

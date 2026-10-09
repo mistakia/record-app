@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { shallowEqual, useStore } from 'react-redux'
 
 import styles from './track-list.module.css'
-import { COLUMNS, grid_min_width, grid_template, NO_HIDDEN_COLUMNS, type ColumnId } from './columns.ts'
+import { COLUMNS, grid_min_width, grid_template, NO_HIDDEN_COLUMNS, visible_columns, type ColumnId } from './columns.ts'
 import { register_list_commands } from './list-commands.ts'
 import { PageSubscription, select_list_page, type ListSource } from './list-source.ts'
 import { pages_for_rows, row_location } from './track-pages.ts'
@@ -71,7 +71,7 @@ export interface ListActions {
 // The first page loading: skeleton rows on the list's column grid.
 export const TrackListSkeleton = ({ rows = 12 }: { rows?: number }) => {
   const [hidden] = use_view_pref<readonly ColumnId[]>('hidden-columns', NO_HIDDEN_COLUMNS)
-  const visible = COLUMNS.filter(({ id }) => !hidden.includes(id))
+  const visible = visible_columns(hidden)
   return (
     <div className={styles.list} style={{ '--track-columns': grid_template(visible), '--track-min-width': grid_min_width(visible) } as React.CSSProperties} aria-busy='true' aria-label='Loading' data-testid='skeleton'>
       {Array.from({ length: rows }, (_, index) => <TrackRowSkeleton key={index} index={index} columns={visible} />)}
@@ -79,7 +79,7 @@ export const TrackListSkeleton = ({ rows = 12 }: { rows?: number }) => {
   )
 }
 
-export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
+export const TrackList = ({ source, view_key, total, busy, sort, actions, beside_pane = false }: {
   source: ListSource
   view_key: string
   total: number
@@ -87,6 +87,8 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
   // The active sort and how to change it; absent where the list has no sort.
   sort?: { sort: TrackSort, order: SortOrder, on_sort: (sort: TrackSort) => void }
   actions: ListActions
+  // The inspector is open beside the list.
+  beside_pane?: boolean
 }) => {
   const dispatch = use_app_dispatch()
   const store = useStore<RootState>()
@@ -95,7 +97,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
   const [menu, set_menu] = useState<{ x: number, y: number, track: Track, row: number } | null>(null)
   const [columns_menu, set_columns_menu] = useState<{ x: number, y: number } | null>(null)
   const [hidden, set_hidden] = use_view_pref<readonly ColumnId[]>('hidden-columns', NO_HIDDEN_COLUMNS)
-  const visible = useMemo(() => COLUMNS.filter(({ id }) => !hidden.includes(id)), [hidden])
+  const visible = useMemo(() => visible_columns(hidden, beside_pane), [hidden, beside_pane])
   const virtualizer = useVirtualizer({ count: total, getScrollElement: () => scroller.current, estimateSize: () => ROW_HEIGHT, overscan: 12 })
   const rows = virtualizer.getVirtualItems()
   const libraries = node_api.endpoints.get_libraries.useQuery().data

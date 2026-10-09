@@ -15,7 +15,7 @@ import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
 import { mode_label } from '#renderer/components/library/replication-policy.tsx'
-import { current_progress, is_replicating, library_category, library_name, own_libraries_of, RECENT_LINK_MS, type LibraryCategory } from '#renderer/components/library/library-category.ts'
+import { current_progress, is_replicating, library_category, library_name, own_libraries_of, own_library_name, RECENT_LINK_MS, type LibraryCategory } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -41,7 +41,7 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
 }) => {
   const writes_allowed = use_app_selector(select_writes_allowed)
   const live_progress = use_app_selector((state) => state.replication.progress[library.address])
-  const connected = use_app_selector((state) => state.replication.connected[library.address])
+  const connected = use_app_selector((state) => state.replication.connected[library.address]) ?? library.connected
   const linked_at = use_app_selector((state) => state.replication.linked_at[library.address])
   const [menu, set_menu] = useState<{ x: number, y: number } | null>(null)
   const category = library_category(library)
@@ -83,8 +83,7 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
       </td>
       <td className='tabular'>{library.peer_ids.length}</td>
       <td className={styles.actions}>
-        <button type='button' data-size='small' disabled={!writes_allowed || connected === true} onClick={() => { actions.set_connection(library, true) }}>Connect</button>
-        <button type='button' data-size='small' disabled={!writes_allowed || connected === false} onClick={() => { actions.set_connection(library, false) }}>Disconnect</button>
+        <button type='button' data-size='small' disabled={!writes_allowed} onClick={() => { actions.set_connection(library, !connected) }}>{connected ? 'Pause' : 'Resume'}</button>
         {library.is_linked && <button type='button' data-size='small' disabled={!writes_allowed} onClick={() => { actions.request_unlink(library) }}>Unlink</button>}
         <button
           type='button'
@@ -107,7 +106,7 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
 // Recently played; the others open their tracks, whose tabs manage them.
 const OwnRow = ({ library, show_address }: { library: Library, show_address: boolean }) => {
   const listens = library.library_type === 'listens'
-  const name = listens ? 'Play history' : library_name(library)
+  const name = own_library_name(library)
   return (
     <tr data-testid='own-library-row' data-retired={library.is_retired} data-type={library.library_type}>
       <td>
