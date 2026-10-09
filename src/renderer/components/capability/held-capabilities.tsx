@@ -29,7 +29,6 @@ export const HeldCapabilities = () => {
 
   return (
     <section className={styles.section} data-testid='held-capabilities'>
-      <h2>Capabilities held</h2>
       {not_served && <p className={styles.muted}>This node cannot list the capabilities you hold.</p>}
       {!not_served && held.error !== undefined && <p className={styles.error}>{'message' in held.error ? held.error.message : 'The node request failed.'}</p>}
       {from_others?.length === 0 && <p className={styles.muted}>No other identity has granted you a capability.</p>}
@@ -41,8 +40,8 @@ export const HeldCapabilities = () => {
               <strong>{name_of(address)}</strong>
               <span className={styles.muted}>{address}</span>
               {is_left
-                ? <button type='button' onClick={() => { set_left({ node_key, library_address: address, left: false }) }}>Rejoin</button>
-                : <button type='button' onClick={() => { set_left({ node_key, library_address: address, left: true }) }}>Leave shared library</button>}
+                ? <button type='button' data-size='small' onClick={() => { set_left({ node_key, library_address: address, left: false }) }}>Rejoin</button>
+                : <button type='button' data-size='small' onClick={() => { set_left({ node_key, library_address: address, left: true }) }}>Leave shared library</button>}
             </div>
             {is_left && <p className={styles.muted}>You left this library: the app offers no writes to it. Your capabilities stay valid, and only the granter can revoke them.</p>}
             <table className={styles.table}>

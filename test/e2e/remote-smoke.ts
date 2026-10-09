@@ -52,11 +52,13 @@ const wait_fresh = async (window: Page): Promise<void> => {
 }
 
 const rows = (window: Page) => window.getByTestId('track-row')
-const titles = async (window: Page) => await rows(window).locator('button').filter({ hasNotText: /^(Next|Queue)$/ }).allInnerTexts()
+// The title is the first child of a row's third cell (index, adopt, title).
+const titles = async (window: Page) => await rows(window).evaluateAll((elements) => elements.map((row) => row.querySelectorAll('[role=cell]')[2]?.firstElementChild?.textContent ?? ''))
+const nav = async (window: Page, name: string) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name, exact: true }).first().click() }
 const settled = async (window: Page) => { await window.locator('[data-testid=track-list][aria-busy=false]').waitFor() }
 
 const save_node_url = async (window: Page, url: string): Promise<void> => {
-  await window.getByRole('link', { name: 'Connection', exact: true }).click()
+  await nav(window, 'Settings')
   await window.locator('input[name=node_url]').fill(url)
   await window.getByRole('button', { name: 'Save', exact: true }).click()
 }
@@ -67,7 +69,7 @@ try {
   // remote node (confirmed, spec 8.3.4), go live, and play.
   const first = await launch(user_data_dir)
   const { window } = first
-  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await nav(window, 'Settings')
   await window.getByLabel('Remote node').check()
   await window.locator('input[name=node_url]').fill(node_url)
   await window.getByRole('button', { name: 'Test connection', exact: true }).click()
@@ -103,15 +105,16 @@ try {
   if (rendered_rows > 120) throw new Error('the list rendered more rows than a window')
   await scroller.evaluate((element) => { element.scrollTop = 0 })
 
-  await window.getByLabel('Sort by').selectOption('title')
-  await window.getByRole('button', { name: 'Descending' }).click()
+  // A header click sorts ascending; a second reverses it.
+  const sort_by_title = window.getByTestId('track-list').getByRole('button', { name: 'Title' })
+  await sort_by_title.click()
   await settled(window)
   console.log('sorted by title ascending, first rows:', (await titles(window)).slice(0, 3))
-  await window.getByRole('button', { name: 'Ascending' }).click()
+  await sort_by_title.click()
   await settled(window)
   console.log('sorted by title descending, first rows:', (await titles(window)).slice(0, 3))
-  // Back to the default view: newest first.
-  await window.getByLabel('Sort by').selectOption('added_at')
+  // Back to the default view, newest first: the sidebar's all-tracks link.
+  await nav(window, 'Tracks')
   await settled(window)
 
   const tag_buttons = window.getByTestId('tag-filter').getByRole('button')
@@ -130,9 +133,11 @@ try {
   await window.locator('[data-testid=track-row]', { hasText: artist }).first().waitFor({ timeout: 30_000 })
   await settled(window)
   console.log(`search "${artist}":`, await window.getByTestId('track-total').textContent())
-  const row = rows(window).filter({ has: window.getByRole('button', { name: title, exact: true }) }).filter({ hasText: artist })
+  const row = rows(window).filter({ has: window.getByText(title, { exact: true }) }).filter({ hasText: artist })
   console.log('found row:', (await row.first().innerText()).replaceAll('\n', ' | '))
-  await row.first().getByRole('button', { name: title, exact: true }).click()
+  // Enter plays from the cursor, which a click on the title moves there.
+  await row.first().getByRole('cell').nth(2).click()
+  await window.keyboard.press('Enter')
   await window.locator('[data-testid=player-bar][data-state=playing]').waitFor({ timeout: 60_000 })
   const first_position = await window.getByTestId('player-position').textContent()
   await window.waitForTimeout(3000)
@@ -143,7 +148,7 @@ try {
 
   // Let the renderer hand main a snapshot (every 5 s), then quit cleanly,
   // which writes it.
-  await window.getByRole('button', { name: 'Pause', exact: true }).click()
+  await window.getByTestId('player-bar').getByRole('button', { name: 'Pause', exact: true }).click()
   await window.waitForTimeout(6000)
   if (first.console_errors.length > 0) throw new Error(`renderer console errors:\n${first.console_errors.join('\n')}`)
   await first.app.close()
@@ -177,7 +182,7 @@ try {
   console.log('relaunch: reconciled to fresh')
 
   // The cued track plays from where it was paused.
-  await second.window.getByRole('button', { name: 'Play', exact: true }).click()
+  await second.window.getByTestId('player-bar').getByRole('button', { name: 'Play', exact: true }).click()
   await second.window.locator('[data-testid=player-bar][data-state=playing]').waitFor({ timeout: 60_000 })
   console.log('restored playback:', await second.window.getByTestId('player-position').textContent())
 

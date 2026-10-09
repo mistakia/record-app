@@ -21,7 +21,7 @@ const node_base_query: BaseQueryFn<NodeRequest, unknown, NodeFailure> = async (r
   return result.ok ? { data: result.data } : { error: result.failure }
 }
 
-export type TrackSort = 'added_at' | 'title' | 'artist' | 'album' | 'bpm' | 'duration'
+export type TrackSort = 'added_at' | 'title' | 'artist' | 'album' | 'bpm' | 'duration' | 'bitrate' | 'listen_count'
 export type SortOrder = 'asc' | 'desc'
 
 // The track-list choices beyond the library: search text, tags (all must

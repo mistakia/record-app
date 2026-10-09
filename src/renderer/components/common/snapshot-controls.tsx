@@ -42,7 +42,7 @@ export const SnapshotControls = () => {
 
   return (
     <form className={styles.controls} onSubmit={(event) => { save_limit(event).catch((error: unknown) => { set_message(String(error)) }) }}>
-      <h2>Offline snapshot</h2>
+      <h3>Offline snapshot</h3>
       <p className={styles.hint}>
         The last-viewed libraries and tracks, kept so the app can show them at launch before the node answers. Never used in place of the node.
       </p>

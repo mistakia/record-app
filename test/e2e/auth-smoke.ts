@@ -26,6 +26,7 @@ await mkdir(user_data_dir, { recursive: true })
 await writeFile(join(user_data_dir, 'connection.json'), JSON.stringify({ mode: 'remote', node_url: node.node_url }))
 
 const step = (label: string, detail: unknown = ''): void => { console.log(`${label}:`, detail) }
+const settings = async (window: Page) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Settings', exact: true }).click() }
 const status = (window: Page, value: string) => window.locator(`[data-testid=events-status][data-status=${value}]`)
 
 const app = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${user_data_dir}`], timeout: 30_000 })
@@ -44,12 +45,12 @@ try {
   // saved token reads differently from the node needing one, so this
   // cannot pass on the state from before the save.
   await window.getByTestId('track-list').waitFor({ timeout: 30_000 })
-  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await settings(window)
   await window.getByTestId('token-status').filter({ hasText: 'refused its token' }).waitFor({ timeout: 30_000 })
   if (process.platform === 'darwin' && await create_keychain_token_store().get(node.node_url) !== null) throw new Error('the refused token is still in the Keychain')
   step('wrong token saved', 'refused and deleted')
 
-  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await settings(window)
   await window.locator('input[name=token]').fill(TOKEN)
   await window.getByRole('button', { name: 'Test connection', exact: true }).click()
   const tested = await window.getByTestId('connection-test-result').innerText()
@@ -76,7 +77,7 @@ try {
     step('keychain', 'holds the token')
   }
 
-  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await settings(window)
   await window.getByTestId('token-status').getByRole('button', { name: 'Log out' }).click()
   await status(window, 'unauthorized').waitFor({ timeout: 30_000 })
   if (process.platform === 'darwin' && await create_keychain_token_store().get(node.node_url) !== null) throw new Error('log out left the token in the Keychain')

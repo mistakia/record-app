@@ -1,13 +1,7 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.section h3 {
-  width: 100%;
-  margin: 0;
-  font-size: 14px;
+  gap: var(--space-xl);
 }
 
 .table {
@@ -15,11 +9,19 @@
   border-collapse: collapse;
 }
 
-.table th,
-.table td {
+.table th {
+  padding: var(--space-xs) var(--space-sm) var(--space-xs) 0;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  font-weight: 400;
+  letter-spacing: 0.5px;
   text-align: left;
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+}
+
+.table td {
+  padding: var(--space-sm) var(--space-sm) var(--space-sm) 0;
+  border-top: 1px solid var(--color-border-light);
   vertical-align: top;
 }
 
@@ -30,54 +32,43 @@
 
 .address {
   display: block;
-  color: var(--muted);
-  font-size: 11px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
   overflow-wrap: anywhere;
+  user-select: text;
 }
 
 .badge {
-  border-radius: 10px;
-  padding: 1px 8px;
-  margin-right: 4px;
-  font-size: 12px;
-  border: 1px solid var(--accent);
-  color: var(--accent);
+  margin-right: var(--space-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .retired {
-  border-color: var(--muted);
-  color: var(--muted);
+  color: var(--color-text-tertiary);
 }
 
 .actions {
-  white-space: nowrap;
-}
-
-.actions button {
-  margin-right: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-xs);
 }
 
 .create {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .create input {
-  font: inherit;
-  padding: 4px 6px;
-  min-width: 220px;
+  flex: 1;
+  min-width: 160px;
 }
 
 .error {
   width: 100%;
-  color: var(--danger);
-  margin: 0;
-}
-
-.dialog_actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  color: var(--color-error);
 }

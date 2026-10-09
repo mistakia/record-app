@@ -26,6 +26,8 @@ export interface MediaSessionState {
   has_track: boolean
   position_seconds: number
   duration_seconds: number
+  // The track's artwork as a data: URL, once loaded; its CID names it.
+  artwork?: { cid: string, url: string } | null
 }
 
 const SILENCE_SECONDS = 10
@@ -77,11 +79,13 @@ export const install_media_session = ({ actions, media_session = navigator.media
 
   return {
     update: (state: MediaSessionState): void => {
-      const metadata_key = JSON.stringify([state.has_track, state.title, state.artist])
+      const metadata_key = JSON.stringify([state.has_track, state.title, state.artist, state.artwork?.cid ?? null])
       if (metadata_key !== last_metadata) {
         last_metadata = metadata_key
         // Values from the node go to the OS as plain strings.
-        media_session.metadata = state.has_track ? new MediaMetadata({ title: state.title ?? 'Untitled', artist: state.artist ?? '' }) : null
+        media_session.metadata = state.has_track
+          ? new MediaMetadata({ title: state.title ?? 'Untitled', artist: state.artist ?? '', ...(state.artwork == null ? {} : { artwork: [{ src: state.artwork.url }] }) })
+          : null
       }
       media_session.playbackState = !state.has_track ? 'none' : state.playing ? 'playing' : 'paused'
       if (state.duration_seconds > 0) {

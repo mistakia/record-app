@@ -1,0 +1,208 @@
+/* STYLE.md § Layout › Sidebar: sunken paper, the whole column a drag
+   region, its controls not. */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  height: 100%;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+}
+
+:global(:root[data-platform='mac']) .sidebar {
+  -webkit-app-region: drag;
+}
+
+.sidebar a,
+.sidebar button {
+  -webkit-app-region: no-drag;
+}
+
+.top {
+  display: flex;
+  justify-content: flex-end;
+  height: var(--page-head-height);
+  padding: 0 var(--space-sm);
+}
+
+.history {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xxs);
+}
+
+.history button {
+  width: 24px;
+  height: 24px;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-secondary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-sm) 0;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-xs) var(--space-base);
+  font-size: var(--font-size-xxs);
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface-sunken);
+}
+
+.add {
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  letter-spacing: 0;
+}
+
+.add:hover {
+  color: var(--color-accent);
+}
+
+.item,
+.library {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 var(--space-base);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.item:hover,
+.library:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.item[aria-current='page'],
+.library[aria-current='page'] {
+  background: var(--color-surface-solid);
+  color: var(--color-selected);
+  font-weight: 600;
+}
+
+.libraries {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--space-sm);
+}
+
+.library {
+  gap: var(--space-xs);
+  padding-right: var(--space-xs);
+}
+
+.library_link {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 32px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gauge {
+  flex: none;
+  width: 20px;
+  height: 2px;
+  background: var(--color-border-light);
+}
+
+.gauge span {
+  display: block;
+  height: 100%;
+  background: var(--color-text-tertiary);
+  transform-origin: left;
+}
+
+.more {
+  opacity: 0;
+  color: var(--color-text-tertiary);
+}
+
+.library:hover .more,
+.more:focus-visible {
+  opacity: 1;
+}
+
+.none {
+  padding: 0 var(--space-base);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.footer {
+  border-top: 1px solid var(--color-border-light);
+  padding: 0 var(--space-sm) var(--space-sm);
+}
+
+.footer_row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+}
+
+.identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-left: var(--space-xs);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.identity:hover,
+.identity[aria-current='page'] {
+  color: var(--color-selected);
+}
+
+.gear {
+  padding: var(--space-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-reading);
+  text-decoration: none;
+}
+
+.gear:hover,
+.gear[aria-current='page'] {
+  color: var(--color-accent);
+}
+
+.status {
+  display: block;
+  padding: 0 var(--space-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  text-decoration: none;
+}
+
+.status:hover {
+  color: var(--color-text-secondary);
+}

@@ -16,6 +16,9 @@ interface BundledView { status: string, pid: number | null, port: number | null,
 export const bundled_state = async (window: Page): Promise<BundledView> =>
   await window.evaluate(async () => await (window as unknown as { record: { bundled: { get_state: () => Promise<BundledView> } } }).record.bundled.get_state())
 
+// The sidebar's links; the first 'Tracks' is every library.
+const nav = async (window: Page, name: string) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name, exact: true }).first().click() }
+
 const wait_running = async (window: Page, not_pid: number | null = null): Promise<BundledView> => {
   const deadline = Date.now() + 60_000
   for (;;) {
@@ -41,7 +44,9 @@ export const check_bundled_ingest = async ({ window, step, audio_path, title, tr
   slow?: (ms: number) => number
 }): Promise<void> => {
   const state = await bundled_state(window)
-  await window.getByRole('navigation').getByRole('link', { name: 'Import', exact: true }).click()
+  // Import has no sidebar link: the track list's [+] opens it.
+  await nav(window, 'Tracks')
+  await window.getByRole('link', { name: 'Import tracks' }).click()
   step('URL import in bundled mode', await window.getByTestId('url-import-off').innerText())
   if (process.platform !== 'darwin' && state.ingest_disabled !== null) {
     step('import page in bundled mode', await window.getByTestId('ingest-disabled').innerText())
@@ -61,7 +66,7 @@ export const check_bundled_ingest = async ({ window, step, audio_path, title, tr
   const item = window.locator('[data-testid=import-item][data-finished=true]').last()
   await item.waitFor({ timeout: slow(60_000) })
   step('bundled file import', (await item.innerText()).replaceAll('\n', ' | '))
-  await window.getByRole('navigation').getByRole('link', { name: 'Tracks', exact: true }).click()
+  await nav(window, 'Tracks')
   await window.getByTestId('track-total').filter({ hasText: new RegExp(`^${tracks_before + 1} tracks$`) }).waitFor({ timeout: slow(30_000) })
   await window.getByTestId('track-row').filter({ hasText: title }).first().waitFor()
   step('bundled library after ingest', `${tracks_before + 1} tracks, including ${title}`)
@@ -79,7 +84,7 @@ export const run_bundled_checks = async ({ app, window, step, remote_url, user_d
   await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: 30_000 })
   step('bundled node', { status: started.status, url: started.url, pid: started.pid, version: started.version, ingest_disabled: started.ingest_disabled })
 
-  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await nav(window, 'Settings')
   step('bundled details', (await window.getByTestId('bundled-details').innerText()).replaceAll('\n', ' | '))
   await window.getByRole('button', { name: 'Test connection', exact: true }).click()
   step('bundled test connection', await window.getByTestId('connection-test-result').innerText())
@@ -92,9 +97,9 @@ export const run_bundled_checks = async ({ app, window, step, remote_url, user_d
   await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: 30_000 })
   step('after a crash', { pid: restarted.pid, url: restarted.url, same_url: restarted.url === started.url })
 
-  // Diagnostics: the child's PID, and the node log inside this profile, not
-  // the real ~/Library/Logs.
-  await window.getByRole('navigation').getByRole('link', { name: 'Diagnostics', exact: true }).click()
+  // Diagnostics, a section of Settings: the child's PID, and the node log
+  // inside this profile, not the real ~/Library/Logs.
+  await nav(window, 'Settings')
   await window.getByTestId('diagnostics-bundled-pid').filter({ hasText: `PID ${restarted.pid}` }).waitFor({ timeout: 10_000 })
   step('diagnostics', (await window.getByTestId('diagnostics').innerText()).split('\n').slice(0, 24).join(' | '))
   if (!restarted.log_path.startsWith(await realpath(user_data_dir))) throw new Error(`the node log is outside the profile: ${restarted.log_path}`)
@@ -111,7 +116,7 @@ export const run_bundled_checks = async ({ app, window, step, remote_url, user_d
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path] })
     dialog.showMessageBox = async () => ({ response: 1, checkboxChecked: false })
   }, chosen_dir)
-  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await nav(window, 'Settings')
   await window.getByTestId('bundled-details').getByRole('button', { name: 'Change', exact: true }).click()
   const deadline = Date.now() + 60_000
   let moved = await bundled_state(window)
@@ -128,7 +133,7 @@ export const run_bundled_checks = async ({ app, window, step, remote_url, user_d
   if (mode !== '700' || chosen_mode !== '755') throw new Error(`the data folder is ${mode} and the chosen folder ${chosen_mode}; expected 700 and an untouched 755`)
 
   // Switch to remote: confirmed, and the bundled child stops.
-  await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+  await nav(window, 'Settings')
   await window.getByLabel('Remote node').check()
   await window.locator('input[name=node_url]').fill(remote_url)
   await window.getByRole('button', { name: 'Save', exact: true }).click()

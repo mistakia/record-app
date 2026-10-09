@@ -1,30 +1,35 @@
 import { useEffect, type ReactElement } from 'react'
-import { HashRouter, Navigate, NavLink, Route, Routes } from 'react-router'
+import { HashRouter, Navigate, Route, Routes } from 'react-router'
 
 import styles from './app.module.css'
+import { ShortcutOverlay } from '#renderer/components/common/shortcut-overlay.tsx'
 import { Toaster } from '#renderer/components/common/toaster.tsx'
 import { BackupPrompt } from '#renderer/components/identity/backup-prompt.tsx'
 import { BundledBanner } from '#renderer/components/layout/bundled-banner.tsx'
-import { ConnectionBanner, ConnectionStatus } from '#renderer/components/layout/connection-banner.tsx'
+import { ConnectionBanner } from '#renderer/components/layout/connection-banner.tsx'
+import { HelpBanner } from '#renderer/components/layout/help-banner.tsx'
+import { IngestGauge } from '#renderer/components/layout/ingest-gauge.tsx'
+import { PageHead } from '#renderer/components/layout/page-head.tsx'
+import { Sidebar } from '#renderer/components/layout/sidebar.tsx'
 import { PlayerBar } from '#renderer/components/player/player-bar.tsx'
+import { QueuePanel } from '#renderer/components/player/queue-panel.tsx'
 import { use_bundled_node } from '#renderer/hooks/use-bundled-node.ts'
 import { current_route, use_hibernation } from '#renderer/hooks/use-hibernation.ts'
 import { use_hotkeys } from '#renderer/hooks/use-hotkeys.ts'
 import { use_node_events } from '#renderer/hooks/use-node-events.ts'
 import { use_media_session } from '#renderer/hooks/use-player.ts'
-import { ConnectionSettings } from '#renderer/pages/connection-settings.tsx'
-import { Diagnostics } from '#renderer/pages/diagnostics.tsx'
 import { Identity } from '#renderer/pages/identity.tsx'
 import { Importer } from '#renderer/pages/importer.tsx'
 import { Libraries } from '#renderer/pages/libraries.tsx'
 import { Listens } from '#renderer/pages/listens.tsx'
-import { Peers } from '#renderer/pages/peers.tsx'
+import { Settings } from '#renderer/pages/settings.tsx'
 import { Tracks } from '#renderer/pages/tracks.tsx'
+import { ROUTES, route_path, settings_route } from '#renderer/routes.ts'
 import { connection_loaded } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { restore_snapshot } from '#renderer/snapshot/hibernation.ts'
 
-const RESTORABLE_ROUTES = new Set(['/tracks', '/libraries', '/import', '/listens', '/peers', '/identity', '/connection', '/diagnostics'])
+const RESTORABLE_ROUTES = new Set<string>(Object.values(ROUTES))
 
 export const App = () => {
   const dispatch = use_app_dispatch()
@@ -41,14 +46,14 @@ export const App = () => {
       const [loaded, snapshot] = await Promise.all([window.record.connection.get(), window.record.snapshot.load()])
       if (snapshot !== null && snapshot.node_key === loaded.node_key) {
         await restore_snapshot({ dispatch, snapshot })
-        if (RESTORABLE_ROUTES.has(snapshot.route) && current_route() === '/') window.location.hash = snapshot.route
+        if (RESTORABLE_ROUTES.has(route_path(snapshot.route)) && current_route() === '/') window.location.hash = snapshot.route
       }
       dispatch(connection_loaded(loaded))
     }
     load().catch(() => {})
   }, [dispatch])
 
-  if (config === null) return <div className={styles.loading}>Loading</div>
+  if (config === null) return <div className={styles.loading} />
   return (
     <HashRouter>
       <Shell configured={config.node_key !== null} />
@@ -56,41 +61,48 @@ export const App = () => {
   )
 }
 
-// Pages that need a node; without one they send the user to Connection.
-const NODE_PAGES: Array<{ path: string, label: string, element: ReactElement }> = [
-  { path: '/tracks', label: 'Tracks', element: <Tracks /> },
-  { path: '/libraries', label: 'Libraries', element: <Libraries /> },
-  { path: '/import', label: 'Import', element: <Importer /> },
-  { path: '/listens', label: 'Listens', element: <Listens /> },
-  { path: '/peers', label: 'Peers', element: <Peers /> },
-  { path: '/identity', label: 'Identity', element: <Identity /> }
+// Pages that need a node; without one they send the user to Settings ›
+// Connection.
+const NODE_PAGES: Array<{ path: string, element: ReactElement }> = [
+  { path: ROUTES.tracks, element: <Tracks /> },
+  { path: ROUTES.listens, element: <Listens /> },
+  { path: ROUTES.libraries, element: <Libraries /> },
+  { path: ROUTES.import, element: <Importer /> },
+  { path: ROUTES.identity, element: <Identity /> }
 ]
 
+// STYLE.md § Layout: the sidebar, and a page column of head, banners, and
+// body over the player bar.
 const Shell = ({ configured }: { configured: boolean }) => {
   use_hotkeys()
+  const queue_open = use_app_selector((state) => state.ui.queue_open)
+  const unconfigured_route = settings_route('connection')
   return (
     <div className={styles.shell}>
-      <nav className={styles.nav}>
-        {NODE_PAGES.map(({ path, label }) => <NavLink key={path} to={path}>{label}</NavLink>)}
-        <NavLink to='/connection'>Connection</NavLink>
-        <NavLink to='/diagnostics'>Diagnostics</NavLink>
-        <ConnectionStatus />
-      </nav>
-      <ConnectionBanner />
-      <BundledBanner />
-      <BackupPrompt />
-      <main className={styles.content}>
-        <Routes>
-          <Route path='/connection' element={<ConnectionSettings />} />
-          <Route path='/diagnostics' element={<Diagnostics />} />
-          {NODE_PAGES.map(({ path, element }) => (
-            <Route key={path} path={path} element={configured ? element : <Navigate to='/connection' replace />} />
-          ))}
-          <Route path='*' element={<Navigate to={configured ? '/tracks' : '/connection'} replace />} />
-        </Routes>
-      </main>
-      <PlayerBar />
-      <Toaster />
+      <Sidebar />
+      <div className={styles.column}>
+        <div className={styles.page}>
+          <PageHead />
+          <ConnectionBanner />
+          <BundledBanner />
+          <BackupPrompt />
+          <HelpBanner />
+          <main className={styles.body}>
+            <Routes>
+              <Route path={ROUTES.settings} element={<Settings />} />
+              {NODE_PAGES.map(({ path, element }) => (
+                <Route key={path} path={path} element={configured ? element : <Navigate to={unconfigured_route} replace />} />
+              ))}
+              <Route path='*' element={<Navigate to={configured ? ROUTES.tracks : unconfigured_route} replace />} />
+            </Routes>
+          </main>
+          <IngestGauge />
+          {queue_open && <QueuePanel />}
+          <Toaster />
+          <ShortcutOverlay />
+        </div>
+        <PlayerBar />
+      </div>
     </div>
   )
 }

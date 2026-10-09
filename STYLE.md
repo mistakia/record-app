@@ -371,7 +371,7 @@ Transitions: 0.15s on color and opacity, 0.28s `cubic-bezier(0.32, 0.72, 0, 1)` 
 
 ## Glyphs
 
-Text glyphs from the mono face, no icon font: `▶` play, `❚❚` pause, `|◀` `▶|` previous and next, `▸` `▾` disclosure, `◆` pinned, `●` status, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Each glyph-only control carries an `aria-label`.
+Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `≡` settings, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat and shuffle are the words `REPEAT` and `SHUFFLE`. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
 
 ## OS Surface (macOS, Electron)
 
@@ -379,7 +379,7 @@ Text glyphs from the mono face, no icon font: `▶` play, `❚❚` pause, `|◀`
 - **Native vs custom** — app menus (About, Show Logs Folder, Show Data Folder, as legacy) and the identity-export confirmation stay native. Context menus are the custom paper menu so they can show shortcuts and stay keyboard-reachable.
 - **Scrollbars** — thin overlay scrollbars in `--color-border`, visible on scroll.
 - **Text selection** — `::selection` in `--color-accent-wash`; chrome (nav, buttons, row indices) is `user-select: none`, values (titles, identifiers in the inspector) are selectable.
-- **Media Session** — the OS now-playing surface shows title and artist; no artwork until the node serves it.
+- **Media Session** — the OS now-playing surface shows title, artist, and the track's artwork from `GET /images/{cid}`.
 - **Platforms off macOS** — the same paper and screens; the native frame stays and the drag regions are omitted.
 
 ## Anti-Patterns

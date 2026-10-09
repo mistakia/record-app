@@ -1,0 +1,65 @@
+/* Shared animations (STYLE.md § Screen effects, § Progressive Disclosure).
+   prefers-reduced-motion freezes every one of them in base.css. */
+
+/* Tiny, irregular brightness dips on the scanline mesh. */
+@keyframes crt-flicker {
+  0%,
+  47%,
+  51%,
+  100% {
+    opacity: 0.5;
+  }
+  48% {
+    opacity: 0.44;
+  }
+  49% {
+    opacity: 0.53;
+  }
+  50% {
+    opacity: 0.47;
+  }
+}
+
+@keyframes crt-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes deplete {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

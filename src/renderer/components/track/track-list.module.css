@@ -1,29 +1,66 @@
 .list {
   display: flex;
-  flex-direction: column;
   flex: 1;
+  min-width: 0;
   min-height: 0;
-}
-
-.header,
-.list :global(.track-row) {
-  display: grid;
-  grid-template-columns: minmax(160px, 3fr) minmax(120px, 2fr) minmax(100px, 2fr) minmax(80px, 2fr) 70px 150px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 8px;
+  flex-direction: column;
 }
 
 .header {
-  font-weight: 600;
-  border-bottom: 1px solid var(--border);
-  height: 30px;
+  display: grid;
+  flex: none;
+  grid-template-columns: var(--track-columns);
+  align-items: center;
+  gap: 0 var(--space-sm);
+  height: 28px;
+  padding: 0 var(--space-lg) 0 var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.header > span {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.index_head {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.header .index_head button,
+.header .sort {
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.sort:hover:not(:disabled),
+.index_head button:hover:not(:disabled) {
+  color: var(--color-accent);
+}
+
+.sort_active {
+  color: var(--color-text-secondary);
+}
+
+.end {
+  text-align: right;
 }
 
 .scroller {
   flex: 1;
   min-height: 0;
   overflow: auto;
+}
+
+.scroller:focus-visible {
+  outline: none;
 }
 
 .canvas {
@@ -38,7 +75,15 @@
   width: 100%;
 }
 
+/* A skeleton row: a ragged bar, pulsing, as the layout it stands for. */
 .placeholder {
+  display: flex;
+  align-items: center;
   height: 100%;
-  border-bottom: 1px solid var(--border);
+  padding: 0 var(--space-lg) 0 calc(var(--space-sm) + 6ch);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.small_glyph {
+  font-size: 0.7em;
 }

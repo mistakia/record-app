@@ -1,33 +1,57 @@
-.filter {
+.strip {
+  position: relative;
+  flex: none;
+  padding: 0 var(--space-lg) var(--space-sm);
+}
+
+/* The right edge fades into the paper. */
+.strip::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: var(--space-sm);
+  width: var(--space-2xl);
+  background: linear-gradient(to right, transparent, var(--color-surface-solid));
+  pointer-events: none;
+}
+
+.chips {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-height: 64px;
-  overflow: auto;
+  gap: var(--space-xs);
+  overflow-x: auto;
+  padding-right: var(--space-2xl);
+  scrollbar-width: none;
 }
 
-.tag {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1px 8px;
-  background: none;
-  color: inherit;
-  font-size: 12px;
+.chips::-webkit-scrollbar {
+  display: none;
 }
 
-.on {
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 600;
+.chip {
+  flex: none;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-.count,
-.more,
-.empty {
-  color: var(--muted);
-  font-size: 12px;
+.chip:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-accent);
 }
 
-.empty {
-  margin: 0;
+.chip[aria-pressed='true'],
+.chip[aria-pressed='true']:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-wash);
+  color: var(--color-accent);
+}
+
+.count {
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
 }

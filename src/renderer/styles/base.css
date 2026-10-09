@@ -1,0 +1,307 @@
+/* Element defaults (STYLE.md § Typography, § Buttons, § OS Surface). */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'calt' 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: var(--font-size-xl);
+}
+
+h2,
+h3,
+h4 {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--color-border);
+  text-underline-offset: 2px;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent);
+}
+
+::selection {
+  background: var(--color-accent-wash);
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.screen :focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+time,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chrome is not text; values are. */
+button,
+nav,
+label,
+[role='menu'],
+[role='tab'] {
+  user-select: none;
+}
+
+/* Buttons: secondary by default; data-variant picks primary, ghost, or
+   danger, data-size small. Square, uppercase, no shadow. */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  height: 32px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+button:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+button[aria-pressed='true'] {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent-wash);
+}
+
+button[data-variant='primary'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+button[data-variant='primary']:hover:not(:disabled) {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  opacity: 0.88;
+}
+
+button[data-variant='danger'] {
+  border-color: var(--color-error);
+  background: var(--color-error);
+  color: var(--color-on-accent);
+}
+
+button[data-variant='danger']:hover:not(:disabled) {
+  background: var(--color-error);
+  color: var(--color-on-accent);
+  opacity: 0.88;
+}
+
+button[data-variant='ghost'] {
+  border-color: transparent;
+  background: transparent;
+}
+
+button[data-variant='ghost']:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-accent);
+}
+
+button[data-size='small'] {
+  height: 24px;
+  padding: 0 var(--space-xs);
+  font-size: var(--font-size-xs);
+}
+
+/* A glyph-only control: ghost, unpadded, no case change. */
+button[data-variant='glyph'] {
+  height: auto;
+  padding: 0 var(--space-xxs);
+  border-color: transparent;
+  background: transparent;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+button[data-variant='glyph']:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-accent);
+}
+
+button:disabled {
+  color: var(--color-text-tertiary);
+  border-color: var(--color-border-light);
+  background: transparent;
+  cursor: default;
+}
+
+/* Inside a screen: outlines and washes, never fills. */
+.screen button[data-variant='primary'],
+.screen button[data-variant='danger'] {
+  background: transparent;
+  color: var(--color-text);
+  border-color: var(--color-text);
+}
+
+.screen button[data-variant='primary']:hover:not(:disabled),
+.screen button[data-variant='danger']:hover:not(:disabled) {
+  background: var(--color-accent-wash);
+  color: var(--color-text);
+  opacity: 1;
+}
+
+.screen button[data-variant='danger']::before {
+  content: '!! ';
+}
+
+.screen button:disabled {
+  opacity: 0.4;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-base);
+  padding: var(--space-xs) var(--space-sm);
+  transition: border-color var(--transition-fast);
+}
+
+input:not([type='checkbox'], [type='radio'], [type='range']),
+select {
+  height: 32px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+input[type='checkbox'],
+input[type='radio'],
+input[type='range'] {
+  accent-color: var(--color-accent);
+}
+
+select {
+  appearance: none;
+  padding-right: var(--space-lg);
+  background-image: linear-gradient(45deg, transparent 50%, currentcolor 50%),
+    linear-gradient(135deg, currentcolor 50%, transparent 50%);
+  background-position:
+    calc(100% - 12px) 50%,
+    calc(100% - 8px) 50%;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+
+/* Thin overlay scrollbars in the border role. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+:hover::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Visually hidden, still read. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+  }
+}

@@ -1,134 +1,153 @@
-// Browsing (spec §8.9.1): aggregated and per-library views, debounced
-// full-text search, sort, and a tag filter, all answered by the node
-// (§8.8.2), over a virtualized list of the whole result.
+// Browsing (spec §8.9.1, STYLE.md § Components › Track list): every library
+// aggregated, or one, with debounced full-text search, sort, and the tag
+// filter, all answered by the node (§8.8.2) over a virtualized list of the
+// whole result. The view lives in the route (routes.ts), so back and
+// forward restore it.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
 
 import styles from './tracks.module.css'
-import type { Track } from '#renderer/api/types.ts'
-import type { MenuItem } from '#renderer/components/common/context-menu.tsx'
-import { library_category, library_name, own_library_address } from '#renderer/components/library/library-category.ts'
-import { AdoptDialog } from '#renderer/components/track/adopt-dialog.tsx'
-import { RemoveDialog, removable_from } from '#renderer/components/track/remove-dialog.tsx'
-import { TagEditor } from '#renderer/components/track/tag-editor.tsx'
+import { EmptyState } from '#renderer/components/common/empty-state.tsx'
+import { Skeleton } from '#renderer/components/common/skeleton.tsx'
+import { library_name, own_library_address } from '#renderer/components/library/library-category.ts'
+import { list_commands } from '#renderer/components/track/list-commands.ts'
+import { Inspector } from '#renderer/components/track/inspector.tsx'
+import { use_inspector_fit } from '#renderer/components/track/use-inspector-fit.ts'
 import { TagFilter } from '#renderer/components/track/tag-filter.tsx'
 import { TrackList } from '#renderer/components/track/track-list.tsx'
+import { use_tag_navigation, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
 import { SEARCH_INPUT_ID } from '#renderer/hooks/use-hotkeys.ts'
-import { add_to_queue, play_tracks } from '#renderer/player/player-controller.ts'
-import { node_api, track_page_args, type SortOrder, type TrackSort } from '#renderer/store/api.ts'
+import { play_tracks, toggle_shuffle_mode } from '#renderer/player/player-controller.ts'
+import { parse_track_view, ROUTES, tracks_route, with_filters_cleared, with_sort, with_tag_toggled, type TrackView } from '#renderer/routes.ts'
+import { node_api, track_page_args } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
-import { report_write } from '#renderer/store/write.ts'
-import { filters_cleared, library_selected, query_changed, sort_changed } from '#renderer/store/ui.ts'
+import { view_changed } from '#renderer/store/ui.ts'
 
 const SEARCH_DEBOUNCE_MS = 250
-const SORTS: Array<{ value: TrackSort, label: string }> = [
-  { value: 'added_at', label: 'Date added' },
-  { value: 'title', label: 'Title' },
-  { value: 'artist', label: 'Artist' },
-  { value: 'album', label: 'Album' },
-  { value: 'duration', label: 'Duration' },
-  { value: 'bpm', label: 'BPM' }
-]
 
 export const Tracks = () => {
   const dispatch = use_app_dispatch()
-  const library_address = use_app_selector((state) => state.ui.library_address)
-  const filters = use_app_selector((state) => state.ui.filters)
+  const navigate = useNavigate()
+  const { search: route_search } = useLocation()
+  const view = useMemo(() => parse_track_view(new URLSearchParams(route_search)), [route_search])
+  const { library_address, filters } = view
   const [search, set_search] = useState(filters.query)
-  const [tagging, set_tagging] = useState<Track | null>(null)
-  const [adopting, set_adopting] = useState<Track | null>(null)
-  const [removing, set_removing] = useState<Track | null>(null)
+  const [inspecting, set_inspecting] = useState(false)
+  const search_ref = useRef<HTMLInputElement>(null)
+  const body_ref = useRef<HTMLDivElement>(null)
+  use_inspector_fit({ body: body_ref, open: inspecting, close: () => { set_inspecting(false) } })
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const first_page = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address, page: 0, filters }))
+  const shuffle = use_app_selector((state) => state.player.queue.shuffle)
   const own_address = own_library_address(libraries.data)
-  // A listen records the library a track was played from: the selected one,
+  // A listen records the library a track was played from: the shown one,
   // or in the aggregated view the own library.
   const listen_library = library_address !== '' ? library_address : own_address ?? ''
+  const viewed = libraries.data?.find(({ address }) => address === library_address)
+  const go = (next: TrackView, replace = false) => { navigate(tracks_route(next), { replace }) }
 
+  useEffect(() => { dispatch(view_changed(view)) }, [dispatch, view])
+  // Back and forward bring their own search text.
+  useEffect(() => { set_search(filters.query) }, [filters.query])
   useEffect(() => {
     if (search === filters.query) return
-    const timer = setTimeout(() => { dispatch(query_changed(search)) }, SEARCH_DEBOUNCE_MS)
+    const timer = setTimeout(() => { go({ ...view, filters: { ...filters, query: search } }, true) }, SEARCH_DEBOUNCE_MS)
     return () => { clearTimeout(timer) }
-  }, [search, filters.query, dispatch])
+  })
 
   const total = first_page.data?.total ?? 0
   const error = first_page.error ?? libraries.error
   const filtered = filters.query.trim() !== '' || filters.tags.length > 0
+  const open_tag = use_tag_navigation()
 
-  const menu_items = (track: Track): MenuItem[] => [
-    { label: 'Play', on_select: () => { play_tracks({ tracks: [track], start_index: 0, library_address: listen_library }) } },
-    { label: 'Play next', on_select: () => { add_to_queue({ tracks: [track], at: 'next', library_address: listen_library }) } },
-    { label: 'Add to queue', on_select: () => { add_to_queue({ tracks: [track], at: 'end', library_address: listen_library }) } },
-    { label: 'Tags', on_select: () => { set_tagging(track) } },
-    { label: 'Adopt to library', on_select: () => { set_adopting(track) } },
-    { label: track.is_pinned === true ? 'Unpin' : 'Pin', on_select: () => { toggle_pin(track) } },
-    ...(removable_from({ track, libraries: libraries.data }).length > 0 ? [{ label: 'Remove from library', on_select: () => { set_removing(track) } }] : [])
-  ]
+  const { actions, dialogs } = use_track_actions({
+    viewed_library: library_address,
+    listen_library,
+    source: {
+      route: tracks_route(view),
+      label: library_address === '' ? 'All tracks' : viewed === undefined ? library_address : library_name(viewed),
+      subtitle: filters.tags.length === 0 ? null : filters.tags.join(' + '),
+      library_address
+    },
+    // A chip filters this view by its tag, or opens the library it came from.
+    on_tag_clicked: ({ tag, library_address: tag_library }) => {
+      if (library_address === '' || tag_library === library_address) go(with_tag_toggled(view, tag))
+      else open_tag({ tag, library_address: tag_library })
+    },
+    toggle_inspector: () => { set_inspecting((open) => !open) },
+    clear_search: () => {
+      if (search === '' && filters.query === '') return false
+      set_search('')
+      go({ ...view, filters: { ...filters, query: '' } }, true)
+      return true
+    },
+    close_pane: () => {
+      if (!inspecting) return false
+      set_inspecting(false)
+      return true
+    }
+  })
 
-  // Spec §4.6.2, §8.6.5a: a pin keeps the track's audio on every device of
-  // the identity, whatever each device's replication mode.
-  const toggle_pin = (track: Track) => {
-    const pinned = track.is_pinned !== true
-    report_write({
-      dispatch,
-      write: dispatch(node_api.endpoints.pin_track.initiate({ cid: track.audio_cid, pinned })),
-      success: pinned ? 'Pinned: kept on all your devices.' : 'Unpinned.'
-    }).catch(() => {})
+  const shuffle_play = () => {
+    toggle_shuffle_mode()
+    const items = first_page.data?.items ?? []
+    if (!shuffle && items.length > 0) play_tracks({ tracks: items, start_index: Math.floor(Math.random() * items.length), library_address: listen_library })
   }
 
   return (
     <section className={styles.page}>
       <div className={styles.toolbar}>
-        <select aria-label='Library' value={library_address} onChange={(event) => { dispatch(library_selected(event.target.value)) }}>
-          <option value=''>All libraries</option>
-          {libraries.data?.map((library) => (
-            <option key={library.id} value={library.address}>
-              {library_name(library)} ({library_category(library)}{library.is_retired ? ', retired' : ''}, {library.track_count} tracks)
-            </option>
-          ))}
-        </select>
-        <input
-          id={SEARCH_INPUT_ID}
-          type='search'
-          aria-label='Search tracks'
-          placeholder='Search title, artist, album'
-          value={search}
-          onChange={(event) => { set_search(event.target.value) }}
-        />
-        <select
-          aria-label='Sort by'
-          value={filters.sort}
-          onChange={(event) => { dispatch(sort_changed({ sort: event.target.value as TrackSort, order: filters.order })) }}
-        >
-          {SORTS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
-        </select>
-        <button
-          type='button'
-          aria-label={filters.order === 'asc' ? 'Ascending' : 'Descending'}
-          onClick={() => { dispatch(sort_changed({ sort: filters.sort, order: (filters.order === 'asc' ? 'desc' : 'asc') as SortOrder })) }}
-        >
-          {filters.order === 'asc' ? 'Asc' : 'Desc'}
-        </button>
+        <div className={styles.search}>
+          <input
+            ref={search_ref}
+            id={SEARCH_INPUT_ID}
+            type='search'
+            aria-label='Search tracks'
+            placeholder='/ search'
+            spellCheck={false}
+            value={search}
+            onChange={(event) => { set_search(event.target.value) }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === 'ArrowDown') {
+                event.preventDefault()
+                list_commands()?.focus()
+              }
+            }}
+          />
+          {search !== '' && (
+            <button type='button' data-variant='glyph' aria-label='Clear search' onClick={() => { set_search(''); search_ref.current?.focus() }}>×</button>
+          )}
+        </div>
         <span className={styles.count} data-testid='track-total'>{total} tracks</span>
         {filtered && (
-          <button type='button' onClick={() => { set_search(''); dispatch(filters_cleared()) }}>Clear filters</button>
+          <button type='button' data-variant='ghost' data-size='small' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
         )}
+        {own_address !== null && <Link to={ROUTES.import} className={styles.add} aria-label='Import tracks'>[+]</Link>}
+        <button type='button' data-variant='glyph' className={styles.shuffle} aria-pressed={shuffle} onClick={shuffle_play}>Shuffle</button>
       </div>
-      <TagFilter library_address={library_address} />
-      {error !== undefined && <p className={styles.error}>{'message' in error ? error.message : 'The node request failed.'}</p>}
-      {first_page.isSuccess && total === 0 && <p className={styles.muted}>{filtered ? 'No tracks match.' : 'No tracks in this view yet.'}</p>}
-      <TrackList
-        library_address={library_address}
-        filters={filters}
-        total={total}
-        busy={first_page.isFetching}
-        on_play={({ page_tracks, index }) => { play_tracks({ tracks: page_tracks, start_index: index, library_address: listen_library }) }}
-        on_queue={({ track, at }) => { add_to_queue({ tracks: [track], at, library_address: listen_library }) }}
-        menu_items={menu_items}
-      />
-      {tagging !== null && <TagEditor track={tagging} viewed_library={library_address} on_close={() => { set_tagging(null) }} />}
-      {removing !== null && <RemoveDialog track={removing} viewed_library={library_address} on_close={() => { set_removing(null) }} />}
-      {adopting !== null && <AdoptDialog track={adopting} viewed_library={library_address} on_close={() => { set_adopting(null) }} />}
+      <TagFilter library_address={library_address} selected={filters.tags} on_toggle={(tag) => { go(with_tag_toggled(view, tag)) }} />
+      {error !== undefined && <p className={styles.error}>!! {'message' in error ? error.message : 'The node request failed.'}</p>}
+      {first_page.isLoading && first_page.data === undefined
+        ? <Skeleton />
+        : first_page.isSuccess && total === 0
+          ? filtered
+            ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
+            : <EmptyState headline='Empty' detail='No tracks in this view yet. Import some, or link a library.' action={<Link to={ROUTES.import}>Import</Link>} />
+          : (
+            <div ref={body_ref} className={styles.body}>
+              <TrackList
+                source={{ kind: 'tracks', library_address, filters }}
+                view_key={tracks_route(view)}
+                total={total}
+                busy={first_page.isFetching}
+                sort={{ sort: filters.sort, order: filters.order, on_sort: (sort) => { go(with_sort(view, sort)) } }}
+                actions={actions}
+              />
+              {inspecting && <Inspector source={{ kind: 'tracks', library_address, filters }} on_close={() => { set_inspecting(false) }} />}
+            </div>
+            )}
+      {dialogs}
     </section>
   )
 }

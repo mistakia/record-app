@@ -1,7 +1,7 @@
 .select {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-xs);
 }
 
 .select select {
@@ -11,9 +11,9 @@
 
 .single,
 .none {
-  color: var(--muted);
+  color: var(--color-text-secondary);
 }
 
 .gone {
-  color: var(--danger);
+  color: var(--color-error);
 }

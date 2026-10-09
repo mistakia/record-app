@@ -1,42 +1,188 @@
-// One track. Every value from the node is plain text (spec §8.10.6).
+// One track (STYLE.md § Components › Track list). At rest: index, title,
+// artist, album, quiet tags and metadata. On hover or under the cursor the
+// index becomes play, +TAG and the menu appear, and the star brightens.
+// Every value from the node is plain text (spec §8.10.6).
+
+import type { MouseEvent } from 'react'
 
 import styles from './track-row.module.css'
+import type { Column } from './columns.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
-import { use_app_selector } from '#renderer/store/index.ts'
 
-export const TrackRow = ({ track, holders, on_play, on_queue, on_menu }: {
-  track: Track
-  // In an aggregated view, which libraries hold the track (spec §8.6.7).
-  holders: string | null
+export type RowPlayState = 'playing' | 'loading' | 'paused' | null
+
+export interface RowHandlers {
   on_play: () => void
-  on_queue: (at: 'next' | 'end') => void
+  on_click: (event: MouseEvent) => void
+  on_double_click: () => void
   on_menu: (x: number, y: number) => void
+  on_adopt: () => void
+  on_add_tag: () => void
+  on_tag: (input: { tag: string, library_address: string }) => void
+  on_remove_tag: (input: { tag: string, library_address: string }) => void
+}
+
+const kbps = (bitrate: number | null | undefined): string => bitrate == null || bitrate <= 0 ? '' : String(Math.round(bitrate / 1000))
+
+const cell_text = (track: Track, column: Column): string => {
+  switch (column.id) {
+    case 'artist': return track.artist ?? ''
+    case 'album': return track.album ?? ''
+    case 'kbps': return kbps(track.bitrate)
+    case 'time': return track.duration_seconds == null ? '' : format_seconds(track.duration_seconds)
+    case 'format': return track.codec?.toUpperCase() ?? ''
+    case 'listens': return track.listen_count > 0 ? String(track.listen_count) : ''
+    case 'tags': return ''
+  }
+}
+
+const Tags = ({ track, removable, handlers }: { track: Track, removable: ReadonlySet<string>, handlers: RowHandlers }) => (
+  <span role='cell' className={`${styles.cell} ${styles.tags}`}>
+    {track.tags.map(({ tag, library_address }) => (
+      <span key={`${library_address} ${tag}`} className={styles.chip}>
+        <button
+          type='button'
+          data-variant='glyph'
+          tabIndex={-1}
+          onClick={(event) => {
+            event.stopPropagation()
+            handlers.on_tag({ tag, library_address })
+          }}
+        >
+          {tag}
+        </button>
+        {removable.has(library_address) && (
+          <button
+            type='button'
+            data-variant='glyph'
+            className={styles.chip_remove}
+            tabIndex={-1}
+            aria-label={`Remove tag ${tag}`}
+            onClick={(event) => {
+              event.stopPropagation()
+              handlers.on_remove_tag({ tag, library_address })
+            }}
+          >
+            ×
+          </button>
+        )}
+      </span>
+    ))}
+  </span>
+)
+
+export const TrackRow = ({ track, index, columns, play_state, is_cursor, is_selected, menu_open, removable, handlers }: {
+  track: Track
+  // Own active libraries, whose tags the row may remove.
+  removable: ReadonlySet<string>
+  index: number
+  columns: readonly Column[]
+  play_state: RowPlayState
+  is_cursor: boolean
+  is_selected: boolean
+  menu_open: boolean
+  handlers: RowHandlers
 }) => {
-  const is_current = use_app_selector((state) => state.player.queue.entries[state.player.queue.index]?.track_id === track.id)
-  const queue = on_queue
+  const classes = [
+    'track-row',
+    styles.row,
+    play_state !== null ? styles.current : '',
+    is_cursor ? styles.cursor : '',
+    is_selected ? styles.selected : '',
+    menu_open ? styles.menu_open : ''
+  ].filter((name) => name !== '').join(' ')
+  const lead = columns.filter(({ lead: is_lead }) => is_lead === true)
+  const rest = columns.filter(({ lead: is_lead }) => is_lead !== true)
+  const render_column = (column: Column) => column.id === 'tags'
+    ? <Tags key='tags' track={track} removable={removable} handlers={handlers} />
+    : (
+      <span key={column.id} role='cell' className={[styles.cell, column.quiet === true ? styles.quiet : '', column.align === 'end' ? styles.end : '', column.id === 'artist' || column.id === 'album' ? styles.secondary : ''].join(' ')}>
+        {cell_text(track, column)}
+      </span>
+      )
+
   return (
     <div
-      className={is_current ? `track-row ${styles.row} ${styles.current}` : `track-row ${styles.row}`}
+      className={classes}
       role='row'
+      aria-selected={is_selected}
       data-testid='track-row'
+      data-cursor={is_cursor ? '' : undefined}
+      onClick={(event) => { handlers.on_click(event) }}
+      onDoubleClick={() => { handlers.on_double_click() }}
       onContextMenu={(event) => {
         event.preventDefault()
-        on_menu(event.clientX, event.clientY)
+        handlers.on_menu(event.clientX, event.clientY)
       }}
     >
-      <span role='cell' className={styles.cell}>
-        <button type='button' className={styles.title} onClick={on_play}>{track.title ?? 'Untitled'}</button>
-        {holders !== null && <span className={styles.holders} data-testid='track-holders' title={(track.library_addresses ?? []).join('\n')}>in {holders}</span>}
-        {track.is_pinned === true && <span className={styles.pinned} title='Pinned: kept on every device of this identity' data-testid='pinned'>Pinned</span>}
+      <span role='cell' className={styles.index}>
+        <span className={styles.number}>{index + 1}</span>
+        <button
+          type='button'
+          data-variant='glyph'
+          className={styles.play}
+          tabIndex={-1}
+          aria-label={play_state === 'playing' ? 'Pause' : 'Play'}
+          onClick={(event) => {
+            event.stopPropagation()
+            handlers.on_play()
+          }}
+        >
+          {play_state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : play_state === 'playing' ? '▮▮' : '▶'}
+        </button>
       </span>
-      <span role='cell' className={styles.cell}>{track.artist ?? ''}</span>
-      <span role='cell' className={styles.cell}>{track.album ?? ''}</span>
-      <span role='cell' className={`${styles.cell} ${styles.tags}`}>{track.tags.map(({ tag }) => tag).join(', ')}</span>
-      <span role='cell'>{track.duration_seconds == null ? '' : format_seconds(track.duration_seconds)}</span>
-      <span role='cell' className={styles.actions}>
-        <button type='button' aria-label='Play next' onClick={() => { queue('next') }}>Next</button>
-        <button type='button' aria-label='Add to queue' onClick={() => { queue('end') }}>Queue</button>
+      <span role='cell'>
+        <button
+          type='button'
+          data-variant='glyph'
+          className={track.have_track ? `${styles.star} ${styles.held}` : styles.star}
+          tabIndex={-1}
+          aria-label={track.have_track ? 'In your library; adopt to another' : 'Adopt to library'}
+          onClick={(event) => {
+            event.stopPropagation()
+            handlers.on_adopt()
+          }}
+        >
+          ★
+        </button>
+      </span>
+      <span role='cell' className={`${styles.cell} ${styles.title_cell}`}>
+        <span className={styles.title}>{track.title ?? 'Untitled'}</span>
+        {track.is_pinned === true && <span className={styles.pinned} aria-label='Pinned' data-testid='pinned'>◆</span>}
+      </span>
+      {lead.map(render_column)}
+      <span role='cell'>
+        <button
+          type='button'
+          data-variant='glyph'
+          className={styles.add_tag}
+          tabIndex={-1}
+          aria-label='Add tag'
+          onClick={(event) => {
+            event.stopPropagation()
+            handlers.on_add_tag()
+          }}
+        >
+          +tag
+        </button>
+      </span>
+      {rest.map(render_column)}
+      <span role='cell'>
+        <button
+          type='button'
+          data-variant='glyph'
+          className={styles.more}
+          tabIndex={-1}
+          aria-label='Track menu'
+          onClick={(event) => {
+            event.stopPropagation()
+            const rect = event.currentTarget.getBoundingClientRect()
+            handlers.on_menu(rect.left, rect.bottom)
+          }}
+        >
+          …
+        </button>
       </span>
     </div>
   )

@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 
 import styles from './connection-banner.module.css'
+import { settings_route } from '#renderer/routes.ts'
+import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
 const seconds_until = (time_ms: number | null, now_ms: number): number =>
@@ -29,10 +31,11 @@ export const ConnectionBanner = () => {
   if (events.status === 'unauthorized') {
     return (
       <div className={styles.unreachable} role='alert' data-testid='node-unauthorized'>
+        <span className={styles.word}>!! token refused</span>
         <span>
           The node at {events.node_url} refused this app's access. It needs a valid access token, and nothing is sent to it until you enter one.
         </span>
-        <Link to='/connection'>Enter a token</Link>
+        <Link to={settings_route('connection')} className={styles.link}>Enter a token</Link>
       </div>
     )
   }
@@ -40,11 +43,12 @@ export const ConnectionBanner = () => {
   if (retrying) {
     return (
       <div className={styles.unreachable} role='alert' data-testid='node-unreachable'>
+        <span className={styles.word}>!! unreachable</span>
         <span>
           Node unreachable at {events.node_url}. {events.last_error} Retrying in {seconds_until(events.retry_at_ms, now_ms)} s.
           {' '}Data shown may be out of date, and changes are paused.
         </span>
-        <button type='button' onClick={() => { window.record.events.reconnect_now().catch(() => {}) }}>Retry now</button>
+        <button type='button' data-size='small' onClick={() => { window.record.events.reconnect_now().catch(() => {}) }}>Retry now</button>
       </div>
     )
   }
@@ -52,6 +56,7 @@ export const ConnectionBanner = () => {
   if (freshness !== 'fresh') {
     return (
       <div className={styles.stale} role='status' data-testid='data-stale'>
+        <span className={styles.word}>● {events.status === 'connecting' ? 'connecting' : 'stale'}</span>
         {events.status === 'connecting' ? 'Connecting to the node.' : 'Refreshing from the node.'} Data shown may be out of date, and changes are paused.
       </div>
     )
@@ -60,22 +65,29 @@ export const ConnectionBanner = () => {
 }
 
 const STATUS_LABELS = {
-  idle: 'No node',
-  connecting: 'Connecting',
-  open: 'Live',
-  reconnecting: 'Unreachable',
-  unauthorized: 'Sign-in needed',
-  closed: 'Disconnected'
+  idle: 'no node',
+  connecting: 'connecting',
+  open: 'live',
+  reconnecting: 'unreachable',
+  unauthorized: 'token refused',
+  closed: 'disconnected'
 } as const
 
-// A compact indicator of the event connection, always visible (§8.7.7).
+const PEERS_POLL_MS = 30_000
+
+// The sidebar's status line (§8.7.7, STYLE.md § Connection status): a dot
+// and a word, and the peer count while live.
 export const ConnectionStatus = () => {
   const status = use_app_selector((state) => state.connection.events?.status ?? 'idle')
   const freshness = use_app_selector((state) => state.connection.freshness)
+  const peers = node_api.endpoints.get_peers.useQuery(undefined, { skip: status !== 'open', pollingInterval: PEERS_POLL_MS })
+  const label = status === 'open' && peers.data !== undefined
+    ? `${peers.data.length} ${peers.data.length === 1 ? 'peer' : 'peers'}`
+    : STATUS_LABELS[status]
   return (
     <span className={styles.status} data-testid='events-status' data-status={status} data-freshness={freshness}>
-      <span className={`${styles.dot} ${styles[status]}`} />
-      {STATUS_LABELS[status]}
+      <span className={`${styles.dot} ${styles[status]}`} aria-hidden='true'>●</span>
+      {label}
     </span>
   )
 }

@@ -1,0 +1,46 @@
+/* Primitives (STYLE.md § Color Palette). Defined once, read only by
+   themes.css and screen.css: a component reads role tokens, never these. */
+
+:root {
+  /* Paper: base iOS's warm-shifted neutrals. */
+  --paper-50: #fbfaf7;
+  --paper-100: #f7f7f4;
+  --paper-200: #eee2d5;
+  --paper-300: #ece7dd;
+  --paper-400: #d6cfc3;
+  --paper-texture: rgba(150, 150, 147, 0.1);
+
+  /* Ink. */
+  --ink-900: #23211d;
+  --ink-600: #6b6661;
+  --ink-400: #a59e94;
+  --ink-white: #ffffff;
+  --ink-red: #c8372d;
+  --ink-amber: #b07d0a;
+  --ink-green: #2e8a4f;
+
+  /* Breadcrumb: base's brown, the selection ink and its washes. */
+  --breadcrumb-700: #4a3520;
+  --breadcrumb-a06: rgba(74, 53, 32, 0.06);
+  --breadcrumb-a10: rgba(74, 53, 32, 0.1);
+  --breadcrumb-a12: rgba(74, 53, 32, 0.12);
+
+  /* Vermilion: record's accent, legacy-v0's #FF492F, and the phosphor. */
+  --vermilion-500: #ff492f;
+  --vermilion-a08: rgba(255, 73, 47, 0.08);
+  --vermilion-a10: rgba(255, 73, 47, 0.1);
+  --vermilion-a12: rgba(255, 73, 47, 0.12);
+  --vermilion-a14: rgba(255, 73, 47, 0.14);
+  --vermilion-a26: rgba(255, 73, 47, 0.26);
+  --vermilion-a35: rgba(255, 73, 47, 0.35);
+  --vermilion-a42: rgba(255, 73, 47, 0.42);
+  --vermilion-a60: rgba(255, 73, 47, 0.6);
+
+  /* Glass: the CRT's near-black, warm. */
+  --glass-surface: radial-gradient(130% 110% at 50% 38%, #1c0f09 0%, #120a06 46%, #0a0604 100%);
+  --glass-solid: #120a06;
+  --glass-shade: rgba(0, 0, 0, 0.6);
+
+  --shadow-ink: rgba(35, 33, 29, 0.1);
+  --ink-veil: rgba(35, 33, 29, 0.18);
+}

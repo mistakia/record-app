@@ -1,17 +1,108 @@
+// The one keyboard dispatch point: every key press goes through
+// resolve_hotkey (hotkeys.ts), and its action routes to the player
+// controller, the shown track list's commands, or navigation.
+
 import { useEffect } from 'react'
+import { useStore } from 'react-redux'
 import { useNavigate } from 'react-router'
 
-import { resolve_hotkey } from './hotkeys.ts'
-import { next_track, previous_track, toggle_playback } from '#renderer/player/player-controller.ts'
+import { resolve_hotkey, type HotkeyAction } from './hotkeys.ts'
+import { own_library_address } from '#renderer/components/library/library-category.ts'
+import { list_commands } from '#renderer/components/track/list-commands.ts'
+import {
+  next_track,
+  previous_track,
+  seek_playback,
+  set_playback_volume,
+  set_repeat_mode,
+  toggle_playback,
+  toggle_shuffle_mode
+} from '#renderer/player/player-controller.ts'
+import type { RepeatMode } from '#renderer/player/queue-manager.ts'
+import { ROUTES, tracks_route } from '#renderer/routes.ts'
+import { node_api } from '#renderer/store/api.ts'
+import type { AppDispatch, RootState } from '#renderer/store/index.ts'
+import { queue_toggled, shortcuts_toggled } from '#renderer/store/ui.ts'
 
 export const SEARCH_INPUT_ID = 'track-search'
+
+const SEEK_STEP_SECONDS = 5
+const VOLUME_STEP = 0.05
+const NEXT_REPEAT: Record<RepeatMode, RepeatMode> = { off: 'all', all: 'one', one: 'off' }
 
 const is_field = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
 
 export const use_hotkeys = (): void => {
   const navigate = useNavigate()
+  const store = useStore<RootState>()
+
   useEffect(() => {
+    const dispatch = store.dispatch as AppDispatch
+    const list = list_commands
+    const run = (action: HotkeyAction, target: EventTarget | null): boolean => {
+      const { player, ui } = store.getState()
+      switch (action) {
+        case 'cursor_down': list()?.move({ by: 1, extend: false }); return true
+        case 'cursor_up': list()?.move({ by: -1, extend: false }); return true
+        case 'extend_down': list()?.move({ by: 1, extend: true }); return true
+        case 'extend_up': list()?.move({ by: -1, extend: true }); return true
+        case 'cursor_first': list()?.move_to({ edge: 'first', extend: false }); return true
+        case 'cursor_last': list()?.move_to({ edge: 'last', extend: false }); return true
+        case 'extend_first': list()?.move_to({ edge: 'first', extend: true }); return true
+        case 'extend_last': list()?.move_to({ edge: 'last', extend: true }); return true
+        case 'toggle_selection': list()?.toggle_selection(); return true
+        case 'play_cursor': list()?.play(); return true
+        case 'play_next': list()?.play_next(); return true
+        case 'add_to_queue': list()?.add_to_queue(); return true
+        case 'tag': list()?.tag(); return true
+        case 'adopt': list()?.adopt(); return true
+        case 'toggle_inspector': list()?.toggle_inspector(); return true
+        case 'open_menu': list()?.open_menu(); return true
+        case 'focus_search': {
+          const search = document.getElementById(SEARCH_INPUT_ID)
+          if (search === null) navigate(ROUTES.tracks)
+          else search.focus()
+          return true
+        }
+        case 'escape': {
+          // A field gives the keys back to the list.
+          if (is_field(target)) {
+            (target as HTMLElement).blur()
+            list()?.focus()
+            return true
+          }
+          if (ui.shortcuts_open) {
+            dispatch(shortcuts_toggled(false))
+            return true
+          }
+          return list()?.escape() ?? false
+        }
+        case 'toggle_playback': toggle_playback(); return true
+        case 'previous_track': previous_track(); return true
+        case 'next_track': next_track(); return true
+        case 'seek_back': seek_playback(Math.max(0, player.position_seconds - SEEK_STEP_SECONDS)); return true
+        case 'seek_forward': seek_playback(player.position_seconds + SEEK_STEP_SECONDS); return true
+        case 'volume_down': set_playback_volume(Math.max(0, player.volume - VOLUME_STEP)); return true
+        case 'volume_up': set_playback_volume(Math.min(1, player.volume + VOLUME_STEP)); return true
+        case 'cycle_repeat': set_repeat_mode(NEXT_REPEAT[player.queue.repeat]); return true
+        case 'toggle_shuffle': toggle_shuffle_mode(); return true
+        case 'toggle_queue': dispatch(queue_toggled()); return true
+        case 'back': navigate(-1); return true
+        case 'forward': navigate(1); return true
+        case 'go_home': navigate(ROUTES.tracks); return true
+        case 'go_library': {
+          const own = own_library_address(node_api.endpoints.get_libraries.select()(store.getState()).data)
+          navigate(own === null ? ROUTES.libraries : tracks_route({ library_address: own }))
+          return true
+        }
+        case 'go_identity': navigate(ROUTES.identity); return true
+        case 'go_settings': navigate(ROUTES.settings); return true
+        case 'import_files': navigate(`${ROUTES.import}?pick=1`); return true
+        case 'show_shortcuts': dispatch(shortcuts_toggled()); return true
+      }
+    }
+
     const on_keydown = (event: KeyboardEvent): void => {
       const action = resolve_hotkey({
         key: event.key,
@@ -20,20 +111,13 @@ export const use_hotkeys = (): void => {
         alt: event.altKey,
         shift: event.shiftKey,
         in_field: is_field(event.target),
-        dialog_open: document.querySelector('dialog[open]') !== null
+        dialog_open: document.querySelector('dialog[open]') !== null,
+        menu_open: document.querySelector('[role=menu]') !== null
       })
       if (action === null) return
-      event.preventDefault()
-      if (action === 'toggle_playback') toggle_playback()
-      else if (action === 'next_track') next_track()
-      else if (action === 'previous_track') previous_track()
-      else {
-        const search = document.getElementById(SEARCH_INPUT_ID)
-        if (search === null) navigate('/tracks')
-        else search.focus()
-      }
+      if (run(action, event.target)) event.preventDefault()
     }
     window.addEventListener('keydown', on_keydown)
     return () => { window.removeEventListener('keydown', on_keydown) }
-  }, [navigate])
+  }, [navigate, store])
 }

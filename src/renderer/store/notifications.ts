@@ -3,11 +3,29 @@
 
 import { createSlice, nanoid, type PayloadAction } from '@reduxjs/toolkit'
 
+import type { NodeApiTag } from './event-invalidation.ts'
+
+// What a toast's button does, as data so it can sit in the store: go to a
+// route, or refetch some of the node's data.
+export interface ToastAction {
+  label: string
+  route?: string
+  invalidate?: NodeApiTag[]
+}
+
 export interface Notification {
   id: string
   kind: 'info' | 'error'
   message: string
+  // Seated on the toast's top stroke, as an event's name.
+  title?: string
+  action?: ToastAction
+  // A toast with the same key replaces the one showing, so a burst of
+  // events raises one toast.
+  key?: string
 }
+
+type NotificationInput = Omit<Notification, 'id'>
 
 const MAX_NOTIFICATIONS = 5
 
@@ -17,9 +35,11 @@ export const notifications_slice = createSlice({
   reducers: {
     notified: {
       reducer: (state, action: PayloadAction<Notification>) => {
-        state.items = [...state.items, action.payload].slice(-MAX_NOTIFICATIONS)
+        const { key } = action.payload
+        const kept = key === undefined ? state.items : state.items.filter((item) => item.key !== key)
+        state.items = [...kept, action.payload].slice(-MAX_NOTIFICATIONS)
       },
-      prepare: ({ kind, message }: { kind: Notification['kind'], message: string }) => ({ payload: { id: nanoid(), kind, message } })
+      prepare: (input: NotificationInput) => ({ payload: { id: nanoid(), ...input } })
     },
     dismissed: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter(({ id }) => id !== action.payload)

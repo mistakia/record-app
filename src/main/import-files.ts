@@ -5,8 +5,8 @@
 // the dialog.
 
 import { openAsBlob } from 'node:fs'
-import { stat } from 'node:fs/promises'
-import { basename, extname } from 'node:path'
+import { readdir, stat } from 'node:fs/promises'
+import { basename, extname, join } from 'node:path'
 
 import type { NodeResult } from '#shared/bridge.ts'
 import { import_files, type ImportAck, type ImportTarget } from './node-client.ts'
@@ -31,13 +31,35 @@ export const clean_upload_name = (name: unknown): string | null => {
   return base
 }
 
-export const import_chosen_paths = async ({ node_url, token, paths, target }: {
+const is_audio_name = (name: string): boolean => !name.startsWith('.') && AUDIO_EXTENSIONS.includes(extname(name).slice(1).toLowerCase())
+
+// A chosen folder stands for the audio files anywhere under it, in name
+// order; hidden entries are skipped. Chosen files pass through as they are.
+export const expand_chosen_paths = async (paths: readonly string[]): Promise<string[]> => {
+  const expanded: string[] = []
+  for (const path of paths) {
+    if (!(await stat(path)).isDirectory()) {
+      expanded.push(path)
+      continue
+    }
+    const found = (await readdir(path, { withFileTypes: true, recursive: true }))
+      .filter((entry) => entry.isFile() && is_audio_name(entry.name) && !entry.parentPath.slice(path.length).split('/').some((part) => part.startsWith('.')))
+      .map((entry) => join(entry.parentPath, entry.name))
+      .sort()
+    expanded.push(...found)
+    if (expanded.length > MAX_IMPORT_FILES) break
+  }
+  return expanded
+}
+
+export const import_chosen_paths = async ({ node_url, token, paths: chosen, target }: {
   node_url: string | null
   token?: string | null | undefined
   paths: string[]
   target?: ImportTarget | undefined
 }): Promise<NodeResult<ImportAck>> => {
-  if (paths.length === 0 || paths.length > MAX_IMPORT_FILES) return refuse(`Choose between 1 and ${MAX_IMPORT_FILES} files.`)
+  const paths = await expand_chosen_paths(chosen)
+  if (paths.length === 0 || paths.length > MAX_IMPORT_FILES) return refuse(`Choose between 1 and ${MAX_IMPORT_FILES} audio files.`)
   const files: Array<{ name: string, blob: Blob }> = []
   for (const path of paths) {
     const name = clean_upload_name(path)

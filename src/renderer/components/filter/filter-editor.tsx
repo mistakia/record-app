@@ -228,8 +228,8 @@ export const FilterEditor = ({ value, on_change, fields, label = 'Filter' }: {
           Use a filter
         </label>
         {enabled && (json_mode
-          ? <button type='button' disabled={!structured_ok} onClick={() => { if (can_draft(value, fields)) set_draft(to_draft(value)); set_json_mode(false) }}>Structured editor</button>
-          : <button type='button' disabled={value === undefined} title={value === undefined ? 'Finish the filter first' : undefined} onClick={() => { set_json_text(as_json(value)); set_json_mode(true) }}>Edit as JSON</button>)}
+          ? <button type='button' data-variant='ghost' data-size='small' disabled={!structured_ok} onClick={() => { if (can_draft(value, fields)) set_draft(to_draft(value)); set_json_mode(false) }}>Structured editor</button>
+          : <button type='button' data-variant='ghost' data-size='small' disabled={value === undefined} title={value === undefined ? 'Finish the filter first' : undefined} onClick={() => { set_json_text(as_json(value)); set_json_mode(true) }}>Edit as JSON</button>)}
       </div>
       {enabled && (json_mode || draft === null
         ? <textarea aria-label='Filter JSON' className={styles.json} rows={8} spellCheck={false} value={json_text} onChange={(event) => { edit_json(event.target.value) }} />

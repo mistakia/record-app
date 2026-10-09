@@ -9,9 +9,9 @@ const route_key = (method: string, path_template: string): string => `${method} 
 
 const KNOWN_ROUTES = new Set<string>(API_ROUTES.map(({ method, path_template }) => route_key(method, path_template)))
 
-// Routes the generic JSON request never carries: audio is binary and has its
-// own channel, and file import takes paths that main resolves itself.
-const DEDICATED_ROUTES = new Set(['get /audio/{cid}', 'head /audio/{cid}', 'post /import/file'])
+// Routes the generic JSON request never carries: audio and images are binary
+// and have their own channels, and file import takes paths that main resolves itself.
+const DEDICATED_ROUTES = new Set(['get /audio/{cid}', 'head /audio/{cid}', 'get /images/{cid}', 'head /images/{cid}', 'post /import/file'])
 
 const QUERY_KEY = /^[a-z][a-z_]*$/
 const DOT_SEGMENTS = new Set(['.', '..'])

@@ -1,0 +1,31 @@
+.table {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-xxs) var(--space-lg);
+  margin: 0;
+}
+
+.row {
+  display: contents;
+}
+
+.row dt {
+  white-space: nowrap;
+}
+
+.row dd {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+kbd {
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.or {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}

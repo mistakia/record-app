@@ -9,12 +9,14 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 
-import styles from './connection-settings.module.css'
+import styles from './connection-section.module.css'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
-import { SnapshotControls } from '#renderer/components/common/snapshot-controls.tsx'
+import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
 import { BundledDetails } from '#renderer/components/layout/bundled-details.tsx'
 import { NetworkPrivacySelector } from '#renderer/components/layout/network-privacy.tsx'
+import { clear_images } from '#renderer/images/image-cache.ts'
 import { stop_playback } from '#renderer/player/player-controller.ts'
+import { ROUTES } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { connection_loaded, events_state_changed, node_switch_started } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -28,7 +30,7 @@ const SWITCH_TEXT: Record<ConnectionMode, string> = {
   remote: 'Switch to a remote node? The bundled node stops. Its library stays on this device, unused, until you switch back.'
 }
 
-export const ConnectionSettings = () => {
+export const ConnectionSection = () => {
   const dispatch = use_app_dispatch()
   const navigate = useNavigate()
   const saved = use_app_selector((state) => state.connection.config)
@@ -105,11 +107,12 @@ export const ConnectionSettings = () => {
         return
       }
       dispatch(replication_reset())
+      clear_images()
       stop_playback()
       dispatch(node_api.util.resetApiState())
       dispatch(connection_loaded(result.data))
       set_token('')
-      navigate('/tracks')
+      navigate(ROUTES.tracks)
     } catch (error) {
       set_save_error(`Saving failed: ${String(error)}`)
     } finally {
@@ -135,9 +138,8 @@ export const ConnectionSettings = () => {
   return (
     <>
       <form className={styles.form} onSubmit={submit}>
-        <h1>Connection</h1>
         <fieldset className={styles.modes}>
-          <legend>Mode</legend>
+          <legend className='visually-hidden'>Mode</legend>
           <label>
             <input type='radio' name='mode' value='bundled' checked={mode === 'bundled'} onChange={() => { set_mode('bundled') }} />
             Bundled node, run by this app on this device
@@ -203,7 +205,7 @@ export const ConnectionSettings = () => {
           <button type='button' disabled={!can_save || testing} onClick={() => { run_test().catch(() => {}) }}>
             {testing ? 'Testing' : 'Test connection'}
           </button>
-          <button type='submit' disabled={!can_save || saving}>{saving ? 'Saving' : 'Save'}</button>
+          <button type='submit' data-variant='primary' disabled={!can_save || saving}>{saving ? 'Saving' : 'Save'}</button>
           <button type='button' disabled={saving} onClick={cancel}>Cancel</button>
         </div>
         {test_result?.ok === true && (
@@ -217,12 +219,11 @@ export const ConnectionSettings = () => {
       </form>
       <Dialog open={confirming} title='Switch mode' on_close={() => { set_confirming(false) }}>
         <p>{SWITCH_TEXT[mode]} Playback stops, and the offline snapshot is cleared.</p>
-        <div className={styles.actions}>
+        <DialogActions>
           <button type='button' onClick={() => { set_confirming(false) }}>Cancel</button>
-          <button type='button' onClick={() => { set_confirming(false); save().catch(() => {}) }}>Switch</button>
-        </div>
+          <button type='button' data-variant='primary' onClick={() => { set_confirming(false); save().catch(() => {}) }}>Switch</button>
+        </DialogActions>
       </Dialog>
-      <SnapshotControls />
     </>
   )
 }

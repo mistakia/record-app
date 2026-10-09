@@ -33,6 +33,17 @@ export interface SnapshotQueueEntry {
   duration_seconds: number | null
   // The library the track was played from, which a listen records.
   library_address: string
+  // What the player bar shows beyond title and artist; absent in a
+  // snapshot written before they were kept.
+  content_cid?: string
+  codec?: string | null
+  bitrate?: number | null
+  artwork?: string | null
+  tags?: string[]
+  have_track?: boolean
+  // Queued by the user (play next, add to queue) rather than from the
+  // source list; these play before the source list resumes.
+  queued?: boolean
 }
 
 export interface HibernationSnapshot {

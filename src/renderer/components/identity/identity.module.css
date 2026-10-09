@@ -2,50 +2,50 @@
 .import {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .warning {
   margin: 0;
-  color: var(--danger);
+  color: var(--color-error);
 }
 
 .muted {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-text-secondary);
 }
 
 .error {
   margin: 0;
-  color: var(--danger);
+  color: var(--color-error);
 }
 
 .check {
   display: flex;
-  gap: 6px;
+  gap: var(--space-xs);
   align-items: flex-start;
 }
 
 .key {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
   width: 100%;
 }
 
 .import textarea,
 .import input {
   font: inherit;
-  padding: 4px 6px;
+  padding: var(--space-xs) var(--space-xs);
 }
 
 .import label {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--space-xxs);
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-sm);
 }

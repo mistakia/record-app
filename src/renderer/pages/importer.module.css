@@ -1,80 +1,111 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-width: 720px;
-}
-
-.page h1 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.page h2 {
-  margin: 8px 0 0;
-  font-size: 16px;
-}
-
-.drop {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 24px;
-  border: 2px dashed var(--border);
-  border-radius: 8px;
-}
-
-.drop p {
-  margin: 0;
-}
-
-.dragging {
-  border-color: var(--accent);
+  gap: var(--space-lg);
+  max-width: calc(720px + 2 * var(--space-lg));
+  padding: var(--space-lg);
 }
 
 .row {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .row input {
   flex: 1;
-  font: inherit;
-  padding: 4px 6px;
+  min-width: 0;
+}
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-base);
+  padding: var(--space-2xl) var(--space-lg);
+  border: 1px dashed var(--color-border);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.dragging {
+  border-color: var(--color-accent);
+  background: var(--color-accent-wash);
+}
+
+.drop_text {
+  color: var(--color-text-secondary);
+}
+
+.hint {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.progress {
+  padding: var(--space-base);
+}
+
+.progress_body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .imports {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  font-size: var(--font-size-sm);
 }
 
 .imports li {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
+}
+
+.line {
+  display: grid;
+  grid-template-columns: max-content 5ch minmax(0, 1fr) max-content;
+  gap: var(--space-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .label {
-  font-weight: 600;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.status,
-.added,
-.muted {
-  color: var(--muted);
+.percent,
+.status {
+  color: var(--color-text-secondary);
+}
+
+.finished {
+  opacity: 0.55;
+}
+
+.added {
+  padding-left: 12ch;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .muted {
-  margin: 0;
+  color: var(--color-text-tertiary);
 }
 
 .error {
-  color: var(--danger);
+  color: var(--color-error);
+}
+
+.imports .error {
+  padding-left: 12ch;
 }

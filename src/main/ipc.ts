@@ -13,7 +13,7 @@ import { AUDIO_EXTENSIONS, import_chosen_paths, import_dropped_files } from './i
 import { check_write_target } from './write-target.ts'
 import { check_connection_config, type ConnectionStore } from './connection-store.ts'
 import { type SettingsStore } from './settings-store.ts'
-import { get_audio, request_node, test_connection } from './node-client.ts'
+import { get_audio, get_image, request_node, test_connection } from './node-client.ts'
 import type { create_node_connection } from './node-connection.ts'
 import type { NodeSession } from './node-session.ts'
 import type { create_update_service } from './updates.ts'
@@ -146,6 +146,11 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     if (typeof request_id !== 'string' || !REQUEST_ID.test(request_id)) return refuse('Malformed audio request id.')
     return await audio_downloads.start({ cid, request_id })
   })
+  handle(IPC_CHANNELS.get_image, async (input) => {
+    const cid = is_plain_object(input) ? input.cid : undefined
+    if (typeof cid !== 'string' || !CID.test(cid)) return refuse('Malformed image CID.')
+    return await authed(async ({ node_url, token }) => await get_image({ node_url, token, cid }))
+  })
   handle(IPC_CHANNELS.cancel_audio, async (input) => {
     const request_id = is_plain_object(input) ? input.request_id : undefined
     if (typeof request_id === 'string') audio_downloads.cancel(request_id)
@@ -155,7 +160,7 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     const target = check_write_target(is_plain_object(input) ? input.target : undefined)
     if (target === null) return refuse('An import must name its target library.')
     const window = BrowserWindow.fromWebContents(event.sender)
-    const options = { title: 'Import audio files', properties: ['openFile', 'multiSelections'] as Array<'openFile' | 'multiSelections'>, filters: [{ name: 'Audio', extensions: AUDIO_EXTENSIONS }] }
+    const options = { title: 'Import audio files or folders', properties: ['openFile', 'openDirectory', 'multiSelections'] as Array<'openFile' | 'openDirectory' | 'multiSelections'>, filters: [{ name: 'Audio', extensions: AUDIO_EXTENSIONS }] }
     const chosen = window === null ? await dialog.showOpenDialog(options) : await dialog.showOpenDialog(window, options)
     if (chosen.canceled || chosen.filePaths.length === 0) return { ok: true, data: null }
     return await authed(async ({ node_url, token }) => await import_chosen_paths({ node_url, token, paths: chosen.filePaths, target }))
@@ -174,6 +179,12 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
     const text = is_plain_object(input) ? input.text : undefined
     if (typeof text !== 'string' || text === '' || text.length > 10_000) return refuse('Nothing to copy.')
     return { ok: true, data: await secret_clipboard.copy(text) }
+  })
+  handle(IPC_CHANNELS.clipboard_write_text, async (input) => {
+    const text = is_plain_object(input) ? input.text : undefined
+    if (typeof text !== 'string' || text === '' || text.length > 4096) return refuse('Nothing to copy.')
+    clipboard.writeText(text)
+    return { ok: true, data: null }
   })
   handle(IPC_CHANNELS.identity_import, async (input) => {
     const result = await identity.import_identity(input)

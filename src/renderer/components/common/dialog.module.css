@@ -1,16 +1,70 @@
 .dialog {
+  position: fixed;
   min-width: 380px;
   max-width: 640px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px 20px;
+  overflow: visible;
+  padding: var(--space-lg) var(--space-lg) var(--space-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-text);
+  font-size: var(--font-size-reading);
+}
+
+.wide {
+  max-width: 760px;
 }
 
 .dialog::backdrop {
-  background: rgb(0 0 0 / 35%);
+  background: var(--color-backdrop);
+}
+
+.stroke {
+  position: absolute;
+  top: 0;
+  right: var(--space-sm);
+  left: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transform: translateY(-50%);
 }
 
 .title {
-  margin: 0 0 12px;
-  font-size: 16px;
+  padding: 0 var(--space-xs);
+  background: var(--color-surface-raised);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.stroke .close {
+  height: auto;
+  padding: 0 var(--space-xs);
+  border: none;
+  background: var(--color-surface-raised);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0;
+}
+
+.stroke .close:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+  color: var(--color-accent);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
 }

@@ -1,12 +1,16 @@
 .details {
   display: grid;
   grid-template-columns: 120px 1fr;
-  gap: 6px 12px;
+  gap: var(--space-xs) var(--space-base);
   margin: 0;
 }
 
 .details dt {
-  font-weight: 600;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+  line-height: 20px;
+  text-transform: uppercase;
 }
 
 .details dd {
@@ -15,10 +19,10 @@
 }
 
 .details code {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .muted {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-text-secondary);
 }

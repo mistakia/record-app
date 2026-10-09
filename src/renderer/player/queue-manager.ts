@@ -1,8 +1,11 @@
 // The playback queue as pure functions over an immutable state: the play
 // order, the current position, repeat off/one/all, and shuffle (spec
-// §8.9.1). Shuffle is Fisher-Yates over everything but the current track,
-// which moves to the front, and turning it off restores the order the
-// entries had before.
+// §8.9.1). Entries the user queued (play next, add to queue) form one block
+// right after the current entry, "playing next", ahead of the rest of the
+// source list, "back to" (STYLE.md § Layout › Queue); an entry stops being
+// queued once it plays. Shuffle is Fisher-Yates over the source entries,
+// with the current entry first and the queued block after it, and turning
+// it off restores the order the entries had before.
 
 import type { SnapshotQueueEntry } from '#shared/snapshot.ts'
 
@@ -25,34 +28,66 @@ export const EMPTY_QUEUE: QueueState = { entries: [], index: -1, repeat: 'off', 
 
 export const current_entry = (queue: QueueState): QueueEntry | null => queue.entries[queue.index] ?? null
 
+const is_queued = (entry: QueueEntry): boolean => entry.queued === true
+
+// How many entries after the current one are queued: they are contiguous.
+export const queued_count = (queue: QueueState): number => {
+  let count = 0
+  while (queue.entries[queue.index + 1 + count]?.queued === true) count++
+  return count
+}
+
+// The current entry has played, so it no longer counts as queued.
+const consume = (queue: QueueState): QueueState => {
+  const current = queue.entries[queue.index]
+  if (current === undefined || !is_queued(current)) return queue
+  const { queued: _, ...played } = current
+  return { ...queue, entries: queue.entries.map((entry, position) => position === queue.index ? played : entry) }
+}
+
+// The queued entries moved to just after the current one, in their order.
+const queued_after_current = (entries: QueueEntry[], current: QueueEntry | undefined): QueueEntry[] => {
+  if (current === undefined) return entries
+  const queued = entries.filter((entry) => is_queued(entry) && entry.queue_id !== current.queue_id)
+  const rest = entries.filter((entry) => !is_queued(entry) || entry.queue_id === current.queue_id)
+  const at = rest.findIndex(({ queue_id }) => queue_id === current.queue_id) + 1
+  return [...rest.slice(0, at), ...queued, ...rest.slice(at)]
+}
+
 const shuffle_around = ({ entries, index, random }: { entries: QueueEntry[], index: number, random: () => number }): QueueEntry[] => {
   const current = entries[index]
-  const rest = entries.filter((_, position) => position !== index)
+  const queued = entries.filter((entry, position) => position !== index && is_queued(entry))
+  const rest = entries.filter((entry, position) => position !== index && !is_queued(entry))
   for (let position = rest.length - 1; position > 0; position--) {
     const swap = Math.floor(random() * (position + 1))
     const held = rest[position] as QueueEntry
     rest[position] = rest[swap] as QueueEntry
     rest[swap] = held
   }
-  return current === undefined ? rest : [current, ...rest]
+  return current === undefined ? [...queued, ...rest] : [current, ...queued, ...rest]
 }
 
-// Replaces the queue, starting at start_index. Shuffle and repeat carry over.
-export const set_entries = ({ queue, entries, start_index, random = Math.random }: {
+// Replaces the source list, starting at start_index; the queued entries
+// still waiting play after the new current one. Shuffle and repeat carry
+// over.
+export const set_entries = ({ queue, entries: source, start_index, random = Math.random }: {
   queue: QueueState
   entries: QueueEntry[]
   start_index: number
   random?: () => number
 }): QueueState => {
-  const index = entries.length === 0 ? -1 : Math.min(Math.max(start_index, 0), entries.length - 1)
-  if (!queue.shuffle) return { ...queue, entries, index, unshuffled: null }
-  return { ...queue, entries: shuffle_around({ entries, index, random }), index: index === -1 ? -1 : 0, unshuffled: entries }
+  const waiting = queue.entries.slice(queue.index + 1, queue.index + 1 + queued_count(queue))
+  const start = source.length === 0 ? -1 : Math.min(Math.max(start_index, 0), source.length - 1)
+  const entries = start === -1 ? waiting : [...source.slice(0, start + 1), ...waiting, ...source.slice(start + 1)]
+  const index = start === -1 ? (entries.length === 0 ? -1 : 0) : start
+  if (!queue.shuffle) return consume({ ...queue, entries, index, unshuffled: null })
+  return consume({ ...queue, entries: shuffle_around({ entries, index, random }), index: index === -1 ? -1 : 0, unshuffled: entries })
 }
 
 export const toggle_shuffle = ({ queue, random = Math.random }: { queue: QueueState, random?: () => number }): QueueState => {
   if (queue.shuffle) {
-    const original = queue.unshuffled ?? queue.entries
     const current = current_entry(queue)
+    const original = queued_after_current(queue.unshuffled ?? queue.entries, current ?? undefined)
     const index = current === null ? -1 : original.findIndex(({ queue_id }) => queue_id === current.queue_id)
     return { ...queue, shuffle: false, entries: original, index, unshuffled: null }
   }
@@ -62,12 +97,64 @@ export const toggle_shuffle = ({ queue, random = Math.random }: { queue: QueueSt
 
 export const set_repeat = ({ queue, repeat }: { queue: QueueState, repeat: RepeatMode }): QueueState => ({ ...queue, repeat })
 
-// Adds entries right after the current one, or at the end.
-export const add_entries = ({ queue, entries, at }: { queue: QueueState, entries: QueueEntry[], at: 'next' | 'end' }): QueueState => {
-  const insert_at = at === 'next' ? queue.index + 1 : queue.entries.length
+// Queues entries: next, right after the current one, or at the end of the
+// queued block, still ahead of the rest of the source list.
+export const add_entries = ({ queue, entries: added, at }: { queue: QueueState, entries: QueueEntry[], at: 'next' | 'end' }): QueueState => {
+  const entries = added.map((entry) => ({ ...entry, queued: true }))
+  const insert_at = at === 'next' ? queue.index + 1 : queue.index + 1 + queued_count(queue)
   const next_entries = [...queue.entries.slice(0, insert_at), ...entries, ...queue.entries.slice(insert_at)]
   const index = queue.index === -1 && next_entries.length > 0 ? 0 : queue.index
-  return { ...queue, entries: next_entries, index, unshuffled: queue.unshuffled === null ? null : [...queue.unshuffled, ...entries] }
+  return consume({ ...queue, entries: next_entries, index, unshuffled: queue.unshuffled === null ? null : [...queue.unshuffled, ...entries] })
+}
+
+// Clears "playing next": every queued entry still waiting.
+export const clear_queued = (queue: QueueState): QueueState => {
+  const waiting = new Set(queue.entries.slice(queue.index + 1, queue.index + 1 + queued_count(queue)).map(({ queue_id }) => queue_id))
+  return {
+    ...queue,
+    entries: queue.entries.filter(({ queue_id }) => !waiting.has(queue_id)),
+    unshuffled: queue.unshuffled?.filter(({ queue_id }) => !waiting.has(queue_id)) ?? null
+  }
+}
+
+const with_flag = (queue: QueueState, queue_id: string, queued: boolean): QueueState => {
+  const flag = (entry: QueueEntry): QueueEntry => {
+    if (entry.queue_id !== queue_id) return entry
+    const { queued: _, ...rest } = entry
+    return queued ? { ...rest, queued: true } : rest
+  }
+  return { ...queue, entries: queue.entries.map(flag), unshuffled: queue.unshuffled?.map(flag) ?? null }
+}
+
+// Moves an upcoming entry one place (Alt+↑/↓). Past the edge of its list it
+// crosses into the other: the last queued entry moving down becomes the
+// first of the source list, and the first source entry moving up becomes
+// the last queued one.
+export const nudge_entry = ({ queue, queue_id, direction }: { queue: QueueState, queue_id: string, direction: 1 | -1 }): QueueState => {
+  const position = queue.entries.findIndex((entry) => entry.queue_id === queue_id)
+  if (position <= queue.index) return queue
+  const boundary = queue.index + 1 + queued_count(queue)
+  const queued = position < boundary
+  if (queued && direction === 1 && position === boundary - 1) return with_flag(queue, queue_id, false)
+  if (!queued && direction === -1 && position === boundary) return with_flag(queue, queue_id, true)
+  const target = position + direction
+  if (target <= queue.index || target >= queue.entries.length) return queue
+  return move_entry({ queue, from: position, to: target })
+}
+
+// Moves an upcoming entry to a place in "playing next" or "back to", as a
+// drag does; offset counts within that list.
+export const place_entry = ({ queue, queue_id, list, offset }: { queue: QueueState, queue_id: string, list: 'queued' | 'source', offset: number }): QueueState => {
+  const position = queue.entries.findIndex((entry) => entry.queue_id === queue_id)
+  if (position <= queue.index) return queue
+  const flagged = with_flag(queue, queue_id, list === 'queued')
+  const moving = flagged.entries[position] as QueueEntry
+  const entries = flagged.entries.filter((_, at) => at !== position)
+  const without = { ...flagged, entries }
+  const start = list === 'queued' ? without.index + 1 : without.index + 1 + queued_count(without)
+  const limit = list === 'queued' ? queued_count(without) : entries.length - start
+  const insert_at = start + Math.min(Math.max(offset, 0), limit)
+  return { ...flagged, entries: [...entries.slice(0, insert_at), moving, ...entries.slice(insert_at)] }
 }
 
 // Removes one entry. Removing the current entry makes the following one
@@ -94,7 +181,7 @@ export const move_entry = ({ queue, from, to }: { queue: QueueState, from: numbe
 }
 
 export const jump_to = ({ queue, index }: { queue: QueueState, index: number }): QueueState =>
-  index >= 0 && index < queue.entries.length ? { ...queue, index } : queue
+  index >= 0 && index < queue.entries.length ? consume({ ...queue, index }) : queue
 
 // The index that plays when the current track ends on its own: repeat one
 // replays it, repeat all wraps, off stops after the last. Null for none.

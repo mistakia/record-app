@@ -3,12 +3,12 @@ import { describe, expect, test } from 'bun:test'
 import { is_cid } from '#renderer/components/library/cid.ts'
 import { current_progress, is_replicating, library_category, own_library_address, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
 import { pages_for_rows, row_location } from '#renderer/components/track/track-pages.ts'
-import { resolve_hotkey, type KeyPress } from '#renderer/hooks/hotkeys.ts'
 import type { Library } from '#renderer/api/types.ts'
 import { DEFAULT_TRACK_FILTERS, track_page_args } from '#renderer/store/api.ts'
 import { import_event_received, import_requested, imports_slice } from '#renderer/store/imports.ts'
 import { library_event_received, library_linked, live_progress_cleared, replication_slice } from '#renderer/store/replication.ts'
-import { filters_cleared, library_selected, query_changed, tag_toggled, ui_slice } from '#renderer/store/ui.ts'
+import { library_selected, ui_slice, view_changed } from '#renderer/store/ui.ts'
+import { parse_track_view, tracks_route, with_filters_cleared, with_sort, with_tag_toggled } from '#renderer/routes.ts'
 
 const library = (overrides: Partial<Library> = {}): Library => ({
   id: 'id',
@@ -48,16 +48,36 @@ describe('virtual list pages', () => {
   })
 })
 
+describe('track view route', () => {
+  test('round-trips library, search, tags, and sort through the query, leaving defaults out', () => {
+    const view = { library_address: '/record/a/b', filters: { query: 'intro ä', tags: ['house', 'deep house'], sort: 'title' as const, order: 'asc' as const } }
+    const route = tracks_route(view)
+    expect(route.startsWith('/tracks?')).toBe(true)
+    expect(parse_track_view(new URLSearchParams(route.split('?')[1]))).toEqual(view)
+    expect(tracks_route()).toBe('/tracks')
+    expect(parse_track_view(new URLSearchParams(''))).toEqual({ library_address: '', filters: DEFAULT_TRACK_FILTERS })
+  })
+
+  test('refuses an unknown sort or order and drops duplicate tags', () => {
+    expect(parse_track_view(new URLSearchParams('sort=drop%20table&order=up&tag=a&tag=a')).filters).toEqual({ ...DEFAULT_TRACK_FILTERS, tags: ['a'] })
+  })
+
+  test('toggles tags, clears filters but keeps sort, and reverses an active sort', () => {
+    let view = parse_track_view(new URLSearchParams('q=intro'))
+    view = with_tag_toggled(with_tag_toggled(with_tag_toggled(view, 'house'), 'techno'), 'house')
+    expect(view.filters.tags).toEqual(['techno'])
+    view = with_sort(view, 'title')
+    expect(view.filters).toMatchObject({ sort: 'title', order: 'asc' })
+    expect(with_sort(view, 'title').filters.order).toBe('desc')
+    expect(with_filters_cleared(view).filters).toEqual({ ...DEFAULT_TRACK_FILTERS, sort: 'title', order: 'asc' })
+  })
+})
+
 describe('ui slice', () => {
-  test('toggles tags, clears filters but keeps sort, and drops tags on a library change', () => {
-    let state = ui_slice.reducer(undefined, query_changed('intro'))
-    state = ui_slice.reducer(state, tag_toggled('house'))
-    state = ui_slice.reducer(state, tag_toggled('techno'))
-    state = ui_slice.reducer(state, tag_toggled('house'))
-    expect(state.filters.tags).toEqual(['techno'])
-    state = ui_slice.reducer({ ...state, filters: { ...state.filters, sort: 'title' } }, filters_cleared())
-    expect(state.filters).toEqual({ ...DEFAULT_TRACK_FILTERS, sort: 'title' })
-    state = ui_slice.reducer(ui_slice.reducer(state, tag_toggled('house')), library_selected('/other'))
+  test('mirrors the route view, and drops tags on a library change', () => {
+    let state = ui_slice.reducer(undefined, view_changed({ library_address: '', filters: { ...DEFAULT_TRACK_FILTERS, tags: ['house'] } }))
+    expect(state.filters.tags).toEqual(['house'])
+    state = ui_slice.reducer(state, library_selected('/other'))
     expect(state).toMatchObject({ library_address: '/other', filters: { tags: [] } })
   })
 })
@@ -127,19 +147,5 @@ describe('imports slice', () => {
     state = imports_slice.reducer(state, event('import:error', { file_path: '/tmp/uploads/def.flac', error: { error: { code: 'VALIDATION_ERROR', message: 'not audio' } } }))
     state = imports_slice.reducer(state, event('import:finished', { track_count: 1, error_count: 1 }))
     expect(state.items).toEqual([{ import_id: 'i1', label: 'two files', file_count: 2, completed: 1, added: ['Intro'], errors: ['def.flac: not audio'], finished: true }])
-  })
-})
-
-describe('hotkeys', () => {
-  const press = (overrides: Partial<KeyPress>): KeyPress => ({ key: ' ', meta: false, ctrl: false, alt: false, shift: false, in_field: false, dialog_open: false, ...overrides })
-  test('maps the shortcuts, and never fires inside a field or a dialog', () => {
-    expect(resolve_hotkey(press({}))).toBe('toggle_playback')
-    expect(resolve_hotkey(press({ key: 'ArrowRight', meta: true }))).toBe('next_track')
-    expect(resolve_hotkey(press({ key: 'ArrowLeft', ctrl: true }))).toBe('previous_track')
-    expect(resolve_hotkey(press({ key: 'f', meta: true }))).toBe('focus_search')
-    expect(resolve_hotkey(press({ key: '/' }))).toBe('focus_search')
-    expect(resolve_hotkey(press({ key: 'ArrowRight' }))).toBeNull()
-    expect(resolve_hotkey(press({ in_field: true }))).toBeNull()
-    expect(resolve_hotkey(press({ dialog_open: true }))).toBeNull()
   })
 })

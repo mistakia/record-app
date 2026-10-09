@@ -14,6 +14,11 @@ const IMPORT_TIMEOUT_MS = 30 * 60_000
 // The whole file crosses IPC and is decoded in memory, so refuse anything
 // larger rather than exhaust either process.
 export const MAX_AUDIO_BYTES = 1024 ** 3
+// Artwork and avatars: the node serves images up to the same cap.
+export const MAX_IMAGE_BYTES = 16 * 1024 ** 2
+const IMAGE_TIMEOUT_MS = 30_000
+// The image types the renderer draws; anything else is refused in main.
+export const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/bmp'])
 
 const TLS_ERROR_CODE = /CERT|TLS|SSL/
 const BUN_ERROR_CODES: Record<string, string> = { ConnectionRefused: 'ECONNREFUSED' }
@@ -142,6 +147,31 @@ export const get_audio = async ({ node_url, token, cid, max_bytes = MAX_AUDIO_BY
   if (!result.ok) return result
   try {
     return await read_capped({ response: result.data, max_bytes })
+  } catch (error) {
+    return { ok: false, failure: describe_fetch_error(error) }
+  }
+}
+
+// An image blob by CID (GET /images/{cid}): artwork and avatars, with the
+// node's auth, the size cap, and the type checked here so the renderer only
+// ever draws a known image type.
+export const get_image = async ({ node_url, token, cid, max_bytes = MAX_IMAGE_BYTES }: {
+  node_url: string | null
+  token?: string | null | undefined
+  cid: string
+  max_bytes?: number
+}): Promise<NodeResult<{ data: ArrayBuffer, mime: string }>> => {
+  if (node_url === null) return not_configured
+  const result = await fetch_node({ url: `${node_url}/api/images/${encodeURIComponent(cid)}`, init: { method: 'GET', headers: auth_headers(token) }, timeout_ms: IMAGE_TIMEOUT_MS })
+  if (!result.ok) return result
+  const mime = (result.data.headers.get('content-type') ?? '').split(';')[0]?.trim().toLowerCase() ?? ''
+  if (!IMAGE_TYPES.has(mime)) {
+    await result.data.body?.cancel().catch(() => {})
+    return { ok: false, failure: { kind: 'refused', message: `Not an image the app draws: ${mime === '' ? 'no type' : mime}.` } }
+  }
+  try {
+    const bytes = await read_capped({ response: result.data, max_bytes })
+    return bytes.ok ? { ok: true, data: { data: bytes.data, mime } } : bytes
   } catch (error) {
     return { ok: false, failure: describe_fetch_error(error) }
   }

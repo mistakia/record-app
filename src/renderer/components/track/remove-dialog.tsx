@@ -61,7 +61,7 @@ export const RemoveDialog = ({ track, viewed_library, on_close }: { track: Track
         )}
         <div className={styles.actions}>
           <button type='button' onClick={on_close}>Cancel</button>
-          <button type='button' disabled={!writes_allowed || busy || target === undefined} onClick={() => { remove().catch(() => {}) }}>Remove</button>
+          <button type='button' data-variant='danger' disabled={!writes_allowed || busy || target === undefined} onClick={() => { remove().catch(() => {}) }}>Remove</button>
         </div>
       </div>
     </Dialog>

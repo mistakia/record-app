@@ -5,6 +5,7 @@ import { node_api } from './api.ts'
 import { bundled_slice } from './bundled.ts'
 import { connection_slice } from './connection.ts'
 import { imports_slice } from './imports.ts'
+import { list_cursor_slice } from './list-cursor.ts'
 import { notifications_slice } from './notifications.ts'
 import { player_slice } from './player.ts'
 import { replication_slice } from './replication.ts'
@@ -16,6 +17,7 @@ export const store = configureStore({
     bundled: bundled_slice.reducer,
     connection: connection_slice.reducer,
     imports: imports_slice.reducer,
+    list_cursor: list_cursor_slice.reducer,
     notifications: notifications_slice.reducer,
     player: player_slice.reducer,
     replication: replication_slice.reducer,

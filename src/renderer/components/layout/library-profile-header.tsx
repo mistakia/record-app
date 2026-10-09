@@ -1,0 +1,46 @@
+// A library's profile in the page head (legacy-v0's library header): avatar,
+// name, OWNER on an own library, the TRACKS │ LIBRARIES tabline, and its
+// counts, which pulse while the node indexes it.
+
+import { Link } from 'react-router'
+
+import styles from './page-head.module.css'
+import type { Library } from '#renderer/api/types.ts'
+import { Avatar } from '#renderer/components/common/avatar.tsx'
+import { current_progress, is_replicating, library_name } from '#renderer/components/library/library-category.ts'
+import { ROUTES, tracks_route } from '#renderer/routes.ts'
+import { use_app_selector } from '#renderer/store/index.ts'
+
+export const LibraryProfileHeader = ({ library, tab }: { library: Library, tab: 'tracks' | 'libraries' }) => {
+  const live_progress = use_app_selector((state) => state.replication.progress[library.address])
+  const linked_at = use_app_selector((state) => state.replication.linked_at[library.address])
+  const progress = current_progress({ library, live_progress, libraries_fetched_at: undefined })
+  const replicating = is_replicating({ library, progress, linked_at, now: Date.now() })
+  const indexing = library.is_processing_index || library.is_loading_index
+  const name = library_name(library)
+  return (
+    <div className={styles.profile} data-testid='library-profile'>
+      <div className={styles.identity}>
+        <Avatar name={name} size={24} cid={library.avatar} />
+        <span className={styles.name} title={library.address}>{name}</span>
+        {library.is_own && <span className={styles.chip}>Owner</span>}
+      </div>
+      {library.is_own && (
+        <div className={styles.tabs} role='tablist'>
+          <Link role='tab' aria-selected={tab === 'tracks'} to={tracks_route({ library_address: library.address })}>Tracks</Link>
+          <Link role='tab' aria-selected={tab === 'libraries'} to={ROUTES.libraries}>Libraries</Link>
+        </div>
+      )}
+      <div className={styles.meta}>
+        {replicating && progress.total > 0 && (
+          <span className={styles.replication} role='progressbar' aria-label='Replicating' aria-valuemin={0} aria-valuemax={progress.total} aria-valuenow={progress.progress}>
+            <span style={{ transform: `scaleX(${Math.min(1, progress.progress / progress.total)})` }} />
+          </span>
+        )}
+        <span className={indexing ? `${styles.counts} ${styles.pulse}` : styles.counts} data-testid='library-counts'>
+          {library.track_count} tracks · {library.linked_library_count} libraries
+        </span>
+      </div>
+    </div>
+  )
+}

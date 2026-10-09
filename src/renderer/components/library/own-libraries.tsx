@@ -12,6 +12,8 @@ import styles from './own-libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { LibraryCapabilities } from '#renderer/components/capability/library-capabilities.tsx'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
+import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
+import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { AboutEditor } from './about-editor.tsx'
 import { can_retire, has_profile, library_name, own_libraries_of, own_library_address } from './library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -46,9 +48,9 @@ const OwnLibraryRow = ({ library, editing, managing, on_edit, on_manage, on_reti
       </td>
       <td>{library.track_count}</td>
       <td className={styles.actions}>
-        {has_profile(library) && <button type='button' aria-pressed={editing} onClick={on_edit}>Profile</button>}
-        {library.library_type === 'recordstore' && <button type='button' aria-pressed={managing} onClick={on_manage}>Capabilities</button>}
-        {can_retire(library) && <button type='button' disabled={!writes_allowed} onClick={on_retire}>Retire</button>}
+        {has_profile(library) && <button type='button' data-size='small' aria-pressed={editing} onClick={on_edit}>Profile</button>}
+        {library.library_type === 'recordstore' && <button type='button' data-size='small' aria-pressed={managing} onClick={on_manage}>Capabilities</button>}
+        {can_retire(library) && <button type='button' data-size='small' disabled={!writes_allowed} onClick={on_retire}>Retire</button>}
       </td>
     </tr>
   )
@@ -104,54 +106,64 @@ export const OwnLibraries = () => {
   }
 
   return (
-    <section className={styles.section} data-testid='own-libraries'>
-      <h2>Your libraries</h2>
-      {own.error !== undefined && <p className={styles.error}>{'message' in own.error ? own.error.message : 'The node request failed.'}</p>}
-      <table className={styles.table}>
-        <thead>
-          <tr><th>Library</th><th /><th>Tracks</th><th /></tr>
-        </thead>
-        <tbody>
-          {libraries.map((library) => (
-            <OwnLibraryRow
-              key={library.id}
-              library={library}
-              editing={library.address === profile_address}
-              managing={library.address === managing}
-              on_edit={() => { set_editing(library.address) }}
-              on_manage={() => { set_managing(managing === library.address ? null : library.address) }}
-              on_retire={() => { set_retiring(library) }}
-            />
-          ))}
-        </tbody>
-      </table>
-      <form className={styles.create} onSubmit={(event) => { create(event).catch(() => {}) }}>
-        <h3>New library</h3>
-        <input aria-label='New library name' placeholder='Name (optional)' maxLength={128} value={name} onChange={(event) => { set_name(event.target.value) }} />
-        <input
-          aria-label='Discriminator'
-          placeholder='Address name (optional)'
-          title='Letters, digits, and hyphens; part of the library address. The node picks one when left empty.'
-          spellCheck={false}
-          maxLength={64}
-          value={discriminator}
-          onChange={(event) => { set_discriminator(event.target.value) }}
-        />
-        <button type='submit' disabled={!writes_allowed || creating || !discriminator_valid}>{creating ? 'Creating' : 'Create'}</button>
-        {!discriminator_valid && <p className={styles.error}>The address name is 1 to 64 letters, digits, and hyphens.</p>}
-      </form>
-      {managed !== undefined && <LibraryCapabilities key={managed.address} address={managed.address} name={library_name(managed)} retired={managed.is_retired} />}
-      {profile_address !== null && <AboutEditor key={profile_address} address={profile_address} />}
+    <div className={styles.section} data-testid='own-libraries'>
+      <FramedSection title='Your libraries' count={libraries.length} width='full'>
+        {own.error !== undefined && <p className={styles.error}>{'message' in own.error ? own.error.message : 'The node request failed.'}</p>}
+        <table className={styles.table}>
+          <thead>
+            <tr><th>Library</th><th /><th>Tracks</th><th /></tr>
+          </thead>
+          <tbody>
+            {libraries.map((library) => (
+              <OwnLibraryRow
+                key={library.id}
+                library={library}
+                editing={library.address === profile_address}
+                managing={library.address === managing}
+                on_edit={() => { set_editing(library.address) }}
+                on_manage={() => { set_managing(managing === library.address ? null : library.address) }}
+                on_retire={() => { set_retiring(library) }}
+              />
+            ))}
+          </tbody>
+        </table>
+      </FramedSection>
+      <FramedSection title='New library' fold_id='own-new-library' default_open={false}>
+        <form className={styles.create} onSubmit={(event) => { create(event).catch(() => {}) }}>
+          <input aria-label='New library name' placeholder='Name (optional)' maxLength={128} value={name} onChange={(event) => { set_name(event.target.value) }} />
+          <input
+            aria-label='Discriminator'
+            placeholder='Address name (optional)'
+            title='Letters, digits, and hyphens; part of the library address. The node picks one when left empty.'
+            spellCheck={false}
+            maxLength={64}
+            value={discriminator}
+            onChange={(event) => { set_discriminator(event.target.value) }}
+          />
+          <button type='submit' disabled={!writes_allowed || creating || !discriminator_valid}>{creating ? 'Creating' : 'Create'}</button>
+          {!discriminator_valid && <p className={styles.error}>The address name is 1 to 64 letters, digits, and hyphens.</p>}
+        </form>
+      </FramedSection>
+      {managed !== undefined && (
+        <FramedSection title={`Capabilities: ${library_name(managed)}`} width='full'>
+          <LibraryCapabilities key={managed.address} address={managed.address} name={library_name(managed)} retired={managed.is_retired} />
+        </FramedSection>
+      )}
+      {profile_address !== null && (
+        <FramedSection title='Profile' fold_id='own-profile'>
+          <AboutEditor key={profile_address} address={profile_address} />
+        </FramedSection>
+      )}
       <Dialog open={retiring !== null} title='Retire library' on_close={() => { set_retiring(null) }}>
         <p>
           Retire {retiring === null ? '' : library_name(retiring)}? Retirement is permanent and cannot be undone. The library stays
           readable, and peers that link it keep it, but nothing new can be written to it from any of your devices.
         </p>
-        <div className={styles.dialog_actions}>
+        <DialogActions>
           <button type='button' onClick={() => { set_retiring(null) }}>Cancel</button>
-          <button type='button' onClick={() => { retire().catch(() => {}) }}>Retire permanently</button>
-        </div>
+          <button type='button' data-variant='danger' onClick={() => { retire().catch(() => {}) }}>Retire permanently</button>
+        </DialogActions>
       </Dialog>
-    </section>
+    </div>
   )
 }
