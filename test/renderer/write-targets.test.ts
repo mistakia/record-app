@@ -6,6 +6,7 @@ import { describe, expect, test } from 'bun:test'
 import type { Capability, Library } from '#renderer/api/types.ts'
 import { describe_holders } from '#renderer/components/library/library-category.ts'
 import { removable_from } from '#renderer/components/track/remove-dialog.tsx'
+import { suggest_discriminator } from '#renderer/pages/new-library.tsx'
 import { choose_capability, default_target, resolve_target, target_fields, write_targets } from '#renderer/library/write-targets.ts'
 
 const library = (overrides: Partial<Library>): Library => ({
@@ -118,7 +119,7 @@ describe('write targets', () => {
 describe('holders', () => {
   test('describes which libraries hold a track, by category (spec 8.6.7)', () => {
     expect(describe_holders({ addresses: ['/record/z/own', '/record/z/own2', '/record/z/shared', '/record/z/linked', '/record/z/unknown'], libraries: LIBRARIES }))
-      .toBe('2 own, 1 shared, 1 linked, 1 discovered')
+      .toBe('2 of yours, 1 shared with you, 1 followed, 1 discovered')
     expect(describe_holders({ addresses: [], libraries: LIBRARIES })).toBeNull()
     // Not before the library list loads, when every holder would read as discovered.
     expect(describe_holders({ addresses: ['/record/z/own'], libraries: undefined })).toBeNull()
@@ -127,5 +128,13 @@ describe('holders', () => {
   test('a track can be removed only from own active recordstores holding it', () => {
     const track = { library_addresses: ['/record/z/own2', '/record/z/retired', '/record/z/listens', '/record/z/shared'] } as unknown as Parameters<typeof removable_from>[0]['track']
     expect(removable_from({ track, libraries: LIBRARIES }).map(({ address }) => address)).toEqual(['/record/z/own2'])
+  })
+})
+
+describe('the address name suggested from a new library name', () => {
+  test('is lowercase letters, digits, and single hyphens', () => {
+    expect(suggest_discriminator('Late Night Mixes')).toBe('late-night-mixes')
+    expect(suggest_discriminator('  Café — B-sides!! ')).toBe('cafe-b-sides')
+    expect(suggest_discriminator('***')).toBe('')
   })
 })

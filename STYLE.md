@@ -193,18 +193,18 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 - **Top** — back and forward (`‹ ›`), right-aligned so they clear the macOS traffic lights.
 - **RECORD** — Tracks (every library, aggregated) and Recently Played (listens).
 - **MY LIBRARY** — Tracks and Libraries of the user's own library. With more than one own active library, MY LIBRARY lists each by name.
-- **LIBRARIES** — linked and held-capability libraries; this list takes the remaining height and scrolls under a sticky heading that hosts `[+]` (link a library). Each row: a 24px avatar, the name, and on hover a `…` that opens the library menu (connect or disconnect, unlink, edit, copy address). A library that is replicating shows a quiet tertiary gauge after its name.
+- **LIBRARIES** — linked and held-capability libraries; this list takes the remaining height and scrolls under a sticky heading that hosts `[+]`, which opens the Link a library flow. Each row: a 24px avatar, the name, and on hover a `…` that opens the library menu (connect or disconnect, unlink, edit, copy address). A library that is replicating shows a quiet tertiary gauge after its name.
 - **Footer** — the identity's profile and the Settings gear, over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings. The identity has no profile of its own (spec §8.6.9), so it goes by its default own library's About name and avatar. Until it is named, it goes by a default read from its public key (`identity/default-name.ts`): a two-word handle (`amber heron`) and a 5×5 mirrored pattern in the avatar, the same on every device, never written to the profile. Either opens Identity, whose first section edits that profile. The gear is a 16px hairline SVG (`components/layout/settings-icon.tsx`) in secondary ink, accent on hover and on the Settings page, labelled `Settings`.
 - Active item: `--color-selected` ink at 600 on the `--color-surface` paper (the item lifts to the page's paper, as legacy's white-on-grey). Hover: `--color-surface-hover`.
 
 ### Page column (paper)
 
 - Fills the rest of the window above the player bar, with base's ruled texture: `--color-surface-ruling`, a `linear-gradient(var(--color-paper-texture) 1px, transparent 1px)` at `2px 2px`, fixed to the window so anything that masks it (a framed section's label) rules in step.
-- **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, the short address, an `OWNER` chip on an own library; a centred `TRACKS │ LIBRARIES` tab pair in reverse video (active tab filled `--color-selected`, base's tui tabline); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
-- **Help banner** — a dismissible per-page framed section (`HELP` on the stroke, `[x]` notch), shown until dismissed once, dismissal persisted. Never an accent fill.
+- **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, the short address, an `OWNER` chip on an own library; on an own recordstore a centred `TRACKS │ PROFILE │ SHARING` tabline in reverse video (active tab filled `--color-selected`, base's tui tabline; a retired library has no `PROFILE`); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
+- **Help** — disclosed, never a banner. A tertiary lowercase `help` sits at the right end of the page head on every page that has help (`components/layout/help.tsx`). It opens a 340px paper popover under it (the overlay surface, border, 2px radius, and shadow): one or two sentences on what the page is for, then `every key ?`, which opens the shortcut overlay. Closed on every visit; `Esc`, a click elsewhere, or a new page closes it. Empty states still teach on their own.
 - **Body** — width tiers by content kind, as on base's entity page: the track list fills the column, forms and settings 720px, reading text (about, descriptions) 66ch. Page padding `--space-lg`; sections stack with `--space-lg` to `--space-xl` between them.
 - **Inspector** — a 320px paper pane docked on the right of the page column, reflowing the list, opened with `i`.
-- **Ingest gauge** — while any import runs, a small screen in the page's bottom-right corner shows `[####------] 3/10`; it opens Import on click and goes away when the batch finishes.
+- **Ingest gauge** — while any import runs and Import is not the page, a small screen in the page's bottom-right corner reads `importing 3/10 [####------]` over the batch (every import seen running since the gauge was last empty). When the batch ends away from Import it holds `done 10`, or `!! 1 failed` when any file failed, for about 4 seconds, then goes; a batch that ends on Import is not held. It opens Import on click.
 
 ### Player bar (screen)
 
@@ -330,13 +330,38 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 - Track: Play, Play next, Add to queue, Remove from queue (when queued), Add tag, Adopt to library, Pin or Unpin, Remove from library, Copy CID. Shortcuts right-aligned in tertiary.
 - Library: Connect or Disconnect, Unlink (confirms), Edit, Copy address.
 
+### Libraries (paper)
+
+Libraries are grouped by the relationship, never labelled with the spec's category terms. Each group is a full-width framed section with its count on the stroke:
+
+- **YOURS** — own libraries, `[new]` on the stroke. A row is the 20px avatar, the name, and the track count; it opens the library. The listens library goes by `Play history`, with `Where your plays are recorded.` under it, and opens Recently Played. A retired library carries a tertiary `retired` after its name.
+- **SHARED WITH YOU** — libraries this identity holds a capability in, each with a `You may: …` line; absent when empty.
+- **FOLLOWING** — linked libraries, `[link]` on the stroke; empty, it says how to follow one, with the link.
+- **DISCOVERED** — known only from peer discovery; absent when empty.
+
+Shared, following, and discovered rows carry replication state, mode with `change`, peers, and connect, disconnect, unlink, and `…`. Every group previews five rows and ends in `show N more`; `show addresses` under the groups adds each row's short address. Where a category is named in a sentence it reads `yours`, `shared with you`, `followed`, `discovered`: the inspector says `in 2 of yours, 1 followed`.
+
+An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Sharing** (`WHO MAY WRITE`: the capabilities it has issued and the issue form, read-only once retired). Retiring lands on Sharing. The identity's own profile is also edited on Identity.
+
+### Step flows (paper)
+
+Linking a library and creating one are their own pages (`/libraries/link`, `/libraries/new`), one question at a time, so attention stays on the step:
+
+- A 560px column, `--space-3xl` from the head: `STEP 1 OF 2` (xs tertiary uppercase), the question in Departure Mono 24px uppercase in `--color-text`, one 48px input at 15px, one line under it (a tertiary hint or an echo of what was understood, or the error with `!!` in `--color-error`), then `Cancel` or `Back` (ghost) on the left and the primary action on the right.
+- `Enter` continues and `Esc` goes back; the input takes focus on each step.
+- **Link a library** — the address, echoed as its readable form (`Found mixes · …8MnGCA`) or refused as not an address; then an optional alias. It lands on the library's tracks.
+- **New library** — the name (required); then the address name, suggested from the name (`late-night-mixes`), editable, with what it is and that it never changes. It lands on the library's Profile tab.
+
 ### Settings (paper)
 
 The legacy settings page, restated for v1, as framed sections: Connection (mode, URL, token, test), Storage (snapshot budget, cache size, reset), Shortcuts (the `HOTKEYS` table), Peers (the peer list, `3 peers` count on the stroke), Diagnostics. The Diagnostics section's live block (connection state, PID, uptime, memory) is a small screen; versions and folders stay paper with `[show in finder]` actions.
 
 ### Import (paper, with a screen)
 
-Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the write-target selector. Running items render in a screen: `[####------] 41%  filename`, a character gauge, finished lines dimming, errors prefixed `!!`.
+Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the write-target selector. Below them, progress in two parts (`components/import/import-list.tsx`):
+
+- **Running** — unfinished imports only, in a screen under `// IMPORTING`, one line each in fixed columns: status (`41%`, or `!! 2 failed` once a file has failed), the label (ellipsized), the count `7/10`, and the age `2m`, tabular. No screen when nothing runs.
+- **History** — finished imports on paper, newest first, in a framed section titled `HISTORY` with the count and `[clear]` (drops every finished import) on the stroke. Each is one row: a `▶` disclosure, the status word (`done` in secondary ink, or `!! 2 failed` in `--color-error`), the label, the tracks added, and the age since it finished. The disclosure, closed by default, opens the errors and then the added tracks under the label column, ten at a time behind `show N more`. A row with nothing to open has no `▶`.
 
 ### Dialogs, context menu, toasts (paper overlays)
 

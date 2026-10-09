@@ -1,0 +1,18 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding: var(--space-lg);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.retire {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+  max-width: 66ch;
+}

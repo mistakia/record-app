@@ -1,7 +1,7 @@
 // Ingest (spec §8.9.1): files from main's picker or dropped here, a URL,
 // or an existing track by content CID, into the library the target
 // selector names (§8.6.3), with per-import progress from the import:*
-// events. Dropped files go to main as bytes and a bare name; no
+// events (`ImportList`). Dropped files go to main as bytes and a bare name; no
 // path ever leaves the renderer (§8.10.3).
 
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react'
@@ -9,9 +9,8 @@ import { useStore } from 'react-redux'
 import { useSearchParams } from 'react-router'
 
 import styles from './importer.module.css'
-import { char_gauge, import_fraction } from '#renderer/components/common/char-gauge.ts'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
-import { Screen } from '#renderer/components/common/screen.tsx'
+import { ImportList } from '#renderer/components/import/import-list.tsx'
 import { is_cid } from '#renderer/components/library/cid.ts'
 import { TargetSelect, use_write_target } from '#renderer/components/library/target-select.tsx'
 import { target_fields, type WriteTarget } from '#renderer/library/write-targets.ts'
@@ -165,27 +164,7 @@ export const Importer = () => {
           <button type='submit' disabled={!writes_allowed || target === null || !is_cid(cid.trim())}>Add track</button>
         </form>
       </FramedSection>
-      {imports.length > 0 && (
-        <Screen className={styles.progress} data-testid='import-progress'>
-          <div className={styles.progress_body}>
-            <p className='screen-label'>imports</p>
-            <ul className={styles.imports}>
-              {imports.map((item) => (
-                <li key={item.import_id} className={item.finished ? styles.finished : undefined} data-testid='import-item' data-finished={item.finished}>
-                  <span className={styles.line}>
-                    <span className={styles.gauge}>{char_gauge(import_fraction(item))}</span>
-                    <span className={styles.percent}>{item.finished ? 'done' : `${Math.round(import_fraction(item) * 100)}%`}</span>
-                    <span className={styles.label}>{item.label}</span>
-                    <span className={styles.status}>{item.completed}{item.file_count === null ? '' : `/${item.file_count}`}</span>
-                  </span>
-                  {item.added.length > 0 && <span className={styles.added}>added: {item.added.join(', ')}</span>}
-                  {item.errors.map((error) => <span key={error} className={styles.error}>!! {error}</span>)}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Screen>
-      )}
+      <ImportList items={imports} />
     </section>
   )
 }

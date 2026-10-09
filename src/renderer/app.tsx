@@ -7,7 +7,6 @@ import { Toaster } from '#renderer/components/common/toaster.tsx'
 import { BackupPrompt } from '#renderer/components/identity/backup-prompt.tsx'
 import { BundledBanner } from '#renderer/components/layout/bundled-banner.tsx'
 import { ConnectionBanner } from '#renderer/components/layout/connection-banner.tsx'
-import { HelpBanner } from '#renderer/components/layout/help-banner.tsx'
 import { IngestGauge } from '#renderer/components/layout/ingest-gauge.tsx'
 import { PageHead } from '#renderer/components/layout/page-head.tsx'
 import { Sidebar } from '#renderer/components/layout/sidebar.tsx'
@@ -19,6 +18,9 @@ import { use_hotkeys } from '#renderer/hooks/use-hotkeys.ts'
 import { use_node_events } from '#renderer/hooks/use-node-events.ts'
 import { use_media_session } from '#renderer/hooks/use-player.ts'
 import { Identity } from '#renderer/pages/identity.tsx'
+import { LibraryProfile, LibrarySharing } from '#renderer/pages/library-manage.tsx'
+import { LinkLibrary } from '#renderer/pages/link-library.tsx'
+import { NewLibrary } from '#renderer/pages/new-library.tsx'
 import { Importer } from '#renderer/pages/importer.tsx'
 import { Libraries } from '#renderer/pages/libraries.tsx'
 import { Listens } from '#renderer/pages/listens.tsx'
@@ -67,6 +69,10 @@ const NODE_PAGES: Array<{ path: string, element: ReactElement }> = [
   { path: ROUTES.tracks, element: <Tracks /> },
   { path: ROUTES.listens, element: <Listens /> },
   { path: ROUTES.libraries, element: <Libraries /> },
+  { path: ROUTES.link_library, element: <LinkLibrary /> },
+  { path: ROUTES.new_library, element: <NewLibrary /> },
+  { path: ROUTES.library_profile, element: <LibraryProfile /> },
+  { path: ROUTES.library_sharing, element: <LibrarySharing /> },
   { path: ROUTES.import, element: <Importer /> },
   { path: ROUTES.identity, element: <Identity /> }
 ]
@@ -86,7 +92,6 @@ const Shell = ({ configured }: { configured: boolean }) => {
           <ConnectionBanner />
           <BundledBanner />
           <BackupPrompt />
-          <HelpBanner />
           <main className={styles.body}>
             <Routes>
               <Route path={ROUTES.settings} element={<Settings />} />

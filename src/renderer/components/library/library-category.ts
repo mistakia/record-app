@@ -9,6 +9,14 @@ export type LibraryCategory = 'own' | 'shared' | 'linked' | 'discovered'
 export const library_category = (library: Pick<Library, 'is_own' | 'is_linked' | 'held_capability_ids'>): LibraryCategory =>
   library.is_own ? 'own' : library.held_capability_ids.length > 0 ? 'shared' : library.is_linked ? 'linked' : 'discovered'
 
+// How a category reads to the user: the relationship, not the spec term.
+export const CATEGORY_LABELS: Record<LibraryCategory, string> = {
+  own: 'yours',
+  shared: 'shared with you',
+  linked: 'followed',
+  discovered: 'discovered'
+}
+
 // A library address is /record/<manifest CID>/<discriminator> (spec
 // §3.6.1). Every manifest CID opens with the same multibase and codec
 // prefix (zBwWX...), so its tail is what tells two libraries apart.
@@ -80,8 +88,8 @@ export const is_replicating = ({ library, progress, linked_at, now }: {
   return library.is_replicating || progress.progress < progress.total || recent
 }
 
-// Which libraries hold a track, by category (spec §8.6.7), as in "2 own,
-// 1 shared, 3 linked". Addresses the app does not list count as discovered;
+// Which libraries hold a track, by category (spec §8.6.7), as in "2 of
+// yours, 1 shared with you, 3 followed". Addresses the app does not list count as discovered;
 // nothing shows until the library list has loaded.
 export const describe_holders = ({ addresses, libraries }: { addresses: readonly string[] | undefined, libraries: readonly Library[] | undefined }): string | null => {
   if (addresses === undefined || addresses.length === 0 || libraries === undefined) return null
@@ -91,5 +99,6 @@ export const describe_holders = ({ addresses, libraries }: { addresses: readonly
     const library = by_address.get(address)
     counts[library === undefined ? 'discovered' : library_category(library)]++
   }
-  return (['own', 'shared', 'linked', 'discovered'] as const).filter((category) => counts[category] > 0).map((category) => `${counts[category]} ${category}`).join(', ')
+  return (['own', 'shared', 'linked', 'discovered'] as const).filter((category) => counts[category] > 0)
+    .map((category) => `${counts[category]}${category === 'own' ? ' of' : ''} ${CATEGORY_LABELS[category]}`).join(', ')
 }
