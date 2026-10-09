@@ -43,69 +43,10 @@
   font-size: var(--font-size-xs);
 }
 
-.progress {
-  padding: var(--space-base);
-}
-
-.progress_body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.imports {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--font-size-sm);
-}
-
-.imports li {
-  display: flex;
-  flex-direction: column;
-}
-
-.line {
-  display: grid;
-  grid-template-columns: max-content 5ch minmax(0, 1fr) max-content;
-  gap: var(--space-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.percent,
-.status {
-  color: var(--color-text-secondary);
-}
-
-.finished {
-  opacity: 0.55;
-}
-
-.added {
-  padding-left: 12ch;
-  overflow: hidden;
-  color: var(--color-text-secondary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .muted {
   color: var(--color-text-tertiary);
 }
 
 .error {
   color: var(--color-error);
-}
-
-.imports .error {
-  padding-left: 12ch;
 }

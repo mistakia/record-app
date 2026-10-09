@@ -1,0 +1,127 @@
+/* Running imports: a screen, one fixed-column line each. */
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-base);
+}
+
+.list,
+.history {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+}
+
+.list {
+  gap: var(--space-xs);
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 12ch minmax(0, 1fr) max-content 4ch;
+  gap: var(--space-base);
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.number {
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.status {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Finished imports: a paper list, each row a disclosure. */
+.entry + .entry {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 2ch 12ch minmax(0, 1fr) max-content 4ch;
+  gap: var(--space-base);
+  align-items: center;
+  justify-content: stretch;
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--space-xs);
+  border: none;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+}
+
+.chevron {
+  display: inline-block;
+  justify-self: center;
+  color: var(--color-text-tertiary);
+  line-height: 1;
+  font-size: 0.7em;
+  transition: transform var(--transition-fast);
+}
+
+.row[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+.done {
+  color: var(--color-text-secondary);
+}
+
+.failed {
+  color: var(--color-error);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The disclosed tracks and errors, under the row's label column. */
+.detail {
+  display: grid;
+  grid-template-columns: 2ch 12ch minmax(0, 1fr);
+  gap: var(--space-xxs) var(--space-base);
+  padding: 0 var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.detail > * {
+  grid-column: 3;
+}
+
+.added {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.more {
+  justify-content: flex-start;
+  height: auto;
+  padding: 0;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.more:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-text-secondary);
+}

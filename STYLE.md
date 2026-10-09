@@ -204,7 +204,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 - **Help banner** — a dismissible per-page framed section (`HELP` on the stroke, `[x]` notch), shown until dismissed once, dismissal persisted. Never an accent fill.
 - **Body** — width tiers by content kind, as on base's entity page: the track list fills the column, forms and settings 720px, reading text (about, descriptions) 66ch. Page padding `--space-lg`; sections stack with `--space-lg` to `--space-xl` between them.
 - **Inspector** — a 320px paper pane docked on the right of the page column, reflowing the list, opened with `i`.
-- **Ingest gauge** — while any import runs, a small screen in the page's bottom-right corner shows `[####------] 3/10`; it opens Import on click and goes away when the batch finishes.
+- **Ingest gauge** — while any import runs and Import is not the page, a small screen in the page's bottom-right corner reads `importing 3/10 [####------]` over the batch (every import seen running since the gauge was last empty). When the batch ends away from Import it holds `done 10`, or `!! 1 failed` when any file failed, for about 4 seconds, then goes; a batch that ends on Import is not held. It opens Import on click.
 
 ### Player bar (screen)
 
@@ -336,7 +336,10 @@ The legacy settings page, restated for v1, as framed sections: Connection (mode,
 
 ### Import (paper, with a screen)
 
-Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the write-target selector. Running items render in a screen: `[####------] 41%  filename`, a character gauge, finished lines dimming, errors prefixed `!!`.
+Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the write-target selector. Below them, progress in two parts (`components/import/import-list.tsx`):
+
+- **Running** — unfinished imports only, in a screen under `// IMPORTING`, one line each in fixed columns: status (`41%`, or `!! 2 failed` once a file has failed), the label (ellipsized), the count `7/10`, and the age `2m`, tabular. No screen when nothing runs.
+- **History** — finished imports on paper, newest first, in a framed section titled `HISTORY` with the count and `[clear]` (drops every finished import) on the stroke. Each is one row: a `▶` disclosure, the status word (`done` in secondary ink, or `!! 2 failed` in `--color-error`), the label, the tracks added, and the age since it finished. The disclosure, closed by default, opens the errors and then the added tracks under the label column, ten at a time behind `show N more`. A row with nothing to open has no `▶`.
 
 ### Dialogs, context menu, toasts (paper overlays)
 
