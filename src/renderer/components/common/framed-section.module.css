@@ -1,0 +1,121 @@
+.frame {
+  position: relative;
+  max-width: 720px;
+  margin-top: var(--space-sm);
+  padding: var(--space-lg) var(--space-base) var(--space-base);
+  border: 1px solid var(--color-border);
+}
+
+.full {
+  max-width: none;
+}
+
+.stroke {
+  position: absolute;
+  top: 0;
+  right: var(--space-sm);
+  left: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.stroke > * {
+  pointer-events: auto;
+}
+
+.title,
+.toggle,
+.controls,
+.count {
+  background: var(--color-surface-solid);
+}
+
+.title,
+.toggle {
+  padding: 0 var(--space-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.toggle {
+  display: inline-flex;
+  gap: var(--space-xs);
+  height: auto;
+  border: none;
+  font-size: var(--font-size-xxs);
+}
+
+.toggle:hover:not(:disabled) {
+  background: var(--color-surface-solid);
+  color: var(--color-text-secondary);
+}
+
+.chevron {
+  display: inline-block;
+  font-size: 0.7em;
+  transition: transform var(--transition-fast);
+}
+
+.toggle[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+.count {
+  padding: 0 var(--space-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  display: inline-flex;
+  gap: var(--space-xs);
+  padding: 0 var(--space-xs);
+  margin-left: auto;
+}
+
+.controls button {
+  height: auto;
+  padding: 0;
+  border: none;
+  background: var(--color-surface-solid);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.controls button:hover:not(:disabled) {
+  background: var(--color-surface-solid);
+  color: var(--color-accent);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+}
+
+.folded {
+  display: flex;
+  align-items: center;
+  max-width: 720px;
+  margin-top: var(--space-sm);
+}
+
+.folded .toggle {
+  padding-left: 0;
+}
+
+.rule {
+  flex: 1;
+  height: 1px;
+  margin-left: var(--space-xs);
+  background: var(--color-border);
+}

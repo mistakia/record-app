@@ -1,0 +1,29 @@
+/* Base's type system (STYLE.md § Typography), bundled and served same-origin.
+   The variable Commit Mono carries the weight and italic axes; the second face
+   declares italic against the same file so the browser drives the axis rather
+   than synthesizing a slant. Block, not swap: a monospace layout reflows if
+   it first paints in a fallback face. */
+
+@font-face {
+  font-family: 'Commit Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('../assets/fonts/CommitMono-VF.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'Commit Mono';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('../assets/fonts/CommitMono-VF.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'Departure Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../assets/fonts/DepartureMono-Regular.woff2') format('woff2');
+}

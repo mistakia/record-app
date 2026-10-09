@@ -2,11 +2,15 @@ import { describe, expect, test } from 'bun:test'
 
 import {
   add_entries,
+  clear_queued,
   current_entry,
   EMPTY_QUEUE,
   jump_to,
   move_entry,
+  nudge_entry,
   peek_next,
+  place_entry,
+  queued_count,
   remove_entry,
   set_entries,
   set_repeat,
@@ -93,14 +97,18 @@ describe('queue manager', () => {
     expect(ids(toggle_shuffle({ queue }))).toBe('wxyz')
   })
 
-  test('add puts entries next or at the end, and keeps the unshuffled order in step', () => {
+  test('add queues entries next or at the end of the queued block, ahead of the source list, and keeps the unshuffled order in step', () => {
     expect(ids(add_entries({ queue: queue_of('abc', 0), entries: [entry('x')], at: 'next' }))).toBe('axbc')
-    expect(ids(add_entries({ queue: queue_of('abc', 0), entries: [entry('x')], at: 'end' }))).toBe('abcx')
+    expect(ids(add_entries({ queue: queue_of('abc', 0), entries: [entry('x')], at: 'end' }))).toBe('axbc')
+    const two = add_entries({ queue: add_entries({ queue: queue_of('abc', 0), entries: [entry('x')], at: 'end' }), entries: [entry('y')], at: 'end' })
+    expect(ids(two)).toBe('axybc')
+    expect(queued_count(two)).toBe(2)
+    expect(ids(add_entries({ queue: two, entries: [entry('z')], at: 'next' }))).toBe('azxybc')
     const empty_then_added = add_entries({ queue: EMPTY_QUEUE, entries: [entry('x')], at: 'end' })
     expect(empty_then_added.index).toBe(0)
     const shuffled = toggle_shuffle({ queue: queue_of('abc', 0), random: () => 0 })
     const added = add_entries({ queue: shuffled, entries: [entry('x')], at: 'next' })
-    expect(ids(toggle_shuffle({ queue: added }))).toBe('abcx')
+    expect(ids(toggle_shuffle({ queue: added }))).toBe('axbc')
   })
 
   test('remove keeps the current entry, or moves to the following one when the current is removed', () => {
@@ -109,6 +117,55 @@ describe('queue manager', () => {
     expect(current_entry(remove_entry({ queue: queue_of('abc', 2), queue_id: 'q-c' }))?.track_id).toBe('b')
     expect(remove_entry({ queue: queue_of('a', 0), queue_id: 'q-a' }).index).toBe(-1)
     expect(remove_entry({ queue: queue_of('abc', 0), queue_id: 'nope' })).toEqual(queue_of('abc', 0))
+  })
+
+  test('a queued entry stops being queued once it plays, and playing from a list keeps the waiting queue after the new start', () => {
+    const queued = add_entries({ queue: queue_of('abc', 0), entries: [entry('x'), entry('y')], at: 'end' })
+    const played = jump_to({ queue: queued, index: 1 })
+    expect(current_entry(played)?.queued).toBeUndefined()
+    expect(queued_count(played)).toBe(1)
+    const replaced = set_entries({ queue: queued, entries: [...'mno'].map(entry), start_index: 1 })
+    expect(ids(replaced)).toBe('mnxyo')
+    expect(current_entry(replaced)?.track_id).toBe('n')
+    expect(queued_count(replaced)).toBe(2)
+  })
+
+  test('shuffle keeps the queued block right after the current entry, and unshuffle puts it back there', () => {
+    const queued = add_entries({ queue: queue_of('abcde', 0), entries: [entry('x'), entry('y')], at: 'end' })
+    const shuffled = toggle_shuffle({ queue: queued, random: () => 0 })
+    expect(ids(shuffled).slice(0, 3)).toBe('axy')
+    expect([...ids(shuffled)].sort().join('')).toBe('abcdexy')
+    const restored = toggle_shuffle({ queue: shuffled })
+    expect(ids(restored)).toBe('axybcde')
+  })
+
+  test('clear removes only the waiting queued entries', () => {
+    const queued = add_entries({ queue: queue_of('abc', 0), entries: [entry('x'), entry('y')], at: 'end' })
+    const cleared = clear_queued(queued)
+    expect(ids(cleared)).toBe('abc')
+    expect(current_entry(cleared)?.track_id).toBe('a')
+  })
+
+  test('nudge reorders within a list and crosses between playing next and the source list at the edge', () => {
+    const queued = add_entries({ queue: queue_of('abc', 0), entries: [entry('x'), entry('y')], at: 'end' })
+    expect(ids(nudge_entry({ queue: queued, queue_id: 'q-y', direction: -1 }))).toBe('ayxbc')
+    const crossed_down = nudge_entry({ queue: queued, queue_id: 'q-y', direction: 1 })
+    expect(ids(crossed_down)).toBe('axybc')
+    expect(queued_count(crossed_down)).toBe(1)
+    const crossed_up = nudge_entry({ queue: queued, queue_id: 'q-b', direction: -1 })
+    expect(queued_count(crossed_up)).toBe(3)
+    expect(ids(nudge_entry({ queue: queued, queue_id: 'q-x', direction: -1 }))).toBe('axybc')
+    expect(nudge_entry({ queue: queued, queue_id: 'q-a', direction: 1 })).toBe(queued)
+  })
+
+  test('place moves an upcoming entry into either list at an offset', () => {
+    const queued = add_entries({ queue: queue_of('abcd', 0), entries: [entry('x')], at: 'end' })
+    const into_queue = place_entry({ queue: queued, queue_id: 'q-c', list: 'queued', offset: 0 })
+    expect(ids(into_queue)).toBe('acxbd')
+    expect(queued_count(into_queue)).toBe(2)
+    const into_source = place_entry({ queue: queued, queue_id: 'q-x', list: 'source', offset: 2 })
+    expect(ids(into_source)).toBe('abcxd')
+    expect(queued_count(into_source)).toBe(0)
   })
 
   test('move reorders and keeps the same entry current', () => {

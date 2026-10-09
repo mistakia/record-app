@@ -3,7 +3,7 @@
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
-import { DEFAULT_TRACK_FILTERS, type SortOrder, type TrackFilters, type TrackSort } from './api.ts'
+import { DEFAULT_TRACK_FILTERS, type TrackFilters } from './api.ts'
 
 interface UiState {
   // The library the track list shows; '' is all libraries.
@@ -11,37 +11,39 @@ interface UiState {
   filters: TrackFilters
   // The library last written to, the default write target (spec §8.6.3).
   recent_write_target: string | null
+  // The queue overlay over the page column.
+  queue_open: boolean
+  // The ? shortcut overlay.
+  shortcuts_open: boolean
 }
 
-const initial_state: UiState = { library_address: '', filters: DEFAULT_TRACK_FILTERS, recent_write_target: null }
+const initial_state: UiState = { library_address: '', filters: DEFAULT_TRACK_FILTERS, recent_write_target: null, queue_open: false, shortcuts_open: false }
 
 export const ui_slice = createSlice({
   name: 'ui',
   initialState: initial_state,
   reducers: {
+    // The track list's view as its route holds it (routes.ts), mirrored here
+    // for the hibernation snapshot and the write-target default.
+    view_changed: (state, action: PayloadAction<{ library_address: string, filters: TrackFilters }>) => {
+      state.library_address = action.payload.library_address
+      state.filters = action.payload.filters
+    },
     // Tags are per library, so a selection does not carry across libraries.
     library_selected: (state, action: PayloadAction<string>) => {
       if (state.library_address !== action.payload) state.filters.tags = []
       state.library_address = action.payload
     },
-    query_changed: (state, action: PayloadAction<string>) => {
-      state.filters.query = action.payload
-    },
-    sort_changed: (state, action: PayloadAction<{ sort: TrackSort, order: SortOrder }>) => {
-      state.filters.sort = action.payload.sort
-      state.filters.order = action.payload.order
-    },
-    tag_toggled: (state, action: PayloadAction<string>) => {
-      const { tags } = state.filters
-      state.filters.tags = tags.includes(action.payload) ? tags.filter((tag) => tag !== action.payload) : [...tags, action.payload]
-    },
     write_target_used: (state, action: PayloadAction<string>) => {
       state.recent_write_target = action.payload
     },
-    filters_cleared: (state) => {
-      state.filters = { ...DEFAULT_TRACK_FILTERS, sort: state.filters.sort, order: state.filters.order }
+    queue_toggled: (state, action: PayloadAction<boolean | undefined>) => {
+      state.queue_open = action.payload ?? !state.queue_open
+    },
+    shortcuts_toggled: (state, action: PayloadAction<boolean | undefined>) => {
+      state.shortcuts_open = action.payload ?? !state.shortcuts_open
     }
   }
 })
 
-export const { library_selected, query_changed, sort_changed, tag_toggled, write_target_used, filters_cleared } = ui_slice.actions
+export const { view_changed, library_selected, write_target_used, queue_toggled, shortcuts_toggled } = ui_slice.actions

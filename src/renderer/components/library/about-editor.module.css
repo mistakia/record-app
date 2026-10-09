@@ -1,28 +1,28 @@
 .about {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
   max-width: 560px;
 }
 
 .about h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--font-size-reading);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--space-xxs);
 }
 
 .field input,
 .field textarea {
   font: inherit;
-  padding: 4px 6px;
+  padding: var(--space-xs) var(--space-xs);
 }
 
 .error {
-  color: var(--danger);
+  color: var(--color-error);
   margin: 0;
 }

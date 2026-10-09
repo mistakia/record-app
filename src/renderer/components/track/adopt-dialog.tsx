@@ -44,7 +44,7 @@ export const AdoptDialog = ({ track, viewed_library, on_close }: { track: Track,
         <TargetSelect choice={choice} />
         <div className={styles.actions}>
           <button type='button' onClick={on_close}>Cancel</button>
-          <button type='button' disabled={!writes_allowed || busy || target === null} onClick={() => { adopt().catch(() => {}) }}>Adopt</button>
+          <button type='button' data-variant='primary' disabled={!writes_allowed || busy || target === null} onClick={() => { adopt().catch(() => {}) }}>Adopt</button>
         </div>
       </div>
     </Dialog>

@@ -1,35 +1,37 @@
 .shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  height: 100%;
+}
+
+.column {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   height: 100%;
 }
 
-.nav {
+/* The page column on base's ruled paper texture, drawn as its background
+   so a screen laid over the page never shows it. */
+.page {
+  position: relative;
   display: flex;
-  gap: 16px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.nav a {
-  color: inherit;
-  text-decoration: none;
-  opacity: 0.65;
-}
-
-.nav a[aria-current='page'] {
-  opacity: 1;
-  font-weight: 600;
-}
-
-.content {
   flex: 1;
   min-height: 0;
+  flex-direction: column;
+  background-image: linear-gradient(var(--color-paper-texture) 1px, transparent 1px);
+  background-size: 2px 2px;
+}
+
+.body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
   overflow: auto;
-  padding: 16px;
 }
 
 .loading {
-  padding: 16px;
-  color: var(--muted);
+  height: 100%;
 }

@@ -3,9 +3,9 @@
 // (search, sort, the tag filter), tagging, ingest (main's file picker, a
 // drop, a URL, add by CID), libraries (link, disconnect, connect, unlink,
 // the own about), identity (public key, export, and no trace of the key in
-// any file the app wrote), listens, peers, a hotkey, and gapless playback
-// with its listen and Media Session, and that the app:// scheme serves only
-// the renderer. Needs ffmpeg and fpcalc; set
+// any file the app wrote), listens, peers, the list and player hotkeys
+// (t, q, Shift+Q, Space), and gapless playback with its listen and Media
+// Session, and that the app:// scheme serves only the renderer. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
 // record-node's pins. Runs under Node: node test/e2e/local-smoke.ts
 
@@ -33,9 +33,18 @@ const app = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${user_dat
 
 const step = (label: string, detail: unknown = ''): void => { console.log(`${label}:`, detail) }
 const toast = async (window: Page, text: string | RegExp) => { await window.getByTestId('toast').filter({ hasText: text }).first().waitFor({ timeout: 30_000 }) }
-const nav = async (window: Page, name: string) => { await window.getByRole('navigation').getByRole('link', { name, exact: true }).click() }
+// The sidebar's first 'Tracks' is every library; a second, under My
+// library, is the own one.
+const nav = async (window: Page, name: string) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name, exact: true }).first().click() }
 const rows = (window: Page) => window.getByTestId('track-row')
-const titles = async (window: Page) => await rows(window).locator('button').filter({ hasNotText: /^(Next|Queue)$/ }).allInnerTexts()
+// The title is the first child of a row's third cell (index, adopt, title).
+const titles = async (window: Page) => await rows(window).evaluateAll((elements) => elements.map((row) => row.querySelectorAll('[role=cell]')[2]?.firstElementChild?.textContent ?? ''))
+// A click on the title cell moves the keyboard cursor there and focuses the list.
+const focus_row = async (window: Page, title: string) => { await rows(window).filter({ hasText: title }).getByRole('cell').nth(2).click() }
+const unfold = async (window: Page, title: string) => {
+  const toggle = window.getByRole('button', { name: title })
+  if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click()
+}
 const settled = async (window: Page) => { await window.locator('[data-testid=track-list][aria-busy=false]').waitFor() }
 
 const files_containing = async (directory: string, needle: string): Promise<string[]> => {
@@ -76,31 +85,54 @@ try {
   await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
   step('search "Alpha"', await titles(window))
   await window.getByRole('button', { name: 'Clear filters' }).click()
-  await window.getByLabel('Sort by').selectOption('title')
-  await window.getByRole('button', { name: 'Descending' }).click()
   await window.getByTestId('track-total').filter({ hasText: /^2 tracks$/ }).waitFor()
+  // A header click sorts ascending; a second reverses it.
+  const list = window.getByTestId('track-list')
+  const title_header = list.getByRole('columnheader').filter({ has: window.getByRole('button', { name: 'Title' }) })
+  await list.getByRole('button', { name: 'Title' }).click()
+  await title_header.and(window.locator('[aria-sort=ascending]')).waitFor()
   await settled(window)
   const ascending = await titles(window)
   step('sort by title ascending', ascending)
   if (ascending[0] !== 'Smoke Alpha') throw new Error('sort did not apply')
+  await list.getByRole('button', { name: 'Title' }).click()
+  await title_header.and(window.locator('[aria-sort=descending]')).waitFor()
+  await settled(window)
+  const descending = await titles(window)
+  step('sort by title descending', descending)
+  if (descending[0] !== 'Smoke Beta') throw new Error('the second header click did not reverse the sort')
+  await list.getByRole('button', { name: 'Title' }).click()
+  await title_header.and(window.locator('[aria-sort=ascending]')).waitFor()
+  await settled(window)
 
-  // Tagging through the context menu, then the tag filter.
-  await rows(window).filter({ hasText: 'Smoke Alpha' }).click({ button: 'right' })
-  await window.getByRole('menuitem', { name: 'Tags' }).click()
-  await window.getByLabel('New tag').fill('smoke-tag')
-  await window.getByRole('button', { name: 'Add', exact: true }).click()
-  await window.getByTestId('tag-editor').getByText('smoke-tag').waitFor()
-  await window.getByRole('button', { name: 'Done' }).click()
+  // Tagging with t at the cursor row, then the tag filter.
+  await focus_row(window, 'Smoke Alpha')
+  await window.keyboard.press('t')
+  const editor = window.getByTestId('tag-editor')
+  await editor.getByLabel('New tag').fill('smoke-tag')
+  await editor.getByLabel('New tag').press('Enter')
+  await editor.getByRole('listitem').filter({ hasText: 'smoke-tag' }).waitFor()
+  await editor.getByLabel('New tag').press('Escape')
+  await editor.waitFor({ state: 'detached' })
   await window.getByTestId('tag-filter').getByRole('button', { name: /smoke-tag/ }).click()
   await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
   step('tag filter "smoke-tag"', await titles(window))
   await window.getByRole('button', { name: 'Clear filters' }).click()
 
-  // Gapless playback with a listen and Media Session; a hotkey pauses it.
+  // Gapless playback with a listen and Media Session: Alpha alone from the
+  // menu, Beta queued with q, seen in the queue overlay; a hotkey pauses it.
   await settled(window)
-  await rows(window).filter({ hasText: 'Smoke Alpha' }).getByRole('button', { name: 'Smoke Alpha', exact: true }).click()
-  await rows(window).filter({ hasText: 'Smoke Beta' }).getByRole('button', { name: 'Add to queue' }).click()
+  await rows(window).filter({ hasText: 'Smoke Alpha' }).click({ button: 'right' })
+  await window.getByRole('menuitem', { name: 'Play', exact: true }).click()
+  await focus_row(window, 'Smoke Beta')
+  await window.keyboard.press('q')
   await window.locator('[data-testid=player-bar][data-state=playing]').waitFor({ timeout: 30_000 })
+  await window.keyboard.press('Shift+Q')
+  const queued = await window.getByTestId('queue-panel').getByTestId('queue-entry').allInnerTexts()
+  step('queue', queued.map((text) => text.replaceAll('\n', ' | ')))
+  if (!queued.some((text) => text.includes('Smoke Beta'))) throw new Error('q did not queue Smoke Beta')
+  await window.keyboard.press('Shift+Q')
+  await window.getByTestId('queue-panel').waitFor({ state: 'detached' })
   await window.evaluate(() => {
     const bar = document.querySelector('[data-testid=player-bar]')
     const states: string[] = []
@@ -112,16 +144,16 @@ try {
   const states = await window.evaluate(() => (window as unknown as { player_states: string[] }).player_states)
   step('player states across the transition', states.length === 0 ? 'playing throughout' : states.join(' -> '))
   if (states.some((state) => state !== 'playing')) throw new Error('the transition was not gapless')
-  await window.locator('body').click({ position: { x: 5, y: 5 } })
+  await focus_row(window, 'Smoke Beta')
   await window.keyboard.press('Space')
   await window.locator('[data-testid=player-bar][data-state=paused]').waitFor()
   step('Space hotkey', 'paused')
 
   // Ingest: main's picker (stubbed in main, as a user's choice), a drop, a URL, and a CID.
-  await nav(window, 'Import')
+  await window.getByRole('link', { name: 'Import tracks' }).click()
   const chosen = node.make_audio({ name: 'Smoke Gamma.flac', seed: 3 })
   await app.evaluate(({ dialog }, path) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path] }) }, chosen)
-  await window.getByRole('button', { name: 'Choose files' }).click()
+  await window.getByRole('button', { name: 'Choose files or folders' }).click()
   const dropped = (await readFile(node.make_audio({ name: 'Smoke Delta.flac', seed: 4 }))).toString('base64')
   await window.evaluate(async (base64) => {
     const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))
@@ -138,9 +170,10 @@ try {
   await finished('smoke-epsilon')
   step('imports', (await window.getByTestId('import-item').allInnerTexts()).map((text) => text.replaceAll('\n', ' | ')))
   const [alpha] = (await node.peer.list_tracks({ offset: 0, limit: 10, shuffle: false, sort: 'title', order: 'asc', query: 'Alpha' })).items
+  await unfold(window, 'Add by CID')
   await window.getByLabel('Add by content CID').fill(alpha?.content_cid ?? '')
   await window.getByRole('button', { name: 'Add track' }).click()
-  await toast(window, /^Added to /)
+  await toast(window, /Added to /)
   const total = (await node.peer.list_tracks({ offset: 0, limit: 1, shuffle: false, sort: 'added_at', order: 'desc' })).total
   step('tracks on the node after ingest', total)
   if (total !== 5) throw new Error('ingest did not add three tracks')
@@ -169,7 +202,7 @@ try {
   await nav(window, 'Identity')
   step('key holder', await window.getByTestId('key-holder').innerText())
   await window.getByRole('button', { name: 'Show public key' }).click()
-  step('public key', await window.getByTestId('public-key').getAttribute('title'))
+  step('public key', await window.getByTestId('public-key').locator('code').textContent())
   private_key = (await node.peer.export_identity()).private_key
   // The generic request channel must refuse the export outright.
   const generic = await window.evaluate(async () => await (window as unknown as { record: { request: (request: unknown) => Promise<{ ok: boolean, failure?: { kind: string } }> } }).record.request({ method: 'get', path_template: '/identity/export' }))
@@ -198,14 +231,17 @@ try {
   await window.getByRole('button', { name: 'Done' }).click()
   await window.getByTestId('exported-key').waitFor({ state: 'detached' })
   step('export', `shown once and closed; last export: ${await window.getByTestId('last-export').innerText()}`)
+  await unfold(window, 'Import')
   step('import in remote mode', await window.getByTestId('import-unavailable').innerText())
 
   // Listens and peers.
-  await nav(window, 'Listens')
-  await window.getByTestId('listen-row').first().waitFor()
-  step('listens', (await window.getByTestId('listen-row').allInnerTexts()).map((text) => text.replaceAll('\t', ' | ')))
-  await nav(window, 'Peers')
-  step('peers', await window.getByRole('heading', { name: 'Peers' }).locator('..').innerText())
+  await nav(window, 'Recently played')
+  const listened = window.getByTestId('listens').getByTestId('track-row')
+  await listened.first().waitFor()
+  step('listens', (await listened.allInnerTexts()).map((text) => text.replaceAll('\n', ' | ')))
+  await nav(window, 'Settings')
+  await unfold(window, 'Peers')
+  step('peers', (await window.locator('#settings-peers').innerText()).replaceAll('\n', ' | '))
   await window.screenshot({ path: join(screenshot_dir, 'record-app-local-smoke.png') })
   if (console_errors.length > 0) throw new Error(`renderer console errors:\n${console_errors.join('\n')}`)
 } finally {

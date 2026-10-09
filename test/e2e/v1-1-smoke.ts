@@ -32,7 +32,15 @@ await mkdir(user_data_dir, { recursive: true })
 await writeFile(join(user_data_dir, 'connection.json'), JSON.stringify({ mode: 'remote', node_url: node.node_url }))
 
 const step = (label: string, detail: unknown = ''): void => { console.log(`${label}:`, detail) }
-const nav = async (window: Page, name: string) => { await window.getByRole('navigation').getByRole('link', { name, exact: true }).click() }
+// The sidebar's links; the first 'Tracks' is every library, and with more
+// than one own library My library lists each by name.
+const nav = async (window: Page, name: string) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name, exact: true }).first().click() }
+const unfold = async (window: Page, title: string) => {
+  const toggle = window.getByRole('button', { name: title })
+  if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click()
+}
+// The library the track list shows, from the hash route's query.
+const viewed_library = async (window: Page) => await window.evaluate(() => new URLSearchParams(location.hash.split('?')[1] ?? '').get('library') ?? '')
 const toast = async (window: Page, text: string | RegExp) => { await window.getByTestId('toast').filter({ hasText: text }).first().waitFor({ timeout: 30_000 }) }
 
 const app = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${user_data_dir}`], timeout: 30_000 })
@@ -50,6 +58,7 @@ try {
   const listens = own_rows.and(window.locator('[data-type=listens]'))
   if (await listens.count() !== 1) throw new Error('expected one listens library')
   if (await listens.getByRole('button', { name: 'Retire' }).count() !== 0) throw new Error('the listens library offers Retire')
+  await unfold(window, 'New library')
   await window.getByLabel('New library name').fill('Smoke Mixes')
   await window.getByLabel('Discriminator').fill('smoke-mixes')
   await window.getByRole('button', { name: 'Create', exact: true }).click()
@@ -62,7 +71,8 @@ try {
   step('profile', 'switched to the new library')
 
   // Write targets: two own libraries now, so writes offer a selector.
-  await nav(window, 'Import')
+  await nav(window, 'Tracks')
+  await window.getByRole('link', { name: 'Import tracks' }).click()
   const import_target = window.getByTestId('write-target')
   await import_target.waitFor()
   const import_options = await import_target.locator('option').allInnerTexts()
@@ -77,19 +87,21 @@ try {
   await adopt.getByTestId('write-target').filter({ hasText: /Smoke Mixes$/ }).waitFor()
   await adopt.getByRole('button', { name: 'Adopt', exact: true }).click()
   await toast(window, 'Adopted into Smoke Mixes.')
-  await window.getByLabel('Library', { exact: true }).selectOption({ label: 'Smoke Mixes (own, 1 tracks)' })
+  await nav(window, 'Smoke Mixes')
   await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
   step('adopted', 'V11 Alpha is in Smoke Mixes')
-  await row.click({ button: 'right' })
-  await window.getByRole('menuitem', { name: 'Tags' }).click()
+  await row.getByRole('cell').nth(2).click()
+  await window.keyboard.press('t')
   const editor = window.getByTestId('tag-editor')
   // Viewing Smoke Mixes, the tag goes there by default.
-  if (await editor.getByLabel('Target library').inputValue() !== (await window.getByLabel('Library', { exact: true }).inputValue())) throw new Error('the tag target is not the viewed library')
+  const viewed = await viewed_library(window)
+  if (viewed === '' || await editor.getByLabel('Target library').inputValue() !== viewed) throw new Error('the tag target is not the viewed library')
   await editor.getByLabel('New tag').fill('v11-tag')
   await editor.getByRole('button', { name: 'Add', exact: true }).click()
   await editor.getByRole('button', { name: 'Remove tag v11-tag' }).waitFor()
-  step('tagged', (await editor.locator('li').allInnerTexts()).join(' | '))
-  await editor.getByRole('button', { name: 'Done' }).click()
+  step('tagged', (await editor.getByRole('listitem').allInnerTexts()).join(' | '))
+  await editor.getByLabel('New tag').press('Escape')
+  await editor.waitFor({ state: 'detached' })
   await row.click({ button: 'right' })
   await window.getByRole('menuitem', { name: 'Pin', exact: true }).click()
   await toast(window, 'Pinned: kept on all your devices.')
@@ -101,16 +113,21 @@ try {
   step('pin', 'pinned, then unpinned, from the track menu')
   // The aggregated view says which libraries hold a track; remove it from
   // one own library and the other keeps it.
-  await window.getByLabel('Library', { exact: true }).selectOption({ label: 'All libraries' })
-  await row.getByTestId('track-holders').filter({ hasText: /^in 2 own$/ }).waitFor()
-  step('holders', await row.getByTestId('track-holders').innerText())
+  // Holders show in the inspector: the cursor on the row, then i.
+  await nav(window, 'Tracks')
+  await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
+  await row.getByRole('cell').nth(2).click()
+  await window.keyboard.press('i')
+  const holders = window.getByTestId('inspector').getByTestId('track-holders')
+  await holders.filter({ hasText: /^in 2 own$/ }).waitFor()
+  step('holders', await holders.innerText())
   await row.click({ button: 'right' })
   await window.getByRole('menuitem', { name: 'Remove from library' }).click()
   const remove = window.getByTestId('remove-dialog')
   await remove.getByLabel('Library to remove from').selectOption({ label: 'Smoke Mixes' })
   await remove.getByRole('button', { name: 'Remove', exact: true }).click()
   await toast(window, 'Removed from Smoke Mixes.')
-  await row.getByTestId('track-holders').filter({ hasText: /^in 1 own$/ }).waitFor()
+  await holders.filter({ hasText: /^in 1 own$/ }).waitFor()
   step('removed', 'V11 Alpha left Smoke Mixes and stays in the default library')
   await nav(window, 'Libraries')
 
@@ -137,7 +154,7 @@ try {
 
   await created.getByRole('button', { name: 'Retire' }).click()
   await window.getByRole('dialog').getByRole('button', { name: 'Retire permanently' }).click()
-  await toast(window, /^Retired /)
+  await toast(window, /Retired /)
   await own_rows.filter({ hasText: 'Smoke Mixes' }).and(window.locator('[data-retired=true]')).waitFor()
   const retired_row = own_rows.filter({ hasText: 'Smoke Mixes' })
   if (await retired_row.getByRole('button', { name: /^(Retire|Profile)$/ }).count() !== 0) throw new Error('a retired library still offers Retire or Profile')
@@ -171,6 +188,7 @@ try {
   step('replication policy', 'full, then selective with a filter, then index only')
   await nav(window, 'Identity')
   await window.getByTestId('identity-own-library').filter({ hasText: '(retired)' }).waitFor()
+  await unfold(window, 'Capabilities held')
   await window.getByTestId('held-capabilities').getByText('No other identity has granted you a capability.').waitFor()
   step('held capabilities', await window.getByTestId('held-capabilities').innerText())
   step('identity own libraries', await window.getByTestId('identity-own-library').allInnerTexts())

@@ -47,6 +47,10 @@ const bridge: RecordBridge = {
     if (typeof request_id !== 'string') throw new TypeError('request_id must be a string')
     return await ipcRenderer.invoke(IPC_CHANNELS.get_audio, { cid, request_id })
   },
+  get_image: async ({ cid }: { cid: string }) => {
+    if (typeof cid !== 'string') throw new TypeError('cid must be a string')
+    return await ipcRenderer.invoke(IPC_CHANNELS.get_image, { cid })
+  },
   cancel_audio: async ({ request_id }: { request_id: string }) => {
     if (typeof request_id !== 'string') throw new TypeError('request_id must be a string')
     await ipcRenderer.invoke(IPC_CHANNELS.cancel_audio, { request_id })
@@ -90,6 +94,12 @@ const bridge: RecordBridge = {
   },
   diagnostics: {
     get: async () => await ipcRenderer.invoke(IPC_CHANNELS.diagnostics_get)
+  },
+  clipboard: {
+    write_text: async ({ text }: { text: string }) => {
+      if (typeof text !== 'string') throw new TypeError('text must be a string')
+      return await ipcRenderer.invoke(IPC_CHANNELS.clipboard_write_text, { text })
+    }
   },
   updates: {
     set_channel: async (channel: UpdateChannel) => {

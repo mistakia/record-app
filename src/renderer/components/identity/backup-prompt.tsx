@@ -23,9 +23,10 @@ export const BackupPrompt = () => {
   if (dismissed || !running || !should_prompt_backup({ mode: config?.mode, node_key, last_export: node_key === null ? null : read_last_export(node_key) })) return null
   return (
     <div className={styles.stale} role='status' data-testid='backup-prompt'>
+      <span className={styles.word}>● back up</span>
       <span>Back up your identity: without an export of its key, a lost device means a library you can no longer write to.</span>
-      <button type='button' onClick={() => { navigate('/identity') }}>Back up now</button>
-      <button type='button' onClick={() => { set_dismissed(true) }}>Later</button>
+      <button type='button' data-size='small' data-variant='primary' onClick={() => { navigate('/identity') }}>Back up now</button>
+      <button type='button' data-size='small' onClick={() => { set_dismissed(true) }}>Later</button>
     </div>
   )
 }

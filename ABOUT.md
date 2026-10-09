@@ -33,6 +33,8 @@ The Record ecosystem spans several repos. This one is the user-facing desktop ap
 
 **Rebuild plan**: [[user:task/record/record-app-rebuild.md]] — phases, scope, and the release and update path.
 
+**Design system**: [STYLE.md](STYLE.md) — Paper and Phosphor: the palette and role tokens, the legacy-v0 layout, the keyboard model, and the component prescriptions every renderer change follows. The restyle that applied it is [[user:task/record/record-app-client-style.md]].
+
 **Sibling repositories**:
 
 - [[user:repository/active/record-docs/ABOUT.md]] — protocol specification (canonical for protocol semantics)

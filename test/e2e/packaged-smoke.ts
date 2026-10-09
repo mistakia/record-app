@@ -160,9 +160,12 @@ try {
 
     // Play the seeded track.
     await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: slow(30_000) })
-    await window.getByRole('navigation').getByRole('link', { name: 'Tracks', exact: true }).click()
+    // The sidebar's first Tracks is every library; Enter plays from the
+    // cursor, which a click on the row's title moves there.
+    await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Tracks', exact: true }).first().click()
     const row = window.getByTestId('track-row').filter({ hasText: 'Packaged Smoke' })
-    await row.getByRole('button', { name: 'Packaged Smoke', exact: true }).click()
+    await row.getByRole('cell').nth(2).click()
+    await window.keyboard.press('Enter')
     await window.locator('[data-testid=player-bar][data-state=playing]').waitFor({ timeout: slow(30_000) })
     const first = await window.getByTestId('player-position').innerText()
     await window.waitForTimeout(3_000)
@@ -180,7 +183,7 @@ try {
 
     // Masked through Tor (spec §8.3.5): the node relaunches through the
     // bundled tor from Resources/bin and listens on, and advertises, nothing.
-    await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+    await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Settings', exact: true }).click()
     await window.getByTestId('network-privacy').getByRole('radio', { name: /Masked through Tor/ }).check()
     const masked = await wait_for(async () => {
       const state = await bundled_state(window)
@@ -195,7 +198,7 @@ try {
     step('bundled tor', { pids: tor_pids })
     if (tor_pids.length !== 1) throw new Error(`expected one bundled tor, found ${tor_pids.length}`)
 
-    await window.getByRole('navigation').getByRole('link', { name: 'Diagnostics', exact: true }).click()
+    // Diagnostics is a section of the Settings page already shown.
     step('diagnostics', (await window.getByTestId('diagnostics').innerText()).split('\n').slice(0, 30).join(' | '))
     if (console_errors.length > 0) throw new Error(`renderer console errors:\n${console_errors.join('\n')}`)
     await browser.close()

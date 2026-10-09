@@ -1,26 +1,6 @@
-:root {
-  color-scheme: light dark;
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-  font-size: 14px;
-  --border: rgb(128 128 128 / 30%);
-  --muted: rgb(128 128 128);
-  --accent: #3d7eff;
-  --danger: #d9534f;
-  --warning: #c98a00;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
-}
-
-button {
-  font: inherit;
-  cursor: pointer;
-}
+@import './styles/fonts.css';
+@import './styles/palette.css';
+@import './styles/keyframes.css';
+@import './styles/themes.css';
+@import './styles/screen.css';
+@import './styles/base.css';

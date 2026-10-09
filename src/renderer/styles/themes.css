@@ -1,0 +1,107 @@
+/* Role tokens (STYLE.md § Token Architecture). Components read only these.
+   A theme maps roles to primitives under :root[data-theme]; a screen is a
+   scope, not a theme, and re-maps the same roles to phosphor so anything
+   inside it renders as phosphor with no screen-specific CSS of its own. */
+
+:root {
+  --font-mono: 'Commit Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-display: 'Departure Mono', 'Commit Mono', ui-monospace, monospace;
+
+  --font-size-xxs: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-reading: 15px;
+  --font-size-xl: 18px;
+  --font-size-display: 24px;
+
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-base: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  --radius-overlay: 2px;
+  --transition-fast: 0.15s ease;
+  --ease-pane: cubic-bezier(0.32, 0.72, 0, 1);
+  --transition-pane: 0.28s var(--ease-pane);
+
+  --sidebar-width: 180px;
+  --page-head-height: 40px;
+  --player-height: 72px;
+  --inspector-width: 320px;
+  --row-height: 36px;
+}
+
+:root[data-theme='paper'] {
+  color-scheme: light;
+
+  --color-surface: var(--paper-100);
+  --color-surface-solid: var(--paper-100);
+  --color-surface-sunken: var(--paper-200);
+  --color-surface-raised: var(--paper-50);
+  --color-surface-hover: var(--breadcrumb-a06);
+  --color-surface-cursor: var(--breadcrumb-a10);
+  --color-text: var(--ink-900);
+  --color-text-secondary: var(--ink-600);
+  --color-text-tertiary: var(--ink-400);
+  --color-border: var(--paper-400);
+  --color-border-light: var(--paper-300);
+  --color-paper-texture: var(--paper-texture);
+  --color-selected: var(--breadcrumb-700);
+  --color-selected-bg: var(--breadcrumb-a12);
+  --color-accent: var(--vermilion-500);
+  --color-accent-wash: var(--vermilion-a10);
+  --color-on-accent: var(--ink-white);
+  --color-backdrop: var(--ink-veil);
+  --color-focus-ring: var(--vermilion-a35);
+
+  --color-error: var(--ink-red);
+  --color-warning: var(--ink-amber);
+  --color-success: var(--ink-green);
+  --color-banner-error-bg: color-mix(in srgb, var(--color-error) 10%, var(--color-surface-solid));
+  --color-banner-warning-bg: color-mix(in srgb, var(--color-warning) 12%, var(--color-surface-solid));
+
+  --shadow-overlay: 0 4px 12px var(--shadow-ink);
+  --focus-ring: 0 0 0 2px var(--color-focus-ring);
+  --text-glow: none;
+  --text-glow-display: none;
+}
+
+/* The screen scope: base's CRT in record vermilion. Monochrome, so error,
+   warning, and success are all phosphor; the words carry the state. */
+.screen {
+  --color-surface: var(--glass-surface);
+  --color-surface-solid: var(--glass-solid);
+  --color-surface-sunken: var(--glass-solid);
+  --color-surface-raised: var(--glass-solid);
+  --color-surface-hover: var(--vermilion-a08);
+  --color-surface-cursor: var(--vermilion-a12);
+  --color-text: var(--vermilion-500);
+  --color-text-secondary: var(--vermilion-a60);
+  --color-text-tertiary: var(--vermilion-a42);
+  --color-border: var(--vermilion-a26);
+  --color-border-light: var(--vermilion-a14);
+  --color-paper-texture: transparent;
+  --color-selected: var(--vermilion-500);
+  --color-selected-bg: var(--vermilion-a12);
+  --color-accent: var(--vermilion-500);
+  --color-accent-wash: var(--vermilion-a12);
+  --color-on-accent: var(--vermilion-500);
+  --color-backdrop: var(--glass-shade);
+  --color-focus-ring: var(--vermilion-a35);
+
+  --color-error: var(--vermilion-500);
+  --color-warning: var(--vermilion-500);
+  --color-success: var(--vermilion-500);
+  --color-banner-error-bg: var(--vermilion-a08);
+  --color-banner-warning-bg: var(--vermilion-a08);
+
+  --shadow-overlay: none;
+  --focus-ring: 0 0 8px var(--vermilion-a60);
+  --text-glow: var(--glow-text);
+  --text-glow-display: var(--glow-display);
+}

@@ -177,6 +177,8 @@ export interface RecordBridge {
   // request_id names the download so cancel_audio can abort it.
   get_audio: (input: { cid: string, request_id: string }) => Promise<NodeResult<ArrayBuffer>>
   cancel_audio: (input: { request_id: string }) => Promise<void>
+  // Artwork and avatars by CID (GET /images/{cid}), with their type.
+  get_image: (input: { cid: string }) => Promise<NodeResult<{ data: ArrayBuffer, mime: string }>>
   events: {
     get_state: () => Promise<EventsState>
     reconnect_now: () => Promise<void>
@@ -221,6 +223,11 @@ export interface RecordBridge {
   diagnostics: {
     get: () => Promise<Diagnostics>
   }
+  // Copies a public value (an address, a CID); the renderer holds no
+  // clipboard permission. The exported key has its own expiring channel.
+  clipboard: {
+    write_text: (input: { text: string }) => Promise<NodeResult<null>>
+  }
   updates: {
     // The update channel (spec §8.2.5) the app checks. Read-side is the
     // Diagnostics payload (the poll carries it), so this changes it.
@@ -247,6 +254,7 @@ export const IPC_CHANNELS = {
   request: 'record:request',
   get_audio: 'record:get-audio',
   cancel_audio: 'record:cancel-audio',
+  get_image: 'record:get-image',
   events_get_state: 'record:events:get-state',
   events_reconnect_now: 'record:events:reconnect-now',
   events_message: 'record:events:message',
@@ -265,6 +273,7 @@ export const IPC_CHANNELS = {
   bundled_choose_data_dir: 'record:bundled:choose-data-dir',
   bundled_set_network_privacy: 'record:bundled:set-network-privacy',
   diagnostics_get: 'record:diagnostics:get',
+  clipboard_write_text: 'record:clipboard:write-text',
   updates_set_channel: 'record:updates:set-channel',
   snapshot_load: 'record:snapshot:load',
   snapshot_update: 'record:snapshot:update',

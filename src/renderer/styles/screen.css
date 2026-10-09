@@ -1,0 +1,87 @@
+/* The CRT glass (STYLE.md § Screen effects), from base's crt-terminal.styl.
+   A screen is small and bounded: components/common/screen.tsx renders the
+   .screen scope and its aria-hidden .screen__glass child, and pauses the
+   flicker while the document is hidden. */
+
+:root {
+  --glow-text: -0.4px 0 rgba(0, 40, 255, 0.26), 0.4px 0 rgba(255, 0, 70, 0.2), 0 0 1px rgba(255, 73, 47, 0.62),
+    0 0 6px rgba(255, 73, 47, 0.22), 0 0 14px rgba(255, 73, 47, 0.11);
+  --glow-display: -0.4px 0 rgba(0, 40, 255, 0.3), 0.4px 0 rgba(255, 0, 70, 0.24), 0 0 1px rgba(255, 73, 47, 0.95),
+    0 0 8px rgba(255, 73, 47, 0.45), 0 0 20px rgba(255, 73, 47, 0.22);
+  --scanlines: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.32) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.14) 0 1px, transparent 1px 3px);
+  --vignette: radial-gradient(120% 100% at 50% 45%, transparent 52%, var(--glass-shade) 100%);
+}
+
+.screen {
+  position: relative;
+  isolation: isolate;
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-shadow: var(--text-glow);
+  box-shadow: inset 0 0 40px var(--glass-shade);
+}
+
+/* The screen's content sits above the glass. */
+.screen > :not(.screen__glass) {
+  position: relative;
+  z-index: 1;
+}
+
+.screen__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.screen__glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--scanlines);
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+  animation: crt-flicker 5.5s steps(1, end) infinite;
+}
+
+.screen__glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--vignette);
+}
+
+.screen[data-paused] .screen__glass::before {
+  animation-play-state: paused;
+}
+
+/* Glass laid over an image (queue artwork): the image keeps its colors. */
+.screen__glass--over {
+  z-index: 2;
+}
+
+/* Departure Mono screen label, base's poster tell. */
+.screen-label {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.screen-label::before {
+  content: '// ';
+}
+
+/* On air: a pulsing phosphor dot before live labels. */
+.on-air::before {
+  content: '';
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin: 0 0.5em 0.12em 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+  animation: crt-pulse 2s ease-in-out infinite;
+}

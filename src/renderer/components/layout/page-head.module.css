@@ -1,0 +1,118 @@
+.head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: var(--page-head-height);
+  padding: 0 var(--space-lg);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+:global(:root[data-platform='mac']) .head {
+  -webkit-app-region: drag;
+}
+
+.head a,
+.head button {
+  -webkit-app-region: no-drag;
+}
+
+.title {
+  overflow: hidden;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-base);
+  width: 100%;
+}
+
+.identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--font-size-reading);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: text;
+}
+
+.chip {
+  flex: none;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Base's tui tabline: the active tab in reverse video. */
+.tabs {
+  display: flex;
+  border: 1px solid var(--color-selected);
+}
+
+.tabs a {
+  padding: 0 var(--space-sm);
+  color: var(--color-selected);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+  line-height: 20px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.tabs a + a {
+  border-left: 1px solid var(--color-selected);
+}
+
+.tabs a[aria-selected='true'] {
+  background: var(--color-selected);
+  color: var(--color-surface-solid);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-base);
+  min-width: 0;
+}
+
+.replication {
+  width: 64px;
+  height: 1px;
+  background: var(--color-border-light);
+}
+
+.replication span {
+  display: block;
+  height: 100%;
+  background: var(--color-text-secondary);
+  transform-origin: left;
+}
+
+.counts {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pulse {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}

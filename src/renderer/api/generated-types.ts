@@ -28,7 +28,7 @@ export interface paths {
                     /** @description Randomize result order (overrides sort). */
                     shuffle?: boolean;
                     /** @description Sort field. Whitelisted to prevent injection. */
-                    sort?: "title" | "artist" | "album" | "bpm" | "duration" | "added_at";
+                    sort?: "title" | "artist" | "album" | "bpm" | "duration" | "bitrate" | "listen_count" | "added_at";
                     order?: "asc" | "desc";
                 };
                 header?: never;
@@ -1091,7 +1091,7 @@ export interface paths {
                         name?: string | null;
                         bio?: string | null;
                         location?: string | null;
-                        /** @description CID of an image blob. */
+                        /** @description CID of an image blob, served by `/images/{cid}`. */
                         avatar?: string | null;
                         capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
@@ -1902,6 +1902,107 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/images/{cid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description CID of an image blob: a `Track.artwork` element or a library's
+                 *     `avatar`. Accepts any valid CID string, as `/audio/{cid}` does.
+                 */
+                cid: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Fetch an image blob by CID.
+         * @description Reads the local content store and, on a networked node, fetches
+         *     missing blocks from peers, as `/audio/{cid}` does. Serves only a
+         *     blob of at most 16 MiB (16777216 bytes) whose first 4100 bytes
+         *     sniff, via file-type, as an `image/*` MIME type, which becomes
+         *     its `Content-Type`; any other blob is 404, so the route is not a
+         *     generic blob fetch. A node SHOULD check the size from the blob's
+         *     root block before fetching the rest. No Range support. CIDs are
+         *     immutable, so the response is cacheable indefinitely. No
+         *     side-effects: the blocks a GET fetched are not pinned or kept.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /**
+                     * @description CID of an image blob: a `Track.artwork` element or a library's
+                     *     `avatar`. Accepts any valid CID string, as `/audio/{cid}` does.
+                     */
+                    cid: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The whole image. */
+                200: {
+                    headers: {
+                        "Content-Type"?: string;
+                        "Content-Length"?: number;
+                        "Cache-Control"?: string;
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/*": string;
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+                404: components["responses"]["NotFound"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /**
+         * Check local availability of an image blob.
+         * @description Returns 200 when GET would serve the blob from the local content
+         *     store alone, 404 otherwise. Side-effect-free.
+         */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /**
+                     * @description CID of an image blob: a `Track.artwork` element or a library's
+                     *     `avatar`. Accepts any valid CID string, as `/audio/{cid}` does.
+                     */
+                    cid: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Locally available as an image. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Unauthorized"];
+                /** @description Not in the local content store, or not an image. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/resolve": {
         parameters: {
             query?: never;
@@ -2009,7 +2110,7 @@ export interface components {
             codec?: string | null;
             sample_rate?: number | null;
             lossless?: boolean | null;
-            /** @description CIDs of album-art blobs. */
+            /** @description CIDs of album-art blobs, served by `/images/{cid}`. */
             artwork?: string[];
             /** @description External source pointers per protocol spec §2.4.2. */
             resolvers?: components["schemas"]["ResolverEntry"][];
@@ -2051,7 +2152,10 @@ export interface components {
             name?: string | null;
             bio?: string | null;
             location?: string | null;
-            /** @description CID of the library's avatar image (protocol spec §2.6). */
+            /**
+             * @description CID of the library's avatar image (protocol spec §2.6), served
+             *     by `/images/{cid}`.
+             */
             avatar?: string | null;
             /**
              * @description Display alias from the identity's link to this library (spec

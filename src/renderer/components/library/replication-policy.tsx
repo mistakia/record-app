@@ -120,7 +120,7 @@ export const ReplicationPolicyDialog = ({ library, on_close }: { library: Librar
         </p>
         <div className={styles.actions}>
           <button type='button' onClick={on_close}>Cancel</button>
-          <button type='button' disabled={!writes_allowed || saving || !known || !filter_ok || policy.data === undefined} onClick={() => { save().catch(() => {}) }}>
+          <button type='button' data-variant='primary' disabled={!writes_allowed || saving || !known || !filter_ok || policy.data === undefined} onClick={() => { save().catch(() => {}) }}>
             {saving ? 'Saving' : 'Save'}
           </button>
         </div>

@@ -23,18 +23,20 @@ export const BundledBanner = () => {
   if (mode !== 'bundled' || bundled === null || bundled.status === 'running' || bundled.status === 'stopped') return null
 
   if (bundled.status === 'starting') {
-    return <div className={styles.stale} role='status' data-testid='bundled-banner' data-status='starting'>Starting the bundled node.</div>
+    return <div className={styles.stale} role='status' data-testid='bundled-banner' data-status='starting'><span className={styles.word}>● starting</span> Starting the bundled node.</div>
   }
   if (restarting) {
     const seconds = Math.max(0, Math.ceil(((bundled.retry_at_ms ?? now_ms) - now_ms) / 1000))
     return (
       <div className={styles.stale} role='status' data-testid='bundled-banner' data-status='restarting'>
+        <span className={styles.word}>● restarting</span>
         {bundled.error} Restarting{seconds > 0 ? ` in ${seconds} s` : ''} (restart {bundled.failed_restarts} of {MAX_FAILED_RESTARTS}).
       </div>
     )
   }
   return (
     <div className={styles.unreachable} role='alert' data-testid='bundled-banner' data-status='failed'>
+      <span className={styles.word}>!! node stopped</span>
       <span>
         {bundled.error} Its data is in <code>{bundled.data_dir}</code>.
         {bundled.stderr_tail !== null && (
@@ -44,8 +46,8 @@ export const BundledBanner = () => {
           </details>
         )}
       </span>
-      <button type='button' onClick={() => { window.record.bundled.restart().catch(() => {}) }}>Retry</button>
-      <button type='button' onClick={() => { window.record.bundled.open_data_dir().catch(() => {}) }}>Open data folder</button>
+      <button type='button' data-size='small' onClick={() => { window.record.bundled.restart().catch(() => {}) }}>Retry</button>
+      <button type='button' data-size='small' onClick={() => { window.record.bundled.open_data_dir().catch(() => {}) }}>Open data folder</button>
     </div>
   )
 }

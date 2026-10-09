@@ -41,6 +41,7 @@ describe('build_api_path', () => {
 
   test('refuses routes with a dedicated channel', () => {
     expect(build_api_path({ method: 'get', path_template: '/audio/{cid}', params: { cid: 'bafy' } }).ok).toBe(false)
+    expect(build_api_path({ method: 'get', path_template: '/images/{cid}', params: { cid: 'bafy' } }).ok).toBe(false)
     expect(build_api_path({ method: 'post', path_template: '/import/file' }).ok).toBe(false)
   })
 

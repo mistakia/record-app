@@ -1,0 +1,75 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+}
+
+.modes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.modes label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.field input {
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.success,
+.error,
+.warning {
+  overflow-wrap: anywhere;
+}
+
+.success {
+  color: var(--color-success);
+}
+
+.success::before {
+  content: '● ';
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.error::before {
+  content: '!! ';
+}
+
+.warning {
+  color: var(--color-warning);
+}
+
+.token_status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+}

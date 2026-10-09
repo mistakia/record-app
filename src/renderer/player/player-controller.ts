@@ -7,11 +7,14 @@ import { create_audio_engine, type EngineTrack } from './audio-engine.ts'
 import { create_listen_recorder } from './listen-recorder.ts'
 import {
   add_entries,
+  clear_queued,
   current_entry,
   EMPTY_QUEUE,
   jump_to,
   move_entry,
+  nudge_entry,
   peek_next,
+  place_entry,
   remove_entry,
   set_entries,
   set_repeat,
@@ -26,7 +29,7 @@ import type { NodeFailure } from '#shared/bridge.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { store } from '#renderer/store/index.ts'
-import { cued_position_changed, engine_updated, queue_changed } from '#renderer/store/player.ts'
+import { cued_position_changed, engine_updated, queue_changed, source_changed, type PlaySource } from '#renderer/store/player.ts'
 
 // Previous restarts the current track instead when this far into it.
 const RESTART_THRESHOLD_SECONDS = 3
@@ -79,7 +82,13 @@ const to_entry = ({ track, library_address }: { track: Track, library_address: s
   title: track.title ?? null,
   artist: track.artist ?? null,
   duration_seconds: track.duration_seconds ?? null,
-  library_address
+  library_address,
+  content_cid: track.content_cid,
+  codec: track.codec ?? null,
+  bitrate: track.bitrate ?? null,
+  artwork: track.artwork?.[0] ?? null,
+  tags: [...new Set(track.tags.map(({ tag }) => tag))],
+  have_track: track.have_track
 })
 
 // Tells the engine what follows the current entry, for the gapless splice.
@@ -147,9 +156,15 @@ setInterval(() => {
   if (writes_allowed && recorder.pending_count() > 0) recorder.flush_pending()
 }, LISTEN_FLUSH_INTERVAL_MS)
 
-export const play_tracks = ({ tracks, start_index, library_address }: { tracks: Track[], start_index: number, library_address: string }): void => {
+export const play_tracks = ({ tracks, start_index, library_address, source = null }: {
+  tracks: Track[]
+  start_index: number
+  library_address: string
+  source?: PlaySource | null
+}): void => {
   const entries = tracks.map((track) => to_entry({ track, library_address }))
   store.dispatch(queue_changed(set_entries({ queue: queue(), entries, start_index })))
+  store.dispatch(source_changed(source))
   play_current()
 }
 
@@ -213,6 +228,16 @@ export const move_in_queue = ({ from, to }: { from: number, to: number }): void 
   commit_queue(move_entry({ queue: queue(), from, to }))
 }
 
+export const clear_playing_next = (): void => { commit_queue(clear_queued(queue())) }
+
+export const nudge_in_queue = ({ queue_id, direction }: { queue_id: string, direction: 1 | -1 }): void => {
+  commit_queue(nudge_entry({ queue: queue(), queue_id, direction }))
+}
+
+export const place_in_queue = ({ queue_id, list, offset }: { queue_id: string, list: 'queued' | 'source', offset: number }): void => {
+  commit_queue(place_entry({ queue: queue(), queue_id, list, offset }))
+}
+
 export const set_repeat_mode = (repeat: RepeatMode): void => { commit_queue(set_repeat({ queue: queue(), repeat })) }
 
 export const toggle_shuffle_mode = (): void => { commit_queue(toggle_shuffle({ queue: queue() })) }
@@ -233,4 +258,5 @@ export const stop_playback = (): void => {
   engine.stop()
   const { repeat, shuffle } = queue()
   commit_queue({ ...EMPTY_QUEUE, repeat, shuffle })
+  store.dispatch(source_changed(null))
 }

@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { app, BrowserWindow, powerMonitor, session } from 'electron'
 
 import { IPC_CHANNELS } from '#shared/bridge.ts'
+import { install_app_menu } from './app-menu.ts'
 import { APP_ORIGIN, register_app_scheme, serve_app_files } from './app-protocol.ts'
 import { open_connection_store } from './connection-store.ts'
 import { register_ipc } from './ipc.ts'
@@ -59,6 +60,7 @@ const start = async (): Promise<void> => {
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => { callback(false) })
   serve_app_files(RENDERER_ROOT)
   const user_data = app.getPath('userData')
+  install_app_menu({ user_data, logs_dir: logs_dir(user_data) })
   const store = await open_connection_store({ file_path: join(user_data, 'connection.json') })
   const snapshots = await open_snapshot_store({
     snapshot_path: join(user_data, 'snapshot.json'),

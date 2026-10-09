@@ -1,13 +1,86 @@
-.panel {
-  max-height: 40vh;
-  overflow: auto;
-  border-top: 1px solid var(--border);
-  padding: 8px 16px;
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  animation: slide-up 0.28s var(--ease-pane);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 60fr 40fr;
+  height: 100%;
+  min-height: 0;
+}
+
+.art {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-base);
+  padding: var(--space-xl);
+}
+
+.collapse {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  font-size: var(--font-size-xl);
+}
+
+.art_frame {
+  position: relative;
+}
+
+.now {
+  flex-direction: column;
+  gap: var(--space-xxs);
+  color: var(--color-text);
+  text-transform: none;
+}
+
+.now_title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-display);
+  text-shadow: var(--text-glow-display);
+}
+
+.lists {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--space-lg);
+  overflow-y: auto;
+  padding: var(--space-lg) var(--space-lg) var(--space-lg) 0;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.clear {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.flag {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .empty {
-  margin: 0;
-  color: var(--muted);
+  padding: var(--space-sm) 0;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
 }
 
 .list {
@@ -17,31 +90,54 @@
 }
 
 .entry {
-  display: flex;
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr) 2ch 6ch;
   align-items: center;
-  gap: 6px;
-  padding: 3px 0;
-  border-bottom: 1px solid var(--border);
+  gap: var(--space-sm);
+  height: 48px;
+  border-bottom: 1px solid var(--color-border-light);
+  cursor: default;
 }
 
-.current .title {
-  color: var(--accent);
-  font-weight: 600;
+.entry:hover,
+.entry:focus-visible {
+  outline: none;
+  background: var(--color-surface-hover);
 }
 
-.title {
-  flex: 1;
+.play,
+.remove {
+  visibility: hidden;
+}
+
+.entry:hover .play,
+.entry:focus-visible .play,
+.entry:hover .remove,
+.entry:focus-visible .remove {
+  visibility: visible;
+}
+
+.text {
   display: flex;
-  gap: 8px;
   min-width: 0;
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-  text-align: left;
+  flex-direction: column;
 }
 
-.artist,
+.title,
+.artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artist {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
 .duration {
-  color: var(--muted);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }

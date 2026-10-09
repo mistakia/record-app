@@ -44,10 +44,15 @@ export const create_main_window = ({ preload_path, renderer_url }: {
   const window = new BrowserWindow({
     width: 1200,
     height: 800,
-    minWidth: 720,
-    minHeight: 480,
+    minWidth: 900,
+    minHeight: 600,
     title: 'Record',
     show: false,
+    // STYLE.md § OS Surface: the paper color before first paint, so the
+    // window never flashes, and on macOS the traffic lights inset over the
+    // sidebar, whose top is a drag region.
+    backgroundColor: '#f7f7f4',
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 13 } } : {}),
     // enableRemoteModule (§8.10.2) no longer exists: Electron removed the
     // remote module in v14, so it is always off.
     webPreferences: {

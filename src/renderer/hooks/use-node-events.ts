@@ -16,6 +16,7 @@ import { import_event_received } from '#renderer/store/imports.ts'
 import { head_check, HEAD_CHECK_INTERVAL_MS } from '#renderer/store/head-check.ts'
 import { use_app_dispatch, type RootState } from '#renderer/store/index.ts'
 import { reconcile } from '#renderer/store/reconcile.ts'
+import { notice_for_event } from '#renderer/store/event-notices.ts'
 import { notified } from '#renderer/store/notifications.ts'
 import { library_event_received } from '#renderer/store/replication.ts'
 
@@ -61,6 +62,8 @@ export const use_node_events = (): void => {
         const notice = describe_inert({ payload: message.payload, libraries: node_api.endpoints.get_libraries.select()(get_state()).data })
         if (notice !== null) dispatch(notified({ kind: 'error', message: notice }))
       }
+      const notice = notice_for_event({ message, libraries: node_api.endpoints.get_libraries.select()(get_state()).data })
+      if (notice !== null) dispatch(notified(notice))
       if (message.type.startsWith('import:')) dispatch(import_event_received(message))
       else if (message.type.startsWith('library:')) dispatch(library_event_received(message))
     })

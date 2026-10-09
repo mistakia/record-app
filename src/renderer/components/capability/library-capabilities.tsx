@@ -10,6 +10,7 @@ import { useState, type FormEvent } from 'react'
 import styles from './capabilities.module.css'
 import type { Capability } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
+import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
 import { FilterEditor } from '#renderer/components/filter/filter-editor.tsx'
 import { CAPABILITY_FIELDS, describe_filter, filter_problems } from '#renderer/filter/filter-spec.ts'
 import { describe_action, describe_conditions, describe_grantee, ISSUABLE_ACTIONS, parse_grantee_keys } from '#renderer/library/capabilities.ts'
@@ -94,17 +95,20 @@ const IssueForm = ({ address }: { address: string }) => {
       </label>
       {!expiry_ok && <p className={styles.error}>The expiry must be in the future.</p>}
       <div>
-        <button type='submit' disabled={!writes_allowed || busy || !ready}>{busy ? 'Issuing' : 'Issue'}</button>
+        <button type='submit' data-variant='primary' disabled={!writes_allowed || busy || !ready}>{busy ? 'Issuing' : 'Issue'}</button>
       </div>
     </form>
   )
 }
+
+const PREVIEW = 5
 
 export const LibraryCapabilities = ({ address, name, retired }: { address: string, name: string, retired: boolean }) => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const capabilities = node_api.endpoints.get_library_capabilities.useQuery(address)
   const [revoking, set_revoking] = useState<Capability | null>(null)
+  const [show_all, set_show_all] = useState(false)
 
   const revoke = async () => {
     if (revoking === null) return
@@ -114,24 +118,26 @@ export const LibraryCapabilities = ({ address, name, retired }: { address: strin
   }
 
   return (
-    <section className={styles.section} data-testid='library-capabilities'>
-      <h3>Capabilities for {name}</h3>
+    <section className={styles.section} data-testid='library-capabilities' aria-label={`Capabilities for ${name}`}>
       {capabilities.error !== undefined && <p className={styles.error}>{'message' in capabilities.error ? capabilities.error.message : 'The node request failed.'}</p>}
       {capabilities.data?.length === 0 && <p className={styles.muted}>No capabilities issued yet.</p>}
       {capabilities.data !== undefined && capabilities.data.length > 0 && (
         <table className={styles.table}>
           <thead><tr><th>Grantee</th><th>Actions</th><th>Filter</th><th>Conditions</th><th>Issued</th><th>Status</th><th /></tr></thead>
           <tbody>
-            {capabilities.data.map((capability) => (
+            {capabilities.data.slice(0, show_all ? undefined : PREVIEW).map((capability) => (
               <CapabilityRow
                 key={capability.capability_id}
                 capability={capability}
                 lead={describe_grantee(capability.grantee)}
-                action={!retired && capability.status === 'active' && <button type='button' disabled={!writes_allowed} onClick={() => { set_revoking(capability) }}>Revoke</button>}
+                action={!retired && capability.status === 'active' && <button type='button' data-size='small' disabled={!writes_allowed} onClick={() => { set_revoking(capability) }}>Revoke</button>}
               />
             ))}
           </tbody>
         </table>
+      )}
+      {!show_all && (capabilities.data?.length ?? 0) > PREVIEW && (
+        <button type='button' data-variant='ghost' data-size='small' className={styles.more} onClick={() => { set_show_all(true) }}>show {(capabilities.data?.length ?? 0) - PREVIEW} more</button>
       )}
       {retired ? <p className={styles.muted}>This library is retired, so no capability can be issued or revoked in it.</p> : <IssueForm address={address} />}
       <Dialog open={revoking !== null} title='Revoke capability' on_close={() => { set_revoking(null) }}>
@@ -140,10 +146,10 @@ export const LibraryCapabilities = ({ address, name, retired }: { address: strin
           count, including writes on devices that have not yet seen it, which become inert when they do. Writes already made before it stay valid:
           revocation is not retroactive.
         </p>
-        <div className={styles.dialog_actions}>
+        <DialogActions>
           <button type='button' onClick={() => { set_revoking(null) }}>Cancel</button>
-          <button type='button' onClick={() => { revoke().catch(() => {}) }}>Revoke</button>
-        </div>
+          <button type='button' data-variant='danger' onClick={() => { revoke().catch(() => {}) }}>Revoke</button>
+        </DialogActions>
       </Dialog>
     </section>
   )

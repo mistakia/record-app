@@ -6,8 +6,19 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { EngineSnapshot } from '#renderer/player/audio-engine.ts'
 import { EMPTY_QUEUE, type QueueState } from '#renderer/player/queue-manager.ts'
 
+// Where playback started (STYLE.md § Player bar, "playing from"): the list's
+// route, so a click returns to it with its filters, and how to name it.
+export interface PlaySource {
+  route: string
+  label: string
+  // The active tag filter, if any.
+  subtitle: string | null
+  library_address: string
+}
+
 interface PlayerState extends EngineSnapshot {
   queue: QueueState
+  source: PlaySource | null
 }
 
 const initial_state: PlayerState = {
@@ -19,7 +30,8 @@ const initial_state: PlayerState = {
   played_seconds: 0,
   volume: 1,
   error: null,
-  queue: EMPTY_QUEUE
+  queue: EMPTY_QUEUE,
+  source: null
 }
 
 export const player_slice = createSlice({
@@ -29,6 +41,9 @@ export const player_slice = createSlice({
     engine_updated: (state, action: PayloadAction<EngineSnapshot>) => ({ ...state, ...action.payload }),
     queue_changed: (state, action: PayloadAction<QueueState>) => {
       state.queue = action.payload
+    },
+    source_changed: (state, action: PayloadAction<PlaySource | null>) => {
+      state.source = action.payload
     },
     // From the hibernation snapshot: the current entry is cued at its
     // position, not loaded.
@@ -45,4 +60,4 @@ export const player_slice = createSlice({
   }
 })
 
-export const { cued_position_changed, engine_updated, queue_changed, player_restored } = player_slice.actions
+export const { cued_position_changed, engine_updated, queue_changed, source_changed, player_restored } = player_slice.actions

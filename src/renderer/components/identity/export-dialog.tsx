@@ -43,7 +43,7 @@ export const ExportDialog = ({ node_key, on_close }: { node_key: string, on_clos
               {error !== null && <p className={styles.error}>{error}</p>}
               <div className={styles.actions}>
                 <button type='button' onClick={close}>Cancel</button>
-                <button type='button' onClick={() => { reveal().catch((caught: unknown) => { set_error(String(caught)) }) }}>Show private key</button>
+                <button type='button' data-variant='primary' onClick={() => { reveal().catch((caught: unknown) => { set_error(String(caught)) }) }}>Show private key</button>
               </div>
             </>
             )

@@ -2,37 +2,40 @@
 // replication state and mode (with a one-action change), connect and
 // disconnect, unlink, linking a new one, and the own libraries.
 
-import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Link, useSearchParams } from 'react-router'
 
 import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
-import { Dialog } from '#renderer/components/common/dialog.tsx'
+import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
+import { FramedSection } from '#renderer/components/common/framed-section.tsx'
+import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
 import { OwnLibraries } from '#renderer/components/library/own-libraries.tsx'
-import { mode_label, ReplicationPolicyDialog } from '#renderer/components/library/replication-policy.tsx'
+import { mode_label } from '#renderer/components/library/replication-policy.tsx'
 import { current_progress, is_replicating, library_category, library_name, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
-import { library_connection_requested, library_linked } from '#renderer/store/replication.ts'
-import { library_selected } from '#renderer/store/ui.ts'
+import { library_linked } from '#renderer/store/replication.ts'
+import { tracks_route } from '#renderer/routes.ts'
 import { report_write } from '#renderer/store/write.ts'
 import { describe_scope } from '#renderer/library/capabilities.ts'
 import { use_left_libraries } from '#renderer/library/left-libraries.ts'
 
-const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink, on_policy }: {
+const PREVIEW = 5
+
+const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions }: {
   library: Library
   libraries_fetched_at: number | undefined
   now: number
-  on_unlink: (library: Library) => void
-  on_policy: (library: Library) => void
+  show_address: boolean
+  actions: ReturnType<typeof use_library_actions>
 }) => {
-  const dispatch = use_app_dispatch()
-  const navigate = useNavigate()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const live_progress = use_app_selector((state) => state.replication.progress[library.address])
   const connected = use_app_selector((state) => state.replication.connected[library.address])
   const linked_at = use_app_selector((state) => state.replication.linked_at[library.address])
+  const [menu, set_menu] = useState<{ x: number, y: number } | null>(null)
   const category = library_category(library)
   const held = node_api.endpoints.get_held_capabilities.useQuery(undefined, { skip: category !== 'shared' })
   const node_key = use_app_selector((state) => state.connection.config?.node_key ?? null)
@@ -44,27 +47,20 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink, on_policy }
   const progress = current_progress({ library, live_progress, libraries_fetched_at })
   const replicating = is_replicating({ library, progress, linked_at, now })
 
-  const set_connection = (connect: boolean) => {
-    const endpoint = connect ? node_api.endpoints.connect_library : node_api.endpoints.disconnect_library
-    report_write({ dispatch, write: dispatch(endpoint.initiate(library.address)), success: connect ? 'Replication resumed.' : 'Replication paused.' })
-      .then((result) => { if (result !== null) dispatch(library_connection_requested({ address: library.address, connected: connect })) })
-      .catch(() => {})
-  }
-
   return (
     <tr data-testid='library-row' data-category={category}>
       <td>
-        <span className={styles.name}>{library_name(library)}</span>
-        <span className={styles.address}>{library.address}</span>
+        <Link className={styles.name} to={tracks_route({ library_address: library.address })}>{library_name(library)}</Link>
+        {show_address && <span className={styles.address}>{library.address}</span>}
         {scope.map((line) => <span key={line} className={styles.scope} data-testid='shared-scope'>You may: {line}</span>)}
         {left && <span className={styles.scope}>You left this shared library; the app offers no writes to it.</span>}
       </td>
       <td>
-        <span className={`${styles.badge} ${styles[category]}`}>{category}</span>
+        <span className={styles.badge}>{category}</span>
         {library.library_type === 'listens' && <span className={styles.badge}>listens</span>}
         {library.is_retired && <span className={styles.badge}>retired</span>}
       </td>
-      <td>{library.track_count}</td>
+      <td className='tabular'>{library.track_count}</td>
       <td data-testid='replication'>
         {category === 'own'
           ? 'Local'
@@ -77,19 +73,30 @@ const LibraryRow = ({ library, libraries_fetched_at, now, on_unlink, on_policy }
           ? 'None'
           : <span className={styles.mode}>{mode_label(library.replication_mode)}</span>}
         {category !== 'own' && library.is_linked && (
-          <button type='button' className={styles.change} disabled={!writes_allowed} onClick={() => { on_policy(library) }}>Change</button>
+          <button type='button' data-size='small' data-variant='ghost' className={styles.change} disabled={!writes_allowed} onClick={() => { actions.edit_policy(library) }}>Change</button>
         )}
       </td>
-      <td>{library.peer_ids.length}</td>
+      <td className='tabular'>{library.peer_ids.length}</td>
       <td className={styles.actions}>
-        <button type='button' onClick={() => { dispatch(library_selected(library.address)); navigate('/tracks') }}>Tracks</button>
         {category !== 'own' && (
           <>
-            <button type='button' disabled={!writes_allowed || connected === true} onClick={() => { set_connection(true) }}>Connect</button>
-            <button type='button' disabled={!writes_allowed || connected === false} onClick={() => { set_connection(false) }}>Disconnect</button>
+            <button type='button' data-size='small' disabled={!writes_allowed || connected === true} onClick={() => { actions.set_connection(library, true) }}>Connect</button>
+            <button type='button' data-size='small' disabled={!writes_allowed || connected === false} onClick={() => { actions.set_connection(library, false) }}>Disconnect</button>
           </>
         )}
-        {library.is_linked && !library.is_own && <button type='button' disabled={!writes_allowed} onClick={() => { on_unlink(library) }}>Unlink</button>}
+        {library.is_linked && !library.is_own && <button type='button' data-size='small' disabled={!writes_allowed} onClick={() => { actions.request_unlink(library) }}>Unlink</button>}
+        <button
+          type='button'
+          data-variant='glyph'
+          aria-label={`Menu for ${library_name(library)}`}
+          onClick={(event) => {
+            const rect = event.currentTarget.getBoundingClientRect()
+            set_menu({ x: rect.left, y: rect.bottom })
+          }}
+        >
+          …
+        </button>
+        {menu !== null && <ContextMenu x={menu.x} y={menu.y} items={actions.menu_items(library)} on_close={() => { set_menu(null) }} />}
       </td>
     </tr>
   )
@@ -99,10 +106,13 @@ export const Libraries = () => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const libraries = node_api.endpoints.get_libraries.useQuery()
+  const actions = use_library_actions()
+  const [search] = useSearchParams()
+  const link_input = useRef<HTMLInputElement>(null)
   const [address, set_address] = useState('')
   const [alias, set_alias] = useState('')
-  const [unlinking, set_unlinking] = useState<Library | null>(null)
-  const [policy_for, set_policy_for] = useState<Library | null>(null)
+  const [show_all, set_show_all] = useState(false)
+  const [show_addresses, set_show_addresses] = useState(false)
   // Re-evaluated every few seconds so a fresh link's grace period ends.
   const [now, set_now] = useState(Date.now())
   const has_recent_link = use_app_selector((state) => Object.values(state.replication.linked_at).some((at) => Date.now() - at < RECENT_LINK_MS))
@@ -111,6 +121,8 @@ export const Libraries = () => {
     const timer = setInterval(() => { set_now(Date.now()) }, 5_000)
     return () => { clearInterval(timer) }
   }, [has_recent_link])
+  // The sidebar's [+] lands here with ?link=1.
+  useEffect(() => { if (search.get('link') === '1') link_input.current?.focus() }, [search])
 
   const link = async (event: FormEvent) => {
     event.preventDefault()
@@ -127,45 +139,37 @@ export const Libraries = () => {
     set_alias('')
   }
 
-  const unlink = async () => {
-    if (unlinking === null) return
-    const target = unlinking
-    set_unlinking(null)
-    await report_write({ dispatch, write: dispatch(node_api.endpoints.unlink_library.initiate(target.address)), success: `Unlinked ${library_name(target)}.` })
-  }
+  const all = libraries.data ?? []
+  const shown = show_all ? all : all.slice(0, PREVIEW)
 
   return (
     <section className={styles.page}>
-      <h1>Libraries</h1>
-      {libraries.error !== undefined && <p className={styles.error}>{'message' in libraries.error ? libraries.error.message : 'The node request failed.'}</p>}
-      <table className={styles.table}>
-        <thead>
-          <tr><th>Library</th><th>Category</th><th>Tracks</th><th>Replication</th><th>Mode</th><th>Peers</th><th /></tr>
-        </thead>
-        <tbody>
-          {libraries.data?.map((library) => (
-            <LibraryRow key={library.id} library={library} libraries_fetched_at={libraries.fulfilledTimeStamp} now={now} on_unlink={set_unlinking} on_policy={set_policy_for} />
-          ))}
-        </tbody>
-      </table>
-      <form className={styles.link} onSubmit={(event) => { link(event).catch(() => {}) }}>
-        <h2>Link a library</h2>
-        <input aria-label='Library address' placeholder='/record/<manifest-cid>/<name>' spellCheck={false} value={address} onChange={(event) => { set_address(event.target.value) }} />
-        <input aria-label='Alias' placeholder='Alias (optional)' maxLength={128} value={alias} onChange={(event) => { set_alias(event.target.value) }} />
-        <button type='submit' disabled={!writes_allowed || address.trim() === ''}>Link</button>
-      </form>
+      {libraries.error !== undefined && <p className={styles.error}>!! {'message' in libraries.error ? libraries.error.message : 'The node request failed.'}</p>}
+      <FramedSection title='Libraries' count={all.length} width='full' testid='libraries-section'>
+        <table className={styles.table}>
+          <thead>
+            <tr><th>Library</th><th>Category</th><th>Tracks</th><th>Replication</th><th>Mode</th><th>Peers</th><th /></tr>
+          </thead>
+          <tbody>
+            {shown.map((library) => (
+              <LibraryRow key={library.id} library={library} libraries_fetched_at={libraries.fulfilledTimeStamp} now={now} show_address={show_addresses} actions={actions} />
+            ))}
+          </tbody>
+        </table>
+        {all.length > shown.length && <button type='button' data-variant='ghost' data-size='small' className={styles.more} onClick={() => { set_show_all(true) }}>show {all.length - shown.length} more</button>}
+        <button type='button' data-variant='ghost' data-size='small' className={styles.more} aria-pressed={show_addresses} onClick={() => { set_show_addresses(!show_addresses) }}>
+          {show_addresses ? 'hide addresses' : 'show addresses'}
+        </button>
+      </FramedSection>
+      <FramedSection title='Link a library' fold_id='libraries-link'>
+        <form className={styles.link} onSubmit={(event) => { link(event).catch(() => {}) }}>
+          <input ref={link_input} aria-label='Library address' placeholder='/record/<manifest-cid>/<name>' spellCheck={false} value={address} onChange={(event) => { set_address(event.target.value) }} />
+          <input aria-label='Alias' placeholder='Alias (optional)' maxLength={128} value={alias} onChange={(event) => { set_alias(event.target.value) }} />
+          <button type='submit' data-variant='primary' disabled={!writes_allowed || address.trim() === ''}>Link</button>
+        </form>
+      </FramedSection>
       <OwnLibraries />
-      {policy_for !== null && <ReplicationPolicyDialog key={policy_for.address} library={policy_for} on_close={() => { set_policy_for(null) }} />}
-      <Dialog open={unlinking !== null} title='Unlink library' on_close={() => { set_unlinking(null) }}>
-        <p>
-          Unlink {unlinking === null ? '' : library_name(unlinking)}? It leaves every view, and the node drops its replica and any
-          content only it held.{unlinking !== null && unlinking.held_capability_ids.length > 0 && ' Capabilities you hold there stay valid; unlinking revokes nothing.'}
-        </p>
-        <div className={styles.dialog_actions}>
-          <button type='button' onClick={() => { set_unlinking(null) }}>Cancel</button>
-          <button type='button' onClick={() => { unlink().catch(() => {}) }}>Unlink</button>
-        </div>
-      </Dialog>
+      {actions.dialogs}
     </section>
   )
 }

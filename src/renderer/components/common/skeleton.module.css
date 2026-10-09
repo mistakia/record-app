@@ -1,0 +1,20 @@
+.skeleton {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  height: var(--row-height);
+  padding: 0 var(--space-lg) 0 calc(var(--space-sm) + 6ch);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.bar {
+  display: block;
+  height: 12px;
+  background: var(--color-border-light);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}

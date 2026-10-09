@@ -1,0 +1,109 @@
+.pane {
+  display: flex;
+  flex: none;
+  width: var(--inspector-width);
+  min-height: 0;
+  flex-direction: column;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface-solid);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0 var(--space-base);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.kicker {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.head button {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+}
+
+.empty {
+  padding: var(--space-base);
+  color: var(--color-text-tertiary);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  overflow-y: auto;
+  padding: var(--space-base);
+  user-select: text;
+}
+
+.title {
+  font-size: var(--font-size-reading);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.artist {
+  color: var(--color-text-secondary);
+}
+
+.fields,
+.ids {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-xxs) var(--space-sm);
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.fields dt,
+.ids dt {
+  color: var(--color-text-tertiary);
+}
+
+.fields dd,
+.ids dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.ids {
+  font-size: var(--font-size-xs);
+}
+
+.row {
+  display: contents;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.quiet {
+  color: var(--color-text-tertiary);
+}
+
+.summary {
+  font-size: var(--font-size-sm);
+}

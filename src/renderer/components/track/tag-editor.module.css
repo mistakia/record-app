@@ -1,46 +1,102 @@
-.editor {
+.adder {
+  position: fixed;
+  z-index: 30;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.note {
-  margin: 0;
-  color: var(--muted);
+  gap: var(--space-sm);
+  width: 280px;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-overlay);
 }
 
 .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.chip button {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.armed {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.armed button {
+  color: var(--color-error);
+}
+
+.form {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.form input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+}
+
+.suggestions {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.tags li {
+.suggestions li {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  height: 24px;
 }
 
-.other,
-.from {
-  color: var(--muted);
+.suggestions li[aria-selected='true'] {
+  background: var(--color-surface-hover);
 }
 
-.add {
-  display: flex;
-  gap: 8px;
-}
-
-.add input {
+.suggestions button {
   flex: 1;
-  font: inherit;
-  padding: 4px 6px;
+  justify-content: flex-start;
+  height: 100%;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
 }
 
-.actions {
-  display: flex;
-  justify-content: flex-end;
+.key {
+  padding: 0 var(--space-xs);
+  border: none;
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xxs);
+}
+
+.target {
+  font-size: var(--font-size-sm);
+}
+
+.note {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
 }
