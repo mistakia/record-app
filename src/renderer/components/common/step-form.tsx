@@ -1,6 +1,7 @@
 // One step of a guided flow (STYLE.md § Step flows): a kicker with the step
 // count, one question in the display face, one input, one line of hint or
-// echo, and back and continue. Enter continues; Esc goes back.
+// echo, and back and continue. Enter continues, from a checkbox or radio
+// too, which a form does not submit on its own; Esc goes back.
 
 import type { ReactNode } from 'react'
 
@@ -26,7 +27,11 @@ export const StepForm = ({ step, steps, question, children, hint, error, next_la
     data-testid='step-form'
     data-step={step}
     onSubmit={(event) => { event.preventDefault(); if (!next_disabled) on_next() }}
-    onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); on_back() } }}
+    onKeyDown={(event) => {
+      if (event.key === 'Escape') { event.preventDefault(); on_back() }
+      const target = event.target as HTMLInputElement
+      if (event.key === 'Enter' && (target.type === 'checkbox' || target.type === 'radio')) { event.preventDefault(); if (!next_disabled) on_next() }
+    }}
   >
     <p className={styles.kicker}>Step {step} of {steps}</p>
     <h2 className={styles.question}>{question}</h2>

@@ -3,7 +3,7 @@
 // capabilities it has issued. The library is the route's ?library.
 
 import { useState } from 'react'
-import { Navigate, useNavigate, useSearchParams } from 'react-router'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 
 import styles from './library-manage.module.css'
 import type { Library } from '#renderer/api/types.ts'
@@ -13,14 +13,14 @@ import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
 import { can_retire, has_profile, library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
-import { library_route } from '#renderer/routes.ts'
+import { issue_route, library_route } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { report_write } from '#renderer/store/write.ts'
 
 // The own library the route names, once the lists have loaded.
-const use_managed_library = (): { library: Library | undefined, loading: boolean } => {
+export const use_managed_library = (): { library: Library | undefined, loading: boolean } => {
   const [search] = useSearchParams()
   const own = node_api.endpoints.get_own_libraries.useQuery()
   const all = node_api.endpoints.get_libraries.useQuery()
@@ -79,7 +79,11 @@ export const LibrarySharing = () => {
   if (library === undefined) return <section className={styles.page}><NotOwn /></section>
   return (
     <section className={styles.page} data-testid='library-sharing-tab'>
-      <FramedSection title='Who may write' width='full'>
+      <FramedSection
+        title='Who may write'
+        width='full'
+        controls={library.is_retired ? undefined : <Link to={issue_route(library.address)} aria-label='Issue a capability' data-testid='issue-capability'>[issue]</Link>}
+      >
         <LibraryCapabilities key={library.address} address={library.address} name={library_name(library)} retired={library.is_retired} />
       </FramedSection>
     </section>
