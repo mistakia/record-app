@@ -23,8 +23,9 @@ const FIELDS: Array<{ key: keyof AboutDraft, label: string, max: number }> = [
 const or_null = (value: string): string | null => value.trim() === '' ? null : value.trim()
 
 // `note` replaces the heading with a line of explanation, where the
-// surrounding section already names the profile.
-export const AboutEditor = ({ address, note }: { address: string, note?: string }) => {
+// surrounding section already names the profile; `default_name` is what an
+// empty name shows as.
+export const AboutEditor = ({ address, note, default_name }: { address: string, note?: string, default_name?: string | undefined }) => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const about = node_api.endpoints.get_about.useQuery(address)
@@ -64,7 +65,7 @@ export const AboutEditor = ({ address, note }: { address: string, note?: string 
           {label}
           {key === 'bio'
             ? <textarea name={key} maxLength={max} rows={3} value={draft[key]} onChange={(event) => { set_draft({ ...draft, [key]: event.target.value }) }} />
-            : <input name={key} maxLength={max} spellCheck={key !== 'avatar'} value={draft[key]} onChange={(event) => { set_draft({ ...draft, [key]: event.target.value }) }} />}
+            : <input name={key} maxLength={max} spellCheck={key !== 'avatar'} placeholder={key === 'name' ? default_name : undefined} value={draft[key]} onChange={(event) => { set_draft({ ...draft, [key]: event.target.value }) }} />}
         </label>
       ))}
       {!avatar_valid && <p className={styles.error}>The avatar must be the CID of an image already in the node.</p>}

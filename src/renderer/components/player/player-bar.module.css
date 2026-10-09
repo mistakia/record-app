@@ -155,9 +155,15 @@
   color: var(--color-text);
 }
 
-/* Play and pause: legacy's outlined button, square as every control here. */
+/* Play and pause: legacy's outlined button, in a circle, the one round
+   control, so the main action reads apart from the square ones beside it. */
 .transport .toggle {
+  flex-basis: 36px;
+  width: 36px;
+  height: 36px;
+  margin: 0 var(--space-xxs);
   border: 1px solid var(--color-text);
+  border-radius: 50%;
   color: var(--color-text);
 }
 

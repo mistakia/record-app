@@ -12,6 +12,7 @@ import { ExportDialog } from '#renderer/components/identity/export-dialog.tsx'
 import { ImportForm } from '#renderer/components/identity/import-form.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
 import { library_name, own_libraries_of, own_library_address } from '#renderer/components/library/library-category.ts'
+import { key_handle } from '#renderer/identity/default-name.ts'
 import { compressed_public_key, read_last_export, truncate_key } from '#renderer/identity/identity.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -30,6 +31,8 @@ export const Identity = () => {
   const last_export = read_last_export(node_key)
   const own = own_libraries_of({ own: own_libraries.data, libraries: libraries.data })
   const profile_address = own_library_address(own)
+  const public_key_query = node_api.endpoints.get_public_key.useQuery()
+  const handle = public_key_query.data === undefined ? undefined : key_handle(public_key_query.data)
 
   // Chapter 7 serves the public key only together with the private key, so
   // it is read on request, in main, which passes on the public half alone.
@@ -47,7 +50,12 @@ export const Identity = () => {
     <section className={styles.page}>
       {profile_address !== null && (
         <FramedSection title='Profile' testid='identity-profile'>
-          <AboutEditor key={profile_address} address={profile_address} note='The name and avatar you go by. They are your default library’s profile, so peers who link it see them too.' />
+          <AboutEditor
+            key={profile_address}
+            address={profile_address}
+            note={`The name and avatar you go by. They are your default library’s profile, so peers who link it see them too.${handle === undefined ? '' : ` Until you name yourself, you go by ${handle}, from your key.`}`}
+            default_name={handle}
+          />
         </FramedSection>
       )}
       <FramedSection title='Identity' testid='identity-section'>

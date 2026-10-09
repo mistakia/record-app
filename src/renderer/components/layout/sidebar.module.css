@@ -183,14 +183,6 @@
   color: var(--color-selected);
 }
 
-.unnamed {
-  color: var(--color-text-tertiary);
-}
-
-.identity:hover .unnamed {
-  color: var(--color-selected);
-}
-
 .gear {
   display: inline-flex;
   padding: var(--space-xs);

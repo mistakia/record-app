@@ -158,7 +158,7 @@ Whitespace is the primary separator. Prefer a `--space-lg` gap to a rule; use a 
 
 ## Borders, Radii, Shadows
 
-- **Radius** — 0 on every interactive element (buttons, inputs, chips, rows). 2px on overlays. Nothing larger.
+- **Radius** — 0 on every interactive element (buttons, inputs, chips, rows). 2px on overlays. Nothing larger, with two exceptions: the vinyl disc, and the player's play and pause button, a circle so the one main action reads apart from the square controls around it.
 - **Borders** — 1px, role tokens only.
 - **Shadows** — `--shadow-overlay: 0 4px 12px rgba(35,33,29,0.10)` on dialogs, context menus, and toasts on paper. Screens use their inset vignette instead.
 
@@ -194,7 +194,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 - **RECORD** — Tracks (every library, aggregated) and Recently Played (listens).
 - **MY LIBRARY** — Tracks and Libraries of the user's own library. With more than one own active library, MY LIBRARY lists each by name.
 - **LIBRARIES** — linked and held-capability libraries; this list takes the remaining height and scrolls under a sticky heading that hosts `[+]` (link a library). Each row: a 24px avatar, the name, and on hover a `…` that opens the library menu (connect or disconnect, unlink, edit, copy address). A library that is replicating shows a quiet tertiary gauge after its name.
-- **Footer** — the identity's profile and the Settings gear, over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings. The identity has no profile of its own (spec §8.6.9), so it goes by its default own library's About name and avatar; with no name set the avatar is blank and the label reads `add a name` in tertiary. Either opens Identity, whose first section edits that profile. The gear is a 16px hairline SVG (`components/layout/settings-icon.tsx`) in secondary ink, accent on hover and on the Settings page, labelled `Settings`.
+- **Footer** — the identity's profile and the Settings gear, over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings. The identity has no profile of its own (spec §8.6.9), so it goes by its default own library's About name and avatar. Until it is named, it goes by a default read from its public key (`identity/default-name.ts`): a two-word handle (`amber heron`) and a 5×5 mirrored pattern in the avatar, the same on every device, never written to the profile. Either opens Identity, whose first section edits that profile. The gear is a 16px hairline SVG (`components/layout/settings-icon.tsx`) in secondary ink, accent on hover and on the Settings page, labelled `Settings`.
 - Active item: `--color-selected` ink at 600 on the `--color-surface` paper (the item lifts to the page's paper, as legacy's white-on-grey). Hover: `--color-surface-hover`.
 
 ### Page column (paper)
@@ -211,7 +211,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 - 75px, legacy-v0's height and proportions, under the page column only (left edge at the sidebar boundary), full width of that column. Hidden when nothing is playing and the queue is empty; slides up from the bottom over 0.28s when playback starts.
 - Thirds, as legacy (35% / 30% / 35%):
   - **Now playing** — a 40px adopt `★` column, 65px artwork (5px right margin), then title (13px, display glow) and artist (dim) on 14px lines, an 8px uppercase meta line `FLAC · 1411 KBPS`, and the track's tags as 18px chips 8px below, fading out at the right.
-  - **Transport** — legacy's row of 40px controls: repeat (off / all / one, lit when on), shuffle, `|◀`, `▶` or `▮▮` in a 1px outlined square (a spinner while loading), `▶|`, the queue with its queued count as a badge, and history. Under them the timeline: elapsed, a 5px phosphor bar over the buffered span with an 11px square thumb on hover, then duration, 10px tabular.
+  - **Transport** — legacy's row of 40px controls: repeat (off / all / one, lit when on), shuffle, `|◀`, `▶` or `▮▮` in a 36px 1px outlined circle (a spinner while loading), `▶|`, the queue with its queued count as a badge, and history. Under them the timeline: elapsed, a 5px phosphor bar over the buffered span with an 11px square thumb on hover, then duration, 10px tabular.
   - **Playing from** — right-aligned: the volume hairline, then the source (library name, or `ALL TRACKS`, with the active tag filter as a 10px subtitle) over an 8px uppercase `PLAYING FROM`, beside the library's 65px avatar. Clicking either returns to that track list with its filters.
 
 ### Queue (screen overlay)
@@ -322,7 +322,7 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 ### Artwork and avatars
 
 - Artwork with no image is legacy's vinyl disc: a circle in `--color-border` with a centre label in `--color-accent-wash`; an image covers it. The disc is the one round shape on paper, because it depicts an object, not a control.
-- Library and identity avatars are square, 1px `--color-border-light`, falling back to the name's first letter in Departure Mono on `--color-surface-sunken`, and to a blank square when there is no name.
+- Library and identity avatars are square, 1px `--color-border-light`, falling back to the name's first letter in Departure Mono on `--color-surface-sunken`; an unnamed identity shows its key pattern instead.
 - Inside a screen, artwork keeps its own colors under the glass.
 
 ### Library context menu, track context menu
@@ -392,7 +392,7 @@ Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀`
 - Phosphor on paper, or paper colors inside a screen.
 - CRT effects outside a bounded screen in the paper theme.
 - Colored side stripes on any edge.
-- Rounded interactive corners, or any radius above 2px.
+- Rounded interactive corners, or any radius above 2px (the play and pause circle excepted).
 - Box-shadow for elevation.
 - Departure Mono below 18px on paper.
 - A literal font family in a module. Use `--font-mono` or `--font-display`.
