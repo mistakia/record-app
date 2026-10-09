@@ -1902,6 +1902,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Store an image blob, such as a library avatar.
+         * @description Stores the uploaded `file` part in the content store as ingest
+         *     stores artwork: imported as one UnixFS file under the §5.5.1
+         *     profile (spec §6.4.1 step 8) and pinned recursively (step 11).
+         *     `GET /images/{cid}` then serves it, and peers fetch it by CID like
+         *     artwork. The returned `cid` is the base58btc string a library's
+         *     `avatar` takes (`POST /libraries/{address}/about`). Uploading bytes
+         *     the node already holds returns the same CID.
+         *
+         *     The node refuses a `file` over 16 MiB (16777216 bytes) with 413
+         *     and one whose first 4100 bytes do not sniff, via file-type, as an
+         *     `image/*` MIME type with 400, both `VALIDATION_ERROR`: the limits
+         *     `GET /images/{cid}` serves under. It stores nothing for a refused
+         *     request.
+         *
+         *     No library is written, so the request takes no write target.
+         *     Nothing releases the pin: an image no entry references stays
+         *     stored.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Stored and pinned. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoredImage"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                /** @description The `file` part is over 16 MiB. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                500: components["responses"]["InternalError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/images/{cid}": {
         parameters: {
             query?: never;
@@ -2401,6 +2475,12 @@ export interface components {
             import_id: string;
             /** @description Number of files accepted (multipart only). */
             file_count?: number;
+        };
+        StoredImage: {
+            /** @description Base58btc CID of the stored blob. */
+            cid: string;
+            /** @description The sniffed `image/*` MIME type, e.g. `image/png`. */
+            mime: string;
         };
         /**
          * @description Canonical shape per protocol spec §2.4.2. `(extractor, id)` MUST

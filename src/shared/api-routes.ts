@@ -41,6 +41,7 @@ export const API_ROUTES = [
   { method: 'post', path_template: '/import/url' },
   { method: 'get', path_template: '/audio/{cid}' },
   { method: 'head', path_template: '/audio/{cid}' },
+  { method: 'post', path_template: '/images' },
   { method: 'get', path_template: '/images/{cid}' },
   { method: 'head', path_template: '/images/{cid}' },
   { method: 'get', path_template: '/resolve' }
