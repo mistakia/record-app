@@ -9,8 +9,8 @@ export const MAX_LOG_BYTES = 5 * 1024 * 1024
 export const KEPT_LOGS = 3
 const TAIL_LINES = 40
 
-export const create_node_log = ({ log_dir, max_bytes = MAX_LOG_BYTES, kept = KEPT_LOGS }: { log_dir: string, max_bytes?: number, kept?: number }) => {
-  const path = join(log_dir, 'node.log')
+export const create_node_log = ({ log_dir, file_name = 'node.log', max_bytes = MAX_LOG_BYTES, kept = KEPT_LOGS }: { log_dir: string, file_name?: string, max_bytes?: number, kept?: number }) => {
+  const path = join(log_dir, file_name)
   let tail: string[] = []
   mkdirSync(log_dir, { recursive: true })
 

@@ -203,6 +203,27 @@ describe('bundled node manager', () => {
     await manager.stop()
   }, 30_000)
 
+  test('a masked network starts the node through the SOCKS address it is given, listening on nothing (spec 8.4.2, 5.6.2)', async () => {
+    // Nothing answers on port 9, so the node's dials fail; it still runs.
+    const network = async () => ({ privacy: 'masked' as const, config: { mode: 'masked' as const, tor: { socks_address: '127.0.0.1:9' } } })
+    const { manager, root } = await setup({ network })
+    await manager.start()
+    await wait_for(() => manager.get_state().status === 'running', 'running')
+    expect(manager.get_state().network_privacy).toBe('masked')
+    expect(JSON.parse(await readFile(join(root, 'bundled-node.json'), 'utf8'))).toMatchObject({ network: { mode: 'masked', tor: { socks_address: '127.0.0.1:9' } } })
+    const settings = await (await fetch(`${manager.get_state().url as string}/api/settings`)).json() as { addresses: string[], network_mode: string }
+    expect(settings).toMatchObject({ addresses: [], network_mode: 'masked' })
+  })
+
+  test('a network that cannot start fails the launch, and no node runs', async () => {
+    const network = async () => { throw new Error('Tor exited (code 1) before it was ready.') }
+    const { manager, children } = await setup({ network })
+    await manager.start()
+    expect(manager.get_state()).toMatchObject({ status: 'failed', pid: null })
+    expect(manager.get_state().error).toContain('Tor exited')
+    expect(children).toEqual([])
+  })
+
   test('the bundled node never runs a yt-dlp, even one on PATH or in YTDLP_PATH', async () => {
     const { root } = await setup()
     const fake_bin = join(root, 'fake-bin')

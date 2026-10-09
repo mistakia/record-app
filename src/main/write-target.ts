@@ -25,6 +25,7 @@ export const check_write_target = (input: unknown): WriteTargetFields | null => 
 export const TARGETED_WRITES: Record<string, 'body' | 'query'> = {
   'post /tracks': 'body',
   'patch /tracks/{id}': 'body',
+  'post /tracks/{id}/rederive': 'body',
   'delete /tracks/{id}': 'query',
   'post /tags': 'body',
   'delete /tags': 'query',

@@ -221,6 +221,88 @@ export interface paths {
         };
         trace?: never;
     };
+    "/tracks/{id}/rederive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Track id (sha256 of the AcoustID fingerprint, lowercase hex). */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recompute a track's decoded audio fields.
+         * @description Audio re-derivation (spec §6.4.4). The node decodes the audio blob
+         *     it holds for the track and recomputes `duration`,
+         *     `numberOfSamples`, and `bitrate` (spec §6.3.2). When any differs
+         *     from the stored value, it writes a new content object with only
+         *     those fields changed and appends a PUT of it under the same track
+         *     id, which supersedes the current one (spec §4.4.2). Everything
+         *     else, including the envelope's labels, is kept. A track whose
+         *     stored fields already match appends nothing, so the request is
+         *     safe to repeat.
+         *
+         *     The values are computed by the node and never taken from the
+         *     client. Under a capability the write needs `library.append_track`
+         *     (spec §3.5.6).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Track id (sha256 of the AcoustID fingerprint, lowercase hex). */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        library_address?: components["schemas"]["WriteTargetAddress"];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
+                    };
+                };
+            };
+            responses: {
+                /** @description The track as the target library now holds it. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Track"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
+                /**
+                 * @description The target is retired, or the node does not hold the track's
+                 *     current content payload or its audio blob, or the blob decodes
+                 *     to no samples.
+                 */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                500: components["responses"]["InternalError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tracks/{cid}/pin": {
         parameters: {
             query?: never;
@@ -2164,6 +2246,12 @@ export interface components {
             addresses?: string[];
             /** @description record-node build version. */
             version?: string;
+            /**
+             * @description The node's network mode (spec §5.6). In `masked` mode
+             *     `addresses` is empty: the node listens on nothing.
+             * @enum {string}
+             */
+            network_mode?: "public" | "masked" | "relayed";
             /**
              * @description Bandwidth counters. Values are decimal-encoded strings
              *     because the underlying counters are unbounded integers.

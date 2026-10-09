@@ -6,6 +6,7 @@ export const API_ROUTES = [
   { method: 'post', path_template: '/tracks' },
   { method: 'patch', path_template: '/tracks/{id}' },
   { method: 'delete', path_template: '/tracks/{id}' },
+  { method: 'post', path_template: '/tracks/{id}/rederive' },
   { method: 'post', path_template: '/tracks/{cid}/pin' },
   { method: 'delete', path_template: '/tracks/{cid}/pin' },
   { method: 'get', path_template: '/tags' },

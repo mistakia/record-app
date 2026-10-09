@@ -71,6 +71,7 @@ const start = async (): Promise<void> => {
   })
   const manager = create_bundled_node({
     user_data,
+    network_privacy: () => settings.get().network_privacy,
     // The packaged smoke runs the test build's Intel slice under Rosetta,
     // where the node starts several times slower than on a native slice, so
     // only a test build takes a longer startup limit from the environment.

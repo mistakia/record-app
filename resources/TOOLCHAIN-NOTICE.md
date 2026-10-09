@@ -1,6 +1,6 @@
-# Bundled ingest tools
+# Bundled tools
 
-Record runs two command-line programs to import audio files: `ffmpeg` and `fpcalc`. They are separate executables in `Record.app/Contents/Resources/bin`. Record starts them as their own processes and does not link them into itself.
+Record runs two command-line programs to import audio files, `ffmpeg` and `fpcalc`, and one for the "Masked through Tor" network privacy setting, `tor`. They are separate executables in `Record.app/Contents/Resources/bin`. Record starts them as their own processes and does not link them into itself.
 
 ## ffmpeg 7.1.1
 
@@ -18,6 +18,14 @@ This software uses code of [FFmpeg](https://ffmpeg.org), licensed under the [GNU
 - The binary statically includes FFmpeg 4.4.1's libavcodec, libavformat, libavutil, and libswresample, under the LGPL 2.1 or later. As a whole it is therefore under the LGPL 2.1. See [Chromaprint-LICENSE.md](Chromaprint-LICENSE.md).
 - Chromaprint source: <https://github.com/acoustid/chromaprint/releases/download/v1.5.1/chromaprint-1.5.1.tar.gz> (SHA-256 `a1aad8fa3b8b18b78d3755b3767faff9abb67242e01b478ec9a64e190f335e1c`). Its release build script, `package/build.sh`, links FFmpeg 4.4.1 as built by `acoustid/ffmpeg-build` at tag `v4.4.1-1` (commit `f5a226a77e8dd24fa5546ded2f60330a4f3af62b`). That repository's `common.sh` and `build-macos.sh` hold the FFmpeg configure line.
 - FFmpeg 4.4.1 source: <https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.xz> (SHA-256 `eadbad9e9ab30b25f5520fbfde99fae4a92a1ae3c0257a8d68569a4651e30e02`, signed by FFmpeg's release key `FCF9 86EA 15E6 E293 A564 4F10 B432 2F04 D676 58D8`). `ffmpeg-build` downloads the same release as `ffmpeg-4.4.1.tar.bz2`.
+
+## Tor 0.4.9.13
+
+`tor` and `libevent-2.1.7.dylib` are the unmodified binaries of the Tor Project's expert bundle 15.0.24 for macOS, the arm64 and x86_64 builds merged into one universal file each and given an ad-hoc code signature. The bundles are <https://archive.torproject.org/tor-package-archive/torbrowser/15.0.24/tor-expert-bundle-macos-aarch64-15.0.24.tar.gz> (SHA-256 `d47afd04b6c751129978390ad003d74ac8b88adfbb939350f0f89999e6570644`) and <https://archive.torproject.org/tor-package-archive/torbrowser/15.0.24/tor-expert-bundle-macos-x86_64-15.0.24.tar.gz> (SHA-256 `8acb0b590f6be34084dcb6d84009ac0c61cc7c5261b7a19d2ab94845aa9bd5b6`), signed by the Tor Browser Developers key `EF6E 286D DA85 EA2A 4BA7 DE68 4E2C 6E87 9329 8290`, which the build verifies.
+
+- Tor is under the 3-clause BSD license. See [Tor-LICENSE.txt](Tor-LICENSE.txt), which also lists the licenses of the components Tor uses.
+- libevent is under the 3-clause BSD license. See [libevent-LICENSE.txt](libevent-LICENSE.txt).
+- Record starts Tor only while the network privacy setting is Masked through Tor.
 
 ## Source offer
 

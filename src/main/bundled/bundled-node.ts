@@ -17,11 +17,13 @@ import { isAbsolute, join } from 'node:path'
 
 import { app, utilityProcess } from 'electron'
 
-import type { BundledState } from '#shared/bridge.ts'
+import type { BundledState, NetworkPrivacy } from '#shared/bridge.ts'
+import { bundled_network } from './bundled-network.ts'
 import type { SpawnChild } from './child-handle.ts'
 import { create_node_log } from './node-log.ts'
 import { create_node_manager } from './node-manager.ts'
 import { app_marker } from './node-orphan.ts'
+import { create_tor_manager } from './tor-manager.ts'
 
 const CLI_RELATIVE = join('node_modules', 'record-node', 'dist', 'cli.js')
 
@@ -96,19 +98,36 @@ export const save_data_dir = async (user_data: string, data_dir: string): Promis
 export const logs_dir = (user_data: string): string =>
   app.commandLine.hasSwitch('user-data-dir') ? join(user_data, 'logs') : app.getPath('logs')
 
+const toolchain_bin = (app_root: string): string => app.isPackaged ? join(process.resourcesPath, 'bin') : join(app_root, 'toolchain', 'bin')
+
 // The pinned ffmpeg and fpcalc (cli/build-toolchain.sh): Resources/bin in a
 // packaged app, toolchain/bin in a checkout that has built them; otherwise
 // none, and record-node looks on PATH (spec §8.2.6).
 export const bundled_toolchain = (app_root: string): { ffmpeg_path: string, fpcalc_path: string } | null => {
-  const bin = app.isPackaged ? join(process.resourcesPath, 'bin') : join(app_root, 'toolchain', 'bin')
+  const bin = toolchain_bin(app_root)
   const paths = { ffmpeg_path: join(bin, 'ffmpeg'), fpcalc_path: join(bin, 'fpcalc') }
   return existsSync(paths.ffmpeg_path) && existsSync(paths.fpcalc_path) ? paths : null
 }
 
-export const create_bundled_node = ({ user_data, on_state, startup_timeout_ms }: { user_data: string, on_state: (state: BundledState) => void, startup_timeout_ms?: number }) => {
+// The bundled Tor client beside them (spec §8.2.6), never one on PATH: a
+// masked node must not depend on whatever tor the machine happens to have.
+export const bundled_tor = (app_root: string): string | null => {
+  const tor_path = join(toolchain_bin(app_root), 'tor')
+  return existsSync(tor_path) ? tor_path : null
+}
+
+export const create_bundled_node = ({ user_data, network_privacy, on_state, startup_timeout_ms }: {
+  user_data: string
+  network_privacy: () => NetworkPrivacy
+  on_state: (state: BundledState) => void
+  startup_timeout_ms?: number
+}) => {
   const app_root = app.getAppPath()
   const config_path = join(user_data, 'bundled-node.json')
-  return create_node_manager({
+  const tor_path = bundled_tor(app_root)
+  const tor_log = create_node_log({ log_dir: logs_dir(user_data), file_name: 'tor.log' })
+  const tor = tor_path === null ? null : create_tor_manager({ tor_path, data_dir: join(user_data, 'tor'), log: tor_log.append })
+  const manager = create_node_manager({
     spawn_child: spawn_utility_process,
     cli_path: join(app_root, CLI_RELATIVE),
     data_dir: read_data_dir(user_data),
@@ -123,7 +142,20 @@ export const create_bundled_node = ({ user_data, on_state, startup_timeout_ms }:
       const port = read_json(config_path)?.port
       return typeof port === 'number' && port > 0 ? port : null
     },
+    network: bundled_network({ privacy: network_privacy, tor }),
     ...(startup_timeout_ms === undefined ? {} : { startup_timeout_ms }),
     on_state
   })
+  return {
+    ...manager,
+    // Tor stops after the node, which may still be dialing through it.
+    stop: async () => {
+      await manager.stop()
+      await tor?.stop()
+    },
+    kill_now: () => {
+      manager.kill_now()
+      tor?.kill_now()
+    }
+  }
 }
