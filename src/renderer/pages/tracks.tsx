@@ -55,7 +55,10 @@ export const Tracks = () => {
     return () => { clearTimeout(timer) }
   })
 
-  const total = first_page.data?.total ?? 0
+  // This view's own result: data would hold the previous view's (its total
+  // and length) until a new search, tag, or sort comes back from the node.
+  const current = first_page.currentData
+  const total = current?.total ?? 0
   const error = first_page.error ?? libraries.error
   const filtered = filters.query.trim() !== '' || filters.tags.length > 0
   const open_tag = use_tag_navigation()
@@ -90,7 +93,7 @@ export const Tracks = () => {
 
   const shuffle_play = () => {
     toggle_shuffle_mode()
-    const items = first_page.data?.items ?? []
+    const items = current?.items ?? []
     if (!shuffle && items.length > 0) play_tracks({ tracks: items, start_index: Math.floor(Math.random() * items.length), library_address: listen_library })
   }
 
@@ -127,9 +130,9 @@ export const Tracks = () => {
       </div>
       <TagFilter library_address={library_address} selected={filters.tags} on_toggle={(tag) => { go(with_tag_toggled(view, tag)) }} />
       {error !== undefined && <p className={styles.error}>!! {'message' in error ? error.message : 'The node request failed.'}</p>}
-      {first_page.isLoading && first_page.data === undefined
+      {current === undefined && first_page.isFetching && error === undefined
         ? <TrackListSkeleton />
-        : first_page.isSuccess && total === 0
+        : current !== undefined && total === 0
           ? filtered
             ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
             : <EmptyState headline='Empty' detail='No tracks in this view yet. Import some, or link a library.' action={<Link to={ROUTES.import}>Import</Link>} />
