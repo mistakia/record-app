@@ -2,7 +2,7 @@
 
 Guidance for Claude Code working in this repository.
 
-For graph context (sibling Record repos, task directory, protocol spec), see [ABOUT.md](ABOUT.md). For the public overview, see [README.md](README.md).
+For graph context (sibling Record repos, task directory, protocol spec), see [ABOUT.md](ABOUT.md). For the public overview, see [README.md](README.md). For the visual language, layout, and keyboard model every renderer change follows, see [STYLE.md](STYLE.md).
 
 ## Project Overview
 
