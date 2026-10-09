@@ -1,3 +1,7 @@
+/* legacy-v0's player sizing: 75px, thirds of 35% / 30% / 35%, 65px
+   artwork, 40px controls, 13px text on 14px lines, 8px meta, a 5px
+   timeline between 10px times. */
+
 .bar {
   flex: none;
   height: var(--player-height);
@@ -5,102 +9,168 @@
 }
 
 .inner {
-  display: grid;
-  grid-template-columns: 35fr 30fr 35fr;
+  display: flex;
   align-items: center;
-  gap: var(--space-base);
   height: 100%;
-  padding: 0 var(--space-base) 0 var(--space-sm);
 }
 
 .now_playing {
   display: flex;
+  flex: 0 0 35%;
   min-width: 0;
   align-items: center;
-  gap: var(--space-sm);
+  height: 100%;
+  padding: 5px 0;
+  overflow: hidden;
+  font-size: var(--font-size-base);
+}
+
+.adopt {
+  display: flex;
+  flex: 0 0 40px;
+  justify-content: center;
+}
+
+.star {
+  width: 40px;
+  height: 40px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-reading);
+}
+
+.star:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.held {
+  color: var(--color-text);
+  text-shadow: var(--text-glow-display);
+}
+
+.now_playing > :nth-child(2) {
+  flex: none;
+  margin-right: 5px;
 }
 
 .text {
   display: flex;
+  flex: 1;
   min-width: 0;
   flex-direction: column;
+  padding-left: var(--space-xs);
+}
+
+.title,
+.artist {
+  height: 14px;
+  overflow: hidden;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .title {
-  overflow: hidden;
-  font-family: var(--font-display);
-  font-size: var(--font-size-xl);
-  line-height: 1.1;
-  text-overflow: ellipsis;
+  color: var(--color-text);
   text-shadow: var(--text-glow-display);
-  white-space: nowrap;
 }
 
 .artist {
-  overflow: hidden;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .meta {
-  display: flex;
-  gap: var(--space-sm);
   overflow: hidden;
   color: var(--color-text-tertiary);
-  font-size: var(--font-size-xxs);
+  font-size: 8px;
+  line-height: 12px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
+/* Tags as legacy's chips, fading out at the right edge. */
 .tags {
+  position: relative;
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
   overflow: hidden;
-  text-overflow: ellipsis;
-  text-transform: none;
+  -webkit-mask-image: linear-gradient(to right, black 55%, transparent);
+  mask-image: linear-gradient(to right, black 55%, transparent);
+}
+
+.chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-tertiary);
+  font-size: 8px;
+  white-space: nowrap;
 }
 
 .center {
   display: flex;
+  flex: 0 0 30%;
   min-width: 0;
   flex-direction: column;
-  gap: var(--space-xxs);
 }
 
 .transport {
   display: flex;
+  flex: 1;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
+  margin-bottom: 5px;
 }
 
 .transport button {
+  position: relative;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
   color: var(--color-text-secondary);
   font-size: var(--font-size-base);
+}
+
+.transport button svg {
+  display: block;
+  margin: auto;
 }
 
 .transport button[aria-pressed='true'] {
   border-color: transparent;
   background: transparent;
   color: var(--color-text);
-  text-shadow: var(--text-glow-display);
+  filter: drop-shadow(0 0 3px var(--color-accent));
 }
 
 .transport button:hover:not(:disabled) {
   color: var(--color-text);
 }
 
+/* Play and pause: legacy's outlined button, square as every control here. */
 .transport .toggle {
-  min-width: 2.5ch;
+  border: 1px solid var(--color-text);
   color: var(--color-text);
-  font-size: var(--font-size-reading);
 }
 
-.transport .word {
-  font-size: var(--font-size-xxs);
-  letter-spacing: 1px;
-  text-transform: uppercase;
+.badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 2px;
+  background: var(--color-text);
+  color: var(--color-surface-solid);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  line-height: 14px;
+  text-align: center;
 }
 
 .spinner {
@@ -113,42 +183,24 @@
   animation: spin 0.8s linear infinite;
 }
 
-.volume {
-  display: inline-flex;
+.timeline {
+  display: flex;
   align-items: center;
-  gap: var(--space-xs);
 }
 
-.volume input {
-  width: 48px;
-}
-
-.readout {
-  width: 3ch;
+.time {
+  flex: none;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xxs);
   font-variant-numeric: tabular-nums;
 }
 
-.seek_row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.time {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xxs);
-  font-variant-numeric: tabular-nums;
-}
-
-/* The hairline: played in phosphor, the buffered span faint, a square thumb
-   on hover. */
-.seek,
-.volume input {
+/* The timeline: 5px, played in phosphor over the buffered span, a square
+   thumb on hover. */
+.seek {
   flex: 1;
-  height: 10px;
-  margin: 0;
+  height: 11px;
+  margin: 0 5px;
   padding: 0;
   border: none;
   appearance: none;
@@ -157,33 +209,21 @@
 }
 
 .seek::-webkit-slider-runnable-track {
-  height: 2px;
+  height: 5px;
   background:
     linear-gradient(to right, var(--color-text) calc(var(--played) * 100%), transparent 0),
     linear-gradient(to right, var(--color-border) calc(var(--buffered) * 100%), var(--color-border-light) 0);
 }
 
-.volume input::-webkit-slider-runnable-track {
-  height: 1px;
-  background: var(--color-border);
-}
-
-.seek::-webkit-slider-thumb,
-.volume input::-webkit-slider-thumb {
-  width: 10px;
-  height: 10px;
-  margin-top: -4px;
+.seek::-webkit-slider-thumb {
+  width: 11px;
+  height: 11px;
+  margin-top: -3px;
   border: none;
   appearance: none;
   background: var(--color-text);
   opacity: 0;
   transition: opacity var(--transition-fast);
-}
-
-.volume input::-webkit-slider-thumb {
-  width: 6px;
-  margin-top: -4.5px;
-  opacity: 1;
 }
 
 .seek:hover::-webkit-slider-thumb,
@@ -193,15 +233,75 @@
 
 .from {
   display: flex;
+  flex: 0 0 35%;
   min-width: 0;
+  align-items: center;
   justify-content: flex-end;
+  gap: var(--space-base);
+  height: 100%;
+  padding: 5px 0;
+  font-size: var(--font-size-base);
+}
+
+.volume {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.volume input {
+  width: 56px;
+  height: 10px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.volume input::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--color-border);
+}
+
+.volume input::-webkit-slider-thumb {
+  width: 6px;
+  height: 10px;
+  margin-top: -4.5px;
+  border: none;
+  appearance: none;
+  background: var(--color-text);
+}
+
+.readout {
+  width: 3ch;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  font-variant-numeric: tabular-nums;
 }
 
 .source {
-  gap: var(--space-sm);
-  max-width: 100%;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0;
+  height: 100%;
+  padding: 0;
   color: var(--color-text);
+  font-size: var(--font-size-base);
   text-align: right;
+}
+
+.source:hover:not(:disabled) .source_label {
+  color: var(--color-text);
+  text-shadow: var(--text-glow-display);
+}
+
+.source > :last-child {
+  flex: none;
+  margin: 0 var(--space-sm);
 }
 
 .source_text {
@@ -211,24 +311,27 @@
   align-items: flex-end;
 }
 
-.kicker {
-  color: var(--color-text-tertiary);
-  font-family: var(--font-display);
-  font-size: var(--font-size-xs);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
 .source_label {
   max-width: 100%;
   overflow: hidden;
-  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 14px;
   text-overflow: ellipsis;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
 .subtitle {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-size: var(--font-size-xxs);
+}
+
+.kicker {
+  color: var(--color-text-tertiary);
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.source_text:only-child {
+  margin-right: var(--space-sm);
 }

@@ -31,7 +31,7 @@
 
   --sidebar-width: 180px;
   --page-head-height: 40px;
-  --player-height: 72px;
+  --player-height: 75px;
   --inspector-width: 320px;
   --row-height: 36px;
 }
@@ -51,6 +51,9 @@
   --color-border: var(--paper-400);
   --color-border-light: var(--paper-300);
   --color-paper-texture: var(--paper-texture);
+  /* The page's ruled paper as a background layer, fixed to the window so a
+     label masking a stroke rules in step with the page behind it. */
+  --color-surface-ruling: linear-gradient(var(--color-paper-texture) 1px, transparent 1px) 0 0 / 2px 2px fixed;
   --color-selected: var(--breadcrumb-700);
   --color-selected-bg: var(--breadcrumb-a12);
   --color-accent: var(--vermilion-500);
@@ -86,6 +89,7 @@
   --color-border: var(--vermilion-a26);
   --color-border-light: var(--vermilion-a14);
   --color-paper-texture: transparent;
+  --color-surface-ruling: none;
   --color-selected: var(--vermilion-500);
   --color-selected-bg: var(--vermilion-a12);
   --color-accent: var(--vermilion-500);

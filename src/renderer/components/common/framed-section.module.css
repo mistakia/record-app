@@ -31,7 +31,7 @@
 .toggle,
 .controls,
 .count {
-  background: var(--color-surface-solid);
+  background: var(--color-surface-ruling), var(--color-surface-solid);
 }
 
 .title,
@@ -52,7 +52,7 @@
 }
 
 .toggle:hover:not(:disabled) {
-  background: var(--color-surface-solid);
+  background: var(--color-surface-ruling), var(--color-surface-solid);
   color: var(--color-text-secondary);
 }
 
@@ -84,7 +84,7 @@
   height: auto;
   padding: 0;
   border: none;
-  background: var(--color-surface-solid);
+  background: var(--color-surface-ruling), var(--color-surface-solid);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xxs);
   letter-spacing: 0;
@@ -92,7 +92,7 @@
 }
 
 .controls button:hover:not(:disabled) {
-  background: var(--color-surface-solid);
+  background: var(--color-surface-ruling), var(--color-surface-solid);
   color: var(--color-accent);
 }
 

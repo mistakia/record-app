@@ -26,7 +26,7 @@ export const HelpBanner = () => {
   return (
     <div className={styles.banner}>
       <FramedSection
-        title='// help'
+        title='help'
         width='full'
         testid='help-banner'
         controls={<button type='button' aria-label='Dismiss help' onClick={() => { set_dismissed([...dismissed, pathname]) }}>[x]</button>}

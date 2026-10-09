@@ -16,7 +16,12 @@ import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { report_write } from '#renderer/store/write.ts'
 
-export const AdoptDialog = ({ track, viewed_library, on_close }: { track: Track, viewed_library: string, on_close: () => void }) => {
+export const AdoptDialog = ({ track, viewed_library, on_close }: {
+  // The fields adoption reads, so the player bar can adopt its queue entry.
+  track: Pick<Track, 'content_cid' | 'title' | 'library_addresses'>
+  viewed_library: string
+  on_close: () => void
+}) => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const choice = use_write_target({ action: 'library.append_track', exclude: [...(viewed_library === '' ? [] : [viewed_library]), ...(track.library_addresses ?? [])] })
