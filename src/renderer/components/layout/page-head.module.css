@@ -17,6 +17,8 @@
 }
 
 .title {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   font-size: var(--font-size-xl);
   font-weight: 600;

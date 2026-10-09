@@ -1,10 +1,11 @@
 // The 40px page head (STYLE.md § Layout › Page column): a drag region with
 // the page title, or a library's profile header on its track list and its
-// Profile and Sharing tabs.
+// Profile and Sharing tabs, and the page's help on request.
 
 import { useLocation } from 'react-router'
 
 import styles from './page-head.module.css'
+import { HelpButton } from './help.tsx'
 import { LibraryProfileHeader } from './library-profile-header.tsx'
 import { own_libraries_of } from '#renderer/components/library/library-category.ts'
 import { parse_track_view, ROUTES, type LibraryTab } from '#renderer/routes.ts'
@@ -43,6 +44,7 @@ export const PageHead = () => {
       {library !== undefined
         ? <LibraryProfileHeader library={library} tab={tab ?? 'tracks'} />
         : <h1 className={styles.title}>{TITLES[pathname] ?? ''}</h1>}
+      <HelpButton />
     </header>
   )
 }

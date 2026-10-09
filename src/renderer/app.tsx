@@ -7,7 +7,6 @@ import { Toaster } from '#renderer/components/common/toaster.tsx'
 import { BackupPrompt } from '#renderer/components/identity/backup-prompt.tsx'
 import { BundledBanner } from '#renderer/components/layout/bundled-banner.tsx'
 import { ConnectionBanner } from '#renderer/components/layout/connection-banner.tsx'
-import { HelpBanner } from '#renderer/components/layout/help-banner.tsx'
 import { IngestGauge } from '#renderer/components/layout/ingest-gauge.tsx'
 import { PageHead } from '#renderer/components/layout/page-head.tsx'
 import { Sidebar } from '#renderer/components/layout/sidebar.tsx'
@@ -93,7 +92,6 @@ const Shell = ({ configured }: { configured: boolean }) => {
           <ConnectionBanner />
           <BundledBanner />
           <BackupPrompt />
-          <HelpBanner />
           <main className={styles.body}>
             <Routes>
               <Route path={ROUTES.settings} element={<Settings />} />

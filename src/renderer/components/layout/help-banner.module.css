@@ -1,8 +1,0 @@
-.banner {
-  padding: var(--space-base) var(--space-lg) 0;
-}
-
-.text {
-  max-width: 66ch;
-  color: var(--color-text-secondary);
-}

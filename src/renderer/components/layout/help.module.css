@@ -1,0 +1,56 @@
+.help {
+  position: relative;
+  flex: none;
+  margin-left: var(--space-base);
+}
+
+.toggle {
+  height: auto;
+  padding: var(--space-xxs) var(--space-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.toggle[aria-expanded='true'] {
+  color: var(--color-text);
+}
+
+.panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--space-sm));
+  right: 0;
+  display: flex;
+  width: 340px;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-overlay);
+}
+
+.text {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.keys {
+  align-self: flex-start;
+  height: auto;
+  padding: 0;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.keys kbd {
+  margin-left: var(--space-xs);
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border-light);
+  font-family: var(--font-mono);
+}
