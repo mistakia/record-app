@@ -1,6 +1,9 @@
 .shell {
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  /* One row the window's height: an auto row grows to the page's content,
+     and the document then scrolls the sidebar and player bar away with it. */
+  grid-template-rows: minmax(0, 1fr);
   height: 100%;
 }
 
