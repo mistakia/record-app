@@ -1,11 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 
+import { format_age } from '#renderer/components/common/format-age.ts'
 import { is_cid } from '#renderer/components/library/cid.ts'
 import { current_progress, is_replicating, library_category, library_name, own_library_address, parse_library_address, RECENT_LINK_MS, short_address } from '#renderer/components/library/library-category.ts'
 import { pages_for_rows, row_location } from '#renderer/components/track/track-pages.ts'
 import type { Library } from '#renderer/api/types.ts'
 import { DEFAULT_TRACK_FILTERS, track_page_args } from '#renderer/store/api.ts'
-import { import_event_received, import_requested, imports_slice } from '#renderer/store/imports.ts'
+import { finished_imports_cleared, import_event_received, import_requested, imports_slice } from '#renderer/store/imports.ts'
 import { library_event_received, library_linked, live_progress_cleared, replication_slice } from '#renderer/store/replication.ts'
 import { library_selected, ui_slice, view_changed } from '#renderer/store/ui.ts'
 import { parse_track_view, tracks_route, with_filters_cleared, with_sort, with_tag_toggled } from '#renderer/routes.ts'
@@ -164,13 +165,34 @@ describe('libraries', () => {
 })
 
 describe('imports slice', () => {
+  const event = (type: string, payload: Record<string, unknown>, at: number, import_id = 'i1') => import_event_received({ type, payload: { import_id, ...payload } }, at)
+
   test('builds an import from its events, whichever arrives first', () => {
-    const event = (type: string, payload: Record<string, unknown>) => import_event_received({ type, payload: { import_id: 'i1', ...payload } })
-    let state = imports_slice.reducer(undefined, event('import:starting', { source: 'file', file_count: 2 }))
-    state = imports_slice.reducer(state, import_requested({ import_id: 'i1', label: 'two files', file_count: 2 }))
-    state = imports_slice.reducer(state, event('import:processed-file', { file_path: '/tmp/uploads/abc.flac', track: { title: 'Intro' }, completed: 1, remaining: 1 }))
-    state = imports_slice.reducer(state, event('import:error', { file_path: '/tmp/uploads/def.flac', error: { error: { code: 'VALIDATION_ERROR', message: 'not audio' } } }))
-    state = imports_slice.reducer(state, event('import:finished', { track_count: 1, error_count: 1 }))
-    expect(state.items).toEqual([{ import_id: 'i1', label: 'two files', file_count: 2, completed: 1, added: ['Intro'], errors: ['def.flac: not audio'], finished: true }])
+    let state = imports_slice.reducer(undefined, event('import:starting', { source: 'file', file_count: 2 }, 1_000))
+    state = imports_slice.reducer(state, import_requested({ import_id: 'i1', label: 'two files', file_count: 2 }, 1_500))
+    state = imports_slice.reducer(state, event('import:processed-file', { file_path: '/tmp/uploads/abc.flac', track: { title: 'Intro' }, completed: 1, remaining: 1 }, 2_000))
+    state = imports_slice.reducer(state, event('import:error', { file_path: '/tmp/uploads/def.flac', error: { error: { code: 'VALIDATION_ERROR', message: 'not audio' } } }, 2_500))
+    state = imports_slice.reducer(state, event('import:finished', { track_count: 1, error_count: 1 }, 3_000))
+    expect(state.items).toEqual([{ import_id: 'i1', label: 'two files', file_count: 2, completed: 1, added: ['Intro'], errors: ['def.flac: not audio'], finished: true, started_at: 1_000, finished_at: 3_000 }])
+  })
+
+  test('stamps an action with the current time when none is given', () => {
+    const before = Date.now()
+    const { meta } = import_requested({ import_id: 'i1', label: 'one', file_count: 1 })
+    expect(meta.at).toBeGreaterThanOrEqual(before)
+  })
+
+  test('[clear] drops the finished imports and keeps the running ones', () => {
+    let state = imports_slice.reducer(undefined, import_requested({ import_id: 'done', label: 'done', file_count: 1 }, 1))
+    state = imports_slice.reducer(state, import_requested({ import_id: 'running', label: 'running', file_count: 3 }, 2))
+    state = imports_slice.reducer(state, event('import:finished', {}, 3, 'done'))
+    state = imports_slice.reducer(state, finished_imports_cleared())
+    expect(state.items.map(({ import_id }) => import_id)).toEqual(['running'])
+  })
+})
+
+describe('format_age', () => {
+  test('reads seconds, minutes, hours, and days, floored', () => {
+    expect([0, 59_999, 60_000, 3_599_999, 3_600_000, 86_400_000 * 3 - 1, -5].map(format_age)).toEqual(['0s', '59s', '1m', '59m', '1h', '2d', '0s'])
   })
 })
