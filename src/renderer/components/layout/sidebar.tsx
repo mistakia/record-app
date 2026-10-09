@@ -1,12 +1,14 @@
 // The library sidebar (STYLE.md § Layout › Sidebar), legacy-v0's shell:
 // back and forward, RECORD, MY LIBRARY, the linked and shared LIBRARIES with
-// their menus, and a footer with the identity, Settings, and the connection.
+// their menus, and a footer with the identity's profile, Settings, and the
+// connection.
 
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
 
 import styles from './sidebar.module.css'
 import { HistoryNav } from './history-nav.tsx'
+import { SettingsIcon } from './settings-icon.tsx'
 import type { Library } from '#renderer/api/types.ts'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
 import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
@@ -54,7 +56,10 @@ export const Sidebar = () => {
   const [menu, set_menu] = useState<{ x: number, y: number, library: Library } | null>(null)
   const own_active = own_libraries_of({ own: own.data, libraries: libraries.data }).filter(has_profile)
   const others = (libraries.data ?? []).filter((library) => !library.is_own && (library.is_linked || library.held_capability_ids.length > 0))
+  // The identity has no profile of its own (spec §8.6.9): it goes by its
+  // default own library's About name and avatar.
   const identity = own_active[0]
+  const identity_name = identity?.name ?? null
 
   return (
     <nav className={styles.sidebar} aria-label='Library'>
@@ -108,10 +113,12 @@ export const Sidebar = () => {
       <div className={styles.footer}>
         <div className={styles.footer_row}>
           <Link to={ROUTES.identity} className={styles.identity} aria-label='Identity' aria-current={is_current(ROUTES.identity) ? 'page' : undefined}>
-            <Avatar name={identity === undefined ? '?' : library_name(identity)} size={28} cid={identity?.avatar} />
-            <span className={styles.name}>{identity?.name ?? 'Identity'}</span>
+            <Avatar name={identity_name ?? ''} size={28} cid={identity?.avatar} />
+            {identity_name === null
+              ? <span className={`${styles.name} ${styles.unnamed}`}>add a name</span>
+              : <span className={styles.name}>{identity_name}</span>}
           </Link>
-          <Link to={ROUTES.settings} className={styles.gear} aria-label='Settings' aria-current={is_current(ROUTES.settings) ? 'page' : undefined}>≡</Link>
+          <Link to={ROUTES.settings} className={styles.gear} aria-label='Settings' title='Settings' aria-current={is_current(ROUTES.settings) ? 'page' : undefined}><SettingsIcon /></Link>
         </div>
         <Link to={settings_route('peers')} className={styles.status}><ConnectionStatus /></Link>
       </div>

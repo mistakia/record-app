@@ -182,7 +182,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 │ LIBRARIES [+]                                         [ingest gauge] │
 │ ◐ name   … ├──────────────────────────────────────────────────────────┤
 │ ◐ name   … │ player bar — 75px screen                                 │
-│ (avatar) ⚙ │ ☆ art title/artist │ ⟲ ⤨ |◀ ▶ ▶| QUEUE 4 · HISTORY │ from │
+│ ▢ name   ⚙ │ ☆ art title/artist │ ⟲ ⤨ |◀ ▶ ▶| QUEUE 4 · HISTORY │ from │
 │ 3 peers    │                    │ 0:41 ━━━━━━━━──── 3:12        │ lib ◐│
 └────────────┴──────────────────────────────────────────────────────────┘
 ```
@@ -194,7 +194,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 - **RECORD** — Tracks (every library, aggregated) and Recently Played (listens).
 - **MY LIBRARY** — Tracks and Libraries of the user's own library. With more than one own active library, MY LIBRARY lists each by name.
 - **LIBRARIES** — linked and held-capability libraries; this list takes the remaining height and scrolls under a sticky heading that hosts `[+]` (link a library). Each row: a 24px avatar, the name, and on hover a `…` that opens the library menu (connect or disconnect, unlink, edit, copy address). A library that is replicating shows a quiet tertiary gauge after its name.
-- **Footer** — the identity avatar (opens Identity) and a `⚙` (opens Settings), over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings.
+- **Footer** — the identity's profile and the Settings gear, over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings. The identity has no profile of its own (spec §8.6.9), so it goes by its default own library's About name and avatar; with no name set the avatar is blank and the label reads `add a name` in tertiary. Either opens Identity, whose first section edits that profile. The gear is a 16px hairline SVG (`components/layout/settings-icon.tsx`) in secondary ink, accent on hover and on the Settings page, labelled `Settings`.
 - Active item: `--color-selected` ink at 600 on the `--color-surface` paper (the item lifts to the page's paper, as legacy's white-on-grey). Hover: `--color-surface-hover`.
 
 ### Page column (paper)
@@ -322,7 +322,7 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 ### Artwork and avatars
 
 - Artwork with no image is legacy's vinyl disc: a circle in `--color-border` with a centre label in `--color-accent-wash`; an image covers it. The disc is the one round shape on paper, because it depicts an object, not a control.
-- Library and identity avatars are square, 1px `--color-border-light`, falling back to the name's first letter in Departure Mono on `--color-surface-sunken`.
+- Library and identity avatars are square, 1px `--color-border-light`, falling back to the name's first letter in Departure Mono on `--color-surface-sunken`, and to a blank square when there is no name.
 - Inside a screen, artwork keeps its own colors under the glass.
 
 ### Library context menu, track context menu
@@ -375,7 +375,7 @@ Transitions: 0.15s on color and opacity, 0.28s `cubic-bezier(0.32, 0.72, 0, 1)` 
 
 ## Glyphs
 
-Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `≡` settings, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat, shuffle, queue, and history have no glyph in either face, so the player bar draws them as 16px hairline SVGs (`components/player/transport-icons.tsx`, a 1.25px square-capped stroke in `currentColor`); nothing else uses an icon. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
+Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat, shuffle, queue, history, and the Settings gear have no glyph in either face, so they are drawn as 16px hairline SVGs (`components/player/transport-icons.tsx`, `components/layout/settings-icon.tsx`, a 1.25px square-capped stroke in `currentColor`); nothing else uses an icon. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
 
 ## OS Surface (macOS, Electron)
 

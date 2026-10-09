@@ -183,11 +183,18 @@
   color: var(--color-selected);
 }
 
-.gear {
-  padding: var(--space-xs);
+.unnamed {
   color: var(--color-text-tertiary);
-  font-size: var(--font-size-reading);
-  text-decoration: none;
+}
+
+.identity:hover .unnamed {
+  color: var(--color-selected);
+}
+
+.gear {
+  display: inline-flex;
+  padding: var(--space-xs);
+  color: var(--color-text-secondary);
 }
 
 .gear:hover,
