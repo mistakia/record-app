@@ -31,10 +31,21 @@ export const COLUMNS: readonly Column[] = [
 export const NO_HIDDEN_COLUMNS: readonly ColumnId[] = []
 
 // index, adopt, title, the lead columns, +TAG, the rest, the menu.
-export const grid_template = (visible: readonly Column[]): string => [
+const track_widths = (visible: readonly Column[]): string[] => [
   '4ch', '2ch', 'minmax(120px, 1.6fr)',
   ...visible.filter(({ lead }) => lead === true).map(({ width }) => width),
   '6ch',
   ...visible.filter(({ lead }) => lead !== true).map(({ width }) => width),
   '3ch'
-].join(' ')
+]
+
+export const grid_template = (visible: readonly Column[]): string => track_widths(visible).join(' ')
+
+// The narrowest a row can be: each column at its minimum, the gaps, and the
+// row's padding. Header and rows both hold it, so a narrow list scrolls
+// sideways as one.
+export const grid_min_width = (visible: readonly Column[]): string => {
+  const widths = track_widths(visible)
+  const minimums = widths.map((width) => /^minmax\(([^,]+),/.exec(width)?.[1]?.trim() ?? width)
+  return `calc(${minimums.join(' + ')} + ${widths.length - 1} * var(--space-sm) + var(--space-sm) + var(--space-lg))`
+}
