@@ -1,5 +1,5 @@
 // A library's profile in the page head (legacy-v0's library header): avatar,
-// name, OWNER on an own library, the TRACKS │ LIBRARIES tabline, and its
+// name, its short address (copies the whole one), OWNER on an own library, the TRACKS │ LIBRARIES tabline, and its
 // counts, which pulse while the node indexes it.
 
 import { Link } from 'react-router'
@@ -7,6 +7,7 @@ import { Link } from 'react-router'
 import styles from './page-head.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
+import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
 import { current_progress, is_replicating, library_name } from '#renderer/components/library/library-category.ts'
 import { ROUTES, tracks_route } from '#renderer/routes.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -22,7 +23,8 @@ export const LibraryProfileHeader = ({ library, tab }: { library: Library, tab: 
     <div className={styles.profile} data-testid='library-profile'>
       <div className={styles.identity}>
         <Avatar name={name} size={24} cid={library.avatar} />
-        <span className={styles.name} title={library.address}>{name}</span>
+        <span className={styles.name}>{name}</span>
+        <LibraryAddress address={library.address} name={name} />
         {library.is_own && <span className={styles.chip}>Owner</span>}
       </div>
       {library.is_own && (

@@ -200,7 +200,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 ### Page column (paper)
 
 - Fills the rest of the window above the player bar, with base's ruled texture: `--color-surface-ruling`, a `linear-gradient(var(--color-paper-texture) 1px, transparent 1px)` at `2px 2px`, fixed to the window so anything that masks it (a framed section's label) rules in step.
-- **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, an `OWNER` chip on an own library; a centred `TRACKS │ LIBRARIES` tab pair in reverse video (active tab filled `--color-selected`, base's tui tabline); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
+- **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, the short address, an `OWNER` chip on an own library; a centred `TRACKS │ LIBRARIES` tab pair in reverse video (active tab filled `--color-selected`, base's tui tabline); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
 - **Help banner** — a dismissible per-page framed section (`HELP` on the stroke, `[x]` notch), shown until dismissed once, dismissal persisted. Never an accent fill.
 - **Body** — width tiers by content kind, as on base's entity page: the track list fills the column, forms and settings 720px, reading text (about, descriptions) 66ch. Page padding `--space-lg`; sections stack with `--space-lg` to `--space-xl` between them.
 - **Inspector** — a 320px paper pane docked on the right of the page column, reflowing the list, opened with `i`.
@@ -344,6 +344,10 @@ Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the wr
 - Dialog: framed-section title on the top stroke, `[x]` close notch on the stroke, 15px body, buttons right-aligned.
 - Context menu: 12px rows, hover and keyboard highlight are the hover wash with accent ink.
 - Toast: framed with the title on the stroke, an optional action button, a depleting 1px rule along the bottom edge for its lifetime (base's countdown idiom). Error toasts state the error in words; no colored edge.
+
+### Library address
+
+A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`.
 
 ### Connection status
 

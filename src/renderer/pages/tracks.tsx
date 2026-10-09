@@ -103,7 +103,7 @@ export const Tracks = () => {
             id={SEARCH_INPUT_ID}
             type='search'
             aria-label='Search tracks'
-            placeholder='/ search'
+            placeholder='search'
             spellCheck={false}
             value={search}
             onChange={(event) => { set_search(event.target.value) }}

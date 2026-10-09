@@ -9,6 +9,7 @@ import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
+import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
 import { OwnLibraries } from '#renderer/components/library/own-libraries.tsx'
 import { mode_label } from '#renderer/components/library/replication-policy.tsx'
@@ -51,7 +52,7 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
     <tr data-testid='library-row' data-category={category}>
       <td>
         <Link className={styles.name} to={tracks_route({ library_address: library.address })}>{library_name(library)}</Link>
-        {show_address && <span className={styles.address}>{library.address}</span>}
+        {show_address && <span className={styles.address}><LibraryAddress address={library.address} name={library_name(library)} /></span>}
         {scope.map((line) => <span key={line} className={styles.scope} data-testid='shared-scope'>You may: {line}</span>)}
         {left && <span className={styles.scope}>You left this shared library; the app offers no writes to it.</span>}
       </td>

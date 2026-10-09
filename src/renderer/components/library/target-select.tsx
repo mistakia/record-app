@@ -8,7 +8,7 @@
 import { useState } from 'react'
 
 import styles from './target-select.module.css'
-import { library_name } from './library-category.ts'
+import { library_name, short_address } from './library-category.ts'
 import { resolve_target, write_targets, type TargetResolution, type WriteAction, type WriteTarget } from '#renderer/library/write-targets.ts'
 import { use_left_libraries } from '#renderer/library/left-libraries.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -49,7 +49,7 @@ export const use_write_target = ({ action, preferred = null, holders = [], exclu
   const target = resolution.kind === 'target' ? resolution.target : null
   const name_of = (library_address: string): string => {
     const library = libraries.data?.find(({ address }) => address === library_address)
-    return library === undefined ? library_address : library_name(library)
+    return library === undefined ? short_address(library_address) : library_name(library)
   }
   return {
     targets,
