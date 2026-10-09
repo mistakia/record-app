@@ -41,7 +41,15 @@ export const use_node_events = (): void => {
 
   useEffect(() => {
     let reconciled_up_to = 0
-    const batcher = create_invalidation_batcher({ flush: (tags) => { dispatch(node_api.util.invalidateTags(tags)) } })
+    // The flush settles when the refetches it started have, so the
+    // batcher can pace the next one on how long the node took.
+    const batcher = create_invalidation_batcher({
+      flush: async (tags) => {
+        dispatch(node_api.util.invalidateTags(tags))
+        await new Promise((resolve) => setTimeout(resolve, 0))
+        await Promise.allSettled(dispatch(node_api.util.getRunningQueriesThunk()))
+      }
+    })
 
     const apply_state = (state: EventsState): void => {
       dispatch(events_state_changed(state))
