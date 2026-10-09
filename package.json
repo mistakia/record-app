@@ -31,6 +31,7 @@
     "smoke:local": "node test/e2e/local-smoke.ts",
     "smoke:auth": "node test/e2e/auth-smoke.ts",
     "smoke:v1-1": "node test/e2e/v1-1-smoke.ts",
+    "perf": "node test/e2e/perf-probe.ts",
     "package:mac": "bun run package:prepare && electron-vite build && electron-builder --mac --publish never",
     "smoke:packaged": "node test/e2e/packaged-smoke.ts",
     "audit": "node cli/check-audit.ts",

@@ -3,6 +3,7 @@
 // and copy, with the dialogs those open.
 
 import { useState, type ReactNode } from 'react'
+import { shallowEqual } from 'react-redux'
 import { useNavigate } from 'react-router'
 
 import type { ListActions } from './track-list.tsx'
@@ -34,7 +35,9 @@ export const use_track_actions = ({ viewed_library, listen_library, source, on_t
 }): { actions: ListActions, dialogs: ReactNode } => {
   const dispatch = use_app_dispatch()
   const libraries = node_api.endpoints.get_libraries.useQuery()
-  const upcoming = use_app_selector((state) => state.player.queue.entries.slice(state.player.queue.index + 1))
+  // Compared entry by entry: the slice is a new array on every store update,
+  // which would re-render the page, the list, and every row on each one.
+  const upcoming = use_app_selector((state) => state.player.queue.entries.slice(state.player.queue.index + 1), shallowEqual)
   const [tagging, set_tagging] = useState<{ tracks: Track[], anchor: { x: number, y: number } } | null>(null)
   const [adopting, set_adopting] = useState<Track | null>(null)
   const [removing, set_removing] = useState<Track | null>(null)

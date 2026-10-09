@@ -13,7 +13,7 @@ import { COLUMNS, grid_min_width, grid_template, NO_HIDDEN_COLUMNS, type ColumnI
 import { register_list_commands } from './list-commands.ts'
 import { PageSubscription, select_list_page, type ListSource } from './list-source.ts'
 import { pages_for_rows, row_location } from './track-pages.ts'
-import { TrackRow, TrackRowSkeleton, type RowPlayState } from './track-row.tsx'
+import { TrackRow, TrackRowSkeleton, type RowHandlers, type RowPlayState } from './track-row.tsx'
 import type { Track } from '#renderer/api/types.ts'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
 import { use_view_pref } from '#renderer/prefs/view-prefs.ts'
@@ -22,6 +22,35 @@ import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/st
 import { action_rows, cursor_moved, row_clicked, selection_cleared, selection_toggled, view_entered } from '#renderer/store/list-cursor.ts'
 
 const ROW_HEIGHT = 36
+// How long the viewport must rest on a set of pages before they are
+// fetched, when it moved on from the last set sooner than that. A fling
+// across a large library passes pages it never stops on; a node answers
+// page requests one at a time, so each one asked for on the way would hold
+// up the page the list lands on.
+const SETTLE_MS = 150
+
+// The pages to subscribe: a new view's at once, a change after a rest at
+// once, and a change hard on another only once it has held for SETTLE_MS.
+// Pages already cached show meanwhile.
+const use_settled_pages = (pages: number[], view_key: string): number[] => {
+  const key = pages.join(',')
+  const [settled, set_settled] = useState({ view_key, key })
+  const changed_at = useRef(0)
+  const current = settled.view_key === view_key ? settled.key : key
+  useEffect(() => {
+    if (settled.view_key === view_key && settled.key === key) return
+    const now = performance.now()
+    const resting = now - changed_at.current >= SETTLE_MS
+    changed_at.current = now
+    if (settled.view_key !== view_key || resting) {
+      set_settled({ view_key, key })
+      return
+    }
+    const timer = setTimeout(() => { set_settled({ view_key, key }) }, SETTLE_MS)
+    return () => { clearTimeout(timer) }
+  }, [key, view_key, settled])
+  return useMemo(() => current.split(',').map(Number), [current])
+}
 
 export interface ListActions {
   // The row's loaded page, to queue from, and where in it the row sits.
@@ -66,13 +95,18 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
   const [menu, set_menu] = useState<{ x: number, y: number, track: Track, row: number } | null>(null)
   const [columns_menu, set_columns_menu] = useState<{ x: number, y: number } | null>(null)
   const [hidden, set_hidden] = use_view_pref<readonly ColumnId[]>('hidden-columns', NO_HIDDEN_COLUMNS)
-  const visible = COLUMNS.filter(({ id }) => !hidden.includes(id))
+  const visible = useMemo(() => COLUMNS.filter(({ id }) => !hidden.includes(id)), [hidden])
   const virtualizer = useVirtualizer({ count: total, getScrollElement: () => scroller.current, estimateSize: () => ROW_HEIGHT, overscan: 12 })
   const rows = virtualizer.getVirtualItems()
   const libraries = node_api.endpoints.get_libraries.useQuery().data
   const removable = useMemo(() => new Set((libraries ?? []).filter(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore').map(({ address }) => address)), [libraries])
-  const pages = pages_for_rows({ first_row: rows[0]?.index ?? 0, last_row: rows.at(-1)?.index ?? 0, total })
+  // The way the list last moved, which a stop (direction null) keeps.
+  const direction = useRef<'forward' | 'backward'>('forward')
+  if (virtualizer.scrollDirection !== null) direction.current = virtualizer.scrollDirection
+  const { shown: pages, ahead } = pages_for_rows({ first_row: rows[0]?.index ?? 0, last_row: rows.at(-1)?.index ?? 0, total, direction: direction.current })
   const page_data = use_app_selector((state) => pages.map((page) => select_list_page(state, source, page)), shallowEqual)
+  const shown_loaded = page_data.every((page) => page !== undefined)
+  const subscribed = use_settled_pages(shown_loaded ? [...pages, ...ahead] : pages, view_key)
   const cursor = use_app_selector((state) => state.list_cursor)
   const current_id = use_app_selector((state) => state.player.queue.entries[state.player.queue.index]?.track_id ?? null)
   const engine_state = use_app_selector((state) => state.player.state)
@@ -148,10 +182,30 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
     focus: () => { scroller.current?.focus({ preventScroll: true }) }
   }), [dispatch, store])
 
-  const on_row_click = (row: number) => (event: MouseEvent) => {
-    dispatch(row_clicked({ index: row, toggle: event.metaKey || event.ctrlKey, extend: event.shiftKey }))
-    scroller.current?.focus({ preventScroll: true })
-  }
+  // Stable for the list's life, so a memoized row skips the re-render a
+  // scroll frame or a store update gives the list.
+  const row_handlers = useMemo((): RowHandlers => ({
+    on_play: (row) => { latest.current.play_row(row) },
+    on_click: (row, event: MouseEvent) => {
+      dispatch(row_clicked({ index: row, toggle: event.metaKey || event.ctrlKey, extend: event.shiftKey }))
+      scroller.current?.focus({ preventScroll: true })
+    },
+    on_double_click: (row) => {
+      dispatch(row_clicked({ index: row }))
+      latest.current.actions.toggle_inspector()
+    },
+    on_menu: (row, x, y) => {
+      dispatch(row_clicked({ index: row }))
+      latest.current.open_menu_at(row, x, y)
+    },
+    on_adopt: (track) => { latest.current.actions.adopt([track]) },
+    on_add_tag: (row, track) => {
+      dispatch(row_clicked({ index: row }))
+      latest.current.actions.add_tag({ tracks: [track], row })
+    },
+    on_tag: (input) => { latest.current.actions.tag_clicked(input) },
+    on_remove_tag: (input) => { latest.current.actions.remove_tag(input) }
+  }), [dispatch])
 
   const play_state_of = (track: Track): RowPlayState => {
     if (track.id !== current_id) return null
@@ -197,7 +251,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
         {visible.filter(({ lead }) => lead !== true).map((column) => <SortHeader key={column.id} label={column.label} column_sort={column.sort} sort={sort} align={column.align} />)}
         <span role='columnheader' />
       </div>
-      {pages.map((page) => <PageSubscription key={page} source={source} page={page} />)}
+      {subscribed.map((page) => <PageSubscription key={page} source={source} page={page} />)}
       <div
         ref={scroller}
         className={styles.scroller}
@@ -226,25 +280,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions }: {
                       is_selected={cursor.selected.includes(row.index)}
                       menu_open={menu?.row === row.index}
                       removable={removable}
-                      handlers={{
-                        on_play: () => { play_row(row.index) },
-                        on_click: on_row_click(row.index),
-                        on_double_click: () => {
-                          dispatch(row_clicked({ index: row.index }))
-                          actions.toggle_inspector()
-                        },
-                        on_menu: (x, y) => {
-                          dispatch(row_clicked({ index: row.index }))
-                          open_menu_at(row.index, x, y)
-                        },
-                        on_adopt: () => { actions.adopt([track]) },
-                        on_add_tag: () => {
-                          dispatch(row_clicked({ index: row.index }))
-                          actions.add_tag({ tracks: [track], row: row.index })
-                        },
-                        on_tag: actions.tag_clicked,
-                        on_remove_tag: ({ tag, library_address }) => { actions.remove_tag({ track, tag, library_address }) }
-                      }}
+                      handlers={row_handlers}
                     />
                     )}
               </div>

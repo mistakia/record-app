@@ -3,7 +3,7 @@
 // index becomes play, +TAG and the menu appear, and the star brightens.
 // Every value from the node is plain text (spec §8.10.6).
 
-import type { MouseEvent } from 'react'
+import { memo, type MouseEvent } from 'react'
 
 import styles from './track-row.module.css'
 import type { Column } from './columns.ts'
@@ -13,15 +13,17 @@ import { ragged_width, SkeletonBar } from '#renderer/components/common/skeleton.
 
 export type RowPlayState = 'playing' | 'loading' | 'paused' | null
 
+// One set for the whole list, stable across renders, so a row re-renders
+// only when its own track or state changes. Each takes the row's index.
 export interface RowHandlers {
-  on_play: () => void
-  on_click: (event: MouseEvent) => void
-  on_double_click: () => void
-  on_menu: (x: number, y: number) => void
-  on_adopt: () => void
-  on_add_tag: () => void
+  on_play: (row: number) => void
+  on_click: (row: number, event: MouseEvent) => void
+  on_double_click: (row: number) => void
+  on_menu: (row: number, x: number, y: number) => void
+  on_adopt: (track: Track) => void
+  on_add_tag: (row: number, track: Track) => void
   on_tag: (input: { tag: string, library_address: string }) => void
-  on_remove_tag: (input: { tag: string, library_address: string }) => void
+  on_remove_tag: (input: { track: Track, tag: string, library_address: string }) => void
 }
 
 const kbps = (bitrate: number | null | undefined): string => bitrate == null || bitrate <= 0 ? '' : String(Math.round(bitrate / 1000))
@@ -62,7 +64,7 @@ const Tags = ({ track, removable, handlers }: { track: Track, removable: Readonl
             aria-label={`Remove tag ${tag}`}
             onClick={(event) => {
               event.stopPropagation()
-              handlers.on_remove_tag({ tag, library_address })
+              handlers.on_remove_tag({ track, tag, library_address })
             }}
           >
             ×
@@ -73,7 +75,7 @@ const Tags = ({ track, removable, handlers }: { track: Track, removable: Readonl
   </span>
 )
 
-export const TrackRow = ({ track, index, columns, play_state, is_cursor, is_selected, menu_open, removable, handlers }: {
+export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is_selected, menu_open, removable, handlers }: {
   track: Track
   // Own active libraries, whose tags the row may remove.
   removable: ReadonlySet<string>
@@ -110,11 +112,11 @@ export const TrackRow = ({ track, index, columns, play_state, is_cursor, is_sele
       aria-selected={is_selected}
       data-testid='track-row'
       data-cursor={is_cursor ? '' : undefined}
-      onClick={(event) => { handlers.on_click(event) }}
-      onDoubleClick={() => { handlers.on_double_click() }}
+      onClick={(event) => { handlers.on_click(index, event) }}
+      onDoubleClick={() => { handlers.on_double_click(index) }}
       onContextMenu={(event) => {
         event.preventDefault()
-        handlers.on_menu(event.clientX, event.clientY)
+        handlers.on_menu(index, event.clientX, event.clientY)
       }}
     >
       <span role='cell' className={styles.index}>
@@ -127,7 +129,7 @@ export const TrackRow = ({ track, index, columns, play_state, is_cursor, is_sele
           aria-label={play_state === 'playing' ? 'Pause' : 'Play'}
           onClick={(event) => {
             event.stopPropagation()
-            handlers.on_play()
+            handlers.on_play(index)
           }}
         >
           {play_state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : play_state === 'playing' ? '▮▮' : '▶'}
@@ -142,7 +144,7 @@ export const TrackRow = ({ track, index, columns, play_state, is_cursor, is_sele
           aria-label={track.have_track ? 'In your library; adopt to another' : 'Adopt to library'}
           onClick={(event) => {
             event.stopPropagation()
-            handlers.on_adopt()
+            handlers.on_adopt(track)
           }}
         >
           ★
@@ -162,7 +164,7 @@ export const TrackRow = ({ track, index, columns, play_state, is_cursor, is_sele
           aria-label='Add tag'
           onClick={(event) => {
             event.stopPropagation()
-            handlers.on_add_tag()
+            handlers.on_add_tag(index, track)
           }}
         >
           +tag
@@ -179,7 +181,7 @@ export const TrackRow = ({ track, index, columns, play_state, is_cursor, is_sele
           onClick={(event) => {
             event.stopPropagation()
             const rect = event.currentTarget.getBoundingClientRect()
-            handlers.on_menu(rect.left, rect.bottom)
+            handlers.on_menu(index, rect.left, rect.bottom)
           }}
         >
           …
@@ -187,7 +189,7 @@ export const TrackRow = ({ track, index, columns, play_state, is_cursor, is_sele
       </span>
     </div>
   )
-}
+})
 
 // Ragged width ranges per column kind, in percent of the cell.
 const SKELETON_WIDTHS: Record<Column['id'], [number, number]> = {

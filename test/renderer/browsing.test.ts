@@ -55,10 +55,14 @@ describe('library address display', () => {
 
 describe('virtual list pages', () => {
   test('subscribes the pages under the visible rows plus one either side, always including the first', () => {
-    expect(pages_for_rows({ first_row: 0, last_row: 30, total: 19_000 })).toEqual([0, 1])
-    expect(pages_for_rows({ first_row: 4_000, last_row: 4_030, total: 19_000 })).toEqual([0, 19, 20, 21])
-    expect(pages_for_rows({ first_row: 18_990, last_row: 18_999, total: 19_000 })).toEqual([0, 93, 94])
-    expect(pages_for_rows({ first_row: 0, last_row: 0, total: 0 })).toEqual([0])
+    // The shown pages, page 0, and the neighbour the list moves toward.
+    expect(pages_for_rows({ first_row: 0, last_row: 30, total: 19_000 })).toEqual({ shown: [0], ahead: [1] })
+    expect(pages_for_rows({ first_row: 4_000, last_row: 4_030, total: 19_000 })).toEqual({ shown: [20, 0], ahead: [21] })
+    expect(pages_for_rows({ first_row: 4_000, last_row: 4_030, total: 19_000, direction: 'backward' })).toEqual({ shown: [20, 0], ahead: [19] })
+    expect(pages_for_rows({ first_row: 4_190, last_row: 4_220, total: 19_000 })).toEqual({ shown: [20, 21, 0], ahead: [22] })
+    expect(pages_for_rows({ first_row: 18_990, last_row: 18_999, total: 19_000 })).toEqual({ shown: [94, 0], ahead: [] })
+    expect(pages_for_rows({ first_row: 10, last_row: 40, total: 19_000, direction: 'backward' })).toEqual({ shown: [0], ahead: [] })
+    expect(pages_for_rows({ first_row: 0, last_row: 0, total: 0 })).toEqual({ shown: [0], ahead: [] })
     expect(row_location(4_321)).toEqual({ page: 21, offset: 121 })
   })
 
