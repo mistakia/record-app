@@ -1,11 +1,14 @@
-// The own library's profile (`about`): name, bio, location, and an avatar
-// given as the CID of an image blob (protocol §2.6). Text is shown and sent
-// as plain text.
+// The own library's profile (`about`): name, bio, location, and an avatar,
+// the CID of an image blob (protocol §2.6). The avatar is an image the user
+// chooses, which main stores in the node (POST /images); the raw CID is
+// behind advanced. Text is shown and sent as plain text.
 
 import { useEffect, useState, type FormEvent } from 'react'
 
 import styles from './about-editor.module.css'
 import { is_cid } from './cid.ts'
+import { Avatar } from '#renderer/components/common/avatar.tsx'
+import { ShowStrip } from '#renderer/components/common/show-strip.tsx'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -13,10 +16,9 @@ import { report_write } from '#renderer/store/write.ts'
 
 interface AboutDraft { name: string, bio: string, location: string, avatar: string }
 
-const FIELDS: Array<{ key: keyof AboutDraft, label: string, max: number }> = [
+const FIELDS: Array<{ key: Exclude<keyof AboutDraft, 'avatar'>, label: string, max: number }> = [
   { key: 'name', label: 'Name', max: 128 },
   { key: 'location', label: 'Location', max: 128 },
-  { key: 'avatar', label: 'Avatar CID', max: 128 },
   { key: 'bio', label: 'Bio', max: 1024 }
 ]
 
@@ -31,6 +33,8 @@ export const AboutEditor = ({ address, note, default_name }: { address: string, 
   const about = node_api.endpoints.get_about.useQuery(address)
   const [draft, set_draft] = useState<AboutDraft>({ name: '', bio: '', location: '', avatar: '' })
   const [saving, set_saving] = useState(false)
+  const [uploading, set_uploading] = useState(false)
+  const [avatar_note, set_avatar_note] = useState<string | null>(null)
 
   useEffect(() => {
     if (about.data === undefined || about.data === null) return
@@ -40,6 +44,19 @@ export const AboutEditor = ({ address, note, default_name }: { address: string, 
   const avatar_valid = draft.avatar.trim() === '' || is_cid(draft.avatar.trim())
   // Null is a library that never set a profile: an empty one.
   const loaded = about.data !== undefined
+
+  const choose_image = async () => {
+    set_uploading(true)
+    const result = await window.record.choose_image()
+    set_uploading(false)
+    if (!result.ok) {
+      set_avatar_note(`!! ${result.failure.message}`)
+      return
+    }
+    if (result.data === null) return
+    set_draft({ ...draft, avatar: result.data.cid })
+    set_avatar_note('Save the profile to use it.')
+  }
 
   const save = async (event: FormEvent) => {
     event.preventDefault()
@@ -54,6 +71,7 @@ export const AboutEditor = ({ address, note, default_name }: { address: string, 
       success: 'Profile saved.'
     })
     set_saving(false)
+    set_avatar_note(null)
   }
 
   return (
@@ -64,9 +82,24 @@ export const AboutEditor = ({ address, note, default_name }: { address: string, 
           {label}
           {key === 'bio'
             ? <textarea name={key} maxLength={max} rows={3} value={draft[key]} onChange={(event) => { set_draft({ ...draft, [key]: event.target.value }) }} />
-            : <input name={key} maxLength={max} spellCheck={key !== 'avatar'} placeholder={key === 'name' ? default_name : undefined} value={draft[key]} onChange={(event) => { set_draft({ ...draft, [key]: event.target.value }) }} />}
+            : <input name={key} maxLength={max} placeholder={key === 'name' ? default_name : undefined} value={draft[key]} onChange={(event) => { set_draft({ ...draft, [key]: event.target.value }) }} />}
         </label>
       ))}
+      <div className={styles.field} data-testid='avatar-field'>
+        Avatar
+        <div className={styles.avatar_row}>
+          <Avatar address={address} size={48} cid={avatar_valid ? or_null(draft.avatar) : null} />
+          <button type='button' data-size='small' disabled={!writes_allowed || uploading} onClick={() => { choose_image().catch(() => { set_uploading(false) }) }}>{uploading ? 'Uploading' : 'Choose image'}</button>
+          {draft.avatar.trim() !== '' && <button type='button' data-size='small' data-variant='ghost' onClick={() => { set_draft({ ...draft, avatar: '' }); set_avatar_note('Save the profile to go back to the pattern.') }}>Remove</button>}
+        </div>
+        <span className={avatar_note?.startsWith('!!') === true ? styles.error : styles.hint}>{avatar_note ?? (draft.avatar.trim() === '' ? 'Until you choose one, the pattern from its address.' : ' ')}</span>
+      </div>
+      <ShowStrip label='advanced' testid='about-advanced'>
+        <label className={styles.field}>
+          Avatar CID
+          <input name='avatar' maxLength={128} spellCheck={false} value={draft.avatar} onChange={(event) => { set_draft({ ...draft, avatar: event.target.value }) }} />
+        </label>
+      </ShowStrip>
       {!avatar_valid && <p className={styles.error}>The avatar must be the CID of an image already in the node.</p>}
       <div>
         <button type='submit' disabled={!writes_allowed || saving || !avatar_valid || !loaded}>Save profile</button>

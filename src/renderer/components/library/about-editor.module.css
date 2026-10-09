@@ -36,6 +36,19 @@
   padding: var(--space-xs) var(--space-xs);
 }
 
+.avatar_row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.hint,
+.field .error {
+  min-height: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .error {
   color: var(--color-error);
   margin: 0;

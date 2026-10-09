@@ -323,6 +323,7 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 
 - Artwork with no image is legacy's vinyl disc: a circle in `--color-border` with a centre label in `--color-accent-wash`; an image covers it. The disc is the one round shape on paper, because it depicts an object, not a control.
 - Library and identity avatars are square, 1px `--color-border-light`, on `--color-surface-sunken`. Without an image, an avatar is a 5×5 mirrored pattern in secondary ink, 60% of the square, read from the library's address (`components/common/avatar-pattern.ts`), so a library looks the same on every device and to every peer. The identity shows its default library's.
+- **Choosing an avatar** — the profile editor shows the avatar at 48px with `Choose image`, which opens main's image picker and stores the image in the node (`POST /images`, at most 16 MiB), and `Remove` once one is set, which goes back to the pattern. A tertiary line under it says what happens next (`Save the profile to use it.`). The raw CID is behind `show advanced`.
 - Inside a screen, artwork keeps its own colors under the glass.
 
 ### Library context menu, track context menu

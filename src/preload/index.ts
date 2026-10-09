@@ -51,6 +51,7 @@ const bridge: RecordBridge = {
     if (typeof cid !== 'string') throw new TypeError('cid must be a string')
     return await ipcRenderer.invoke(IPC_CHANNELS.get_image, { cid })
   },
+  choose_image: async () => await ipcRenderer.invoke(IPC_CHANNELS.choose_image),
   cancel_audio: async ({ request_id }: { request_id: string }) => {
     if (typeof request_id !== 'string') throw new TypeError('request_id must be a string')
     await ipcRenderer.invoke(IPC_CHANNELS.cancel_audio, { request_id })
