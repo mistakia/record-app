@@ -81,6 +81,33 @@ describe('create_invalidation_batcher', () => {
     await new Promise((resolve) => setTimeout(resolve, 30))
     expect(flushed).toHaveLength(1)
   })
+
+  test('holds the next flush until the last one settles, then waits load_factor times as long as it took', async () => {
+    const flushed: number[] = []
+    let settle_flush = (): void => {}
+    const batcher = create_invalidation_batcher({
+      flush: async () => {
+        flushed.push(Date.now())
+        await new Promise<void>((resolve) => { settle_flush = resolve })
+      },
+      interval_ms: 10,
+      load_factor: 2
+    })
+    batcher.add(['tracks'])
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(flushed).toHaveLength(1)
+    // Events keep arriving while the node is still answering the refetch.
+    batcher.add(['tracks'])
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(flushed).toHaveLength(1)
+    settle_flush()
+    // The flush took about 110 ms, so the next waits about 220 ms, not 10.
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(flushed).toHaveLength(1)
+    await new Promise((resolve) => setTimeout(resolve, 250))
+    expect(flushed).toHaveLength(2)
+    batcher.cancel()
+  })
 })
 
 describe('reconcile and the write gate', () => {

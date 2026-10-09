@@ -28,23 +28,45 @@ export const tags_for_event = (type: string): NodeApiTag[] => {
 
 // Coalesces tags so a burst of events (a bulk ingest sends one per track)
 // refetches each surface at most once per interval: the first event flushes
-// after interval_ms, and later ones join that flush.
-export const create_invalidation_batcher = ({ flush, interval_ms = 1000 }: {
-  flush: (tags: NodeApiTag[]) => void
+// after interval_ms, and later ones join that flush. A flush that returns a
+// promise (its refetches settling) holds the next one until it settles, and
+// the gap after it is load_factor times as long as it took, up to max_gap_ms:
+// a node that takes seconds per page (a large aggregated view under ingest)
+// spends at most 1 / (1 + load_factor) of its time on this client's
+// refetches, instead of every request it can serve while health checks and
+// the event connection queue behind them.
+export const create_invalidation_batcher = ({ flush, interval_ms = 1000, load_factor = 3, max_gap_ms = 30_000 }: {
+  flush: (tags: NodeApiTag[]) => Promise<unknown> | void
   interval_ms?: number
+  load_factor?: number
+  max_gap_ms?: number
 }): { add: (tags: NodeApiTag[]) => void, drain: () => NodeApiTag[], cancel: () => void } => {
   const pending = new Set<NodeApiTag>()
   let timer: ReturnType<typeof setTimeout> | null = null
+  let in_flight = false
+  let cancelled = false
+  let gap_ms = interval_ms
+  const schedule = (): void => {
+    if (timer !== null || in_flight || cancelled || pending.size === 0) return
+    timer = setTimeout(() => {
+      timer = null
+      const tags_to_flush = [...pending]
+      pending.clear()
+      const started = Date.now()
+      const settling = flush(tags_to_flush)
+      if (settling === undefined) return schedule()
+      in_flight = true
+      settling.catch(() => {}).finally(() => {
+        in_flight = false
+        gap_ms = Math.min(max_gap_ms, Math.max(interval_ms, (Date.now() - started) * load_factor))
+        schedule()
+      })
+    }, gap_ms)
+  }
   return {
     add: (tags) => {
       for (const tag of tags) pending.add(tag)
-      if (timer !== null || pending.size === 0) return
-      timer = setTimeout(() => {
-        timer = null
-        const tags_to_flush = [...pending]
-        pending.clear()
-        flush(tags_to_flush)
-      }, interval_ms)
+      schedule()
     },
     // The pending tags, handed over instead of flushed later.
     drain: () => {
@@ -57,6 +79,7 @@ export const create_invalidation_batcher = ({ flush, interval_ms = 1000 }: {
     cancel: () => {
       if (timer !== null) clearTimeout(timer)
       timer = null
+      cancelled = true
       pending.clear()
     }
   }
