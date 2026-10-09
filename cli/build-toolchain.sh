@@ -2,9 +2,12 @@
 # Builds the bundled node's ingest toolchain into toolchain/ (spec §6.1.5,
 # §6.2.4 pins): ffmpeg 7.1.1 from FFmpeg's release tarball, configured LGPL
 # with only what the tag strip needs, built for arm64 and x86_64 and merged
-# with lipo; and chromaprint's universal fpcalc 1.5.1 release binary. Every
-# download is pinned by SHA-256. electron-builder ships toolchain/bin and
-# toolchain/licenses as Resources/bin and Resources/licenses.
+# with lipo; and chromaprint's universal fpcalc 1.5.1 release binary. It also
+# takes Tor for the masked network privacy (spec §8.2.6): the Tor Project's
+# signed expert bundles for arm64 and x86_64, merged with lipo with their
+# libevent and ad-hoc signed, since Apple Silicon kills an unsigned binary.
+# Every download is pinned by SHA-256. electron-builder ships toolchain/bin
+# and toolchain/licenses as Resources/bin and Resources/licenses.
 #
 # The tag strip (`-i` probe, then `-map 0:a -codec:a copy -bitexact
 # -map_metadata -1`) copies streams, so no encoder is built. The containers
@@ -41,6 +44,16 @@ FPCALC_URL="https://github.com/acoustid/chromaprint/releases/download/v$FPCALC_V
 FPCALC_SHA256=d4d8faff4b5f7c558d9be053da47804f9501eaa6c2f87906a9f040f38d61c860
 CHROMAPRINT_SOURCE_URL="https://github.com/acoustid/chromaprint/releases/download/v$FPCALC_VERSION/chromaprint-$FPCALC_VERSION.tar.gz"
 CHROMAPRINT_SOURCE_SHA256=a1aad8fa3b8b18b78d3755b3767faff9abb67242e01b478ec9a64e190f335e1c
+# The Tor Project's archive keeps every release, unlike dist.torproject.org.
+TOR_BUNDLE_VERSION=15.0.24
+TOR_VERSION=0.4.9.13
+TOR_BASE_URL="https://archive.torproject.org/tor-package-archive/torbrowser/$TOR_BUNDLE_VERSION"
+TOR_ARM64_SHA256=d47afd04b6c751129978390ad003d74ac8b88adfbb939350f0f89999e6570644
+TOR_X86_64_SHA256=8acb0b590f6be34084dcb6d84009ac0c61cc7c5261b7a19d2ab94845aa9bd5b6
+# Tor Browser Developers (signing key); the bundles are signed by a subkey.
+TOR_KEY_URL=https://openpgpkey.torproject.org/.well-known/openpgpkey/torproject.org/hu/kounek7zrdx745qydx6p59t9mqjpuhdf
+TOR_KEY_FINGERPRINT=EF6E286DDA85EA2A4BA7DE684E2C6E8793298290
+TOR_LIBEVENT=libevent-2.1.7.dylib
 MACOS_MIN=12.0
 
 DEMUXERS=mp3,mov,aac,flac,ogg,wav,aiff,asf,matroska
@@ -97,29 +110,40 @@ fresh_private_dir() {
 }
 
 # Fails closed: no gpg, a key with another fingerprint, or any signature but
-# a good one from that key stops the build.
-verify_ffmpeg_signature() {
-  command -v gpg > /dev/null || { echo "gpg is required to verify the FFmpeg tarball" >&2; exit 1; }
+# a good one from that key (VALIDSIG ends with the primary key's fingerprint,
+# so a subkey's signature counts) stops the build.
+# Usage: verify_signature <label> <key url> <fingerprint> <signature url> <file>
+verify_signature() {
+  local label="$1" key_url="$2" fingerprint="$3" signature_url="$4" file="$5"
+  command -v gpg > /dev/null || { echo "gpg is required to verify $label" >&2; exit 1; }
   local keyring
   keyring="$(mktemp -d)"
   chmod 700 "$keyring"
-  curl -fsSL "$FFMPEG_KEY_URL" -o "$keyring/key.asc"
-  curl -fsSL "$FFMPEG_URL.asc" -o "$keyring/tarball.asc"
-  gpg --homedir "$keyring" --batch --quiet --import "$keyring/key.asc" 2> /dev/null
+  curl -fsSL "$key_url" -o "$keyring/key"
+  curl -fsSL "$signature_url" -o "$keyring/signature.asc"
+  gpg --homedir "$keyring" --batch --quiet --import "$keyring/key" 2> /dev/null
   local imported
   imported="$(gpg --homedir "$keyring" --batch --with-colons --fingerprint 2> /dev/null | awk -F: '$1 == "fpr" { print $10 }')"
-  if ! grep -qx "$FFMPEG_KEY_FINGERPRINT" <<< "$imported"; then
+  if ! grep -qx "$fingerprint" <<< "$imported"; then
     rm -rf "$keyring"
-    echo "The FFmpeg signing key does not have the pinned fingerprint" >&2
+    echo "The $label signing key does not have the pinned fingerprint" >&2
     exit 1
   fi
   local status
-  status="$(gpg --homedir "$keyring" --batch --status-fd 1 --verify "$keyring/tarball.asc" "$CACHE/ffmpeg-$FFMPEG_VERSION.tar.xz" 2> /dev/null || true)"
+  status="$(gpg --homedir "$keyring" --batch --status-fd 1 --verify "$keyring/signature.asc" "$file" 2> /dev/null || true)"
   rm -rf "$keyring"
-  if ! grep -q "^\[GNUPG:\] VALIDSIG .* $FFMPEG_KEY_FINGERPRINT\$" <<< "$status"; then
-    echo "The FFmpeg tarball's signature does not verify against $FFMPEG_KEY_FINGERPRINT" >&2
+  if ! grep -q "^\[GNUPG:\] VALIDSIG .* $fingerprint\$" <<< "$status"; then
+    echo "The $label signature does not verify against $fingerprint" >&2
     exit 1
   fi
+}
+
+# Unpacks one arch's expert bundle into $WORK/tor-<arch>.
+unpack_tor() {
+  local arch="$1" archive="$CACHE/tor-expert-bundle-macos-$1-$TOR_BUNDLE_VERSION.tar.gz"
+  rm -rf "$WORK/tor-$arch"
+  mkdir -p "$WORK/tor-$arch"
+  tar -xzf "$archive" -C "$WORK/tor-$arch" tor/tor "tor/$TOR_LIBEVENT" docs/tor.txt docs/libevent.txt
 }
 
 build_ffmpeg() {
@@ -147,7 +171,13 @@ build_ffmpeg() {
 mkdir -p "$CACHE" "$WORK" "$OUT/bin" "$OUT/licenses"
 fresh_private_dir "$BUILD_ROOT"
 fetch "$FFMPEG_URL" "$FFMPEG_SHA256"
-verify_ffmpeg_signature
+verify_signature FFmpeg "$FFMPEG_KEY_URL" "$FFMPEG_KEY_FINGERPRINT" "$FFMPEG_URL.asc" "$CACHE/ffmpeg-$FFMPEG_VERSION.tar.xz"
+for arch in aarch64 x86_64; do
+  if [ "$arch" = aarch64 ]; then sha="$TOR_ARM64_SHA256"; else sha="$TOR_X86_64_SHA256"; fi
+  url="$TOR_BASE_URL/tor-expert-bundle-macos-$arch-$TOR_BUNDLE_VERSION.tar.gz"
+  fetch "$url" "$sha"
+  verify_signature "Tor expert bundle ($arch)" "$TOR_KEY_URL" "$TOR_KEY_FINGERPRINT" "$url.asc" "$CACHE/$(basename "$url")"
+done
 fetch "$FPCALC_URL" "$FPCALC_SHA256"
 fetch "$CHROMAPRINT_SOURCE_URL" "$CHROMAPRINT_SOURCE_SHA256"
 
@@ -159,15 +189,26 @@ codesign --force --sign - "$OUT/bin/ffmpeg"
 tar -xzf "$CACHE/chromaprint-fpcalc-$FPCALC_VERSION-macos-universal.tar.gz" -C "$WORK"
 cp "$WORK/chromaprint-fpcalc-$FPCALC_VERSION-macos-universal/fpcalc" "$OUT/bin/fpcalc"
 
+# tor loads libevent from @executable_path, so both sit in bin/.
+unpack_tor aarch64
+unpack_tor x86_64
+lipo -create "$WORK/tor-aarch64/tor/tor" "$WORK/tor-x86_64/tor/tor" -output "$OUT/bin/tor"
+lipo -create "$WORK/tor-aarch64/tor/$TOR_LIBEVENT" "$WORK/tor-x86_64/tor/$TOR_LIBEVENT" -output "$OUT/bin/$TOR_LIBEVENT"
+codesign --force --sign - "$OUT/bin/$TOR_LIBEVENT"
+codesign --force --sign - "$OUT/bin/tor"
+
 cp "$BUILD_ROOT/ffmpeg-arm64/COPYING.LGPLv2.1" "$OUT/licenses/FFmpeg-COPYING.LGPLv2.1"
 cp "$BUILD_ROOT/ffmpeg-arm64/LICENSE.md" "$OUT/licenses/FFmpeg-LICENSE.md"
 tar -xzf "$CACHE/chromaprint-$FPCALC_VERSION.tar.gz" -C "$WORK" "chromaprint-$FPCALC_VERSION/LICENSE.md"
 cp "$WORK/chromaprint-$FPCALC_VERSION/LICENSE.md" "$OUT/licenses/Chromaprint-LICENSE.md"
+cp "$WORK/tor-aarch64/docs/tor.txt" "$OUT/licenses/Tor-LICENSE.txt"
+cp "$WORK/tor-aarch64/docs/libevent.txt" "$OUT/licenses/libevent-LICENSE.txt"
 cp "$ROOT/resources/TOOLCHAIN-NOTICE.md" "$OUT/licenses/TOOLCHAIN-NOTICE.md"
 
 # The pins the bundled node checks.
 "$OUT/bin/ffmpeg" -version | head -1 | grep -q "^ffmpeg version $FFMPEG_VERSION " || { echo "ffmpeg reports the wrong version" >&2; exit 1; }
 "$OUT/bin/fpcalc" -version | grep -q "^fpcalc version $FPCALC_VERSION " || { echo "fpcalc reports the wrong version" >&2; exit 1; }
+"$OUT/bin/tor" --version | grep -q "^Tor version $TOR_VERSION " || { echo "tor reports the wrong version" >&2; exit 1; }
 
 {
   echo "ffmpeg $FFMPEG_VERSION: $FFMPEG_URL"
@@ -179,8 +220,10 @@ cp "$ROOT/resources/TOOLCHAIN-NOTICE.md" "$OUT/licenses/TOOLCHAIN-NOTICE.md"
   echo "  archive sha256 $FPCALC_SHA256"
   echo "chromaprint source: $CHROMAPRINT_SOURCE_URL"
   echo "  sha256 $CHROMAPRINT_SOURCE_SHA256"
+  echo "tor $TOR_VERSION: Tor expert bundle $TOR_BUNDLE_VERSION, $TOR_BASE_URL"
+  echo "  aarch64 sha256 $TOR_ARM64_SHA256, x86_64 sha256 $TOR_X86_64_SHA256, signatures verified against $TOR_KEY_FINGERPRINT"
   echo "outputs:"
-  (cd "$OUT" && shasum -a 256 bin/ffmpeg bin/fpcalc | sed 's/^/  /')
+  (cd "$OUT" && shasum -a 256 bin/ffmpeg bin/fpcalc bin/tor "bin/$TOR_LIBEVENT" | sed 's/^/  /')
   for arch in arm64 x86_64; do
     echo "  ffmpeg $arch slice: $(shasum -a 256 "$BUILD_ROOT/ffmpeg-$arch/ffmpeg" | cut -d' ' -f1)"
   done

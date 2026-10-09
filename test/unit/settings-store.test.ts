@@ -19,16 +19,16 @@ const temporary_file = async (): Promise<string> => {
 describe('settings store', () => {
   test('starts on the stable channel, the first-launch default (spec 8.2.5)', async () => {
     const store = await open_settings_store({ file_path: await temporary_file() })
-    expect(store.get()).toEqual({ update_channel: 'stable' })
+    expect(store.get()).toEqual({ update_channel: 'stable', network_privacy: 'public' })
   })
 
   test('persists a chosen channel, readable only by the owner, and reads it back on reopen', async () => {
     const file_path = await temporary_file()
     const store = await open_settings_store({ file_path })
     expect(await store.set_channel('beta')).toEqual({ ok: true, data: 'beta' })
-    expect(JSON.parse(await readFile(file_path, 'utf8'))).toEqual({ update_channel: 'beta' })
+    expect(JSON.parse(await readFile(file_path, 'utf8'))).toEqual({ update_channel: 'beta', network_privacy: 'public' })
     expect((await stat(file_path)).mode & 0o777).toBe(0o600)
-    expect((await open_settings_store({ file_path })).get()).toEqual({ update_channel: 'beta' })
+    expect((await open_settings_store({ file_path })).get()).toEqual({ update_channel: 'beta', network_privacy: 'public' })
   })
 
   test('refuses a channel that is not stable or beta without changing the saved setting', async () => {
@@ -36,16 +36,44 @@ describe('settings store', () => {
     for (const input of ['canary', undefined, null, 42]) {
       expect((await store.set_channel(input)).ok).toBe(false)
     }
-    expect(store.get()).toEqual({ update_channel: 'stable' })
+    expect(store.get()).toEqual({ update_channel: 'stable', network_privacy: 'public' })
   })
 
   test('falls back to the default on a corrupt or invalid file', async () => {
     const file_path = await temporary_file()
     const quiet = () => {}
     await writeFile(file_path, '{ not json')
-    expect((await open_settings_store({ file_path, log: quiet })).get()).toEqual({ update_channel: 'stable' })
+    expect((await open_settings_store({ file_path, log: quiet })).get()).toEqual({ update_channel: 'stable', network_privacy: 'public' })
     await writeFile(file_path, JSON.stringify({ update_channel: 'nightly' }))
-    expect((await open_settings_store({ file_path, log: quiet })).get()).toEqual({ update_channel: 'stable' })
+    expect((await open_settings_store({ file_path, log: quiet })).get()).toEqual({ update_channel: 'stable', network_privacy: 'public' })
+  })
+})
+
+describe('network privacy (spec 8.3.5)', () => {
+  test('defaults to public, persists masked, and keeps the channel beside it', async () => {
+    const file_path = await temporary_file()
+    const store = await open_settings_store({ file_path })
+    expect(store.get().network_privacy).toBe('public')
+    expect(await store.set_channel('beta')).toEqual({ ok: true, data: 'beta' })
+    expect(await store.set_network_privacy('masked')).toEqual({ ok: true, data: 'masked' })
+    expect(JSON.parse(await readFile(file_path, 'utf8'))).toEqual({ update_channel: 'beta', network_privacy: 'masked' })
+    expect((await open_settings_store({ file_path })).get()).toEqual({ update_channel: 'beta', network_privacy: 'masked' })
+  })
+
+  test('refuses anything but public or masked, and a bad stored value falls back alone', async () => {
+    const file_path = await temporary_file()
+    const store = await open_settings_store({ file_path })
+    for (const input of ['tor', 'relayed', undefined, true]) expect((await store.set_network_privacy(input)).ok).toBe(false)
+    expect(store.get().network_privacy).toBe('public')
+    await writeFile(file_path, JSON.stringify({ update_channel: 'beta', network_privacy: 'hidden' }))
+    expect((await open_settings_store({ file_path, log: () => {} })).get()).toEqual({ update_channel: 'beta', network_privacy: 'public' })
+  })
+
+  test('a channel and a privacy saved at once both land', async () => {
+    const file_path = await temporary_file()
+    const store = await open_settings_store({ file_path })
+    await Promise.all([store.set_channel('beta'), store.set_network_privacy('masked')])
+    expect(JSON.parse(await readFile(file_path, 'utf8'))).toEqual({ update_channel: 'beta', network_privacy: 'masked' })
   })
 })
 
@@ -56,7 +84,7 @@ describe('settings store concurrency', () => {
     const channels = ['beta', 'stable', 'beta', 'stable', 'beta']
     const results = await Promise.all(channels.map(async (update_channel) => await store.set_channel(update_channel)))
     expect(results.every((result) => result.ok)).toBe(true)
-    expect(store.get()).toEqual({ update_channel: 'beta' })
+    expect(store.get()).toEqual({ update_channel: 'beta', network_privacy: 'public' })
     expect(JSON.parse(await readFile(file_path, 'utf8')).update_channel).toBe('beta')
     expect(await Bun.file(`${file_path}.tmp`).exists()).toBe(false)
   })

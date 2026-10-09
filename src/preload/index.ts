@@ -4,7 +4,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 
-import { IPC_CHANNELS, type BundledState, type ConnectionSave, type ConnectionView, type EventsState, type ImportTarget, type NodeEventMessage, type NodeRequest, type RecordBridge, type UpdateChannel } from '#shared/bridge.ts'
+import { IPC_CHANNELS, type BundledState, type ConnectionSave, type ConnectionView, type EventsState, type ImportTarget, type NodeEventMessage, type NodeRequest, type NetworkPrivacy, type RecordBridge, type UpdateChannel } from '#shared/bridge.ts'
 import type { HibernationSnapshot } from '#shared/snapshot.ts'
 
 const require_object = (value: unknown, name: string): void => {
@@ -82,7 +82,11 @@ const bridge: RecordBridge = {
     restart: async () => await ipcRenderer.invoke(IPC_CHANNELS.bundled_restart),
     open_data_dir: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_data_dir) },
     open_log: async () => { await ipcRenderer.invoke(IPC_CHANNELS.bundled_open_log) },
-    choose_data_dir: async () => await ipcRenderer.invoke(IPC_CHANNELS.bundled_choose_data_dir)
+    choose_data_dir: async () => await ipcRenderer.invoke(IPC_CHANNELS.bundled_choose_data_dir),
+    set_network_privacy: async (privacy: NetworkPrivacy) => {
+      if (privacy !== 'public' && privacy !== 'masked') throw new TypeError('network privacy must be public or masked')
+      return await ipcRenderer.invoke(IPC_CHANNELS.bundled_set_network_privacy, privacy)
+    }
   },
   diagnostics: {
     get: async () => await ipcRenderer.invoke(IPC_CHANNELS.diagnostics_get)

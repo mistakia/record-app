@@ -11,7 +11,7 @@ import type { ElectronApplication, Page } from 'playwright-core'
 
 import { is_alive } from '#main/bundled/process-probe.ts'
 
-interface BundledView { status: string, pid: number | null, port: number | null, url: string | null, version: string, ingest_disabled: string | null, data_dir: string, log_path: string }
+interface BundledView { status: string, pid: number | null, port: number | null, url: string | null, version: string, ingest_disabled: string | null, network_privacy: string, data_dir: string, log_path: string }
 
 export const bundled_state = async (window: Page): Promise<BundledView> =>
   await window.evaluate(async () => await (window as unknown as { record: { bundled: { get_state: () => Promise<BundledView> } } }).record.bundled.get_state())

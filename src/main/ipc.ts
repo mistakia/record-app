@@ -193,6 +193,18 @@ export const register_ipc = ({ store, connection, manager, session, snapshots, d
   })
   handle(IPC_CHANNELS.bundled_open_data_dir, async () => { await shell.openPath(manager.get_state().data_dir) })
   handle(IPC_CHANNELS.bundled_choose_data_dir, async () => await diagnostics.choose_data_dir())
+  // Spec §8.3.5: saved first; a change stops the bundled node and starts it
+  // again under the new privacy, Tor first when masked. (restart() only
+  // recovers a node that gave up, and leaves a running one alone.)
+  handle(IPC_CHANNELS.bundled_set_network_privacy, async (input) => {
+    const previous = settings.get().network_privacy
+    const saved = await settings.set_network_privacy(input)
+    if (saved.ok && saved.data !== previous && store.get().mode === 'bundled') {
+      await manager.stop()
+      await manager.start()
+    }
+    return saved
+  })
   handle(IPC_CHANNELS.diagnostics_get, async () => diagnostics.collect())
   handle(IPC_CHANNELS.bundled_open_log, async () => { shell.showItemInFolder(manager.get_state().log_path) })
 

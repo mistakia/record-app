@@ -178,6 +178,23 @@ try {
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'anoisesrc=d=8:c=brown:seed=11:a=0.3', '-metadata', 'title=Packaged Ingest', ingest_audio])
     await check_bundled_ingest({ window, step, audio_path: ingest_audio, title: 'Packaged Ingest', tracks_before: 1, slow })
 
+    // Masked through Tor (spec §8.3.5): the node relaunches through the
+    // bundled tor from Resources/bin and listens on, and advertises, nothing.
+    await window.getByRole('navigation').getByRole('link', { name: 'Connection', exact: true }).click()
+    await window.getByTestId('network-privacy').getByRole('radio', { name: /Masked through Tor/ }).check()
+    const masked = await wait_for(async () => {
+      const state = await bundled_state(window)
+      if (state.status === 'failed') throw new Error(`the masked node failed: ${JSON.stringify(state)}`)
+      return state.status === 'running' && state.network_privacy === 'masked' && state.pid !== running.pid ? state : null
+    }, 'the masked node', slow(180_000))
+    const masked_settings = await (await fetch(`${masked.url as string}/api/settings`)).json() as { addresses?: string[], network_mode?: string }
+    step('masked node', { network_mode: masked_settings.network_mode, addresses: masked_settings.addresses })
+    if (masked_settings.network_mode !== 'masked' || (masked_settings.addresses ?? []).length !== 0) throw new Error('the masked node advertises addresses')
+    const tor_path = join(await realpath(app_path), 'Contents', 'Resources', 'bin', 'tor')
+    const tor_pids = execFileSync('pgrep', ['-f', tor_path], { encoding: 'utf8' }).trim().split('\n').filter((pid) => pid !== '').map(Number)
+    step('bundled tor', { pids: tor_pids })
+    if (tor_pids.length !== 1) throw new Error(`expected one bundled tor, found ${tor_pids.length}`)
+
     await window.getByRole('navigation').getByRole('link', { name: 'Diagnostics', exact: true }).click()
     step('diagnostics', (await window.getByTestId('diagnostics').innerText()).split('\n').slice(0, 30).join(' | '))
     if (console_errors.length > 0) throw new Error(`renderer console errors:\n${console_errors.join('\n')}`)
@@ -186,8 +203,10 @@ try {
     // Quitting stops the child with the app.
     app.kill('SIGTERM')
     step('app exit code', await exited)
-    await wait_for(async () => (is_alive(running.pid as number) ? null : true), 'the child to exit', slow(10_000))
+    await wait_for(async () => (is_alive(masked.pid as number) ? null : true), 'the child to exit', slow(10_000))
     step('child after quit', 'gone')
+    await wait_for(async () => (tor_pids.some(is_alive) ? null : true), 'tor to exit', slow(10_000))
+    step('tor after quit', 'gone')
   } finally {
     if (app.exitCode === null && app.signalCode === null) {
       app.kill('SIGKILL')

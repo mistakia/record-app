@@ -13,7 +13,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
 
-import type { BundledState } from '#shared/bridge.ts'
+import type { BundledState, NetworkPrivacy } from '#shared/bridge.ts'
 import { MAX_FAILED_RESTARTS } from '#shared/bundled.ts'
 import { build_child_env } from './child-env.ts'
 import type { ChildHandle, SpawnChild } from './child-handle.ts'
@@ -55,6 +55,13 @@ export const choose_port = async (preferred: number | null): Promise<number> => 
 
 export interface Health { peer_id: string, identity_address: string | null }
 
+// The node's network (spec §8.3.5, §8.4.2): the privacy, and the record-node
+// `network` config that carries it, absent for public, the node's default.
+export interface BundledNetwork {
+  privacy: NetworkPrivacy
+  config?: { mode: 'masked', tor: { socks_address: string } }
+}
+
 // GET /api/settings for the peer_id, and GET /api/identity for the
 // identity's default own library.
 export const probe_health = async (url: string): Promise<Health | null> => {
@@ -71,6 +78,7 @@ export const probe_health = async (url: string): Promise<Health | null> => {
 
 export const create_node_manager = ({
   spawn_child, cli_path, data_dir: initial_data_dir, config_path, version, env, toolchain = null, orphan_marker, log, on_state,
+  network = async () => ({ privacy: 'public' }),
   preferred_port = async () => null,
   pick_port = choose_port,
   health = probe_health,
@@ -93,6 +101,9 @@ export const create_node_manager = ({
   orphan_marker: string
   log: ReturnType<typeof create_node_log>
   on_state: (state: BundledState) => void
+  // Called at each launch; for masked it starts Tor and resolves once Tor's
+  // SOCKS port is ready, so the node never starts dialing directly.
+  network?: () => Promise<BundledNetwork>
   preferred_port?: () => Promise<number | null>
   pick_port?: (preferred: number | null) => Promise<number>
   health?: (url: string) => Promise<Health | null>
@@ -118,6 +129,7 @@ export const create_node_manager = ({
     error: null,
     stderr_tail: null,
     ingest_disabled: null,
+    network_privacy: 'public',
     node_key_pin: read_pin(data_dir),
     started_at_ms: null
   }
@@ -287,10 +299,24 @@ export const create_node_manager = ({
     const port = await pick_port(remembered !== null && remembered === avoid_port ? null : remembered)
     await checkpoint('port')
     if (stale()) return
+    // A masked network that cannot start fails the start: the node never
+    // runs in the open in its place.
+    let bundled_network: BundledNetwork
+    try {
+      bundled_network = await network()
+    } catch (error) {
+      if (!stale()) fail(`The bundled node's network could not start: ${error instanceof Error ? error.message : String(error)}`)
+      return
+    }
+    const { privacy, config: network_config } = bundled_network
+    await checkpoint('network')
+    if (stale()) return
     await mkdir(data_dir, { recursive: true })
     // Loopback only and no browser origins (spec §8.4.2, §8.7.5): record-node
     // binds 127.0.0.1 by default, and this config pins it.
-    await writeFile(config_path, `${JSON.stringify({ host: '127.0.0.1', port, cors_origins: [], ytdlp_path: YTDLP_DISABLED_PATH, ...toolchain })}\n`, { mode: 0o600 })
+    const node_config = { host: '127.0.0.1', port, cors_origins: [], ytdlp_path: YTDLP_DISABLED_PATH, ...toolchain, ...(network_config === undefined ? {} : { network: network_config }) }
+    await writeFile(config_path, `${JSON.stringify(node_config)}\n`, { mode: 0o600 })
+    set_state({ network_privacy: privacy })
     await checkpoint('config')
     if (stale()) return
     const listening = { port: null as number | null }

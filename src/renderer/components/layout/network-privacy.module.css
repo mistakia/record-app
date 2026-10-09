@@ -1,0 +1,36 @@
+.privacy {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  border: none;
+}
+
+.privacy legend {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.option {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.detail {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.error {
+  margin: 0;
+  color: #b00020;
+  font-size: 12px;
+}

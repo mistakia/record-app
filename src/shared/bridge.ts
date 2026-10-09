@@ -10,6 +10,10 @@ export type ConnectionMode = 'bundled' | 'remote'
 // prereleases.
 export type UpdateChannel = 'stable' | 'beta'
 
+// The bundled node's network privacy (spec §8.3.5): public, or masked, where
+// every connection goes out through the bundled Tor client (§5.6.2).
+export type NetworkPrivacy = 'public' | 'masked'
+
 export interface ConnectionConfig {
   mode: ConnectionMode
   // The remote node's URL; kept while in bundled mode, so switching back
@@ -116,6 +120,8 @@ export interface BundledState {
   stderr_tail: string | null
   // Why ingest is off (the pinned ffmpeg and fpcalc are not bundled yet).
   ingest_disabled: string | null
+  // The privacy the node was last launched with (spec §8.3.5).
+  network_privacy: NetworkPrivacy
   // The node and identity the data directory holds, once it has answered.
   node_key_pin: { peer_id: string, identity_address: string | null } | null
   // When the running node last came up, for its uptime.
@@ -208,6 +214,9 @@ export interface RecordBridge {
     // Main's folder picker and confirmation, then a restart there; the new
     // path, or null when the user cancels.
     choose_data_dir: () => Promise<NodeResult<string | null>>
+    // Saves the network privacy (spec §8.3.5) and restarts the bundled node
+    // under it; the state's network_privacy follows once it has relaunched.
+    set_network_privacy: (privacy: NetworkPrivacy) => Promise<NodeResult<NetworkPrivacy>>
   }
   diagnostics: {
     get: () => Promise<Diagnostics>
@@ -254,6 +263,7 @@ export const IPC_CHANNELS = {
   bundled_open_data_dir: 'record:bundled:open-data-dir',
   bundled_open_log: 'record:bundled:open-log',
   bundled_choose_data_dir: 'record:bundled:choose-data-dir',
+  bundled_set_network_privacy: 'record:bundled:set-network-privacy',
   diagnostics_get: 'record:diagnostics:get',
   updates_set_channel: 'record:updates:set-channel',
   snapshot_load: 'record:snapshot:load',

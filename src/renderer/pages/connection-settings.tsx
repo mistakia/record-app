@@ -1,6 +1,6 @@
 // Spec §8.3.5: the bundled or remote selector, the remote node URL and
-// access token, the bundled node's read-only details, test connection, and
-// save or cancel. The token goes to main, which keeps it in the Keychain and
+// access token, the bundled node's read-only details and network privacy,
+// test connection, and save or cancel. The token goes to main, which keeps it in the Keychain and
 // never hands it back; the page only learns whether one is saved (§8.7.3).
 // A save that changes mode asks first (§8.3.4). Save tears down everything
 // tied to the old node (playback, the query cache) and reinitializes
@@ -13,6 +13,7 @@ import styles from './connection-settings.module.css'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { SnapshotControls } from '#renderer/components/common/snapshot-controls.tsx'
 import { BundledDetails } from '#renderer/components/layout/bundled-details.tsx'
+import { NetworkPrivacySelector } from '#renderer/components/layout/network-privacy.tsx'
 import { stop_playback } from '#renderer/player/player-controller.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { connection_loaded, events_state_changed, node_switch_started } from '#renderer/store/connection.ts'
@@ -147,7 +148,12 @@ export const ConnectionSettings = () => {
           </label>
         </fieldset>
         {mode === 'bundled'
-          ? <BundledDetails state={bundled} />
+          ? (
+            <>
+              <BundledDetails state={bundled} />
+              {saved_mode === 'bundled' && <NetworkPrivacySelector state={bundled} />}
+            </>
+            )
           : (
             <>
               <label className={styles.field}>
