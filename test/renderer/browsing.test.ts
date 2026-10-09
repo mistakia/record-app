@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import { is_cid } from '#renderer/components/library/cid.ts'
-import { current_progress, is_replicating, library_category, own_library_address, RECENT_LINK_MS } from '#renderer/components/library/library-category.ts'
+import { current_progress, is_replicating, library_category, library_name, own_library_address, parse_library_address, RECENT_LINK_MS, short_address } from '#renderer/components/library/library-category.ts'
 import { pages_for_rows, row_location } from '#renderer/components/track/track-pages.ts'
 import type { Library } from '#renderer/api/types.ts'
 import { DEFAULT_TRACK_FILTERS, track_page_args } from '#renderer/store/api.ts'
@@ -30,6 +30,27 @@ const library = (overrides: Partial<Library> = {}): Library => ({
   held_capability_ids: [],
   peer_ids: [],
   ...overrides
+})
+
+// The spec §3.6.1 reference vector's mixes library.
+const MIXES = '/record/zBwWX7ayGQu2GevKxpfRiHbcuNjtqkbRghTqUtCPRKbeRGLdtphXDbHThj9HcnMwMXQhF9GZY9rhYt7Yaibr4Z5Bsed4o/mixes'
+
+describe('library address display', () => {
+  test('parses the discriminator and the manifest CID tail', () => {
+    expect(parse_library_address(MIXES)).toEqual({ discriminator: 'mixes', fingerprint: 'Bsed4o' })
+    expect(short_address(MIXES)).toBe('mixes · …Bsed4o')
+  })
+
+  test('leaves an address of another shape whole', () => {
+    expect(parse_library_address('/orbitdb/zdpu/record')).toBeNull()
+    expect(short_address('/orbitdb/zdpu/record')).toBe('/orbitdb/zdpu/record')
+  })
+
+  test('names a library by alias, then name, then discriminator', () => {
+    expect(library_name({ alias: 'Friends', name: 'Mixes', address: MIXES })).toBe('Friends')
+    expect(library_name({ alias: null, name: 'Mixes', address: MIXES })).toBe('Mixes')
+    expect(library_name({ alias: null, name: null, address: MIXES })).toBe('mixes')
+  })
 })
 
 describe('virtual list pages', () => {

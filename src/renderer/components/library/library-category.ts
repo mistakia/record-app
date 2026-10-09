@@ -9,8 +9,29 @@ export type LibraryCategory = 'own' | 'shared' | 'linked' | 'discovered'
 export const library_category = (library: Pick<Library, 'is_own' | 'is_linked' | 'held_capability_ids'>): LibraryCategory =>
   library.is_own ? 'own' : library.held_capability_ids.length > 0 ? 'shared' : library.is_linked ? 'linked' : 'discovered'
 
+// A library address is /record/<manifest CID>/<discriminator> (spec
+// §3.6.1). Every manifest CID opens with the same multibase and codec
+// prefix (zBwWX...), so its tail is what tells two libraries apart.
+export interface LibraryAddressParts { discriminator: string, fingerprint: string }
+
+const FINGERPRINT_LENGTH = 6
+
+export const parse_library_address = (address: string): LibraryAddressParts | null => {
+  const match = /^\/record\/([1-9A-HJ-NP-Za-km-z]+)\/([^/]+)$/.exec(address)
+  if (match?.[1] === undefined || match[2] === undefined) return null
+  return { discriminator: match[2], fingerprint: match[1].slice(-FINGERPRINT_LENGTH) }
+}
+
+// The address as people read it: `mixes · …8MnGCA`.
+export const short_address = (address: string): string => {
+  const parts = parse_library_address(address)
+  return parts === null ? address : `${parts.discriminator} · …${parts.fingerprint}`
+}
+
+// The alias, then the About name; a library with neither goes by its
+// discriminator rather than its whole address.
 export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address'>): string =>
-  library.alias ?? library.name ?? library.address
+  library.alias ?? library.name ?? parse_library_address(library.address)?.discriminator ?? library.address
 
 // The first active own recordstore: chapter 7 v1.1 lists every own library,
 // the listens library and retired ones included.

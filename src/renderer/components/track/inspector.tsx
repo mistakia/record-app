@@ -12,7 +12,7 @@ import { row_location } from './track-pages.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
-import { describe_holders, library_category, library_name } from '#renderer/components/library/library-category.ts'
+import { describe_holders, library_category, library_name, short_address } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
@@ -33,7 +33,7 @@ export const Inspector = ({ source, on_close }: { source: ListSource, on_close: 
   const libraries = node_api.endpoints.get_libraries.useQuery().data
   const name_of = (address: string): string => {
     const library = libraries?.find((candidate) => candidate.address === address)
-    return library === undefined ? address : library_name(library)
+    return library === undefined ? short_address(address) : library_name(library)
   }
 
   return (

@@ -1,0 +1,18 @@
+.address {
+  flex: none;
+  height: auto;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.address:hover:not(:disabled) {
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
