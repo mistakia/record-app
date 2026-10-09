@@ -41,6 +41,10 @@ export const short_address = (address: string): string => {
 export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address'>): string =>
   library.alias ?? library.name ?? parse_library_address(library.address)?.discriminator ?? library.address
 
+// An own library's name, where the listens library goes by Play history.
+export const own_library_name = (library: Pick<Library, 'alias' | 'name' | 'address' | 'library_type'>): string =>
+  library.library_type === 'listens' ? 'Play history' : library_name(library)
+
 // The first active own recordstore: chapter 7 v1.1 lists every own library,
 // the listens library and retired ones included.
 export const own_library_address = (libraries: readonly Library[] | undefined): string | null =>

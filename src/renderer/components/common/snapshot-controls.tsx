@@ -50,7 +50,7 @@ export const SnapshotControls = () => {
         {info === null ? 'Reading' : `${format_mebibytes(info.size_bytes)} used of ${format_mebibytes(info.budget_bytes)}`}
       </p>
       <label className={styles.limit}>
-        Limit (MB, 0 turns it off)
+        <span>Limit <span className={styles.limit_hint}>in MB, 0 turns it off</span></span>
         <input
           type='number'
           min={0}

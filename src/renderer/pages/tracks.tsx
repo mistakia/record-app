@@ -145,6 +145,7 @@ export const Tracks = () => {
                 busy={first_page.isFetching}
                 sort={{ sort: filters.sort, order: filters.order, on_sort: (sort) => { go(with_sort(view, sort)) } }}
                 actions={actions}
+                beside_pane={inspecting}
               />
               {inspecting && <Inspector source={{ kind: 'tracks', library_address, filters }} on_close={() => { set_inspecting(false) }} />}
             </div>

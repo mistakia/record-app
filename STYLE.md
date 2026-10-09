@@ -134,7 +134,7 @@ Base's type system, bundled with the app (`src/renderer/assets/fonts/`) and serv
 
 - **Scale** — 10px (xxs, screen kickers) / 11px (xs, labels, chips, metadata) / 12px (sm, secondary rows, buttons) / 13px (base, track rows and body) / 15px (reading: about text, dialogs) / 18px (xl, page titles) / 24px (display, now-playing title, empty-state headline).
 - **Weights** — 400 body, 600 emphasis, headings, the cursor row's title. Nothing else.
-- **Labels and section titles** — 10–11px, uppercase, 0.5px tracking, `--color-text-tertiary`. Set apart by case and tracking, not size.
+- **Labels and section titles** — 10–11px, uppercase, 0.5px tracking, `--color-text-tertiary`. Set apart by case and tracking, not size. Every form field's label and fieldset legend takes this one style (`NODE URL`, `NAME`, `ACTIONS`); a qualifier inside a label drops to lowercase in the same ink (`LIMIT in MB, 0 turns it off`).
 - **Screen labels** — Departure Mono at 11px is allowed inside a screen only, where the glow carries it, uppercase with 1px tracking and a `// ` prefix (base's poster tell).
 - **Numerals** — `font-variant-numeric: tabular-nums` on every duration, time, count, and size.
 - **Truncation** — single-line cells ellipsize; the full value is in the inspector, never only in a `title` tooltip.
@@ -237,7 +237,7 @@ The "feng shui" of base, made concrete for a library: every legacy capability st
 
 - **Rest** — a track row shows index, title, artist, album, tags (quiet), and duration. Bitrate, format, and listen columns are on by default as in legacy but rendered tertiary; any column can be hidden from the header's menu, and the choice persists. Holders, pins, and CIDs are not on the row.
 - **Hover or cursor** — the index becomes `▶`, `+TAG` appears in its column, `☆` brightens, and the row's `…` appears. As legacy.
-- **Inspector** — `i` or a double-click opens the cursor track's full detail in the docked pane: every field, every holder library, pin state, CIDs, listen count, where each tag came from. Detail lives here so the row never has to carry it.
+- **Inspector** — `i` or a double-click opens the cursor track's full detail in the docked pane: every field, every holder library, pin state, listen count, where each tag came from, and the CIDs behind a closed `show identifiers` strip. Detail lives here so the row never has to carry it. Beside the pane the list drops its FMT and LISTENS columns, so it never scrolls sideways; the saved column choice is untouched.
 - **Sections fold** — management pages (libraries, identity, settings, capabilities, replication policy) are stacks of framed sections. Primary sections open by default; secondary sections show as one rule line with a count: `▸ CAPABILITIES HELD  3 ─────────`. Folded state persists per section.
 - **Advanced is a disclosure** — the JSON filter editor, raw identifiers, peer IDs, and folder paths sit behind an "advanced" disclosure inside their section.
 - **Preview, then "show N more"** — lists inside a section preview a few items (5 libraries, 5 capabilities) and end in a tertiary `show 12 more`. Long text cuts at 120 characters with an inline `show more`.
@@ -334,12 +334,12 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 
 Libraries are grouped by the relationship, never labelled with the spec's category terms. Each group is a full-width framed section with its count on the stroke:
 
-- **YOURS** — own libraries, `[new]` on the stroke. A row is the 20px avatar, the name, and the track count; it opens the library. The listens library goes by `Play history`, with `Where your plays are recorded.` under it, and opens Recently Played. A retired library carries a tertiary `retired` after its name.
+- **YOURS** — own libraries, `[new]` on the stroke. A row is the 20px avatar, the name, and the track count; it opens the library. The listens library goes by `Play history` here and wherever own libraries are listed (Identity too), with `Where your plays are recorded.` under it, and opens Recently Played. A retired library carries a tertiary `retired` after its name.
 - **SHARED WITH YOU** — libraries this identity holds a capability in, each with a `You may: …` line; absent when empty.
 - **FOLLOWING** — linked libraries, `[link]` on the stroke; empty, it says how to follow one, with the link.
 - **DISCOVERED** — known only from peer discovery; absent when empty.
 
-Shared, following, and discovered rows carry replication state, mode with `change`, peers, and connect, disconnect, unlink, and `…`. Every group previews five rows and ends in `show N more`; `show addresses` under the groups adds each row's short address. Where a category is named in a sentence it reads `yours`, `shared with you`, `followed`, `discovered`: the inspector says `in 2 of yours, 1 followed`.
+Shared, following, and discovered rows carry replication state, mode with `change`, peers, one `Pause` or `Resume` for replication (whichever applies), unlink, and `…`. Every group previews five rows and ends in `show N more`; `show addresses` under the groups adds each row's short address. Where a category is named in a sentence it reads `yours`, `shared with you`, `followed`, `discovered`: the inspector says `in 2 of yours, 1 followed`.
 
 An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Sharing** (`WHO MAY WRITE`: the capabilities it has issued and the issue form, read-only once retired). Retiring lands on Sharing. The identity's own profile is also edited on Identity.
 
@@ -354,7 +354,7 @@ Linking a library and creating one are their own pages (`/libraries/link`, `/lib
 
 ### Settings (paper)
 
-The legacy settings page, restated for v1, as framed sections: Connection (mode, URL, token, test), Storage (snapshot budget, cache size, reset), Shortcuts (the `HOTKEYS` table), Peers (the peer list, `3 peers` count on the stroke), Diagnostics. The Diagnostics section's live block (connection state, PID, uptime, memory) is a small screen; versions and folders stay paper with `[show in finder]` actions.
+The legacy settings page, restated for v1, as framed sections: Connection (mode, URL, token, test), Storage (snapshot budget, cache size, reset), Shortcuts (the `HOTKEYS` table), Peers (the peer list, folded by default with its count on the rule), Diagnostics. The Diagnostics section's live block (connection state, memory, and for the bundled node its status, PID, and uptime) is a small screen; versions and folders stay paper with `[show in finder]` actions.
 
 ### Import (paper, with a screen)
 
@@ -389,7 +389,7 @@ Departure Mono headline (24px, uppercase), a 13px mono detail line, and the acti
 | Rest      | Neutral ink, no accent                                    | Phosphor at body glow                          |
 | Hover     | `--color-surface-hover` wash, ink to accent on links      | Accent wash, dim ink to full phosphor          |
 | Cursor    | `--color-surface-cursor` wash, 600 title                  | Accent wash                                    |
-| Focus     | 2px `--color-focus-ring` outline, offset 1px              | `0 0 8px` phosphor glow                        |
+| Focus     | 2px `--color-focus-ring` outline, offset 1px (inset 2px on the sidebar's edge-to-edge items, which it clips) | `0 0 8px` phosphor glow |
 | Selected  | `--color-selected-bg`, breadcrumb ink                     | Accent wash with full phosphor                 |
 | Active    | Primary accent fill or reverse video (active nav item)    | Lit toggle (`aria-pressed`)                    |
 | Playing   | Accent title and `▸`                                      | Display glow and on-air dot                    |

@@ -1,7 +1,8 @@
 // The inspector (STYLE.md § Progressive Disclosure › Inspector): the cursor
 // track's full detail in a pane docked on the right of the page column, so
 // the row never has to carry it — every field, the libraries holding it, pin
-// state, CIDs, listen count, and where each tag came from. Values are
+// state, listen count, where each tag came from, and the CIDs behind a
+// closed `show identifiers` strip. Values are
 // selectable plain text (spec §8.10.6). Empty values are left out.
 
 import type { ReactNode } from 'react'
@@ -12,6 +13,7 @@ import { row_location } from './track-pages.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
+import { ShowStrip } from '#renderer/components/common/show-strip.tsx'
 import { CATEGORY_LABELS, describe_holders, library_category, library_name, short_address } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -64,7 +66,6 @@ export const Inspector = ({ source, on_close }: { source: ListSource, on_close: 
               <Field label='Listens' testid='inspector-listens'>{track.listen_count}</Field>
               {present(track.added_at_ms) && <Field label='Added'>{new Date(track.added_at_ms ?? 0).toLocaleString()}</Field>}
               <Field label='Pinned' testid='inspector-pinned'>{track.is_pinned === true ? '◆ kept on every device of this identity' : 'no'}</Field>
-              <Field label='In your library'>{track.have_track ? 'yes' : 'no'}</Field>
             </dl>
             {present(track.library_addresses) && (
               <section className={styles.section}>
@@ -86,15 +87,14 @@ export const Inspector = ({ source, on_close }: { source: ListSource, on_close: 
                 </ul>
               </section>
             )}
-            <section className={styles.section}>
-              <h3>Identifiers</h3>
+            <ShowStrip label='identifiers' testid='inspector-identifiers'>
               <dl className={styles.ids}>
                 <dt>Track</dt><dd>{track.id}</dd>
                 <dt>Content</dt><dd data-testid='inspector-content-cid'>{track.content_cid}</dd>
                 <dt>Audio</dt><dd>{track.audio_cid}</dd>
                 {track.artwork?.map((cid, index) => <div key={cid} className={styles.row}><dt>Artwork {index + 1}</dt><dd>{cid}</dd></div>)}
               </dl>
-            </section>
+            </ShowStrip>
           </div>
           )}
     </aside>

@@ -43,7 +43,7 @@ export const Listens = () => {
         ? <EmptyState headline='Nothing yet' detail='Tracks you play show here, newest first.' action={<Link to={ROUTES.tracks}>Tracks</Link>} testid='listens-empty' />
         : (
           <div ref={body_ref} className={styles.body} data-testid='listens'>
-            <TrackList source={{ kind: 'listens' }} view_key={ROUTES.listens} total={total} busy={listens.isFetching} actions={actions} />
+            <TrackList source={{ kind: 'listens' }} view_key={ROUTES.listens} total={total} busy={listens.isFetching} actions={actions} beside_pane={inspecting} />
             {inspecting && <Inspector source={{ kind: 'listens' }} on_close={() => { set_inspecting(false) }} />}
           </div>
           )}

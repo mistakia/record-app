@@ -88,9 +88,14 @@ export const DiagnosticsSection = () => {
               {events?.last_error != null ? `: !! ${events.last_error}` : ''}
             </dd>
             <dt>data</dt><dd>{freshness}</dd>
-            <dt>node</dt><dd data-testid='diagnostics-bundled-status'>{bundled.status}{bundled.error === null ? '' : `: !! ${bundled.error}`}</dd>
-            <dt>pid</dt><dd data-testid='diagnostics-bundled-pid'>{bundled.pid === null ? 'none' : `PID ${bundled.pid}`}</dd>
-            <dt>uptime</dt><dd className='tabular'>{running ? duration(now - (bundled.started_at_ms ?? now)) : 'not running'}</dd>
+            {/* The bundled node's rows; a remote node has none to show. */}
+            {data.mode === 'bundled' && (
+              <>
+                <dt>node</dt><dd data-testid='diagnostics-bundled-status'>{bundled.status}{bundled.error === null ? '' : `: !! ${bundled.error}`}</dd>
+                <dt>pid</dt><dd data-testid='diagnostics-bundled-pid'>{bundled.pid === null ? 'none' : `PID ${bundled.pid}`}</dd>
+                <dt>uptime</dt><dd className='tabular'>{running ? duration(now - (bundled.started_at_ms ?? now)) : 'not running'}</dd>
+              </>
+            )}
             <dt>memory</dt><dd className='tabular' data-testid='diagnostics-memory'>{mebibytes(data.memory.total_working_set_bytes)} working set</dd>
           </dl>
         </div>

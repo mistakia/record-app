@@ -15,15 +15,24 @@
   color: var(--color-text-secondary);
 }
 
+/* Labels as Settings draws them: xs uppercase tertiary. */
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xxs);
+  gap: var(--space-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .field input,
 .field textarea {
   font: inherit;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  letter-spacing: 0;
+  text-transform: none;
   padding: var(--space-xs) var(--space-xs);
 }
 

@@ -11,7 +11,7 @@ import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { ExportDialog } from '#renderer/components/identity/export-dialog.tsx'
 import { ImportForm } from '#renderer/components/identity/import-form.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
-import { library_name, own_libraries_of, own_library_address } from '#renderer/components/library/library-category.ts'
+import { own_libraries_of, own_library_address, own_library_name } from '#renderer/components/library/library-category.ts'
 import { key_handle } from '#renderer/identity/default-name.ts'
 import { read_last_export, truncate_key } from '#renderer/identity/identity.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -71,8 +71,7 @@ export const Identity = () => {
             ? 'None'
             : own.map((library) => (
               <span key={library.id} className={styles.library} data-testid='identity-own-library'>
-                {library_name(library)}
-                {library.library_type === 'listens' && ' (listens)'}
+                {own_library_name(library)}
                 {library.is_retired && ' (retired)'}
               </span>
             ))}
@@ -81,7 +80,7 @@ export const Identity = () => {
           <dd data-testid='last-export'>{last_export === null ? 'Never from this app' : new Date(last_export).toLocaleString()}</dd>
         </dl>
         <div>
-          <button type='button' data-variant='primary' onClick={() => { set_exporting(true) }}>Export identity</button>
+          <button type='button' onClick={() => { set_exporting(true) }}>Export identity</button>
         </div>
       </FramedSection>
       <FramedSection title='Capabilities held' fold_id='identity-held' default_open={false} count={held_count}>
