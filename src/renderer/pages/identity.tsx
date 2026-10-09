@@ -13,7 +13,7 @@ import { ImportForm } from '#renderer/components/identity/import-form.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
 import { library_name, own_libraries_of, own_library_address } from '#renderer/components/library/library-category.ts'
 import { key_handle } from '#renderer/identity/default-name.ts'
-import { compressed_public_key, read_last_export, truncate_key } from '#renderer/identity/identity.ts'
+import { read_last_export, truncate_key } from '#renderer/identity/identity.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
@@ -21,8 +21,7 @@ export const Identity = () => {
   const config = use_app_selector((state) => state.connection.config)
   const own_libraries = node_api.endpoints.get_own_libraries.useQuery()
   const libraries = node_api.endpoints.get_libraries.useQuery()
-  const [public_key, set_public_key] = useState<string | null>(null)
-  const [key_error, set_key_error] = useState<string | null>(null)
+  const [key_shown, set_key_shown] = useState(false)
   const [exporting, set_exporting] = useState(false)
   const [, set_export_count] = useState(0)
   const node_url = config?.node_url ?? ''
@@ -32,15 +31,9 @@ export const Identity = () => {
   const own = own_libraries_of({ own: own_libraries.data, libraries: libraries.data })
   const profile_address = own_library_address(own)
   const public_key_query = node_api.endpoints.get_public_key.useQuery()
-  const handle = public_key_query.data === undefined ? undefined : key_handle(public_key_query.data)
-
-  // Chapter 7 serves the public key only together with the private key, so
-  // it is read on request, in main, which passes on the public half alone.
-  const show_public_key = async () => {
-    const result = await window.record.identity.public_key()
-    if (result.ok) set_public_key(compressed_public_key(result.data.public_key))
-    else set_key_error(result.failure.message)
-  }
+  const public_key = public_key_query.data
+  const handle = public_key === undefined ? undefined : key_handle(public_key)
+  const key_error = public_key_query.error !== undefined && 'message' in public_key_query.error ? String(public_key_query.error.message) : null
 
   const held = node_api.endpoints.get_held_capabilities.useQuery()
   const own_addresses = new Set(own.map(({ address }) => address))
@@ -68,9 +61,9 @@ export const Identity = () => {
           </dd>
           <dt>Public key</dt>
           <dd>
-            {public_key === null
-              ? <button type='button' data-size='small' onClick={() => { show_public_key().catch(() => {}) }}>Show public key</button>
-              : <span data-testid='public-key'>{truncate_key(public_key)} <code className={styles.full}>{public_key}</code></span>}
+            {key_shown && public_key !== undefined
+              ? <span data-testid='public-key'>{truncate_key(public_key)} <code className={styles.full}>{public_key}</code></span>
+              : <button type='button' data-size='small' disabled={public_key === undefined} onClick={() => { set_key_shown(true) }}>Show public key</button>}
             {key_error !== null && <span className={styles.error}>!! {key_error}</span>}
           </dd>
           <dt>Own libraries</dt>

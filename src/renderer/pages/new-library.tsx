@@ -41,8 +41,8 @@ export const NewLibrary = () => {
       success: 'Library created.'
     })
     set_creating(false)
-    if (created === null) return
-    navigate(library_route({ tab: 'profile', library_address: created.address }), { replace: true })
+    if (!created.ok) return
+    navigate(library_route({ tab: 'profile', library_address: created.data.address }), { replace: true })
   }
 
   if (step === 1) {

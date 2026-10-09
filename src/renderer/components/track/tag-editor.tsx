@@ -71,7 +71,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
     const updated: Track[] = []
     for (const track of tracks) {
       const result = await report_write<Track>({ dispatch, write: dispatch(node_api.endpoints.add_tag.initiate({ track_id: track.id, tag, ...target_fields(target) })), success: null })
-      updated.push(result ?? track)
+      updated.push(result.ok ? result.data : track)
     }
     set_busy(false)
     set_tracks(updated)
@@ -86,7 +86,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
     const updated = await report_write<Track>({ dispatch, write: dispatch(node_api.endpoints.remove_tag.initiate({ track_id: single.id, tag, library_address })), success: null })
     set_busy(false)
     set_armed(null)
-    if (updated !== null) set_tracks([updated])
+    if (updated.ok) set_tracks([updated.data])
   }
 
   const arm_or_remove = (tag: string, library_address: string) => {

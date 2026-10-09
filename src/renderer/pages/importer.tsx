@@ -52,7 +52,7 @@ export const Importer = () => {
       return
     }
     if (result.data === null) return
-    dispatch(import_requested({ import_id: result.data.import_id, label, file_count: result.data.file_count ?? null }))
+    dispatch(import_requested({ import_id: result.data.import_id, label, file_count: result.data.file_count ?? null, file_names: result.data.file_names }))
   }
 
   // Checked when the action runs, not only through the disabled buttons:
@@ -99,9 +99,9 @@ export const Importer = () => {
     const source = url.trim()
     if (target === null) return
     const ack = await report_write<ImportAck>({ dispatch, write: dispatch(node_api.endpoints.import_url.initiate({ url: source, ...target_fields(target) })), success: null })
-    if (ack === null) return
+    if (!ack.ok) return
     choice.used(target)
-    dispatch(import_requested({ import_id: ack.import_id, label: source, file_count: 1 }))
+    dispatch(import_requested({ import_id: ack.data.import_id, label: source, file_count: 1 }))
     set_url('')
   }
 
@@ -113,7 +113,7 @@ export const Importer = () => {
       write: dispatch(node_api.endpoints.add_track_by_cid.initiate({ content_cid: cid.trim(), ...target_fields(target) })),
       success: `Added to ${choice.name_of(target.library_address)}.`
     })
-    if (added === null) return
+    if (!added.ok) return
     choice.used(target)
     set_cid('')
   }

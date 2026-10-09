@@ -3,7 +3,7 @@
 // any request carrying one. Imports nothing from Electron, so the integration
 // tests drive it directly.
 
-import type { ConnectionTest, NodeFailure, NodeRequest, NodeResult } from '#shared/bridge.ts'
+import type { ConnectionTest, ImportAck, ImportTarget, NodeFailure, NodeRequest, NodeResult } from '#shared/bridge.ts'
 import { build_api_path } from './api-path.ts'
 
 const REQUEST_TIMEOUT_MS = 15_000
@@ -191,16 +191,6 @@ export const test_connection = async ({ node_url, token }: { node_url: string, t
   }
 }
 
-export interface ImportTarget {
-  library_address: string
-  capability_id?: string
-}
-
-export interface ImportAck {
-  import_id: string
-  file_count?: number
-}
-
 // POST /api/import/file as multipart `files` parts. Each file's name only
 // tells the node the container by its extension; progress arrives as
 // import:* events.
@@ -223,7 +213,7 @@ export const import_files = async ({ node_url, token, files, target }: {
   try {
     const ack = await result.data.json() as { import_id?: unknown, file_count?: unknown }
     if (typeof ack.import_id !== 'string') throw new Error('no import_id')
-    return { ok: true, data: { import_id: ack.import_id, ...(typeof ack.file_count === 'number' ? { file_count: ack.file_count } : {}) } }
+    return { ok: true, data: { import_id: ack.import_id, ...(typeof ack.file_count === 'number' ? { file_count: ack.file_count } : {}), file_names: files.map(({ name }) => name) } }
   } catch {
     return { ok: false, failure: { kind: 'http', status: result.data.status, code: null, message: 'The node accepted the upload but returned no import id.' } }
   }

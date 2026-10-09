@@ -24,10 +24,10 @@ const totals = (items: readonly ImportProgress[]) => {
   let total = 0
   let added = 0
   let failed = 0
-  for (const { completed, errors, file_count, finished } of items) {
-    done += completed + errors.length
-    total += finished ? completed + errors.length : file_count ?? 1
-    added += completed
+  for (const { settled, added: titles, errors, file_count, finished } of items) {
+    done += settled
+    total += finished ? settled : file_count ?? 1
+    added += titles.length
     failed += errors.length
   }
   return { done, total: Math.max(total, done), added, failed }

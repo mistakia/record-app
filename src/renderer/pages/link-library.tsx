@@ -34,9 +34,9 @@ export const LinkLibrary = () => {
       success: 'Linked. Its tracks arrive as it replicates.'
     })
     set_linking(false)
-    if (linked === null) return
-    dispatch(library_linked(linked.address))
-    navigate(tracks_route({ library_address: linked.address }), { replace: true })
+    if (!linked.ok) return
+    dispatch(library_linked(linked.data.address))
+    navigate(tracks_route({ library_address: linked.data.address }), { replace: true })
   }
 
   if (step === 1) {

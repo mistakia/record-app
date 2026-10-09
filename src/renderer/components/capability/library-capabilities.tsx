@@ -61,7 +61,7 @@ const IssueForm = ({ address }: { address: string }) => {
       success: 'Capability issued.'
     })
     set_busy(false)
-    if (issued === null) return
+    if (!issued.ok) return
     set_keys('')
     set_filter(null)
     set_expires('')

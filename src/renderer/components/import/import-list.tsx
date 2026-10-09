@@ -9,7 +9,7 @@ import { import_fraction } from '#renderer/components/common/char-gauge.ts'
 import { format_age } from '#renderer/components/common/format-age.ts'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { Screen } from '#renderer/components/common/screen.tsx'
-import { finished_imports_cleared, type ImportProgress } from '#renderer/store/imports.ts'
+import { error_line, finished_imports_cleared, type ImportProgress } from '#renderer/store/imports.ts'
 import { use_app_dispatch } from '#renderer/store/index.ts'
 
 const PREVIEW = 10
@@ -36,7 +36,7 @@ const RunningImports = ({ items, now }: { items: readonly ImportProgress[], now:
         <li key={item.import_id} className={styles.line} data-testid='import-item' data-finished={false}>
           <span className={styles.status}>{item.errors.length > 0 ? failed(item) : `${Math.round(import_fraction(item) * 100)}%`}</span>
           <span className={styles.label}>{item.label}</span>
-          <span className={styles.number}>{item.completed}{item.file_count === null ? '' : `/${item.file_count}`}</span>
+          <span className={styles.number}>{item.settled}{item.file_count === null ? '' : `/${item.file_count}`}</span>
           <span className={styles.number}>{format_age(now - item.started_at)}</span>
         </li>
       ))}
@@ -57,7 +57,7 @@ const HistoryRow = ({ item, now }: { item: ImportProgress, now: number }) => {
       <span className={styles.chevron} aria-hidden='true'>{has_detail ? '▶' : ''}</span>
       <span className={item.errors.length > 0 ? styles.failed : styles.done}>{item.errors.length > 0 ? failed(item) : 'done'}</span>
       <span className={styles.label}>{item.label}</span>
-      <span className={styles.number}>{tracks(item.completed)}</span>
+      <span className={styles.number}>{tracks(item.added.length)}</span>
       <span className={styles.number}>{format_age(now - (item.finished_at ?? item.started_at))}</span>
     </>
   )
@@ -68,7 +68,7 @@ const HistoryRow = ({ item, now }: { item: ImportProgress, now: number }) => {
         : <div className={styles.row}>{cells}</div>}
       {open && (
         <div id={body_id} className={styles.detail}>
-          {item.errors.map((error, index) => <span key={index} className={styles.error}>!! {error}</span>)}
+          {item.errors.map((error) => <span key={error.position} className={styles.error}>!! {error_line(item, error)}</span>)}
           {shown.map((title, index) => <span key={index} className={styles.added}>{title}</span>)}
           {item.added.length > shown.length && (
             <button type='button' className={styles.more} onClick={() => { set_all(true) }}>show {item.added.length - shown.length} more</button>

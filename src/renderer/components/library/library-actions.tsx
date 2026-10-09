@@ -33,7 +33,7 @@ export const use_library_actions = (): {
   const set_connection = (library: Library, connect: boolean) => {
     const endpoint = connect ? node_api.endpoints.connect_library : node_api.endpoints.disconnect_library
     report_write({ dispatch, write: dispatch(endpoint.initiate(library.address)), success: connect ? 'Replication resumed.' : 'Replication paused.' })
-      .then((result) => { if (result !== null) dispatch(library_connection_requested({ address: library.address, connected: connect })) })
+      .then(({ ok }) => { if (ok) dispatch(library_connection_requested({ address: library.address, connected: connect })) })
       .catch(() => {})
   }
 

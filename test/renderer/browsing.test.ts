@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 
+import { import_fraction } from '#renderer/components/common/char-gauge.ts'
 import { format_age } from '#renderer/components/common/format-age.ts'
 import { is_cid } from '#renderer/components/library/cid.ts'
 import { current_progress, is_replicating, library_category, library_name, own_library_address, parse_library_address, RECENT_LINK_MS, short_address } from '#renderer/components/library/library-category.ts'
 import { pages_for_rows, row_location } from '#renderer/components/track/track-pages.ts'
 import type { Library } from '#renderer/api/types.ts'
 import { DEFAULT_TRACK_FILTERS, track_page_args } from '#renderer/store/api.ts'
-import { finished_imports_cleared, import_event_received, import_requested, imports_slice } from '#renderer/store/imports.ts'
+import { error_line, finished_imports_cleared, import_event_received, import_requested, imports_slice } from '#renderer/store/imports.ts'
 import { library_event_received, library_linked, live_progress_cleared, replication_slice } from '#renderer/store/replication.ts'
 import { library_selected, ui_slice, view_changed } from '#renderer/store/ui.ts'
 import { parse_track_view, tracks_route, with_filters_cleared, with_sort, with_tag_toggled } from '#renderer/routes.ts'
@@ -173,7 +174,23 @@ describe('imports slice', () => {
     state = imports_slice.reducer(state, event('import:processed-file', { file_path: '/tmp/uploads/abc.flac', track: { title: 'Intro' }, completed: 1, remaining: 1 }, 2_000))
     state = imports_slice.reducer(state, event('import:error', { file_path: '/tmp/uploads/def.flac', error: { error: { code: 'VALIDATION_ERROR', message: 'not audio' } } }, 2_500))
     state = imports_slice.reducer(state, event('import:finished', { track_count: 1, error_count: 1 }, 3_000))
-    expect(state.items).toEqual([{ import_id: 'i1', label: 'two files', file_count: 2, completed: 1, added: ['Intro'], errors: ['def.flac: not audio'], finished: true, started_at: 1_000, finished_at: 3_000 }])
+    expect(state.items).toEqual([{ import_id: 'i1', label: 'two files', file_count: 2, file_names: [], settled: 2, added: ['Intro'], errors: [{ position: 1, file_path: '/tmp/uploads/def.flac', message: 'not audio' }], finished: true, started_at: 1_000, finished_at: 3_000 }])
+    const [item] = state.items
+    expect(item?.errors.map((error) => error_line(item, error))).toEqual(['def.flac: not audio'])
+  })
+
+  test('names a failed file by the name it was sent under, and counts a failure once', () => {
+    const not_audio = { error: { error: { code: 'VALIDATION_ERROR', message: 'not audio' } } }
+    let state = imports_slice.reducer(undefined, event('import:error', { file_path: '/tmp/uploads/4c950b70.flac', ...not_audio }, 1_000))
+    state = imports_slice.reducer(state, import_requested({ import_id: 'i1', label: 'three files', file_count: 3, file_names: ['one.flac', 'two.flac', 'three.flac'] }, 1_500))
+    state = imports_slice.reducer(state, event('import:processed-file', { file_path: '/tmp/uploads/9a1e.flac', completed: 2, remaining: 1 }, 2_000))
+    state = imports_slice.reducer(state, event('import:error', { file_path: '/tmp/uploads/77d0.flac', ...not_audio }, 2_500))
+    const [item] = state.items
+    if (item === undefined) throw new Error('no import')
+    expect(item.errors.map((error) => error_line(item, error))).toEqual(['one.flac: not audio', 'three.flac: not audio'])
+    expect(item.added).toEqual(['two.flac'])
+    expect(item.settled).toBe(3)
+    expect(import_fraction(item)).toBe(1)
   })
 
   test('stamps an action with the current time when none is given', () => {
