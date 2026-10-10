@@ -14,6 +14,7 @@ import { Avatar } from '#renderer/components/common/avatar.tsx'
 import { key_handle } from '#renderer/identity/default-name.ts'
 import { MAX_JUMP_LABELS } from '#renderer/hooks/hotkeys.ts'
 import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { ConnectionStatus } from '#renderer/components/layout/connection-banner.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
 import { current_progress, has_profile, is_replicating, library_name, own_libraries_of, sidebar_libraries } from '#renderer/components/library/library-category.ts'
@@ -94,7 +95,7 @@ export const Sidebar = () => {
       <div className={styles.libraries}>
         <h2 className={`${styles.heading} ${styles.sticky}`}>
           Libraries
-          <Link to={ROUTES.link_library} className={styles.add} aria-label='Link a library'>[+]</Link>
+          <Link to={ROUTES.link_library} className={styles.add} aria-label='Link a library' {...tip('Link a library')}>[+]</Link>
         </h2>
         {others.map((library, index) => {
           const to = tracks_route({ library_address: library.address })
@@ -112,6 +113,7 @@ export const Sidebar = () => {
                 data-variant='glyph'
                 className={styles.more}
                 aria-label={`Menu for ${library_name(library)}`}
+                {...tip('Library menu')}
                 onClick={(event) => {
                   const rect = event.currentTarget.getBoundingClientRect()
                   set_menu({ x: rect.left, y: rect.bottom, library })
@@ -126,11 +128,11 @@ export const Sidebar = () => {
       </div>
       <div className={styles.footer}>
         <div className={styles.footer_row}>
-          <Link to={ROUTES.identity} className={styles.identity} aria-label='Identity' aria-current={is_current(ROUTES.identity) ? 'page' : undefined}>
+          <Link to={ROUTES.identity} className={styles.identity} aria-label='Identity' {...tip('Identity')} aria-current={is_current(ROUTES.identity) ? 'page' : undefined}>
             <Avatar address={identity?.address ?? ''} size={28} cid={identity?.avatar} />
             {identity_name !== null && <span className={styles.name}>{identity_name}</span>}
           </Link>
-          <Link to={ROUTES.settings} className={styles.gear} aria-label='Settings' title='Settings' aria-current={is_current(ROUTES.settings) ? 'page' : undefined}><SettingsIcon /></Link>
+          <Link to={ROUTES.settings} className={styles.gear} aria-label='Settings' {...tip('Settings', 'go_settings')} aria-current={is_current(ROUTES.settings) ? 'page' : undefined}><SettingsIcon /></Link>
         </div>
         <Link to={settings_route('peers')} className={styles.status}><ConnectionStatus /></Link>
       </div>

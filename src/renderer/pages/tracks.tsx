@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from 'react-router'
 
 import styles from './tracks.module.css'
 import { EmptyState } from '#renderer/components/common/empty-state.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { library_name, own_library_address } from '#renderer/components/library/library-category.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
@@ -128,7 +129,7 @@ export const Tracks = () => {
             }}
           />
           {search !== '' && (
-            <button type='button' data-variant='glyph' aria-label='Clear search' onClick={() => { set_search(''); search_ref.current?.focus() }}>×</button>
+            <button type='button' data-variant='glyph' aria-label='Clear search' {...tip('Clear search')} onClick={() => { set_search(''); search_ref.current?.focus() }}>×</button>
           )}
         </div>
         <span className={styles.count} data-testid='track-total'>{total} tracks</span>

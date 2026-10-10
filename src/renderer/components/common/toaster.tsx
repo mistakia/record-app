@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 
 import styles from './toaster.module.css'
+import { tip } from './tooltip-logic.ts'
 import { node_api } from '#renderer/store/api.ts'
 import type { AppDispatch } from '#renderer/store/index.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -33,7 +34,7 @@ const Toast = ({ notification }: { notification: Notification }) => {
     <div className={notification.kind === 'error' ? `${styles.toast} ${styles.error}` : styles.toast} role={notification.kind === 'error' ? 'alert' : 'status'} data-testid='toast'>
       <header className={styles.stroke}>
         <span className={styles.title}>{notification.kind === 'error' ? `!! ${title}` : title}</span>
-        <button type='button' className={styles.close} aria-label='Dismiss' onClick={() => { dispatch(dismissed(notification.id)) }}>[x]</button>
+        <button type='button' className={styles.close} aria-label='Dismiss' {...tip('Dismiss')} onClick={() => { dispatch(dismissed(notification.id)) }}>[x]</button>
       </header>
       <span className={styles.message}>{notification.message}</span>
       {action !== undefined && (

@@ -16,6 +16,7 @@ import { pages_for_rows, row_location } from './track-pages.ts'
 import { TrackRow, TrackRowSkeleton, type RowHandlers, type RowPlayState } from './track-row.tsx'
 import type { Track } from '#renderer/api/types.ts'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { is_field } from '#renderer/hooks/hotkeys.ts'
 import { use_view_pref } from '#renderer/prefs/view-prefs.ts'
 import { node_api, type SortOrder, type TrackSort } from '#renderer/store/api.ts'
@@ -243,6 +244,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
             type='button'
             data-variant='glyph'
             aria-label='Columns'
+            {...tip('Columns')}
             onClick={(event) => {
               const rect = event.currentTarget.getBoundingClientRect()
               set_columns_menu({ x: rect.left, y: rect.bottom })
@@ -251,7 +253,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
             <span className={styles.small_glyph}>▼</span>
           </button>
         </span>
-        <span role='columnheader' aria-label='Adopt'>★</span>
+        <span role='columnheader' aria-label='Adopt' {...tip('Adopt to library', 'adopt')}>★</span>
         <SortHeader label='Title' column_sort='title' sort={sort} />
         {visible.filter(({ lead }) => lead === true).map((column) => <SortHeader key={column.id} label={column.label} column_sort={column.sort} sort={sort} />)}
         <span role='columnheader'>+tag</span>

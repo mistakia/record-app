@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from 'react-router'
 import styles from './ingest-gauge.module.css'
 import { char_gauge } from '#renderer/components/common/char-gauge.ts'
 import { Screen } from '#renderer/components/common/screen.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { ROUTES } from '#renderer/routes.ts'
 import type { ImportProgress } from '#renderer/store/imports.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -71,7 +72,7 @@ export const IngestGauge = () => {
     : `Importing ${done} of ${total}; open Import`
   return (
     <Screen className={styles.gauge} data-testid='ingest-gauge' data-state={ended ? 'ended' : 'running'}>
-      <button type='button' data-variant='glyph' className={styles.button} onClick={() => { navigate(ROUTES.import) }} aria-label={label}>
+      <button type='button' data-variant='glyph' className={styles.button} onClick={() => { navigate(ROUTES.import) }} aria-label={label} {...tip('Open Import')}>
         {text}
       </button>
     </Screen>

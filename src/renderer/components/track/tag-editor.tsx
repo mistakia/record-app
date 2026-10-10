@@ -13,6 +13,7 @@ import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent }
 import styles from './tag-editor.module.css'
 import { normalize_tag, suggest_tags } from './tag-suggest.ts'
 import type { Track } from '#renderer/api/types.ts'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import { TargetSelect, use_write_target } from '#renderer/components/library/target-select.tsx'
 import { target_fields } from '#renderer/library/write-targets.ts'
@@ -127,7 +128,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
               <li key={key} className={armed === key ? `${styles.chip} ${styles.armed}` : styles.chip}>
                 {tag}
                 {removable.has(library_address) && (
-                  <button type='button' data-variant='glyph' aria-label={armed === key ? `Confirm removing tag ${tag}` : `Remove tag ${tag}`} disabled={!editable} onClick={() => { arm_or_remove(tag, library_address) }}>
+                  <button type='button' data-variant='glyph' aria-label={armed === key ? `Confirm removing tag ${tag}` : `Remove tag ${tag}`} {...(armed === key ? {} : tip('Remove tag'))} disabled={!editable} onClick={() => { arm_or_remove(tag, library_address) }}>
                     {armed === key ? 'remove?' : '×'}
                   </button>
                 )}

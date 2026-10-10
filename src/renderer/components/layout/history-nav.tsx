@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useNavigationType } from 'react-router'
 
 import styles from './sidebar.module.css'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 
 const history_index = (): number => {
   const state = window.history.state as { idx?: unknown } | null
@@ -28,8 +29,8 @@ export const HistoryNav = () => {
 
   return (
     <div className={styles.history}>
-      <button type='button' data-variant='glyph' aria-label='Back' disabled={index === 0} onClick={() => { navigate(-1) }}>‹</button>
-      <button type='button' data-variant='glyph' aria-label='Forward' disabled={index >= furthest.current} onClick={() => { navigate(1) }}>›</button>
+      <button type='button' data-variant='glyph' aria-label='Back' {...tip('Back', 'back')} disabled={index === 0} onClick={() => { navigate(-1) }}>‹</button>
+      <button type='button' data-variant='glyph' aria-label='Forward' {...tip('Forward', 'forward')} disabled={index >= furthest.current} onClick={() => { navigate(1) }}>›</button>
     </div>
   )
 }
