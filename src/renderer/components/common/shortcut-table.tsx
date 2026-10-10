@@ -1,12 +1,13 @@
 // The HOTKEYS table, as the ? overlay and Settings › Shortcuts both show it,
 // so neither can drift from the bindings: grouped by where a key is live,
-// with the keys after g as their own group. `list_first` puts the track
+// with the keys after g as their own group.
+// Off a track list, f and . act on the playing track instead of a row. `list_first` puts the track
 // list's keys first, for the overlay over a page that shows one.
 
 import styles from './shortcut-table.module.css'
 import { GO_KEYS, HOTKEYS, type Hotkey, type HotkeyScope } from '#renderer/hooks/hotkeys.ts'
 
-const GROUPS: Record<HotkeyScope, string> = { list: 'In a track list', app: 'Everywhere' }
+const GROUPS: Record<HotkeyScope, string> = { list: 'In a track list', player: 'Off a track list', app: 'Everywhere' }
 
 const Keys = ({ keys }: { keys: string }) => (
   <dt>{keys.split(' or ').map((key, index) => <span key={key}>{index > 0 && <span className={styles.or}> or </span>}<kbd>{key}</kbd></span>)}</dt>
@@ -24,7 +25,7 @@ const Group = ({ title, rows }: { title: string, rows: ReadonlyArray<Pick<Hotkey
 )
 
 export const ShortcutTable = ({ list_first = false }: { list_first?: boolean }) => {
-  const order: HotkeyScope[] = list_first ? ['list', 'app'] : ['app', 'list']
+  const order: HotkeyScope[] = list_first ? ['list', 'app', 'player'] : ['app', 'player', 'list']
   return (
     <div className={styles.groups} data-testid='shortcut-table'>
       {order.map((scope) => <Group key={scope} title={GROUPS[scope]} rows={HOTKEYS.filter((hotkey) => hotkey.scope === scope)} />)}

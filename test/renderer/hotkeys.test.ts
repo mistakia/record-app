@@ -6,13 +6,23 @@ const press = (overrides: Partial<KeyPress>): KeyPress => ({ key: ' ', meta: fal
 
 describe('hotkeys', () => {
   test('every combo in the table resolves to its own binding, so no row shadows another', () => {
-    for (const { action, combos } of HOTKEYS) {
+    for (const { action, scope, combos } of HOTKEYS) {
       for (const combo of combos) {
         const key = combo.shift === true && /^[a-z]$/.test(combo.key) ? combo.key.toUpperCase() : combo.key
-        expect({ action, key, resolved: resolve_hotkey(press({ key, meta: combo.command === true, shift: combo.shift === true })) })
+        expect({ action, key, resolved: resolve_hotkey(press({ key, meta: combo.command === true, shift: combo.shift === true, list_shown: scope !== 'player' })) })
           .toEqual({ action, key, resolved: action })
       }
     }
+  })
+
+  test('off a track list, f and . act on the playing track; m mutes everywhere', () => {
+    expect(resolve_hotkey(press({ key: 'f', list_shown: false }))).toBe('adopt_playing')
+    expect(resolve_hotkey(press({ key: '.', list_shown: false }))).toBe('open_playing_menu')
+    expect(resolve_hotkey(press({ key: 'f' }))).toBe('adopt')
+    expect(resolve_hotkey(press({ key: '.' }))).toBe('open_menu')
+    expect(resolve_hotkey(press({ key: 'j', list_shown: false }))).toBeNull()
+    expect(resolve_hotkey(press({ key: 'm' }))).toBe('toggle_mute')
+    expect(resolve_hotkey(press({ key: 'm', list_shown: false }))).toBe('toggle_mute')
   })
 
   test('the STYLE.md bindings', () => {

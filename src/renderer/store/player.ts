@@ -17,6 +17,8 @@ export interface PlaySource {
 }
 
 interface PlayerState extends EngineSnapshot {
+  // While muted, the level unmuting restores; null when not muted.
+  muted_volume: number | null
   queue: QueueState
   source: PlaySource | null
 }
@@ -30,6 +32,7 @@ const initial_state: PlayerState = {
   played_seconds: 0,
   volume: 1,
   error: null,
+  muted_volume: null,
   queue: EMPTY_QUEUE,
   source: null
 }
@@ -41,6 +44,9 @@ export const player_slice = createSlice({
     engine_updated: (state, action: PayloadAction<EngineSnapshot>) => ({ ...state, ...action.payload }),
     queue_changed: (state, action: PayloadAction<QueueState>) => {
       state.queue = action.payload
+    },
+    mute_changed: (state, action: PayloadAction<number | null>) => {
+      state.muted_volume = action.payload
     },
     source_changed: (state, action: PayloadAction<PlaySource | null>) => {
       state.source = action.payload
@@ -60,4 +66,4 @@ export const player_slice = createSlice({
   }
 })
 
-export const { cued_position_changed, engine_updated, queue_changed, source_changed, player_restored } = player_slice.actions
+export const { cued_position_changed, engine_updated, mute_changed, queue_changed, source_changed, player_restored } = player_slice.actions

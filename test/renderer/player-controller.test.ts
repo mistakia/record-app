@@ -141,6 +141,26 @@ describe('player controller', () => {
     expect(player().state).toBe('playing')
   })
 
+  test('mute holds the level and restores it; setting a level unmutes; zero unmutes to a fallback', () => {
+    controller.set_playback_volume(0.7)
+    controller.toggle_mute()
+    expect([player().volume, player().muted_volume]).toEqual([0, 0.7])
+    controller.toggle_mute()
+    expect([player().volume, player().muted_volume]).toEqual([0.7, null])
+    controller.toggle_mute()
+    controller.set_playback_volume(0.4)
+    expect([player().volume, player().muted_volume]).toEqual([0.4, null])
+    controller.set_playback_volume(0)
+    controller.toggle_mute()
+    expect(player().volume).toBe(0.5)
+    controller.set_playback_volume(1)
+  })
+
+  test('the playing track comes back in full, as it was queued', () => {
+    controller.play_tracks({ tracks: TRACKS, start_index: 1, library_address: LIBRARY })
+    expect(controller.playing_track()?.content_cid).toBe('content-b')
+  })
+
   test('stop_playback empties the queue and keeps repeat', () => {
     controller.set_repeat_mode('one')
     controller.stop_playback()

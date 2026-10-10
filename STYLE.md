@@ -210,9 +210,10 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 
 - 75px, legacy-v0's height and proportions, under the page column only (left edge at the sidebar boundary), full width of that column. Hidden when nothing is playing and the queue is empty; slides up from the bottom over 0.28s when playback starts.
 - Thirds, as legacy (35% / 30% / 35%):
-  - **Now playing** — a 40px adopt `★` column, 65px artwork (5px right margin), then title (13px, display glow) and artist (dim) on 14px lines, an 8px uppercase meta line `FLAC · 1411 KBPS`, and the track's tags as 18px chips 8px below, fading out at the right.
+  - **Now playing** — a 40px adopt `★` column, 65px artwork (5px right margin), then title (13px, display glow) and artist (dim) on 14px lines, an 8px uppercase meta line `FLAC · 1411 KBPS`, and the track's tags as 18px chips 8px below, fading out at the right. A right-click on the block, or its `…` (shown on hover, at the top right), opens the track menu for the playing track: the row's menu less Play and Details.
   - **Transport** — legacy's row of 40px controls: repeat (off / all / one, lit when on), shuffle, `|◀`, `▶` or `▮▮` in a 36px 1px outlined circle (a spinner while loading), `▶|`, the queue with its queued count as a badge, and history. Under them the timeline: elapsed, a 5px phosphor bar over the buffered span with an 11px square thumb on hover, then duration, 10px tabular.
-  - **Playing from** — right-aligned: the volume hairline, then the source (library name, or `ALL TRACKS`, with the active tag filter as a 10px subtitle) over an 8px uppercase `PLAYING FROM`, beside the library's 65px avatar. Clicking either returns to that track list with its filters.
+  - **Playing from** — right-aligned: the volume, then the source (library name, or `ALL TRACKS`, with the active tag filter as a 10px subtitle) over an 8px uppercase `PLAYING FROM`, beside the library's 65px avatar. Clicking either returns to that track list with its filters.
+  - **Volume** — legacy-v0's desktop player drew none (it kept a level, 90 at first, stepped by 5), so it is restated as a phosphor level meter: the speaker icon, twenty 2px by 8px ticks with a 1px gap, one per 5% step, then the readout, 10px tabular. Lit ticks are phosphor with a 4px glow; unlit ones are `--color-border-light`, raised to `--color-border` on hover. A transparent range input lies over the ticks, so drag, click, and keys work. The speaker or the readout mutes and unmutes: muted, the speaker carries a slash, the ticks hold the silenced level in tertiary with no glow, and the readout says `MUTE`. A new level, or `-` or `=`, unmutes. The level persists across launches; a mute does not.
 
 ### Queue (screen overlay)
 
@@ -271,6 +272,7 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 | `Cmd+←` / `Cmd+→`       | Previous / next track                                    |
 | `Shift+←` / `Shift+→`   | Seek 5s                                                  |
 | `-` / `=`               | Volume down / up                                         |
+| `m`                     | Mute or unmute                                           |
 | `r` / `s`               | Cycle repeat / toggle shuffle                            |
 | `Shift+Q`               | Toggle the queue                                         |
 | `Cmd+[` / `Cmd+]`       | Back / forward                                           |
@@ -282,9 +284,9 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 
 **Go, the `g` lead.** Navigation is rare next to the list and player verbs, so it sits one key behind `g` rather than spending bare letters. `g` opens a small paper panel at the top of the page column, `G THEN` over the keys; the next key is consumed, never passed on: `t` all tracks, `r` recently played, `l` my library, `b` libraries, `i` import, `a` identity, `,` settings, and `1`–`9` the sidebar's libraries in its order, whose avatars turn into those digits while the panel is up. `Esc`, any other key, a click, or leaving the window closes it.
 
-**Live keys.** The track list's keys (cursor, selection, play, queue, tag, adopt, inspector, row menu) are live only while a track list is mounted, so on another page they pass through. Every other key is live everywhere.
+**Live keys.** The track list's keys (cursor, selection, play, queue, tag, adopt, inspector, row menu) are live only while a track list is mounted. Off a track list, `f` adopts the playing track and `.` (or `Shift+F10`) opens its menu, and the rest pass through. Every other key is live everywhere.
 
-Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys after `g` are in `GO_KEYS`. The `?` overlay and the Settings shortcut section both render them grouped — `IN A TRACK LIST`, `EVERYWHERE`, `AFTER G` — the overlay putting the track list's keys first on a page that shows one, so neither can drift from the bindings.
+Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys after `g` are in `GO_KEYS`. The `?` overlay and the Settings shortcut section both render them grouped — `IN A TRACK LIST`, `EVERYWHERE`, `OFF A TRACK LIST`, `AFTER G` — the overlay putting the track list's keys first on a page that shows one, so neither can drift from the bindings.
 
 ## Components
 
@@ -405,7 +407,7 @@ Transitions: 0.15s on color and opacity, 0.28s `cubic-bezier(0.32, 0.72, 0, 1)` 
 
 ## Glyphs
 
-Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat, shuffle, queue, history, and the Settings gear have no glyph in either face, so they are drawn as 16px hairline SVGs (`components/player/transport-icons.tsx`, `components/layout/settings-icon.tsx`, a 1.25px square-capped stroke in `currentColor`); nothing else uses an icon. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
+Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat, shuffle, queue, history, the volume's speaker, and the Settings gear have no glyph in either face, so they are drawn as 16px hairline SVGs (`components/player/transport-icons.tsx`, `components/layout/settings-icon.tsx`, a 1.25px square-capped stroke in `currentColor`); nothing else uses an icon. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
 
 ## OS Surface (macOS, Electron)
 

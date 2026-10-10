@@ -10,9 +10,10 @@ export type HotkeyAction =
   | 'cursor_down' | 'cursor_up' | 'cursor_first' | 'cursor_last'
   | 'extend_down' | 'extend_up' | 'extend_first' | 'extend_last' | 'toggle_selection'
   | 'play_cursor' | 'play_next' | 'add_to_queue' | 'tag' | 'adopt' | 'toggle_inspector' | 'open_menu'
+  | 'adopt_playing' | 'open_playing_menu'
   | 'focus_search' | 'escape'
   | 'toggle_playback' | 'previous_track' | 'next_track' | 'seek_back' | 'seek_forward'
-  | 'volume_down' | 'volume_up' | 'cycle_repeat' | 'toggle_shuffle' | 'toggle_queue'
+  | 'volume_down' | 'volume_up' | 'toggle_mute' | 'cycle_repeat' | 'toggle_shuffle' | 'toggle_queue'
   | 'back' | 'forward' | 'go_settings' | 'import_files' | 'lead' | 'show_help' | 'show_shortcuts'
 
 export interface KeyPress {
@@ -37,8 +38,10 @@ interface Combo {
 }
 
 // Where a binding is live: 'list' keys only while a track list is mounted
-// (it registers its commands, list-commands.ts), 'app' keys everywhere.
-export type HotkeyScope = 'list' | 'app'
+// (it registers its commands, list-commands.ts), 'player' keys only while
+// none is, where the same keys act on the playing track, and 'app' keys
+// everywhere.
+export type HotkeyScope = 'list' | 'player' | 'app'
 
 export interface Hotkey {
   keys: string
@@ -67,6 +70,8 @@ export const HOTKEYS: readonly Hotkey[] = [
   { keys: 'f', label: 'Adopt into your library', action: 'adopt', scope: 'list', combos: [k('f')] },
   { keys: 'i', label: 'Show or hide the details pane', action: 'toggle_inspector', scope: 'list', combos: [k('i')] },
   { keys: '. or Shift+F10', label: 'Open the row menu', action: 'open_menu', scope: 'list', combos: [k('.'), k('F10', { shift: true })] },
+  { keys: 'f', label: 'Adopt the playing track into your library', action: 'adopt_playing', scope: 'player', combos: [k('f')] },
+  { keys: '. or Shift+F10', label: 'Open the playing track’s menu', action: 'open_playing_menu', scope: 'player', combos: [k('.'), k('F10', { shift: true })] },
   { keys: '/ or Cmd+F', label: 'Search', action: 'focus_search', scope: 'app', combos: [k('/'), k('f', { command: true })] },
   { keys: 'Esc', label: 'Close the menu, then clear the search, the selection, the pane', action: 'escape', scope: 'app', combos: [k('Escape')] },
   { keys: 'Space', label: 'Play or pause', action: 'toggle_playback', scope: 'app', combos: [k(' ')] },
@@ -76,6 +81,7 @@ export const HOTKEYS: readonly Hotkey[] = [
   { keys: 'Shift+→', label: 'Seek forward 5 seconds', action: 'seek_forward', scope: 'app', combos: [k('ArrowRight', { shift: true })] },
   { keys: '-', label: 'Volume down', action: 'volume_down', scope: 'app', combos: [k('-')] },
   { keys: '=', label: 'Volume up', action: 'volume_up', scope: 'app', combos: [k('='), k('+', { shift: 'any' })] },
+  { keys: 'm', label: 'Mute or unmute', action: 'toggle_mute', scope: 'app', combos: [k('m')] },
   { keys: 'r', label: 'Cycle repeat: off, all, one', action: 'cycle_repeat', scope: 'app', combos: [k('r')] },
   { keys: 's', label: 'Shuffle on or off', action: 'toggle_shuffle', scope: 'app', combos: [k('s')] },
   { keys: 'Shift+Q', label: 'Show or hide the queue', action: 'toggle_queue', scope: 'app', combos: [k('q', { shift: true })] },
@@ -125,5 +131,5 @@ const matches = (combo: Combo, press: KeyPress): boolean => {
 export const resolve_hotkey = (press: KeyPress): HotkeyAction | null => {
   if (press.key === 'Escape') return press.dialog_open || press.menu_open === true ? null : 'escape'
   if (press.in_field || press.dialog_open || press.menu_open === true || press.alt) return null
-  return HOTKEYS.find(({ scope, combos }) => (scope === 'app' || press.list_shown) && combos.some((combo) => matches(combo, press)))?.action ?? null
+  return HOTKEYS.find(({ scope, combos }) => (scope === 'app' || (scope === 'list') === press.list_shown) && combos.some((combo) => matches(combo, press)))?.action ?? null
 }
