@@ -65,9 +65,9 @@ export const use_track_actions = ({ viewed_library, listen_library, source, on_t
   const menu_items = (track: Track, row: number | null = null): MenuItem[] => {
     const queued = upcoming.find(({ track_id }) => track_id === track.id)
     return [
-      { label: 'Play', shortcut: 'Enter', on_select: () => { play_tracks({ tracks: [track], start_index: 0, library_address: listen_library, source }) } },
-      { label: 'Play next', shortcut: 'n', on_select: () => { add_to_queue({ tracks: [track], at: 'next', library_address: listen_library }) } },
-      { label: 'Add to queue', shortcut: 'q', on_select: () => { add_to_queue({ tracks: [track], at: 'end', library_address: listen_library }) } },
+      { label: 'Play', shortcut: 'Enter', on_select: () => { play_tracks({ tracks: [track], start_index: 0, library_address: listen_library, scope: viewed_library, source }) } },
+      { label: 'Play next', shortcut: 'n', on_select: () => { add_to_queue({ tracks: [track], at: 'next', library_address: listen_library, scope: viewed_library }) } },
+      { label: 'Add to queue', shortcut: 'q', on_select: () => { add_to_queue({ tracks: [track], at: 'end', library_address: listen_library, scope: viewed_library }) } },
       ...(queued === undefined ? [] : [{ label: 'Remove from queue', on_select: () => { remove_from_queue(queued.queue_id) } }]),
       { label: 'Add tag', shortcut: 't', on_select: () => { open_tagger([track], row) } },
       { label: 'Adopt to library', shortcut: 'f', on_select: () => { set_adopting(track) } },
@@ -89,9 +89,9 @@ export const use_track_actions = ({ viewed_library, listen_library, source, on_t
     // index -1: the row is the current track, so it pauses or resumes.
     play: ({ page_tracks, index }) => {
       if (index === -1) toggle_playback()
-      else play_tracks({ tracks: page_tracks, start_index: index, library_address: listen_library, source })
+      else play_tracks({ tracks: page_tracks, start_index: index, library_address: listen_library, scope: viewed_library, source })
     },
-    queue: ({ tracks, at }) => { if (tracks.length > 0) add_to_queue({ tracks, at, library_address: listen_library }) },
+    queue: ({ tracks, at }) => { if (tracks.length > 0) add_to_queue({ tracks, at, library_address: listen_library, scope: viewed_library }) },
     adopt: (tracks) => { if (tracks[0] !== undefined) set_adopting(tracks[0]) },
     add_tag: ({ tracks, row }) => { open_tagger(tracks, row) },
     tag_clicked: on_tag_clicked,

@@ -7,11 +7,26 @@
 // with the current entry first and the queued block after it, and turning
 // it off restores the order the entries had before.
 
+import type { Track } from '#renderer/api/types.ts'
 import type { SnapshotQueueEntry } from '#shared/snapshot.ts'
 
 export type RepeatMode = 'off' | 'one' | 'all'
 
 export type QueueEntry = SnapshotQueueEntry
+
+// What an entry keeps of its track for the player bar, taken when it is
+// queued and again from the node's newest description while it plays.
+export const track_display = (track: Track): Omit<QueueEntry, 'queue_id' | 'track_id' | 'audio_cid' | 'library_address' | 'scope' | 'queued'> => ({
+  title: track.title ?? null,
+  artist: track.artist ?? null,
+  duration_seconds: track.duration_seconds ?? null,
+  content_cid: track.content_cid,
+  codec: track.codec ?? null,
+  bitrate: track.bitrate ?? null,
+  artwork: track.artwork?.[0] ?? null,
+  tags: [...new Set(track.tags.map(({ tag }) => tag))],
+  have_track: track.have_track
+})
 
 export interface QueueState {
   // In play order.

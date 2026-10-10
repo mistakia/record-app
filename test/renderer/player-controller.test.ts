@@ -69,7 +69,7 @@ beforeAll(async () => {
 
 describe('player controller', () => {
   test('plays a list from the clicked track, splices the next one in gaplessly, and the queue follows', async () => {
-    controller.play_tracks({ tracks: TRACKS, start_index: 1, library_address: LIBRARY })
+    controller.play_tracks({ tracks: TRACKS, start_index: 1, library_address: LIBRARY, scope: '' })
     await sleep()
     expect(current_title()).toBe('b')
     expect(player().state).toBe('playing')
@@ -87,7 +87,7 @@ describe('player controller', () => {
     mock.finish(mock.sources.at(-1))
     expect(player().state).toBe('ended')
     controller.set_repeat_mode('all')
-    controller.play_tracks({ tracks: TRACKS, start_index: 2, library_address: LIBRARY })
+    controller.play_tracks({ tracks: TRACKS, start_index: 2, library_address: LIBRARY, scope: '' })
     await sleep()
     mock.context.currentTime += 1
     await tick()
@@ -113,7 +113,7 @@ describe('player controller', () => {
   })
 
   test('records one listen at 60 s of play, through POST /listens with the play\'s library', async () => {
-    controller.play_tracks({ tracks: TRACKS, start_index: 0, library_address: LIBRARY })
+    controller.play_tracks({ tracks: TRACKS, start_index: 0, library_address: LIBRARY, scope: '' })
     await sleep()
     const listens = () => requests.filter(({ path_template }) => path_template === '/listens')
     const before = listens().length
@@ -129,9 +129,9 @@ describe('player controller', () => {
   })
 
   test('remove, move, and add next keep the current entry and the engine\'s next in step', async () => {
-    controller.play_tracks({ tracks: TRACKS, start_index: 0, library_address: LIBRARY })
+    controller.play_tracks({ tracks: TRACKS, start_index: 0, library_address: LIBRARY, scope: '' })
     await sleep()
-    controller.add_to_queue({ tracks: [track('d', 30)], at: 'next', library_address: LIBRARY })
+    controller.add_to_queue({ tracks: [track('d', 30)], at: 'next', library_address: LIBRARY, scope: '' })
     expect(player().queue.entries.map(({ title }) => title)).toEqual(['a', 'd', 'b', 'c'])
     controller.move_in_queue({ from: 3, to: 1 })
     expect(player().queue.entries.map(({ title }) => title)).toEqual(['a', 'c', 'd', 'b'])
@@ -157,7 +157,7 @@ describe('player controller', () => {
   })
 
   test('the playing track comes back in full, as it was queued', () => {
-    controller.play_tracks({ tracks: TRACKS, start_index: 1, library_address: LIBRARY })
+    controller.play_tracks({ tracks: TRACKS, start_index: 1, library_address: LIBRARY, scope: '' })
     expect(controller.playing_track()?.content_cid).toBe('content-b')
   })
 
@@ -188,7 +188,7 @@ describe('player controller', () => {
 
   test('a skip just past 60 s records the outgoing track\'s listen, not the incoming one\'s', async () => {
     const long = track('long', 300)
-    controller.play_tracks({ tracks: [long, track('b', 40)], start_index: 0, library_address: LIBRARY })
+    controller.play_tracks({ tracks: [long, track('b', 40)], start_index: 0, library_address: LIBRARY, scope: '' })
     await sleep()
     const listens = () => requests.filter(({ path_template }) => path_template === '/listens')
     const before = listens().length

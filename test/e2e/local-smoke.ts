@@ -152,6 +152,16 @@ try {
   await window.keyboard.press('Space')
   await window.locator('[data-testid=player-bar][data-state=paused]').waitFor()
   step('Space hotkey', 'paused')
+  // A tag added to the playing track shows in the now-playing block at once,
+  // though the track was queued without it.
+  await window.keyboard.press('t')
+  const playing_editor = window.getByTestId('tag-editor')
+  await playing_editor.getByLabel('New tag').fill('playing-tag')
+  await playing_editor.getByLabel('New tag').press('Enter')
+  await playing_editor.getByRole('listitem').filter({ hasText: 'playing-tag' }).waitFor()
+  await playing_editor.getByLabel('New tag').press('Escape')
+  await window.getByTestId('now-playing').getByText('playing-tag', { exact: true }).waitFor({ timeout: 10_000 })
+  step('now playing tags', 'playing-tag shown at once')
 
   // Ingest: main's picker (stubbed in main, as a user's choice), a drop, a URL, and a CID.
   await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Add music' }).click()
