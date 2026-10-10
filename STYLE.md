@@ -393,7 +393,7 @@ Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the wr
 
 ### Library address
 
-A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. Hovering it shows the action: a small paper tip under the box, `copy` at 10px in secondary ink, over what is below so nothing beside the address moves or is covered; it reads `copied` for a moment after a click. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`; the user's default own library goes by `My library` instead (§ Libraries, YOURS), so its address shows whole.
+A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. Hovering it shows the action: a small paper tip under the box, `copy` at 10px in secondary ink, over what is below so nothing beside the address moves or is covered; it reads `copied` for a moment after a click. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`; the user's default own library goes by `My library` instead (§ Libraries, YOURS), so its address keeps the discriminator, `record · …8MnGCA`.
 
 ### Connection status
 
