@@ -287,7 +287,7 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 
 **Live keys.** The track list's keys (cursor, selection, play, queue, tag, adopt, inspector, row menu) are live only while a track list is mounted. Off a track list, `f` adopts the playing track and `.` (or `Shift+F10`) opens its menu, and the rest pass through. Every other key is live everywhere.
 
-Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys after `g` are in `GO_KEYS`. The `?` overlay and the Settings shortcut section both render them grouped — `IN A TRACK LIST`, `EVERYWHERE`, `OFF A TRACK LIST`, `AFTER G` — the overlay putting the track list's keys first on a page that shows one, so neither can drift from the bindings.
+Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys after `g` are in `GO_KEYS`. The `?` overlay and the Settings shortcut section both render them grouped — `EVERYWHERE`, `OFF A TRACK LIST`, `IN A TRACK LIST`, `AFTER G` — the overlay putting the track list's keys first on a page that shows one (`IN A TRACK LIST`, `EVERYWHERE`, `OFF A TRACK LIST`), so neither can drift from the bindings.
 
 ## Components
 
@@ -316,7 +316,7 @@ Base's `tui-section`: a 1px `--color-border` frame with the title seated on the 
 
 ### Section index (paper)
 
-Settings and Identity are long stacks of framed sections, so each carries an index (`components/common/indexed-page.tsx`): a 140px column at the left of the page, sticky as the sections scroll, listing them by title in 10px uppercase tertiary on 24px rows. The section in view is in `--color-accent` with a 0.7em `▶` before it; hover raises an entry to secondary. A click, or `[` and `]`, goes to a section, unfolding it if it is folded, and keeps it in the route as `?section=`, so a reload or back returns there and a link can open on one (`settings_route('peers')`).
+Settings and Identity are long stacks of framed sections, so each carries an index (`components/common/indexed-page.tsx`): a 140px column at the left of the page, sticky as the sections scroll, listing them by title in 10px uppercase tertiary on 24px rows. The section in view (the last whose top has passed the middle of the visible page) is in `--color-accent` with a 0.7em `▶` before it; hover raises an entry to secondary. A click, or `[` and `]`, goes to a section, unfolding it if it is folded, and keeps it in the route as `?section=`, so a reload or back returns there and a link can open on one (`settings_route('peers')`).
 
 ### Buttons
 

@@ -26,10 +26,12 @@ let active: SectionIndexCommands | null = null
 
 export const section_index_commands = (): SectionIndexCommands | null => active
 
-// A section counts as in view once its top is this far down the page.
-const IN_VIEW_OFFSET = 96
+// A section counts as in view once its top has passed this far down the
+// visible page: the middle, so a page too short to bring its last sections
+// to the top still marks the one filling the view.
+const IN_VIEW_FRACTION = 0.5
 // The scroll a click on the index causes keeps the clicked section marked,
-// even one too short to reach the top at the end of the page.
+// even one that cannot scroll up past the middle.
 const CLICK_SETTLE_MS = 250
 
 export const IndexedPage = ({ prefix, sections, testid }: { prefix: string, sections: IndexedSection[], testid?: string | undefined }) => {
@@ -55,27 +57,27 @@ export const IndexedPage = ({ prefix, sections, testid }: { prefix: string, sect
     else set_search((params) => { params.set('section', id); return params }, { replace: true })
   }, [requested, scroll_to, set_search])
 
-  // On the section the route names, once per change of it: the sections are
-  // a new array each render, so the latest scroll_to is read from a ref.
+  // On the section the route names, once it is there (Identity's Profile
+  // waits for the own libraries) and again when the route names another:
+  // the sections are a new array each render, so the latest scroll_to is
+  // read from a ref.
   const scroll_to_ref = useRef(scroll_to)
   scroll_to_ref.current = scroll_to
-  useEffect(() => { if (requested !== null) scroll_to_ref.current(requested) }, [requested])
+  const requested_present = sections.some(({ id }) => id === requested)
+  useEffect(() => { if (requested !== null && requested_present) scroll_to_ref.current(requested) }, [requested, requested_present])
 
-  // The section in view: the last whose top has passed the offset, or the
-  // last one once the page is scrolled to its end.
+  // The section in view: the last whose top has passed the middle.
   useEffect(() => {
     const spy = () => {
-      const page = root.current
-      if (page === null || performance.now() - scrolled_by_index_at.current < CLICK_SETTLE_MS) return
-      const top = page.getBoundingClientRect().top
+      // The page column's <main> is what scrolls, so tops are measured from it.
+      const scroller = root.current?.closest('main')
+      if (scroller == null || performance.now() - scrolled_by_index_at.current < CLICK_SETTLE_MS) return
+      const top = scroller.getBoundingClientRect().top
       let seen = sections[0]?.id ?? null
       for (const { id } of sections) {
         const rect = document.getElementById(element_id(id))?.getBoundingClientRect()
-        if (rect !== undefined && rect.top - top <= IN_VIEW_OFFSET) seen = id
+        if (rect !== undefined && rect.top - top <= scroller.clientHeight * IN_VIEW_FRACTION) seen = id
       }
-      // The page column's <main> is what scrolls.
-      const scroller = page.closest('main')
-      if (scroller !== null && scroller.scrollTop > 0 && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2) seen = sections.at(-1)?.id ?? seen
       set_current(seen)
     }
     document.addEventListener('scroll', spy, { capture: true, passive: true })

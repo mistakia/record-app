@@ -80,8 +80,13 @@ export const PlayerBar = () => {
   const queue_open = use_app_selector((state) => state.ui.queue_open)
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const [adopting, set_adopting] = useState(false)
-  const [menu, set_menu] = useState<{ x: number, y: number } | null>(null)
+  const [menu, set_menu] = useState<{ x: number, y: number, items: MenuItem[] } | null>(null)
   const now_playing = useRef<HTMLDivElement>(null)
+  // Set each render below; the key commands registered once call the latest.
+  const open_menu_at = useRef<(x: number, y: number) => void>(() => {})
+  // The menu closes on the mousedown that starts a click on …; that click
+  // must not open it again.
+  const more_pressed_while_open = useRef(false)
   const on_tag_clicked = use_tag_navigation()
   const { actions, dialogs } = use_track_actions({
     viewed_library: '',
@@ -102,7 +107,7 @@ export const PlayerBar = () => {
       adopt: () => { if (adoptable) set_adopting(true) },
       open_menu: () => {
         const rect = now_playing.current?.getBoundingClientRect()
-        if (rect !== undefined) set_menu({ x: rect.left + 40, y: rect.top })
+        if (rect !== undefined) open_menu_at.current(rect.left + 40, rect.top)
       }
     })
   }, [has_current, adoptable])
@@ -118,7 +123,13 @@ export const PlayerBar = () => {
   const buffered = player.state === 'loading' || player.state === 'idle' ? 0 : 1
   const meta = current === null ? '' : meta_line(current)
 
-  const menu_items = (): MenuItem[] => {
+  // An entry with nothing it can do opens no menu, which would only hold the keys.
+  open_menu_at.current = (x, y) => {
+    const items = menu_items()
+    if (items.length > 0) set_menu({ x, y, items })
+  }
+
+  function menu_items (): MenuItem[] {
     const track = playing_track()
     if (track !== null) return without_row_keys(actions.menu_items(track, null).filter(({ label }) => !NOW_PLAYING_OMITS.has(label)))
     // A queue restored from the snapshot has only its entries: what they allow.
@@ -142,7 +153,7 @@ export const PlayerBar = () => {
             onContextMenu={(event) => {
               if (current === null) return
               event.preventDefault()
-              set_menu({ x: event.clientX, y: event.clientY })
+              open_menu_at.current(event.clientX, event.clientY)
             }}
           >
             <div className={styles.adopt}>
@@ -176,9 +187,14 @@ export const PlayerBar = () => {
                 aria-label='Menu for the playing track'
                 aria-haspopup='menu'
                 aria-expanded={menu !== null}
+                onMouseDown={() => { more_pressed_while_open.current = menu !== null }}
                 onClick={(event) => {
+                  if (more_pressed_while_open.current) {
+                    more_pressed_while_open.current = false
+                    return
+                  }
                   const rect = event.currentTarget.getBoundingClientRect()
-                  set_menu({ x: rect.left, y: rect.top })
+                  open_menu_at.current(rect.left, rect.top)
                 }}
               >
                 …
@@ -245,7 +261,7 @@ export const PlayerBar = () => {
           </div>
         </div>
       </Screen>
-      {menu !== null && <ContextMenu x={menu.x} y={menu.y} items={menu_items()} on_close={() => { set_menu(null) }} />}
+      {menu !== null && <ContextMenu x={menu.x} y={menu.y} items={menu.items} on_close={() => { set_menu(null) }} />}
       {dialogs}
       {adopting && current?.content_cid !== undefined && (
         <AdoptDialog
