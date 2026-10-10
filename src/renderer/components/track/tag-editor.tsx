@@ -15,7 +15,8 @@ import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 're
 import styles from './tag-editor.module.css'
 import { TagTarget } from './tag-target.tsx'
 import { move_highlight, normalize_tag, suggest_tags, tab_completion, type AdderRow } from './tag-suggest.ts'
-import { tag_key, use_tag_writes, type ShownTag } from './use-tag-writes.ts'
+import { tag_key, type ShownTag } from './tag-writes.ts'
+import { use_tag_writes } from './use-tag-writes.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import { use_write_target } from '#renderer/components/library/target-select.tsx'
@@ -46,7 +47,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const visible_tags = node_api.endpoints.get_tags.useQuery(viewed_library === '' ? {} : { library_addresses: [viewed_library] })
   const choice = use_write_target({ action: 'library.append_tag', preferred: viewed_library === '' ? null : viewed_library, holders: initial[0]?.library_addresses ?? [] })
-  const { tracks, single, shown, fresh, add, remove, unfresh } = use_tag_writes({ initial, on_added: choice.used })
+  const { tracks, single, shown, fresh, add, remove, unfresh } = use_tag_writes(initial)
   const [draft, set_draft] = useState('')
   const [highlight, set_highlight] = useState<number | null>(null)
   const [armed, set_armed] = useState<string | null>(null)
@@ -60,17 +61,27 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
   const active = highlight !== null && highlight < rows.length ? highlight : null
 
   // Opens under the row, or above it when it would run off the window,
-  // growing upward from there as chips are added.
+  // growing upward from there. Placed again whenever its height changes, as
+  // when the suggestions arrive or chips are added.
   useLayoutEffect(() => {
-    const height = ref.current?.getBoundingClientRect().height ?? 0
-    const left = Math.max(EDGE_MARGIN, Math.min(anchor.x, window.innerWidth - WIDTH - EDGE_MARGIN))
-    if (anchor.y + height + EDGE_MARGIN > window.innerHeight) {
-      set_place({ left, bottom: window.innerHeight - Math.max(EDGE_MARGIN, anchor.y - height - 40) - height, above: true })
-    } else {
-      set_place({ left, top: anchor.y, above: false })
+    const element = ref.current
+    if (element === null) return
+    const place_it = () => {
+      const height = element.getBoundingClientRect().height
+      const left = Math.max(EDGE_MARGIN, Math.min(anchor.x, window.innerWidth - WIDTH - EDGE_MARGIN))
+      if (anchor.y + height + EDGE_MARGIN > window.innerHeight) {
+        set_place({ left, bottom: window.innerHeight - Math.max(EDGE_MARGIN, anchor.y - height - 40) - height, above: true })
+      } else {
+        set_place({ left, top: anchor.y, above: false })
+      }
     }
-    input.current?.focus()
+    place_it()
+    const observer = new ResizeObserver(place_it)
+    observer.observe(element)
+    return () => { observer.disconnect() }
   }, [anchor.x, anchor.y])
+
+  useLayoutEffect(() => { input.current?.focus() }, [])
 
   const close = () => {
     on_close()
@@ -81,7 +92,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
     const tag = normalize_tag(value)
     const { target } = choice
     if (!writes_allowed || target === null || tag === '' || tag.length > MAX_TAG_LENGTH) return
-    add(tag, target)
+    add(tag, target).then((took) => { if (took) choice.used(target) }).catch(() => {})
     set_draft('')
     set_highlight(null)
     set_armed(null)
@@ -91,13 +102,15 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
     const key = tag_key(entry)
     if (armed === key) {
       set_armed(null)
-      remove(entry)
+      remove(entry).catch(() => {})
     } else {
       set_armed(key)
     }
   }
 
   const on_key_down = (event: KeyboardEvent<HTMLInputElement>) => {
+    // Keys during an input method's composition belong to it.
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return
     const completion = event.key === 'Tab' && !event.shiftKey ? tab_completion({ rows, highlight: active, draft }) : null
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
@@ -143,7 +156,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
       role='dialog'
       aria-label='Add tag'
       data-testid='tag-editor'
-      onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close() } }}
+      onKeyDown={(event) => { if (event.key === 'Escape' && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); close() } }}
       onBlur={(event) => { if (!ref.current?.contains(event.relatedTarget as Node | null)) close() }}
       // Clicks inside keep the field focused.
       onMouseDown={(event) => { if (event.target !== input.current) event.preventDefault() }}
