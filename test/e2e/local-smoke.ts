@@ -84,6 +84,11 @@ try {
   await window.getByLabel('Search tracks').fill('Alpha')
   await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
   step('search "Alpha"', await titles(window))
+  // The results are a new view, but typing stays in the search: t is text
+  // there, not the list's tag key.
+  if (!await window.getByLabel('Search tracks').evaluate((input) => input === document.activeElement)) throw new Error('the search lost focus when its results loaded')
+  await window.keyboard.press('t')
+  if (await window.getByLabel('Search tracks').inputValue() !== 'Alphat' || await window.getByRole('dialog').count() > 0) throw new Error('a key typed after the results loaded left the search')
   await window.getByRole('button', { name: 'Clear filters' }).click()
   await window.getByTestId('track-total').filter({ hasText: /^2 tracks$/ }).waitFor()
   // A header click sorts ascending; a second reverses it.

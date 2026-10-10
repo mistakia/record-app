@@ -16,6 +16,7 @@ import { pages_for_rows, row_location } from './track-pages.ts'
 import { TrackRow, TrackRowSkeleton, type RowHandlers, type RowPlayState } from './track-row.tsx'
 import type { Track } from '#renderer/api/types.ts'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
+import { is_field } from '#renderer/hooks/hotkeys.ts'
 import { use_view_pref } from '#renderer/prefs/view-prefs.ts'
 import { node_api, type SortOrder, type TrackSort } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/store/index.ts'
@@ -114,7 +115,11 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
   const engine_state = use_app_selector((state) => state.player.state)
 
   useEffect(() => { dispatch(view_entered(view_key)) }, [dispatch, view_key])
-  useEffect(() => { scroller.current?.focus({ preventScroll: true }) }, [view_key])
+  // Focus enters the list with each view, but never leaves a field for it:
+  // a search's results are a new view, and typing must stay in the search.
+  useEffect(() => {
+    if (!is_field(document.activeElement)) scroller.current?.focus({ preventScroll: true })
+  }, [view_key])
 
   const track_at = (row: number): { track: Track, page_tracks: Track[], offset: number } | null => {
     const { page, offset } = row_location(row)
