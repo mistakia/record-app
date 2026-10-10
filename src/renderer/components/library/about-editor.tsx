@@ -1,7 +1,8 @@
 // The own library's profile (`about`): name, bio, location, and an avatar,
 // the CID of an image blob (protocol §2.6). The avatar is an image the user
 // chooses, which main stores in the node (POST /images); the raw CID is
-// behind advanced. Text is shown and sent as plain text.
+// behind advanced. Text is shown and sent as plain text. Saving a profile
+// is what starts a node announcing (protocol §5.3.2), so the form says so.
 
 import { useEffect, useState, type FormEvent } from 'react'
 
@@ -101,6 +102,7 @@ export const AboutEditor = ({ address, note, default_name }: { address: string, 
         </label>
       </ShowStrip>
       {!avatar_valid && <p className={styles.error}>The avatar must be the CID of an image already in the node.</p>}
+      <p className={styles.note} data-testid='about-announce-warning'>Saving a profile starts announcing this library to every peer on the network, unless its node is set not to announce.</p>
       <div>
         <button type='submit' disabled={!writes_allowed || saving || !avatar_valid || !loaded}>Save profile</button>
       </div>
