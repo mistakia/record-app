@@ -8,7 +8,8 @@ import { useEffect, useId, useRef } from 'react'
 import { useLocation } from 'react-router'
 
 import styles from './help.module.css'
-import { ROUTES } from '#renderer/routes.ts'
+import { parse_track_view, ROUTES } from '#renderer/routes.ts'
+import { node_api } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { help_toggled, shortcuts_toggled } from '#renderer/store/ui.ts'
 
@@ -25,6 +26,21 @@ const HELP: Record<string, string> = {
   [ROUTES.identity]: 'Your identity signs everything you add, on every device. Back up its key: it is the only way to recover your libraries.'
 }
 
+// A library's track list shares /tracks with All tracks, told apart by its
+// ?library, and reads differently for a library of yours and one you follow.
+const LIBRARY_HELP = {
+  own: 'This library’s tracks. j and k move, Enter plays, t tags, and i opens the details. Imports to it land here; its Profile and Writers tabs are beside Tracks.',
+  followed: 'The tracks of a library you follow, replicated to this node. j and k move, Enter plays, and f adopts a track into a library of yours.'
+}
+
+const use_help_text = (): string | undefined => {
+  const { pathname, search } = useLocation()
+  const own = node_api.endpoints.get_own_libraries.useQuery()
+  const library = pathname === ROUTES.tracks ? parse_track_view(new URLSearchParams(search)).library_address : ''
+  if (library === '') return HELP[pathname]
+  return own.data?.some(({ address }) => address === library) === true ? LIBRARY_HELP.own : LIBRARY_HELP.followed
+}
+
 export const HelpButton = () => {
   const dispatch = use_app_dispatch()
   const { pathname } = useLocation()
@@ -32,7 +48,7 @@ export const HelpButton = () => {
   const set_open = (next: boolean): void => { dispatch(help_toggled(next)) }
   const root = useRef<HTMLDivElement>(null)
   const panel_id = useId()
-  const text = HELP[pathname]
+  const text = use_help_text()
 
   // A new page starts with its help closed.
   useEffect(() => { dispatch(help_toggled(false)) }, [pathname, dispatch])
