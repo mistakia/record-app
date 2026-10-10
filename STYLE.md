@@ -268,7 +268,7 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 | `i`                     | Toggle the inspector                                     |
 | `.` or `Shift+F10`      | Open the row's context menu at the row                   |
 | `/` or `Cmd+F`          | Search                                                   |
-| `Esc`                   | Close menu, then clear search, then selection, then pane |
+| `Esc`                   | Close recent searches, then menu, then clear search, then selection, then pane |
 | `Space`                 | Play or pause                                            |
 | `Cmd+←` / `Cmd+→`       | Previous / next track                                    |
 | `Shift+←` / `Shift+→`   | Seek 5s                                                  |
@@ -295,6 +295,7 @@ Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys af
 ### Track list (paper)
 
 - **Header row** — a borderless search field filling the left (48px tall, `/` hint when empty, a `×` clear); on the right the shuffle toggle. Adding music is the page's main action (§ Main action).
+- **Recent searches** — focusing the empty search (or emptying it) drops a paper overlay directly under it: `RECENT` in 10px uppercase tertiary, 13px rows, a `×` per row, `clear` at the foot. `↑`/`↓` highlight, `Enter` or a click runs one; typing closes it. A search is kept when its results are acted on or the field is left with text: newest first, case-insensitively unique, 20 at most, one list for every view, on this machine only, search text without tags. The clear controls never take the focus, so a cleared search is not kept.
 - **Tag strip** — the list's tags as chips with counts, A to Z, one line with a right-edge fade into the paper; scrolls horizontally. Clicking toggles a tag in the filter (AND).
 - **Column header** — 10px uppercase tertiary: `▶ ☆ TITLE ARTIST ALBUM +TAG TAGS KBPS TIME FMT LISTENS`. Sortable headers show `▴` or `▾` on the active sort and turn accent on hover. Filter, search, and sort state live in the route, so back and forward restore them.
 - **Rows** — 36px, 13px mono, virtualized, `--color-border-light` dividers, no zebra.
