@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router'
 
 import styles from './player-bar.module.css'
 import { register_now_playing_commands } from './now-playing-commands.ts'
-import { HistoryIcon, QueueIcon, RepeatIcon, ShuffleIcon, SpeakerIcon } from './transport-icons.tsx'
+import { HistoryIcon, PauseIcon, QueueIcon, RepeatIcon, ShuffleIcon, SpeakerIcon } from './transport-icons.tsx'
 import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
@@ -218,7 +218,7 @@ export const PlayerBar = () => {
               </button>
               <button type='button' data-variant='glyph' aria-label='Previous' disabled={current === null} onClick={previous_track}>|◀</button>
               <button type='button' data-variant='glyph' className={styles.toggle} aria-label={player.state === 'playing' ? 'Pause' : 'Play'} disabled={!can_toggle} onClick={toggle_playback}>
-                {player.state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : player.state === 'playing' ? '▮▮' : '▶'}
+                {player.state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : player.state === 'playing' ? <PauseIcon /> : '▶'}
               </button>
               <button type='button' data-variant='glyph' aria-label='Next' disabled={current === null} onClick={next_track}>▶|</button>
               <button type='button' data-variant='glyph' aria-label={`Queue, ${queued_count} queued`} aria-pressed={queue_open} aria-expanded={queue_open} title='Play queue' onClick={() => { dispatch(queue_toggled()) }}>

@@ -10,6 +10,7 @@ import type { Column } from './columns.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { ragged_width, SkeletonBar } from '#renderer/components/common/skeleton.tsx'
+import { PauseIcon } from '#renderer/components/player/transport-icons.tsx'
 
 export type RowPlayState = 'playing' | 'loading' | 'paused' | null
 
@@ -132,7 +133,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
             handlers.on_play(index)
           }}
         >
-          {play_state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : play_state === 'playing' ? '▮▮' : '▶'}
+          {play_state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : play_state === 'playing' ? <PauseIcon height={8} bar={2} gap={2} /> : '▶'}
         </button>
       </span>
       <span role='cell'>
