@@ -20,8 +20,8 @@ const HELP: Record<string, string> = {
   [ROUTES.link_library]: 'Linking follows a library: its tracks replicate here and show in your tracks. Only its owner, and those they share it with, can change it.',
   [ROUTES.new_library]: 'A library is a collection with its own address, profile, and the people you let write to it. Your imports go to the library you choose.',
   [ROUTES.library_profile]: 'The profile is how this library introduces itself to the peers who link it.',
-  [ROUTES.issue_capability]: 'A capability lets another identity write to this library. You can revoke it on Sharing later, which stops new writes but not past ones.',
-  [ROUTES.library_sharing]: 'A capability lets another identity write to this library: add tracks or tags, perhaps only some, perhaps until a date. Revoking stops new writes, not past ones.',
+  [ROUTES.issue_capability]: 'A capability lets another identity write to this library. You can revoke it on Writers later, which stops new writes but not past ones.',
+  [ROUTES.library_writers]: 'Writers are the identities you let add tracks or tags to this library, perhaps only some, perhaps until a date. Listening needs no permission: anyone with the address can link it. Revoking stops new writes, not past ones.',
   [ROUTES.import]: 'Add files or folders, drop them here, or paste a URL. Each import goes to the library named as its target.',
   [ROUTES.identity]: 'Your identity signs everything you add, on every device. Back up its key: it is the only way to recover your libraries.'
 }

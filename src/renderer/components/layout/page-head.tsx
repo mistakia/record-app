@@ -1,6 +1,6 @@
 // The 40px page head (STYLE.md § Layout › Page column): a drag region with
 // the page title, or a library's profile header on its track list and its
-// Profile and Sharing tabs, and the page's help on request.
+// Profile and Writers tabs, and the page's help on request.
 
 import { useLocation } from 'react-router'
 
@@ -26,7 +26,7 @@ const TITLES: Record<string, string> = {
 const TAB_OF: Record<string, LibraryTab> = {
   [ROUTES.tracks]: 'tracks',
   [ROUTES.library_profile]: 'profile',
-  [ROUTES.library_sharing]: 'sharing'
+  [ROUTES.library_writers]: 'writers'
 }
 
 export const PageHead = () => {

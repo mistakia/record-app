@@ -19,7 +19,7 @@ import { use_hotkeys } from '#renderer/hooks/use-hotkeys.ts'
 import { use_node_events } from '#renderer/hooks/use-node-events.ts'
 import { use_media_session } from '#renderer/hooks/use-player.ts'
 import { Identity } from '#renderer/pages/identity.tsx'
-import { LibraryProfile, LibrarySharing } from '#renderer/pages/library-manage.tsx'
+import { LibraryProfile, LibraryWriters } from '#renderer/pages/library-manage.tsx'
 import { LinkLibrary } from '#renderer/pages/link-library.tsx'
 import { IssueCapability } from '#renderer/pages/issue-capability.tsx'
 import { NewLibrary } from '#renderer/pages/new-library.tsx'
@@ -74,7 +74,7 @@ const NODE_PAGES: Array<{ path: string, element: ReactElement }> = [
   { path: ROUTES.link_library, element: <LinkLibrary /> },
   { path: ROUTES.new_library, element: <NewLibrary /> },
   { path: ROUTES.library_profile, element: <LibraryProfile /> },
-  { path: ROUTES.library_sharing, element: <LibrarySharing /> },
+  { path: ROUTES.library_writers, element: <LibraryWriters /> },
   { path: ROUTES.issue_capability, element: <IssueCapability /> },
   { path: ROUTES.import, element: <Importer /> },
   { path: ROUTES.identity, element: <Identity /> }

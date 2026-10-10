@@ -1,6 +1,6 @@
-// An own library's Profile and Sharing tabs (spec §8.6.1, §8.6.4, §4.8.3),
-// beside its track list: the profile, with retirement at its foot, and the
-// capabilities it has issued. The library is the route's ?library.
+// An own library's Profile and Writers tabs (spec §8.6.1, §8.6.4, §4.8.3),
+// beside its track list: the profile, with retirement at its foot, and who
+// may write to it, the capabilities it has issued. The library is the route's ?library.
 
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
@@ -39,14 +39,14 @@ export const LibraryProfile = () => {
   const [retiring, set_retiring] = useState(false)
   if (loading) return null
   if (library === undefined) return <section className={styles.page}><NotOwn /></section>
-  const sharing = library_route({ tab: 'sharing', library_address: library.address })
-  // A retired library has no profile to edit, so a stale link goes on to Sharing.
-  if (!has_profile(library)) return <Navigate to={sharing} replace />
+  const writers = library_route({ tab: 'writers', library_address: library.address })
+  // A retired library has no profile to edit, so a stale link goes on to Writers.
+  if (!has_profile(library)) return <Navigate to={writers} replace />
 
   const retire = async () => {
     set_retiring(false)
     const retired = await report_write({ dispatch, write: dispatch(node_api.endpoints.retire_own_library.initiate(library.address)), success: `Retired ${library_name(library)}.` })
-    if (retired.ok) navigate(sharing, { replace: true })
+    if (retired.ok) navigate(writers, { replace: true })
   }
 
   return (
@@ -73,17 +73,22 @@ export const LibraryProfile = () => {
   )
 }
 
-export const LibrarySharing = () => {
+export const LibraryWriters = () => {
   const { library, loading } = use_managed_library()
   if (loading) return null
   if (library === undefined) return <section className={styles.page}><NotOwn /></section>
   return (
-    <section className={styles.page} data-testid='library-sharing-tab'>
+    <section className={styles.page} data-testid='library-writers-tab'>
       <FramedSection
         title='Who may write'
         width='full'
-        controls={library.is_retired ? undefined : <Link to={issue_route(library.address)} aria-label='Issue a capability' data-testid='issue-capability'>[issue]</Link>}
+        controls={library.is_retired ? undefined : <Link to={issue_route(library.address)} data-testid='issue-capability'>[let someone write]</Link>}
       >
+        <p className={styles.muted}>
+          {library.is_retired
+            ? 'The people this library let add tracks and tags. It is retired, so nobody can write to it now.'
+            : 'The people you let add tracks and tags to this library. Revoking stops their new writes, not past ones.'}
+        </p>
         <LibraryCapabilities key={library.address} address={library.address} name={library_name(library)} retired={library.is_retired} />
       </FramedSection>
     </section>

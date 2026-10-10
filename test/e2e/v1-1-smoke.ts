@@ -134,13 +134,13 @@ try {
   step('removed', 'V11 Alpha left Smoke Mixes and stays in the default library')
   await nav(window, 'Libraries')
 
-  // Capability management on the new library's Sharing tab: issue with a
+  // Capability management on the new library's Writers tab: issue with a
   // filter, revoke.
   await created.getByRole('link').first().click()
-  await window.getByRole('tab', { name: 'Sharing' }).click()
+  await window.getByRole('tab', { name: 'Writers' }).click()
   // Issuing is a step flow: who, what, and for how long, with the filter
   // behind advanced.
-  await window.getByRole('link', { name: 'Issue a capability' }).click()
+  await window.getByTestId('issue-capability').click()
   const flow = window.getByTestId('step-form')
   await flow.getByLabel('Grantee public keys').fill('0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798')
   await flow.getByRole('button', { name: 'Continue' }).click()
@@ -171,7 +171,7 @@ try {
   await window.getByRole('button', { name: 'Retire library' }).click()
   await window.getByRole('dialog').getByRole('button', { name: 'Retire permanently' }).click()
   await toast(window, /Retired /)
-  // Retiring lands on Sharing, read-only, and the Profile tab is gone.
+  // Retiring lands on Writers, read-only, and the Profile tab is gone.
   await window.getByTestId('library-capabilities').getByText('This library is retired').waitFor()
   if (await window.getByTestId('issue-capability').count() !== 0) throw new Error('a retired library offers issuing')
   if (await window.getByRole('tab', { name: 'Profile' }).count() !== 0) throw new Error('a retired library still offers its Profile')

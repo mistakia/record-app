@@ -1,6 +1,6 @@
 // Letting another identity write to an own library (spec §8.6.4), one
 // question at a time: who, what they may do, and for how long, with the
-// filter behind `advanced` on the last step. Issuing lands back on Sharing.
+// filter behind `advanced` on the last step. Issuing lands back on Writers.
 
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
@@ -49,7 +49,7 @@ export const IssueCapability = () => {
   const [issuing, set_issuing] = useState(false)
   if (loading) return null
   if (library === undefined || library.is_retired) return <Navigate to={library_route({ tab: 'tracks', library_address: library?.address ?? '' })} replace />
-  const sharing = library_route({ tab: 'sharing', library_address: library.address })
+  const writers = library_route({ tab: 'writers', library_address: library.address })
 
   const grantee = parse_grantee_keys(keys)
   const chosen = DURATIONS.find(({ id }) => id === duration)
@@ -72,7 +72,7 @@ export const IssueCapability = () => {
       success: 'Capability issued.'
     })
     set_issuing(false)
-    if (issued.ok) navigate(sharing, { replace: true })
+    if (issued.ok) navigate(writers, { replace: true })
   }
 
   if (step === 1) {
@@ -90,7 +90,7 @@ export const IssueCapability = () => {
         next_label='Continue'
         next_disabled={!grantee.ok}
         on_next={() => { set_step(2) }}
-        on_back={() => { navigate(sharing) }}
+        on_back={() => { navigate(writers) }}
       >
         <input autoFocus aria-label='Grantee public keys' placeholder='02… or 03…' spellCheck={false} value={keys} onChange={(event) => { set_keys(event.target.value) }} />
       </StepForm>
@@ -131,7 +131,7 @@ export const IssueCapability = () => {
       step={3}
       steps={3}
       question='For how long?'
-      hint={expires_at === null ? 'Until you revoke it on Sharing.' : expiry_ok ? `Until ${new Date(expires_at).toLocaleString()}.` : 'Choose the date and time it ends.'}
+      hint={expires_at === null ? 'Until you revoke it on Writers.' : expiry_ok ? `Until ${new Date(expires_at).toLocaleString()}.` : 'Choose the date and time it ends.'}
       error={duration === 'date' && date !== '' && !expiry_ok ? 'The date must be in the future.' : null}
       next_label={issuing ? 'Issuing' : 'Issue'}
       next_disabled={!writes_allowed || issuing || !expiry_ok || !filter_ok}
