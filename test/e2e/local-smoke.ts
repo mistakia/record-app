@@ -88,13 +88,19 @@ try {
   if (!await window.getByLabel('Search tracks').evaluate((input) => input === document.activeElement)) throw new Error('the search lost focus when its results loaded')
   await window.keyboard.press('t')
   if (await window.getByLabel('Search tracks').inputValue() !== 'Alphat' || await window.getByRole('dialog').count() > 0) throw new Error('a key typed after the results loaded left the search')
+  // Tab leaves the field, which keeps the search; clearing never does.
+  await window.keyboard.press('Tab')
   await window.getByRole('button', { name: 'Clear filters' }).click()
   await window.getByTestId('track-total').filter({ hasText: /^2 tracks$/ }).waitFor()
-  // Leaving the field recorded the search: `/` on the empty field lists it,
-  // ↓ Enter runs it, and Esc closes the list before anything else.
+  await window.getByLabel('Search tracks').fill('Zeta')
+  await window.getByLabel('Clear search').click()
+  await window.keyboard.press('Tab')
+  // `/` on the empty field lists the kept search, ↓ Enter runs it, and Esc
+  // closes the list before anything else.
   await window.keyboard.press('/')
   const recent = window.getByRole('listbox', { name: 'Recent' })
   await recent.getByRole('option', { name: 'Alphat' }).waitFor({ timeout: 5000 })
+  if (await recent.getByRole('option', { name: 'Zeta' }).count() > 0) throw new Error('clearing the search kept it in the recent searches')
   await window.keyboard.press('ArrowDown')
   await window.keyboard.press('Enter')
   if (await window.getByLabel('Search tracks').inputValue() !== 'Alphat') throw new Error('a recent search did not run from the keyboard')

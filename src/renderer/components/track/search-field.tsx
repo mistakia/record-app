@@ -7,6 +7,7 @@ import { useId, useRef, useState } from 'react'
 
 import { recent_search_key } from './recent-searches.ts'
 import styles from './search-field.module.css'
+import { keep_focus } from '#renderer/components/common/keep-focus.ts'
 import { SEARCH_INPUT_ID } from '#renderer/hooks/use-hotkeys.ts'
 import { clear_searches, record_search, remove_search, use_search_history } from '#renderer/prefs/search-history.ts'
 
@@ -30,8 +31,6 @@ export const SearchField = ({ value, on_change, on_submit }: {
     record_search(query)
     on_change(query)
   }
-  // A press inside the list keeps the focus in the field.
-  const keep_focus = (event: React.MouseEvent) => { event.preventDefault() }
 
   return (
     <div className={styles.search}>
@@ -42,7 +41,7 @@ export const SearchField = ({ value, on_change, on_submit }: {
         role='combobox'
         aria-label='Search tracks'
         aria-expanded={shown}
-        aria-controls={list_id}
+        aria-controls={shown ? list_id : undefined}
         aria-autocomplete='list'
         aria-activedescendant={active >= 0 ? `${list_id}-${active}` : undefined}
         placeholder='search'
@@ -50,6 +49,8 @@ export const SearchField = ({ value, on_change, on_submit }: {
         value={value}
         onFocus={() => { if (value === '') show() }}
         onMouseDown={() => { if (value === '' && !open) show() }}
+        // Leaving the field keeps its text; the clear controls never take
+        // the focus, so a discarded search is not kept.
         onBlur={() => { set_open(false); record_search(value) }}
         onChange={(event) => {
           const next = event.target.value
@@ -75,7 +76,7 @@ export const SearchField = ({ value, on_change, on_submit }: {
         }}
       />
       {value !== '' && (
-        <button type='button' data-variant='glyph' aria-label='Clear search' onClick={() => { on_change(''); input.current?.focus() }}>×</button>
+        <button type='button' data-variant='glyph' aria-label='Clear search' onMouseDown={keep_focus} onClick={() => { on_change(''); show(); input.current?.focus() }}>×</button>
       )}
       {shown && (
         <div className={styles.recent} onMouseDown={keep_focus}>

@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from 'react-router'
 
 import styles from './tracks.module.css'
 import { EmptyState } from '#renderer/components/common/empty-state.tsx'
+import { keep_focus } from '#renderer/components/common/keep-focus.ts'
 import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { library_name, own_library_address } from '#renderer/components/library/library-category.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
@@ -117,7 +118,7 @@ export const Tracks = () => {
         <SearchField value={search} on_change={set_search} on_submit={() => { list_commands()?.focus() }} />
         <span className={styles.count} data-testid='track-total'>{total} tracks</span>
         {filtered && (
-          <button type='button' data-variant='ghost' data-size='small' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
+          <button type='button' data-variant='ghost' data-size='small' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
         )}
         <button type='button' data-variant='glyph' className={styles.shuffle} aria-pressed={shuffle} onClick={shuffle_play}>Shuffle</button>
       </div>
@@ -127,7 +128,7 @@ export const Tracks = () => {
         ? <TrackListSkeleton />
         : current !== undefined && total === 0
           ? filtered
-            ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
+            ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
             : can_add
               ? <EmptyState headline='Empty' detail='No tracks in this view yet. Add some music, or link a library.' action={<button type='button' data-variant='primary' onClick={() => { navigate(ROUTES.import) }}>Add music</button>} />
               : <EmptyState headline='Empty' detail='No tracks here yet. A library you follow fills in as it replicates.' />

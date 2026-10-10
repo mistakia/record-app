@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
 import { recent_search_key } from '#renderer/components/track/recent-searches.ts'
-import { clear_searches, record_search, remove_search, SEARCH_HISTORY_LIMIT, with_search_recorded, with_search_removed } from '#renderer/prefs/search-history.ts'
-import { read_view_pref } from '#renderer/prefs/view-prefs.ts'
+import { as_search_history, clear_searches, record_search, remove_search, SEARCH_HISTORY_LIMIT, with_search_recorded, with_search_removed } from '#renderer/prefs/search-history.ts'
+import { read_view_pref, write_view_pref } from '#renderer/prefs/view-prefs.ts'
 
 const stored = () => read_view_pref<readonly string[]>('search-history', [])
 
@@ -27,6 +27,14 @@ describe('search history', () => {
 
   test('removes one entry', () => {
     expect(with_search_removed(['techno', 'house'], 'techno')).toEqual(['house'])
+  })
+
+  test('stored text that is not a list of strings reads as no history', () => {
+    for (const value of [null, 'techno', 42, { 0: 'techno' }, ['techno', 3]]) expect(as_search_history(value)).toEqual([])
+    expect(as_search_history(['techno'])).toEqual(['techno'])
+    write_view_pref('search-history', { broken: true })
+    record_search('house')
+    expect(stored()).toEqual(['house'])
   })
 
   test('the stored list records, removes, and clears', () => {
