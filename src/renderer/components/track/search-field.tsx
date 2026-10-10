@@ -8,6 +8,7 @@ import { useId, useRef, useState } from 'react'
 import { recent_search_key } from './recent-searches.ts'
 import styles from './search-field.module.css'
 import { keep_focus } from '#renderer/components/common/keep-focus.ts'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { SEARCH_INPUT_ID } from '#renderer/hooks/use-hotkeys.ts'
 import { clear_searches, record_search, remove_search, use_search_history } from '#renderer/prefs/search-history.ts'
 
@@ -76,7 +77,7 @@ export const SearchField = ({ value, on_change, on_submit }: {
         }}
       />
       {value !== '' && (
-        <button type='button' data-variant='glyph' aria-label='Clear search' onMouseDown={keep_focus} onClick={() => { on_change(''); show(); input.current?.focus() }}>×</button>
+        <button type='button' data-variant='glyph' aria-label='Clear search' {...tip('Clear search')} onMouseDown={keep_focus} onClick={() => { on_change(''); show(); input.current?.focus() }}>×</button>
       )}
       {shown && (
         <div className={styles.recent} onMouseDown={keep_focus}>
@@ -98,6 +99,7 @@ export const SearchField = ({ value, on_change, on_submit }: {
                   data-variant='glyph'
                   tabIndex={-1}
                   aria-label={`Remove ${query}`}
+                  {...tip('Remove from recent searches')}
                   onClick={(event) => { event.stopPropagation(); remove_search(query) }}
                 >×
                 </button>

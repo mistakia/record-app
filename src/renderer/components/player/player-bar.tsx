@@ -9,10 +9,11 @@ import { useNavigate } from 'react-router'
 
 import styles from './player-bar.module.css'
 import { register_now_playing_commands } from './now-playing-commands.ts'
-import { HistoryIcon, QueueIcon, RepeatIcon, ShuffleIcon, SpeakerIcon } from './transport-icons.tsx'
+import { HistoryIcon, PauseIcon, QueueIcon, RepeatIcon, ShuffleIcon, SpeakerIcon } from './transport-icons.tsx'
 import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { copy_text } from '#renderer/components/common/copy-text.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { Screen } from '#renderer/components/common/screen.tsx'
@@ -52,13 +53,15 @@ const meta_line = ({ codec, bitrate }: { codec?: string | null | undefined, bitr
 // ticks hold the silenced level, dimmed, and the readout says MUTE.
 const VOLUME_TICKS = 20
 
+const REPEAT_TIPS: Record<RepeatMode, string> = { off: 'Repeat off', all: 'Repeat all', one: 'Repeat one' }
+
 const VolumeMeter = ({ volume, muted_volume }: { volume: number, muted_volume: number | null }) => {
   const muted = muted_volume !== null
   const level = muted_volume ?? volume
   const lit = Math.round(level * VOLUME_TICKS)
   return (
     <div className={styles.volume} data-muted={muted} data-testid='volume'>
-      <button type='button' data-variant='glyph' className={styles.mute} aria-label={muted ? 'Unmute' : 'Mute'} aria-pressed={muted} onClick={toggle_mute}>
+      <button type='button' data-variant='glyph' className={styles.mute} aria-label={muted ? 'Unmute' : 'Mute'} aria-pressed={muted} {...tip(muted ? 'Unmute' : 'Mute', 'toggle_mute')} onClick={toggle_mute}>
         <SpeakerIcon muted={muted} />
       </button>
       <span className={styles.meter}>
@@ -162,6 +165,7 @@ export const PlayerBar = () => {
                 data-variant='glyph'
                 className={current?.have_track === true ? `${styles.star} ${styles.held}` : styles.star}
                 aria-label={current?.have_track === true ? 'In your library; adopt to another' : 'Adopt to library'}
+                {...tip(current?.have_track === true ? 'In your library — adopt to another' : 'Adopt to library', 'adopt_playing')}
                 disabled={!adoptable}
                 onClick={() => { set_adopting(true) }}
               >
@@ -185,6 +189,7 @@ export const PlayerBar = () => {
                 data-variant='glyph'
                 className={styles.more}
                 aria-label='Menu for the playing track'
+                {...tip('Track menu', 'open_playing_menu')}
                 aria-haspopup='menu'
                 aria-expanded={menu !== null}
                 onMouseDown={() => { more_pressed_while_open.current = menu !== null }}
@@ -208,24 +213,24 @@ export const PlayerBar = () => {
                 data-variant='glyph'
                 aria-label={`Repeat ${queue.repeat}`}
                 aria-pressed={queue.repeat !== 'off'}
-                title={`Repeat: ${queue.repeat}`}
+                {...tip(REPEAT_TIPS[queue.repeat], 'cycle_repeat')}
                 onClick={() => { set_repeat_mode(NEXT_REPEAT[queue.repeat]) }}
               >
                 <RepeatIcon one={queue.repeat === 'one'} />
               </button>
-              <button type='button' data-variant='glyph' aria-label='Shuffle' aria-pressed={queue.shuffle} title='Shuffle' onClick={toggle_shuffle_mode}>
+              <button type='button' data-variant='glyph' aria-label='Shuffle' aria-pressed={queue.shuffle} {...tip(queue.shuffle ? 'Shuffle on' : 'Shuffle off', 'toggle_shuffle')} onClick={toggle_shuffle_mode}>
                 <ShuffleIcon />
               </button>
-              <button type='button' data-variant='glyph' aria-label='Previous' disabled={current === null} onClick={previous_track}>|◀</button>
-              <button type='button' data-variant='glyph' className={styles.toggle} aria-label={player.state === 'playing' ? 'Pause' : 'Play'} disabled={!can_toggle} onClick={toggle_playback}>
-                {player.state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : player.state === 'playing' ? '▮▮' : '▶'}
+              <button type='button' data-variant='glyph' aria-label='Previous' {...tip('Previous track', 'previous_track')} disabled={current === null} onClick={previous_track}>|◀</button>
+              <button type='button' data-variant='glyph' className={styles.toggle} aria-label={player.state === 'playing' ? 'Pause' : 'Play'} {...tip(player.state === 'playing' ? 'Pause' : 'Play', 'toggle_playback')} disabled={!can_toggle} onClick={toggle_playback}>
+                {player.state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : player.state === 'playing' ? <PauseIcon /> : '▶'}
               </button>
-              <button type='button' data-variant='glyph' aria-label='Next' disabled={current === null} onClick={next_track}>▶|</button>
-              <button type='button' data-variant='glyph' aria-label={`Queue, ${queued_count} queued`} aria-pressed={queue_open} aria-expanded={queue_open} title='Play queue' onClick={() => { dispatch(queue_toggled()) }}>
+              <button type='button' data-variant='glyph' aria-label='Next' {...tip('Next track', 'next_track')} disabled={current === null} onClick={next_track}>▶|</button>
+              <button type='button' data-variant='glyph' aria-label={`Queue, ${queued_count} queued`} aria-pressed={queue_open} aria-expanded={queue_open} {...tip('Play queue', 'toggle_queue')} onClick={() => { dispatch(queue_toggled()) }}>
                 <QueueIcon />
                 {queued_count > 0 && <span className={styles.badge}>{queued_count}</span>}
               </button>
-              <button type='button' data-variant='glyph' aria-label='History' title='Listening history' onClick={() => { navigate(ROUTES.listens) }}>
+              <button type='button' data-variant='glyph' aria-label='History' {...tip('Recently played')} onClick={() => { navigate(ROUTES.listens) }}>
                 <HistoryIcon />
               </button>
             </div>

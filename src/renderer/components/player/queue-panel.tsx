@@ -10,6 +10,7 @@ import styles from './queue-panel.module.css'
 import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { Screen } from '#renderer/components/common/screen.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { use_player } from '#renderer/hooks/use-player.ts'
 import { clear_playing_next, jump_to_entry, nudge_in_queue, place_in_queue, remove_from_queue, toggle_playback } from '#renderer/player/player-controller.ts'
 import { queued_count, type QueueEntry } from '#renderer/player/queue-manager.ts'
@@ -53,12 +54,12 @@ const Entry = ({ entry, index, list, offset, on_drag }: {
       onDragStart={() => { on_drag(entry.queue_id) }}
       onKeyDown={on_key_down}
     >
-      <button type='button' data-variant='glyph' className={styles.play} tabIndex={-1} aria-label={`Play ${entry.title ?? 'Untitled'}`} onClick={() => { jump_to_entry(index) }}>▶</button>
+      <button type='button' data-variant='glyph' className={styles.play} tabIndex={-1} aria-label={`Play ${entry.title ?? 'Untitled'}`} {...tip('Play')} onClick={() => { jump_to_entry(index) }}>▶</button>
       <span className={styles.text}>
         <span className={styles.title}>{entry.title ?? 'Untitled'}</span>
         <span className={styles.artist}>{entry.artist ?? ''}</span>
       </span>
-      <button type='button' data-variant='glyph' className={styles.remove} tabIndex={-1} aria-label='Remove from queue' onClick={() => { remove_from_queue(entry.queue_id) }}>×</button>
+      <button type='button' data-variant='glyph' className={styles.remove} tabIndex={-1} aria-label='Remove from queue' {...tip('Remove from queue')} onClick={() => { remove_from_queue(entry.queue_id) }}>×</button>
       <span className={styles.duration}>{entry.duration_seconds == null ? '' : format_seconds(entry.duration_seconds)}</span>
     </li>
   )
@@ -102,7 +103,7 @@ export const QueuePanel = () => {
     <Screen className={styles.overlay} data-testid='queue-panel' aria-label='Queue' role='region'>
       <div ref={ref} className={styles.layout}>
         <div className={styles.art}>
-          <button type='button' data-variant='glyph' className={styles.collapse} aria-label='Close queue' onClick={() => { dispatch(queue_toggled(false)) }}>▼</button>
+          <button type='button' data-variant='glyph' className={styles.collapse} aria-label='Close queue' {...tip('Close queue', 'toggle_queue')} onClick={() => { dispatch(queue_toggled(false)) }}>▼</button>
           <div className={styles.art_frame}>
             <Artwork cid={current?.artwork} size={280} />
             <div className='screen__glass screen__glass--over' aria-hidden='true' />

@@ -10,6 +10,9 @@ import type { Column } from './columns.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { ragged_width, SkeletonBar } from '#renderer/components/common/skeleton.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
+import type { HotkeyAction } from '#renderer/hooks/hotkeys.ts'
+import { PauseIcon } from '#renderer/components/player/transport-icons.tsx'
 
 export type RowPlayState = 'playing' | 'loading' | 'paused' | null
 
@@ -62,6 +65,7 @@ const Tags = ({ track, removable, handlers }: { track: Track, removable: Readonl
             className={styles.chip_remove}
             tabIndex={-1}
             aria-label={`Remove tag ${tag}`}
+            {...tip('Remove tag')}
             onClick={(event) => {
               event.stopPropagation()
               handlers.on_remove_tag({ track, tag, library_address })
@@ -95,6 +99,9 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
     is_selected ? styles.selected : '',
     menu_open ? styles.menu_open : ''
   ].filter((name) => name !== '').join(' ')
+  // The list's keys act on the cursor row (or the selection), so only its
+  // tips name them.
+  const row_key = (action: HotkeyAction): HotkeyAction | undefined => is_cursor ? action : undefined
   const lead = columns.filter(({ lead: is_lead }) => is_lead === true)
   const rest = columns.filter(({ lead: is_lead }) => is_lead !== true)
   const render_column = (column: Column) => column.id === 'tags'
@@ -127,12 +134,13 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
           className={styles.play}
           tabIndex={-1}
           aria-label={play_state === 'playing' ? 'Pause' : 'Play'}
+          {...(play_state === null ? tip('Play', row_key('play_cursor')) : tip(play_state === 'playing' ? 'Pause' : 'Play', 'toggle_playback'))}
           onClick={(event) => {
             event.stopPropagation()
             handlers.on_play(index)
           }}
         >
-          {play_state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : play_state === 'playing' ? '▮▮' : '▶'}
+          {play_state === 'loading' ? <span className={styles.spinner} aria-hidden='true' /> : play_state === 'playing' ? <PauseIcon height={8} bar={2} gap={2} /> : '▶'}
         </button>
       </span>
       <span role='cell'>
@@ -142,6 +150,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
           className={track.have_track ? `${styles.star} ${styles.held}` : styles.star}
           tabIndex={-1}
           aria-label={track.have_track ? 'In your library; adopt to another' : 'Adopt to library'}
+          {...tip(track.have_track ? 'In your library — adopt to another' : 'Adopt to library', row_key('adopt'))}
           onClick={(event) => {
             event.stopPropagation()
             handlers.on_adopt(track)
@@ -152,7 +161,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
       </span>
       <span role='cell' className={`${styles.cell} ${styles.title_cell}`}>
         <span className={styles.title}>{track.title ?? 'Untitled'}</span>
-        {track.is_pinned === true && <span className={styles.pinned} aria-label='Pinned' data-testid='pinned'>◆</span>}
+        {track.is_pinned === true && <span className={styles.pinned} aria-label='Pinned' data-testid='pinned' {...tip('Pinned')}>◆</span>}
       </span>
       {lead.map(render_column)}
       <span role='cell'>
@@ -162,6 +171,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
           className={styles.add_tag}
           tabIndex={-1}
           aria-label='Add tag'
+          {...tip('Add tag', row_key('tag'))}
           onClick={(event) => {
             event.stopPropagation()
             handlers.on_add_tag(index, track)
@@ -178,6 +188,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
           className={styles.more}
           tabIndex={-1}
           aria-label='Track menu'
+          {...tip('Track menu', row_key('open_menu'))}
           onClick={(event) => {
             event.stopPropagation()
             const rect = event.currentTarget.getBoundingClientRect()

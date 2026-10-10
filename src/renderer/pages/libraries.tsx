@@ -12,6 +12,7 @@ import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
@@ -90,6 +91,7 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
           type='button'
           data-variant='glyph'
           aria-label={`Menu for ${library_name(library)}`}
+          {...tip('Library menu')}
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect()
             set_menu({ x: rect.left, y: rect.bottom })

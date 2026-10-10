@@ -14,6 +14,7 @@ import type { Track } from '#renderer/api/types.ts'
 import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { ShowStrip } from '#renderer/components/common/show-strip.tsx'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { CATEGORY_LABELS, describe_holders, library_category, library_name, short_address } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -42,7 +43,7 @@ export const Inspector = ({ source, on_close }: { source: ListSource, on_close: 
     <aside className={styles.pane} aria-label='Track details' data-testid='inspector'>
       <header className={styles.head}>
         <span className={styles.kicker}>Details</span>
-        <button type='button' data-variant='glyph' aria-label='Close details' onClick={on_close}>[x]</button>
+        <button type='button' data-variant='glyph' aria-label='Close details' {...tip('Close details', 'toggle_inspector')} onClick={on_close}>[x]</button>
       </header>
       {track === undefined
         ? <p className={styles.empty}>No track under the cursor.</p>

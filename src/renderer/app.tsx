@@ -5,6 +5,7 @@ import styles from './app.module.css'
 import { ShortcutOverlay } from '#renderer/components/common/shortcut-overlay.tsx'
 import { GoPanel } from '#renderer/components/layout/go-panel.tsx'
 import { Toaster } from '#renderer/components/common/toaster.tsx'
+import { TooltipLayer } from '#renderer/components/common/tooltip.tsx'
 import { BackupPrompt } from '#renderer/components/identity/backup-prompt.tsx'
 import { BundledBanner } from '#renderer/components/layout/bundled-banner.tsx'
 import { ConnectionBanner } from '#renderer/components/layout/connection-banner.tsx'
@@ -115,6 +116,7 @@ const Shell = ({ configured }: { configured: boolean }) => {
         </PageActionsProvider>
         <PlayerBar />
       </div>
+      <TooltipLayer />
     </div>
   )
 }

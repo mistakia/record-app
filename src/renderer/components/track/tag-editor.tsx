@@ -18,6 +18,7 @@ import { move_highlight, normalize_tag, suggest_tags, tab_completion, type Adder
 import { tag_key, type ShownTag } from './tag-writes.ts'
 import { use_tag_writes } from './use-tag-writes.ts'
 import type { Track } from '#renderer/api/types.ts'
+import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import { use_write_target } from '#renderer/components/library/target-select.tsx'
 import { node_api } from '#renderer/store/api.ts'
@@ -172,7 +173,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
               <li key={key} className={classes} aria-busy={entry.pending} onAnimationEnd={() => { unfresh(key) }}>
                 {entry.tag}
                 {can_remove && (
-                  <button type='button' data-variant='glyph' aria-label={armed === key ? `Confirm removing tag ${entry.tag}` : `Remove tag ${entry.tag}`} disabled={!writes_allowed} onClick={() => { arm_or_remove({ tag: entry.tag, library_address: entry.library_address }) }}>
+                  <button type='button' data-variant='glyph' aria-label={armed === key ? `Confirm removing tag ${entry.tag}` : `Remove tag ${entry.tag}`} {...(armed === key ? {} : tip('Remove tag'))} disabled={!writes_allowed} onClick={() => { arm_or_remove({ tag: entry.tag, library_address: entry.library_address }) }}>
                     {armed === key ? 'remove?' : '×'}
                   </button>
                 )}

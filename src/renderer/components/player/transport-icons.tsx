@@ -1,6 +1,6 @@
 // Hairline icons for the transport controls the mono faces have no glyph
-// for (STYLE.md § Glyphs): repeat, repeat one, shuffle, queue, history, and
-// the volume's speaker.
+// for (STYLE.md § Glyphs): repeat, repeat one, shuffle, queue, history, the
+// volume's speaker, and pause.
 // 16px, a 1.25px square-capped stroke in currentColor, as crisp as the text
 // glyphs beside them.
 
@@ -44,3 +44,16 @@ export const SpeakerIcon = ({ muted }: { muted: boolean }) => (
     {muted ? <path d='M2 2l12 12' /> : <path d='M10.5 6a2.5 2.5 0 0 1 0 4M12 4a5 5 0 0 1 0 8' />}
   </Icon>
 )
+
+// Pause: two solid bars, drawn because the face's ▮▮ is squat, no taller
+// than ▶ and wider. Filled rather than stroked, to weigh what ▶ weighs, a
+// little taller than it, and boxed tight to the bars so it centres where ▶
+// does. In whole CSS pixels, so the bars are crisp at 1x as at 2x.
+export const PauseIcon = ({ height = 10, bar = 3, gap = 2 }: { height?: number, bar?: number, gap?: number }) => {
+  const width = bar * 2 + gap
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill='currentColor' aria-hidden='true'>
+      <path d={`M0 0h${bar}v${height}H0zM${bar + gap} 0h${bar}v${height}H${bar + gap}z`} />
+    </svg>
+  )
+}
