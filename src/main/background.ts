@@ -1,9 +1,10 @@
 // Background mode is for a session driving the app. The app never activates
 // or takes the operator's focus, makes no sound, and leaves the media keys
 // and Now Playing to whatever the operator is listening to; playback still
-// runs. RECORD_BACKGROUND=1, for a dev run, keeps the window on screen for
-// the operator to watch. RECORD_BACKGROUND=hidden, for a script, makes it
-// invisible and lets clicks through, so a stray click cannot land in it.
+// runs. RECORD_BACKGROUND=hidden, a session's default for a script or a dev
+// run, makes the window invisible and lets clicks through, so a stray click
+// cannot land in it. RECORD_BACKGROUND=1 keeps it on screen, for a dev run
+// the operator asked to watch.
 // A release build ignores both, so it can never start unreachable.
 
 import { app, dialog, shell } from 'electron'
