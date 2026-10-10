@@ -138,6 +138,7 @@ try {
   await editor.getByLabel('New tag').fill('smoke-tag')
   await editor.getByLabel('New tag').press('Enter')
   await editor.locator('li[aria-busy=false]').filter({ hasText: 'smoke-tag' }).waitFor()
+  if (await editor.getByTestId('write-target').count() > 0) throw new Error('the tag adder names its only target library')
   await editor.getByLabel('New tag').press('Escape')
   await editor.waitFor({ state: 'detached' })
   await window.getByTestId('tag-filter').getByRole('button', { name: /smoke-tag/ }).click()

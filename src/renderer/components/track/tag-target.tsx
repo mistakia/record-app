@@ -1,6 +1,6 @@
-// The inline adder's write target as one quiet line, `into <library>`, with
-// `change` when more than one library would take the tag; `change` opens the
-// choice as a short list in place. The rule and the default are
+// The inline adder's write target as one quiet line, `into <library> ·
+// change`, shown only when more than one library would take the tag;
+// `change` opens the choice as a short list in place. The rule and the default are
 // use_write_target's (spec §8.6.3, §8.6.7); only the presentation is compact.
 
 import { useState } from 'react'
@@ -12,14 +12,15 @@ import type { WriteTarget } from '#renderer/library/write-targets.ts'
 export const TagTarget = ({ choice, on_chosen }: { choice: WriteTargetChoice, on_chosen: () => void }) => {
   const { targets, target, resolution, choose, name_of } = choice
   const [open, set_open] = useState(false)
-  if (resolution.kind === 'loading') return <p className={styles.target} data-testid='write-target'>finding your libraries</p>
+  // One library to tag into needs no line: it only names what cannot change.
+  if (resolution.kind === 'loading' || (targets.length <= 1 && target !== null)) return null
   const describe = (candidate: WriteTarget): string => `${name_of(candidate.library_address)}${candidate.category === 'shared' ? ' (shared)' : ''}`
   const listed = open || target === null
   return (
     <>
       <p className={styles.target} data-testid='write-target' data-library={target?.library_address ?? ''}>
         into <span className={styles.library}>{target === null ? '—' : describe(target)}</span>
-        {targets.length > 1 && target !== null && (
+        {target !== null && (
           <>
             {' · '}
             <button type='button' data-variant='glyph' aria-expanded={open} aria-label='Change target library' onClick={() => { set_open(!open) }}>change</button>
