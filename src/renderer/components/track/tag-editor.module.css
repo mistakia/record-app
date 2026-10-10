@@ -1,16 +1,61 @@
+/* The inline tag adder: a small paper overlay framed like a section, its
+   title on the top stroke, opening with a short fade from the +TAG cell. */
+
 .adder {
+  --from: -4px;
+
   position: fixed;
   z-index: 30;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  width: 280px;
-  padding: var(--space-sm);
+  width: 300px;
+  padding: var(--space-base) var(--space-sm) var(--space-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-overlay);
   background: var(--color-surface-raised);
   box-shadow: var(--shadow-overlay);
+  animation: adder-in var(--transition-fast) both;
 }
+
+.adder[data-above='true'] {
+  --from: 4px;
+}
+
+@keyframes adder-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--from));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.stroke {
+  position: absolute;
+  top: 0;
+  right: var(--space-sm);
+  left: var(--space-sm);
+  display: flex;
+  transform: translateY(-50%);
+}
+
+.title {
+  overflow: hidden;
+  max-width: 100%;
+  padding: 0 var(--space-xs);
+  background: var(--color-surface-raised);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Chips */
 
 .tags {
   display: flex;
@@ -46,21 +91,36 @@
   color: var(--color-error);
 }
 
-.form {
-  display: flex;
-  gap: var(--space-xs);
+/* A tag just added lights in the accent, then settles to a resting chip. */
+.fresh {
+  animation: chip-flash 0.9s ease-out;
 }
 
-.form input {
-  flex: 1;
-  min-width: 0;
+@keyframes chip-flash {
+  from {
+    border-color: var(--color-accent);
+    background: var(--color-accent-wash);
+    color: var(--color-accent);
+  }
+  to {
+    border-color: var(--color-border-light);
+    background: transparent;
+    color: var(--color-text-secondary);
+  }
+}
+
+/* The field and its suggestions */
+
+.field {
+  width: 100%;
   height: 28px;
+  font-size: var(--font-size-sm);
 }
 
 .suggestions {
   display: flex;
   flex-direction: column;
-  margin: 0;
+  margin: calc(var(--space-xs) * -1) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -69,31 +129,100 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-sm);
   height: 24px;
+  padding: 0 var(--space-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
 }
 
 .suggestions li[aria-selected='true'] {
   background: var(--color-surface-hover);
-}
-
-.suggestions button {
-  flex: 1;
-  justify-content: flex-start;
-  height: 100%;
   color: var(--color-text);
-  font-size: var(--font-size-sm);
 }
 
-.key {
-  padding: 0 var(--space-xs);
-  border: none;
-  color: var(--color-text-tertiary);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xxs);
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+.lit {
+  color: var(--color-text);
+  font-weight: 400;
+}
+
+.suggestions li[aria-selected='true'] .lit {
+  color: var(--color-accent);
+}
+
+.count {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.create {
+  color: var(--color-text-tertiary);
+}
+
+.quoted {
+  color: var(--color-text);
+}
+
+.suggestions li.create[aria-selected='true'] .quoted {
+  color: var(--color-accent);
+}
+
+/* Where the tag goes */
 
 .target {
-  font-size: var(--font-size-sm);
+  padding: 0 var(--space-sm);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.library {
+  color: var(--color-text-secondary);
+}
+
+.target button {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.targets {
+  display: flex;
+  flex-direction: column;
+  margin: calc(var(--space-xs) * -1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.targets button {
+  justify-content: flex-start;
+  padding: 0 var(--space-sm);
+  width: 100%;
+  height: 22px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.targets button[aria-current='true'] {
+  color: var(--color-text);
+}
+
+.mark {
+  width: 2ch;
+  color: var(--color-accent);
+  font-size: 0.7em;
+}
+
+.gone {
+  padding: 0 var(--space-sm);
+  color: var(--color-error);
+  font-size: var(--font-size-xs);
 }
 
 .note {
