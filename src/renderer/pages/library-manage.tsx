@@ -3,7 +3,7 @@
 // may write to it, the capabilities it has issued. The library is the route's ?library.
 
 import { useState } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
+import { Navigate, useNavigate, useSearchParams } from 'react-router'
 
 import styles from './library-manage.module.css'
 import type { Library } from '#renderer/api/types.ts'
@@ -11,6 +11,7 @@ import { LibraryCapabilities } from '#renderer/components/capability/library-cap
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
+import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
 import { can_retire, has_profile, library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
 import { issue_route, library_route } from '#renderer/routes.ts'
@@ -74,22 +75,30 @@ export const LibraryProfile = () => {
 }
 
 export const LibraryWriters = () => {
+  const navigate = useNavigate()
   const { library, loading } = use_managed_library()
   if (loading) return null
   if (library === undefined) return <section className={styles.page}><NotOwn /></section>
   return (
     <section className={styles.page} data-testid='library-writers-tab'>
-      <FramedSection
-        title='Who may write'
-        width='full'
-        controls={library.is_retired ? undefined : <Link to={issue_route(library.address)} data-testid='issue-capability'>[let someone write]</Link>}
-      >
+      {!library.is_retired && (
+        <PageActions>
+          <button type='button' data-size='small' data-variant='primary' data-testid='issue-capability' onClick={() => { navigate(issue_route(library.address)) }}>Add writer</button>
+        </PageActions>
+      )}
+      <FramedSection title='Who may write' width='full'>
         <p className={styles.muted}>
           {library.is_retired
             ? 'The people this library let add tracks and tags. It is retired, so nobody can write to it now.'
             : 'The people you let add tracks and tags to this library. Revoking stops their new writes, not past ones.'}
         </p>
-        <LibraryCapabilities key={library.address} address={library.address} name={library_name(library)} retired={library.is_retired} />
+        <LibraryCapabilities
+          key={library.address}
+          address={library.address}
+          name={library_name(library)}
+          retired={library.is_retired}
+          empty_action={<button type='button' data-variant='primary' onClick={() => { navigate(issue_route(library.address)) }}>Add writer</button>}
+        />
       </FramedSection>
     </section>
   )

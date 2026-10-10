@@ -168,16 +168,17 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 
 ```
 ┌────────────┬──────────────────────────────────────────────────────────┐
-│ ‹ ›        │ page head 40px: title, or the library profile header     │
+│ ‹ ›        │ page head 40px: title or profile header, [MAIN ACTION]   │
 │            ├──────────────────────────────────────────────────────────┤
-│ RECORD     │ search ······························· [+]  [shuffle]   │
+│ RECORD     │ search ·································· [shuffle]   │
 │ tracks     │ tag chips with counts ·································› │
 │ recently   │ ▶  ☆  TITLE ▴  ARTIST  ALBUM  +TAG  TAGS  KBPS  TIME  FMT  LISTENS │
 │  played    │ track rows, 36px                                         │
 │            │                                                          │
 │ MY LIBRARY │                                                          │
 │ tracks     │                                       (inspector pane    │
-│ libraries  │                                        docks here, 320px)│
+│ add music  │                                        docks here, 320px)│
+│ libraries  │                                                          │
 │            │                                                          │
 │ LIBRARIES [+]                                         [ingest gauge] │
 │ ◐ name   … ├──────────────────────────────────────────────────────────┤
@@ -192,7 +193,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 - 180px, full window height, `--color-surface-sunken`, a 1px `--color-border` pane boundary on its right edge. The whole sidebar is the window drag region; its controls are `no-drag`.
 - **Top** — back and forward (`‹ ›`), right-aligned so they clear the macOS traffic lights.
 - **RECORD** — Tracks (every library, aggregated) and Recently Played (listens).
-- **MY LIBRARY** — Tracks and Libraries of the user's own library. With more than one own active library, MY LIBRARY lists each by name.
+- **MY LIBRARY** — Tracks, Add music, and Libraries of the user's own library. With more than one own active library, MY LIBRARY lists each by name before Add music. Add music opens Import; while imports run it carries their count in 10px tertiary, `Add music  3`.
 - **LIBRARIES** — linked and held-capability libraries; this list takes the remaining height and scrolls under a sticky heading that hosts `[+]`, which opens the Link a library flow. Each row: a 24px avatar, the name, and on hover a `…` that opens the library menu (connect or disconnect, unlink, edit, copy address). A library that is replicating shows a quiet tertiary gauge after its name.
 - **Footer** — the identity's profile and the Settings gear, over a 48px row; under it the status line, `3 peers` with the connection dot, 11px tertiary, linking to Settings. The identity has no profile of its own (spec §8.6.9), so it goes by its default own library's About name and avatar. Until it is named, it goes by a two-word handle read from its public key (`identity/default-name.ts`, `amber heron`), the same on every device, never written to the profile. Until it has an image, its avatar is its default library's pattern. Either opens Identity, whose first section edits that profile. The gear is a 16px hairline SVG (`components/layout/settings-icon.tsx`) in secondary ink, accent on hover and on the Settings page, labelled `Settings`.
 - Active item: `--color-selected` ink at 600 on the `--color-surface` paper (the item lifts to the page's paper, as legacy's white-on-grey). Hover: `--color-surface-hover`.
@@ -293,7 +294,7 @@ Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys af
 
 ### Track list (paper)
 
-- **Header row** — a borderless search field filling the left (48px tall, `/` hint when empty, a `×` clear); on the right `[+]` import (shown when a write target exists) and the shuffle toggle.
+- **Header row** — a borderless search field filling the left (48px tall, `/` hint when empty, a `×` clear); on the right the shuffle toggle. Adding music is the page's main action (§ Main action).
 - **Tag strip** — the list's tags as chips with counts, A to Z, one line with a right-edge fade into the paper; scrolls horizontally. Clicking toggles a tag in the filter (AND).
 - **Column header** — 10px uppercase tertiary: `▶ ☆ TITLE ARTIST ALBUM +TAG TAGS KBPS TIME FMT LISTENS`. Sortable headers show `▴` or `▾` on the active sort and turn accent on hover. Filter, search, and sort state live in the route, so back and forward restore them.
 - **Rows** — 36px, 13px mono, virtualized, `--color-border-light` dividers, no zebra.
@@ -312,7 +313,7 @@ Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys af
 
 ### Framed section (paper)
 
-Base's `tui-section`: a 1px `--color-border` frame with the title seated on the top stroke (`┌─ TITLE ─────┐`), the label masked by the surface it sits on (on the page, `--color-surface-ruling` over `--color-surface-solid`, so the ruling runs through it), 10px uppercase tertiary. Folded, it is a single rule line with `▸`, the title, and a count. Border-hosted controls (a `[+]` add, a count, `[x]`) sit on the stroke the same way. Never give the label a contrasting chip background.
+Base's `tui-section`: a 1px `--color-border` frame with the title seated on the top stroke (`┌─ TITLE ─────┐`), the label masked by the surface it sits on (on the page, `--color-surface-ruling` over `--color-surface-solid`, so the ruling runs through it), 10px uppercase tertiary. Folded, it is a single rule line with `▸`, the title, and a count. Border-hosted controls (a count, `[x]`, a small local action like `[clear]`) sit on the stroke the same way; a page's main action never does (§ Main action). Never give the label a contrasting chip background.
 
 ### Section index (paper)
 
@@ -328,6 +329,14 @@ Settings and Identity are long stacks of framed sections, so each carries an ind
 | danger    | `--color-error` fill, white text                           | phosphor outline with `!!` prefix                        |
 
 Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, square corners, no shadow.
+
+### Main action
+
+A page's main action is a button, never a bracketed word on a frame stroke, which read as decoration. The page puts it in the right of the page head, before `help` (`components/layout/page-actions.tsx`): at most one small primary, with any secondary actions as small secondary buttons to its left. When the page is empty, its empty state repeats the action as a medium primary in the body, where attention is.
+
+- **Libraries** — `NEW LIBRARY` primary, `LINK A LIBRARY` secondary. An empty Following says how to follow one, with `LINK A LIBRARY` again as a medium secondary, so the page keeps one primary.
+- **Writers** — `ADD WRITER` primary, absent once the library is retired; none issued, the empty line carries it again.
+- **Tracks** — `ADD MUSIC` on All tracks and on a library of yours that is not retired, secondary, primary only while the list is empty. A filled button on every list page would pull the eye from the playing row.
 
 ### Artwork and avatars
 
@@ -345,24 +354,24 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 
 Libraries are grouped by the relationship, never labelled with the spec's category terms. Each group is a full-width framed section with its count on the stroke:
 
-- **YOURS** — own libraries, `[new]` on the stroke. A row is the 20px avatar, the name, and the track count; it opens the library. The listens library goes by `Play history` here and wherever own libraries are listed (Identity too), with `Where your plays are recorded.` under it, and opens Recently Played. A retired library carries a tertiary `retired` after its name.
+- **YOURS** — own libraries. A row is the 20px avatar, the name, and the track count; it opens the library. The listens library goes by `Play history` here and wherever own libraries are listed (Identity too), with `Where your plays are recorded.` under it, and opens Recently Played. A retired library carries a tertiary `retired` after its name.
 - **SHARED WITH YOU** — libraries this identity holds a capability in, each with a `You may: …` line; absent when empty.
-- **FOLLOWING** — linked libraries, `[link]` on the stroke; empty, it says how to follow one, with the link.
+- **FOLLOWING** — linked libraries; empty, it says how to follow one, with the action.
 - **DISCOVERED** — known only from peer discovery; absent when empty.
 
 Shared, following, and discovered rows carry replication state, mode with `change`, peers, one `Pause` or `Resume` for replication (whichever applies), unlink, and `…`. Every group previews five rows and ends in `show N more`; `show addresses` under the groups adds each row's short address. Where a category is named in a sentence it reads `yours`, `shared with you`, `followed`, `discovered`: the inspector says `in 2 of yours, 1 followed`.
 
-An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Writers** (`WHO MAY WRITE`: one line on what it is for, `The people you let add tracks and tags to this library. Revoking stops their new writes, not past ones.`, then the capabilities it has issued, with `[let someone write]` on the stroke opening the Let someone write flow; read-only once retired). The tab is named for what it holds, not the spec's term, so its purpose reads without the help. Retiring lands on Writers. The identity's own profile is also edited on Identity.
+An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Writers** (`WHO MAY WRITE`: one line on what it is for, `The people you let add tracks and tags to this library. Revoking stops their new writes, not past ones.`, then the capabilities it has issued; `ADD WRITER` in the head opens the Add a writer flow; read-only once retired). The tab is named for what it holds, not the spec's term, so its purpose reads without the help. Retiring lands on Writers. The identity's own profile is also edited on Identity.
 
 ### Step flows (paper)
 
-Linking a library, creating one, and letting someone write to one are their own pages (`/libraries/link`, `/libraries/new`, `/library/writers/issue`), one question at a time, so attention stays on the step:
+Linking a library, creating one, and adding a writer to one are their own pages (`/libraries/link`, `/libraries/new`, `/library/writers/issue`), one question at a time, so attention stays on the step:
 
 - A 560px column, `--space-3xl` from the head: `STEP 1 OF 2` (xs tertiary uppercase), the question in Departure Mono 24px uppercase in `--color-text`, one 48px input at 15px, one line under it (a tertiary hint or an echo of what was understood, or the error with `!!` in `--color-error`), then `Cancel` or `Back` (ghost) on the left and the primary action on the right.
 - `Enter` continues, from a checkbox or radio too, and `Esc` goes back; the input takes focus on each step. A step whose answer is a choice lists it as 32px checkbox or radio rows at 15px in place of the input.
 - **Link a library** — the address, echoed as its readable form (`Found mixes · …8MnGCA`) or refused as not an address; then an optional alias. It lands on the library's tracks.
 - **New library** — the name (required); then the address name, suggested from the name (`late-night-mixes`), editable, with what it is and that it never changes. It lands on the library's Profile tab.
-- **Let someone write** — who (one or more public keys, echoed as `One identity: 0279be66…f81798`); what they may do (add tracks, add tags, edit the profile, grant to others; add tracks preselected, echoed as a sentence); for how long (until revoked, a day, a week, thirty days, or a date), with the write filter behind a `show advanced` strip. It lands back on Writers.
+- **Add a writer** — who (one or more public keys, echoed as `One identity: 0279be66…f81798`); what they may do (add tracks, add tags, edit the profile, grant to others; add tracks preselected, echoed as a sentence); for how long (until revoked, a day, a week, thirty days, or a date), with the write filter behind a `show advanced` strip. It lands back on Writers.
 
 ### Settings (paper)
 

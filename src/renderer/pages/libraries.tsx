@@ -6,12 +6,13 @@
 // creating are their own step flows.
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 import styles from './libraries.module.css'
 import type { Library } from '#renderer/api/types.ts'
 import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
+import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
 import { mode_label } from '#renderer/components/library/replication-policy.tsx'
@@ -151,14 +152,19 @@ export const Libraries = () => {
     return () => { clearInterval(timer) }
   }, [has_recent_link])
 
+  const navigate = useNavigate()
   const own = own_libraries_of({ own: own_query.data, libraries: libraries.data })
   const others = (libraries.data ?? []).filter(({ is_own }) => !is_own)
   const error = libraries.error ?? own_query.error
 
   return (
     <section className={styles.page}>
+      <PageActions>
+        <button type='button' data-size='small' onClick={() => { navigate(ROUTES.link_library) }}>Link a library</button>
+        <button type='button' data-size='small' data-variant='primary' onClick={() => { navigate(ROUTES.new_library) }}>New library</button>
+      </PageActions>
       {error !== undefined && !('status' in error && error.status === 404) && <p className={styles.error}>!! {'message' in error ? error.message : 'The node request failed.'}</p>}
-      <FramedSection title='Yours' count={own.length} width='full' testid='libraries-yours' controls={<Link to={ROUTES.new_library} aria-label='New library'>[new]</Link>}>
+      <FramedSection title='Yours' count={own.length} width='full' testid='libraries-yours'>
         <table className={styles.table}>
           <thead><tr><th>Library</th><th>Tracks</th></tr></thead>
           <tbody>
@@ -176,10 +182,14 @@ export const Libraries = () => {
             count={members.length}
             width='full'
             testid={`libraries-${category}`}
-            controls={category === 'linked' ? <Link to={ROUTES.link_library} aria-label='Link a library'>[link]</Link> : undefined}
           >
             {members.length === 0
-              ? <p className={styles.empty}>Follow a library by its address, and its tracks replicate here. <Link to={ROUTES.link_library}>Link a library</Link></p>
+              ? (
+                <div className={styles.empty}>
+                  <p>Follow a library by its address, and its tracks replicate here.</p>
+                  <button type='button' onClick={() => { navigate(ROUTES.link_library) }}>Link a library</button>
+                </div>
+                )
               : (
                 <table className={styles.table}>
                   <thead>

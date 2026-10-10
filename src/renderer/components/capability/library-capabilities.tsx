@@ -5,7 +5,7 @@
 // after a confirmation that says revocation is not retroactive. A retired
 // library refuses writes, so its history shows read-only.
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import styles from './capabilities.module.css'
 import type { Capability } from '#renderer/api/types.ts'
@@ -32,7 +32,8 @@ export const CapabilityRow = ({ capability, lead, action }: { capability: Capabi
 
 const PREVIEW = 5
 
-export const LibraryCapabilities = ({ address, name, retired }: { address: string, name: string, retired: boolean }) => {
+// With none issued, the empty line carries the page's main action.
+export const LibraryCapabilities = ({ address, name, retired, empty_action }: { address: string, name: string, retired: boolean, empty_action?: ReactNode }) => {
   const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const capabilities = node_api.endpoints.get_library_capabilities.useQuery(address)
@@ -49,7 +50,12 @@ export const LibraryCapabilities = ({ address, name, retired }: { address: strin
   return (
     <section className={styles.section} data-testid='library-capabilities' aria-label={`Capabilities for ${name}`}>
       {capabilities.error !== undefined && <p className={styles.error}>{'message' in capabilities.error ? capabilities.error.message : 'The node request failed.'}</p>}
-      {capabilities.data?.length === 0 && !retired && <p className={styles.muted}>Only you can write to this library so far.</p>}
+      {capabilities.data?.length === 0 && !retired && (
+        <div className={styles.empty}>
+          <p className={styles.muted}>Only you can write to this library so far.</p>
+          {empty_action}
+        </div>
+      )}
       {capabilities.data !== undefined && capabilities.data.length > 0 && (
         <table className={styles.table}>
           <thead><tr><th>Grantee</th><th>Actions</th><th>Filter</th><th>Conditions</th><th>Issued</th><th>Status</th><th /></tr></thead>

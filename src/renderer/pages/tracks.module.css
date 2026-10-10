@@ -42,15 +42,6 @@
   white-space: nowrap;
 }
 
-.add {
-  color: var(--color-text-secondary);
-  text-decoration: none;
-}
-
-.add:hover {
-  color: var(--color-accent);
-}
-
 .toolbar .shuffle {
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xxs);

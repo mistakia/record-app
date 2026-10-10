@@ -150,7 +150,7 @@ try {
   step('Space hotkey', 'paused')
 
   // Ingest: main's picker (stubbed in main, as a user's choice), a drop, a URL, and a CID.
-  await window.getByRole('link', { name: 'Import tracks' }).click()
+  await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Add music' }).click()
   const chosen = node.make_audio({ name: 'Smoke Gamma.flac', seed: 3 })
   await app.evaluate(({ dialog }, path) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path] }) }, chosen)
   await window.getByRole('button', { name: 'Choose files or folders' }).click()

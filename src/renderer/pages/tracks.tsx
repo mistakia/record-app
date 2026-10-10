@@ -5,10 +5,11 @@
 // forward restore it.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 
 import styles from './tracks.module.css'
 import { EmptyState } from '#renderer/components/common/empty-state.tsx'
+import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { library_name, own_library_address } from '#renderer/components/library/library-category.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import { Inspector } from '#renderer/components/track/inspector.tsx'
@@ -61,6 +62,10 @@ export const Tracks = () => {
   const total = current?.total ?? 0
   const error = first_page.error ?? libraries.error
   const filtered = filters.query.trim() !== '' || filters.tags.length > 0
+  // Music is added to an own library: on All tracks, or on one of yours
+  // that is not retired; never on a library you follow.
+  const can_add = own_address !== null && (library_address === '' || (viewed?.is_own === true && !viewed.is_retired))
+  const empty = current !== undefined && total === 0 && !filtered
   const open_tag = use_tag_navigation()
 
   const { actions, dialogs } = use_track_actions({
@@ -99,6 +104,11 @@ export const Tracks = () => {
 
   return (
     <section className={styles.page}>
+      {can_add && (
+        <PageActions>
+          <button type='button' data-size='small' data-variant={empty ? 'primary' : undefined} onClick={() => { navigate(ROUTES.import) }}>Add music</button>
+        </PageActions>
+      )}
       <div className={styles.toolbar}>
         <div className={styles.search}>
           <input
@@ -125,7 +135,6 @@ export const Tracks = () => {
         {filtered && (
           <button type='button' data-variant='ghost' data-size='small' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
         )}
-        {own_address !== null && <Link to={ROUTES.import} className={styles.add} aria-label='Import tracks'>[+]</Link>}
         <button type='button' data-variant='glyph' className={styles.shuffle} aria-pressed={shuffle} onClick={shuffle_play}>Shuffle</button>
       </div>
       <TagFilter library_address={library_address} selected={filters.tags} on_toggle={(tag) => { go(with_tag_toggled(view, tag)) }} />
@@ -135,7 +144,9 @@ export const Tracks = () => {
         : current !== undefined && total === 0
           ? filtered
             ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
-            : <EmptyState headline='Empty' detail='No tracks in this view yet. Import some, or link a library.' action={<Link to={ROUTES.import}>Import</Link>} />
+            : can_add
+              ? <EmptyState headline='Empty' detail='No tracks in this view yet. Add some music, or link a library.' action={<button type='button' data-variant='primary' onClick={() => { navigate(ROUTES.import) }}>Add music</button>} />
+              : <EmptyState headline='Empty' detail='No tracks here yet. A library you follow fills in as it replicates.' />
           : (
             <div ref={body_ref} className={styles.body}>
               <TrackList
