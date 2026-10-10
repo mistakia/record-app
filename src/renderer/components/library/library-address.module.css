@@ -18,17 +18,23 @@
   color: var(--color-text-secondary);
 }
 
-/* The action hint: after the box, out of the flow so nothing shifts. */
+/* The action hint: a small paper tip under the box, over whatever is
+   below, so nothing beside it moves or is covered. */
 .address::after {
   position: absolute;
-  top: 50%;
-  left: calc(100% + var(--space-xs));
-  color: var(--color-text-tertiary);
+  z-index: 10;
+  top: calc(100% + 3px);
+  left: -1px;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay);
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   font-size: var(--font-size-xxs);
+  line-height: 16px;
   content: 'copy';
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-50%);
   transition: opacity var(--transition-fast);
 }
 
@@ -39,6 +45,6 @@
 }
 
 .address[data-copied='true']::after {
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   content: 'copied';
 }

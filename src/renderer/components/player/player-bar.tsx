@@ -39,8 +39,11 @@ import { queue_toggled } from '#renderer/store/ui.ts'
 const NEXT_REPEAT: Record<RepeatMode, RepeatMode> = { off: 'all', all: 'one', one: 'off' }
 
 // The row menu, less Play (the track is playing) and Details (the inspector
-// belongs to a track list).
+// belongs to a track list), and without the row keys, which act on a list's
+// cursor row rather than the playing track.
 const NOW_PLAYING_OMITS = new Set(['Play', 'Details'])
+
+const without_row_keys = (items: MenuItem[]): MenuItem[] => items.map(({ shortcut: _shortcut, ...item }) => item)
 
 const meta_line = ({ codec, bitrate }: { codec?: string | null | undefined, bitrate?: number | null | undefined }): string =>
   [codec?.toUpperCase(), bitrate == null || bitrate <= 0 ? undefined : `${Math.round(bitrate / 1000)} kbps`].filter((part) => part !== undefined && part !== '').join(' · ')
@@ -117,13 +120,13 @@ export const PlayerBar = () => {
 
   const menu_items = (): MenuItem[] => {
     const track = playing_track()
-    if (track !== null) return actions.menu_items(track, null).filter(({ label }) => !NOW_PLAYING_OMITS.has(label))
+    if (track !== null) return without_row_keys(actions.menu_items(track, null).filter(({ label }) => !NOW_PLAYING_OMITS.has(label)))
     // A queue restored from the snapshot has only its entries: what they allow.
     const content_cid = current?.content_cid
     return content_cid === undefined
       ? []
       : [
-          { label: 'Adopt to library', shortcut: 'f', on_select: () => { set_adopting(true) } },
+          { label: 'Adopt to library', on_select: () => { set_adopting(true) } },
           { label: 'Copy CID', on_select: () => { copy_text({ dispatch, text: content_cid, label: 'the CID' }).catch(() => {}) } }
         ]
   }

@@ -1,6 +1,6 @@
 // A library's address, short: the discriminator and the manifest CID's
 // tail (`mixes · …8MnGCA`). The whole address is the tooltip, and a click
-// copies it: on hover a `copy` hint sits after the box, `copied` for a
+// copies it: on hover a small `copy` tip sits under the box, `copied` for a
 // moment after a click. Beside a name that is already the discriminator,
 // only the tail shows.
 
