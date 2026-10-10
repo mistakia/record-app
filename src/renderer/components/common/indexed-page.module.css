@@ -1,0 +1,59 @@
+.page {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: var(--space-xl);
+  align-items: start;
+  padding: var(--space-lg);
+}
+
+/* Sticky in the page column, level with the first section's stroke. */
+.index {
+  position: sticky;
+  top: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-sm);
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 24px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.entry::before {
+  width: 1ch;
+  font-size: 0.7em;
+  content: '';
+}
+
+.entry:hover {
+  color: var(--color-text-secondary);
+}
+
+.entry[aria-current='location'] {
+  color: var(--color-accent);
+}
+
+.entry[aria-current='location']::before {
+  content: '▶';
+}
+
+.sections {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+/* Lands a section a little below the top, its stroke label clear. */
+.section {
+  scroll-margin-top: var(--space-lg);
+}

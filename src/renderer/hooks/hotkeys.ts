@@ -14,7 +14,7 @@ export type HotkeyAction =
   | 'focus_search' | 'escape'
   | 'toggle_playback' | 'previous_track' | 'next_track' | 'seek_back' | 'seek_forward'
   | 'volume_down' | 'volume_up' | 'toggle_mute' | 'cycle_repeat' | 'toggle_shuffle' | 'toggle_queue'
-  | 'back' | 'forward' | 'go_settings' | 'import_files' | 'lead' | 'show_help' | 'show_shortcuts'
+  | 'previous_section' | 'next_section' | 'back' | 'forward' | 'go_settings' | 'import_files' | 'lead' | 'show_help' | 'show_shortcuts'
 
 export interface KeyPress {
   key: string
@@ -85,6 +85,8 @@ export const HOTKEYS: readonly Hotkey[] = [
   { keys: 'r', label: 'Cycle repeat: off, all, one', action: 'cycle_repeat', scope: 'app', combos: [k('r')] },
   { keys: 's', label: 'Shuffle on or off', action: 'toggle_shuffle', scope: 'app', combos: [k('s')] },
   { keys: 'Shift+Q', label: 'Show or hide the queue', action: 'toggle_queue', scope: 'app', combos: [k('q', { shift: true })] },
+  { keys: '[', label: 'Previous section, on a page with a section index', action: 'previous_section', scope: 'app', combos: [k('[')] },
+  { keys: ']', label: 'Next section, on a page with a section index', action: 'next_section', scope: 'app', combos: [k(']')] },
   { keys: 'Cmd+[', label: 'Back', action: 'back', scope: 'app', combos: [k('[', { command: true })] },
   { keys: 'Cmd+]', label: 'Forward', action: 'forward', scope: 'app', combos: [k(']', { command: true })] },
   { keys: 'g', label: 'Go to a page or a library: the next key says where', action: 'lead', scope: 'app', combos: [k('g')] },

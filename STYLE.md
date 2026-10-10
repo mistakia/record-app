@@ -275,6 +275,7 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 | `m`                     | Mute or unmute                                           |
 | `r` / `s`               | Cycle repeat / toggle shuffle                            |
 | `Shift+Q`               | Toggle the queue                                         |
+| `[` / `]`               | Previous / next section, on a page with a section index  |
 | `Cmd+[` / `Cmd+]`       | Back / forward                                           |
 | `g`                     | Go: the next key says where (below)                      |
 | `Cmd+,`                 | Settings                                                 |
@@ -312,6 +313,10 @@ Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys af
 ### Framed section (paper)
 
 Base's `tui-section`: a 1px `--color-border` frame with the title seated on the top stroke (`┌─ TITLE ─────┐`), the label masked by the surface it sits on (on the page, `--color-surface-ruling` over `--color-surface-solid`, so the ruling runs through it), 10px uppercase tertiary. Folded, it is a single rule line with `▸`, the title, and a count. Border-hosted controls (a `[+]` add, a count, `[x]`) sit on the stroke the same way. Never give the label a contrasting chip background.
+
+### Section index (paper)
+
+Settings and Identity are long stacks of framed sections, so each carries an index (`components/common/indexed-page.tsx`): a 140px column at the left of the page, sticky as the sections scroll, listing them by title in 10px uppercase tertiary on 24px rows. The section in view is in `--color-accent` with a 0.7em `▶` before it; hover raises an entry to secondary. A click, or `[` and `]`, goes to a section, unfolding it if it is folded, and keeps it in the route as `?section=`, so a reload or back returns there and a link can open on one (`settings_route('peers')`).
 
 ### Buttons
 
@@ -361,7 +366,7 @@ Linking a library, creating one, and letting someone write to one are their own 
 
 ### Settings (paper)
 
-The legacy settings page, restated for v1, as framed sections: Connection (mode, URL, token, test), Storage (snapshot budget, cache size, reset), Shortcuts (the `HOTKEYS` table), Peers (the peer list, folded by default with its count on the rule), Diagnostics. The Diagnostics section's live block (connection state, memory, and for the bundled node its status, PID, and uptime) is a small screen; versions and folders stay paper with `[show in finder]` actions.
+The legacy settings page, restated for v1, as framed sections behind a section index: Connection (mode, URL, token, test), Storage (snapshot budget, cache size, reset), Shortcuts (the `HOTKEYS` table), Peers (the peer list, folded by default with its count on the rule), Diagnostics. The Diagnostics section's live block (connection state, memory, and for the bundled node its status, PID, and uptime) is a small screen; versions and folders stay paper with `[show in finder]` actions.
 
 ### Import (paper, with a screen)
 

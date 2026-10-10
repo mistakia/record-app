@@ -9,6 +9,7 @@ import { useStore } from 'react-redux'
 import { useNavigate } from 'react-router'
 
 import { resolve_go, resolve_hotkey, type GoTarget, type HotkeyAction } from './hotkeys.ts'
+import { section_index_commands } from '#renderer/components/common/indexed-page.tsx'
 import { own_library_address, sidebar_libraries } from '#renderer/components/library/library-category.ts'
 import { now_playing_commands } from '#renderer/components/player/now-playing-commands.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
@@ -128,6 +129,13 @@ export const use_hotkeys = (): void => {
         case 'cycle_repeat': set_repeat_mode(NEXT_REPEAT[player.queue.repeat]); return true
         case 'toggle_shuffle': toggle_shuffle_mode(); return true
         case 'toggle_queue': dispatch(queue_toggled()); return true
+        // Off a page with a section index the key passes on.
+        case 'previous_section':
+        case 'next_section': {
+          const index = section_index_commands()
+          index?.step(action === 'next_section' ? 1 : -1)
+          return index !== null
+        }
         case 'back': navigate(-1); return true
         case 'forward': navigate(1); return true
         case 'lead': dispatch(lead_toggled(true)); return true
