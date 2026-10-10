@@ -1,4 +1,5 @@
 .address {
+  position: relative;
   flex: none;
   height: auto;
   padding: 0 var(--space-xs);
@@ -15,4 +16,29 @@
 .address:hover:not(:disabled) {
   border-color: var(--color-border);
   color: var(--color-text-secondary);
+}
+
+/* The action hint: after the box, out of the flow so nothing shifts. */
+.address::after {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + var(--space-xs));
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  content: 'copy';
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity var(--transition-fast);
+}
+
+.address:hover::after,
+.address:focus-visible::after,
+.address[data-copied='true']::after {
+  opacity: 1;
+}
+
+.address[data-copied='true']::after {
+  color: var(--color-text-secondary);
+  content: 'copied';
 }

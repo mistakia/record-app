@@ -379,7 +379,7 @@ Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the wr
 
 ### Library address
 
-A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`.
+A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. Hovering it shows the action: a 10px tertiary `copy` after the box, out of the flow so nothing moves, which reads `copied` in secondary ink for a moment after a click. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`.
 
 ### Connection status
 
