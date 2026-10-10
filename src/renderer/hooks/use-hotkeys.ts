@@ -9,7 +9,9 @@ import { useStore } from 'react-redux'
 import { useNavigate } from 'react-router'
 
 import { resolve_go, resolve_hotkey, type GoTarget, type HotkeyAction } from './hotkeys.ts'
+import { section_index_commands } from '#renderer/components/common/indexed-page.tsx'
 import { own_library_address, sidebar_libraries } from '#renderer/components/library/library-category.ts'
+import { now_playing_commands } from '#renderer/components/player/now-playing-commands.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import {
   next_track,
@@ -17,6 +19,7 @@ import {
   seek_playback,
   set_playback_volume,
   set_repeat_mode,
+  toggle_mute,
   toggle_playback,
   toggle_shuffle_mode
 } from '#renderer/player/player-controller.ts'
@@ -84,6 +87,17 @@ export const use_hotkeys = (): void => {
         case 'adopt': list()?.adopt(); return true
         case 'toggle_inspector': list()?.toggle_inspector(); return true
         case 'open_menu': list()?.open_menu(); return true
+        // With nothing playing the key passes on.
+        case 'adopt_playing': {
+          const playing = now_playing_commands()
+          playing?.adopt()
+          return playing !== null
+        }
+        case 'open_playing_menu': {
+          const playing = now_playing_commands()
+          playing?.open_menu()
+          return playing !== null
+        }
         case 'focus_search': {
           const search = document.getElementById(SEARCH_INPUT_ID)
           if (search === null) navigate(ROUTES.tracks)
@@ -108,11 +122,20 @@ export const use_hotkeys = (): void => {
         case 'next_track': next_track(); return true
         case 'seek_back': seek_playback(Math.max(0, player.position_seconds - SEEK_STEP_SECONDS)); return true
         case 'seek_forward': seek_playback(player.position_seconds + SEEK_STEP_SECONDS); return true
-        case 'volume_down': set_playback_volume(Math.max(0, player.volume - VOLUME_STEP)); return true
-        case 'volume_up': set_playback_volume(Math.min(1, player.volume + VOLUME_STEP)); return true
+        // While muted, a step starts from the level the mute holds.
+        case 'volume_down': set_playback_volume((player.muted_volume ?? player.volume) - VOLUME_STEP); return true
+        case 'volume_up': set_playback_volume((player.muted_volume ?? player.volume) + VOLUME_STEP); return true
+        case 'toggle_mute': toggle_mute(); return true
         case 'cycle_repeat': set_repeat_mode(NEXT_REPEAT[player.queue.repeat]); return true
         case 'toggle_shuffle': toggle_shuffle_mode(); return true
         case 'toggle_queue': dispatch(queue_toggled()); return true
+        // Off a page with a section index the key passes on.
+        case 'previous_section':
+        case 'next_section': {
+          const index = section_index_commands()
+          index?.step(action === 'next_section' ? 1 : -1)
+          return index !== null
+        }
         case 'back': navigate(-1); return true
         case 'forward': navigate(1); return true
         case 'lead': dispatch(lead_toggled(true)); return true

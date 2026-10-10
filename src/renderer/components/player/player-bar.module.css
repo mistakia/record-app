@@ -52,6 +52,25 @@
   margin-right: 5px;
 }
 
+.more {
+  flex: none;
+  align-self: flex-start;
+  padding: 0 var(--space-xs);
+  color: var(--color-text-secondary);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.now_playing:hover .more,
+.more:focus-visible,
+.more[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.more:hover {
+  color: var(--color-text);
+}
+
 .text {
   display: flex;
   flex: 1;
@@ -260,36 +279,76 @@
   gap: var(--space-xs);
 }
 
-.volume input {
-  width: 56px;
-  height: 10px;
-  margin: 0;
+.mute {
+  display: inline-flex;
   padding: 0;
-  border: none;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
+  color: var(--color-text-secondary);
 }
 
-.volume input::-webkit-slider-runnable-track {
-  height: 1px;
+.mute:hover,
+.volume[data-muted='true'] .mute {
+  color: var(--color-text);
+}
+
+/* The level meter: twenty 2px ticks, lit ones glowing. The range input lies
+   over them, transparent, so drag, click, keys and screen readers work. */
+.meter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 16px;
+}
+
+.tick {
+  width: 2px;
+  height: 8px;
+  background: var(--color-border-light);
+}
+
+.meter:hover .tick {
   background: var(--color-border);
 }
 
-.volume input::-webkit-slider-thumb {
-  width: 6px;
-  height: 10px;
-  margin-top: -4.5px;
-  border: none;
-  appearance: none;
+.tick[data-lit='true'] {
   background: var(--color-text);
+  box-shadow: 0 0 4px var(--color-focus-ring);
+}
+
+.volume[data-muted='true'] .tick[data-lit='true'] {
+  background: var(--color-text-tertiary);
+  box-shadow: none;
+}
+
+.meter input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
+}
+
+.meter:has(input:focus-visible) {
+  outline: none;
+  box-shadow: 0 0 8px var(--color-focus-ring);
 }
 
 .readout {
-  width: 3ch;
+  width: 4ch;
+  padding: 0;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xxs);
   font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.readout:hover {
+  color: var(--color-text);
 }
 
 .source {

@@ -8,7 +8,7 @@ const PREFIX = 'record:view:'
 const listeners = new Set<() => void>()
 const cache = new Map<string, unknown>()
 
-const read = <T>(key: string, fallback: T): T => {
+export const read_view_pref = <T>(key: string, fallback: T): T => {
   if (cache.has(key)) return cache.get(key) as T
   let value: T = fallback
   try {
@@ -35,7 +35,7 @@ const subscribe = (listener: () => void): (() => void) => {
 // The fallback must be stable (a literal or a module constant), since it is
 // returned as is until a value is stored.
 export const use_view_pref = <T>(key: string, fallback: T): [T, (value: T) => void] => {
-  const value = useSyncExternalStore(subscribe, () => read(key, fallback))
+  const value = useSyncExternalStore(subscribe, () => read_view_pref(key, fallback))
   const set = useCallback((next: T) => { write_view_pref(key, next) }, [key])
   return [value, set]
 }

@@ -200,7 +200,7 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 ### Page column (paper)
 
 - Fills the rest of the window above the player bar, with base's ruled texture: `--color-surface-ruling`, a `linear-gradient(var(--color-paper-texture) 1px, transparent 1px)` at `2px 2px`, fixed to the window so anything that masks it (a framed section's label) rules in step.
-- **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, the short address, an `OWNER` chip on an own library; on an own recordstore a centred `TRACKS │ PROFILE │ SHARING` tabline in reverse video (active tab filled `--color-selected`, base's tui tabline; a retired library has no `PROFILE`); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
+- **Page head** — 40px, a drag region, `--color-border-light` rule below. It holds either the page title (18px) or, on a library's tracks, the **library profile header**: avatar, name, the short address, an `OWNER` chip on an own library; on an own recordstore a centred `TRACKS │ PROFILE │ WRITERS` tabline in reverse video (active tab filled `--color-selected`, base's tui tabline; a retired library has no `PROFILE`); on the right, last updated (time ago), replication progress as a thin rule, and track and library counts that pulse while indexing.
 - **Help** — disclosed, never a banner. A tertiary lowercase `help` sits at the right end of the page head on every page that has help (`components/layout/help.tsx`); `Cmd+?` opens and closes it. It opens a 340px paper popover under it (the overlay surface, border, 2px radius, and shadow): one or two sentences on what the page is for, then `every key ?`, which opens the shortcut overlay. Closed on every visit; `Esc`, a click elsewhere, or a new page closes it. Empty states still teach on their own.
 - **Body** — width tiers by content kind, as on base's entity page: the track list fills the column, forms and settings 720px, reading text (about, descriptions) 66ch. Page padding `--space-lg`; sections stack with `--space-lg` to `--space-xl` between them.
 - **Inspector** — a 320px paper pane docked on the right of the page column, reflowing the list, opened with `i`.
@@ -210,9 +210,10 @@ Legacy-v0's shell, kept: a full-height sidebar, a page column with a 40px head, 
 
 - 75px, legacy-v0's height and proportions, under the page column only (left edge at the sidebar boundary), full width of that column. Hidden when nothing is playing and the queue is empty; slides up from the bottom over 0.28s when playback starts.
 - Thirds, as legacy (35% / 30% / 35%):
-  - **Now playing** — a 40px adopt `★` column, 65px artwork (5px right margin), then title (13px, display glow) and artist (dim) on 14px lines, an 8px uppercase meta line `FLAC · 1411 KBPS`, and the track's tags as 18px chips 8px below, fading out at the right.
+  - **Now playing** — a 40px adopt `★` column, 65px artwork (5px right margin), then title (13px, display glow) and artist (dim) on 14px lines, an 8px uppercase meta line `FLAC · 1411 KBPS`, and the track's tags as 18px chips 8px below, fading out at the right. A right-click on the block, or its `…` (shown on hover, at the top right), opens the track menu for the playing track: the row's menu less Play and Details.
   - **Transport** — legacy's row of 40px controls: repeat (off / all / one, lit when on), shuffle, `|◀`, `▶` or `▮▮` in a 36px 1px outlined circle (a spinner while loading), `▶|`, the queue with its queued count as a badge, and history. Under them the timeline: elapsed, a 5px phosphor bar over the buffered span with an 11px square thumb on hover, then duration, 10px tabular.
-  - **Playing from** — right-aligned: the volume hairline, then the source (library name, or `ALL TRACKS`, with the active tag filter as a 10px subtitle) over an 8px uppercase `PLAYING FROM`, beside the library's 65px avatar. Clicking either returns to that track list with its filters.
+  - **Playing from** — right-aligned: the volume, then the source (library name, or `ALL TRACKS`, with the active tag filter as a 10px subtitle) over an 8px uppercase `PLAYING FROM`, beside the library's 65px avatar. Clicking either returns to that track list with its filters.
+  - **Volume** — legacy-v0's desktop player drew none (it kept a level, 90 at first, stepped by 5), so it is restated as a phosphor level meter: the speaker icon, twenty 2px by 8px ticks with a 1px gap, one per 5% step, then the readout, 10px tabular. Lit ticks are phosphor with a 4px glow; unlit ones are `--color-border-light`, raised to `--color-border` on hover. A transparent range input lies over the ticks, so drag, click, and keys work. The speaker or the readout mutes and unmutes: muted, the speaker carries a slash, the ticks hold the silenced level in tertiary with no glow, and the readout says `MUTE`. A new level, or `-` or `=`, unmutes. The level persists across launches; a mute does not.
 
 ### Queue (screen overlay)
 
@@ -271,8 +272,10 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 | `Cmd+←` / `Cmd+→`       | Previous / next track                                    |
 | `Shift+←` / `Shift+→`   | Seek 5s                                                  |
 | `-` / `=`               | Volume down / up                                         |
+| `m`                     | Mute or unmute                                           |
 | `r` / `s`               | Cycle repeat / toggle shuffle                            |
 | `Shift+Q`               | Toggle the queue                                         |
+| `[` / `]`               | Previous / next section, on a page with a section index  |
 | `Cmd+[` / `Cmd+]`       | Back / forward                                           |
 | `g`                     | Go: the next key says where (below)                      |
 | `Cmd+,`                 | Settings                                                 |
@@ -282,9 +285,9 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 
 **Go, the `g` lead.** Navigation is rare next to the list and player verbs, so it sits one key behind `g` rather than spending bare letters. `g` opens a small paper panel at the top of the page column, `G THEN` over the keys; the next key is consumed, never passed on: `t` all tracks, `r` recently played, `l` my library, `b` libraries, `i` import, `a` identity, `,` settings, and `1`–`9` the sidebar's libraries in its order, whose avatars turn into those digits while the panel is up. `Esc`, any other key, a click, or leaving the window closes it.
 
-**Live keys.** The track list's keys (cursor, selection, play, queue, tag, adopt, inspector, row menu) are live only while a track list is mounted, so on another page they pass through. Every other key is live everywhere.
+**Live keys.** The track list's keys (cursor, selection, play, queue, tag, adopt, inspector, row menu) are live only while a track list is mounted. Off a track list, `f` adopts the playing track and `.` (or `Shift+F10`) opens its menu, and the rest pass through. Every other key is live everywhere.
 
-Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys after `g` are in `GO_KEYS`. The `?` overlay and the Settings shortcut section both render them grouped — `IN A TRACK LIST`, `EVERYWHERE`, `AFTER G` — the overlay putting the track list's keys first on a page that shows one, so neither can drift from the bindings.
+Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys after `g` are in `GO_KEYS`. The `?` overlay and the Settings shortcut section both render them grouped — `EVERYWHERE`, `OFF A TRACK LIST`, `IN A TRACK LIST`, `AFTER G` — the overlay putting the track list's keys first on a page that shows one (`IN A TRACK LIST`, `EVERYWHERE`, `OFF A TRACK LIST`), so neither can drift from the bindings.
 
 ## Components
 
@@ -311,6 +314,10 @@ Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys af
 
 Base's `tui-section`: a 1px `--color-border` frame with the title seated on the top stroke (`┌─ TITLE ─────┐`), the label masked by the surface it sits on (on the page, `--color-surface-ruling` over `--color-surface-solid`, so the ruling runs through it), 10px uppercase tertiary. Folded, it is a single rule line with `▸`, the title, and a count. Border-hosted controls (a `[+]` add, a count, `[x]`) sit on the stroke the same way. Never give the label a contrasting chip background.
 
+### Section index (paper)
+
+Settings and Identity are long stacks of framed sections, so each carries an index (`components/common/indexed-page.tsx`): a 140px column at the left of the page, sticky as the sections scroll, listing them by title in 10px uppercase tertiary on 24px rows. The section in view (the last whose top has passed the middle of the visible page) is in `--color-accent` with a 0.7em `▶` before it; hover raises an entry to secondary. A click, or `[` and `]`, goes to a section, unfolding it if it is folded, and keeps it in the route as `?section=`, so a reload or back returns there and a link can open on one (`settings_route('peers')`).
+
 ### Buttons
 
 | Variant   | Paper                                                     | Screen                                                  |
@@ -325,7 +332,7 @@ Heights 24px (small, 11px) and 32px (medium, 12px). Uppercase, 0.5px tracking, s
 ### Artwork and avatars
 
 - Artwork with no image is legacy's vinyl disc: a circle in `--color-border` with a centre label in `--color-accent-wash`; an image covers it. The disc is the one round shape on paper, because it depicts an object, not a control.
-- Library and identity avatars are square, 1px `--color-border-light`, on `--color-surface-sunken`. Without an image, an avatar is a 5×5 mirrored pattern in secondary ink, 60% of the square, read from the library's address (`components/common/avatar-pattern.ts`), so a library looks the same on every device and to every peer. The identity shows its default library's.
+- Library and identity avatars are square, 1px `--color-border-light`, on `--color-surface-sunken`. Without an image, an avatar is a 5×5 mirrored pattern in secondary ink, about 60% of the square in whole-pixel cells centred on a whole pixel (so it stays crisp at 20 and 24px), read from the library's address (`components/common/avatar-pattern.ts`), so a library looks the same on every device and to every peer. The identity shows its default library's.
 - **Choosing an avatar** — the profile editor shows the avatar at 48px with `Choose image`, which opens main's image picker and stores the image in the node (`POST /images`, at most 16 MiB), and `Remove` once one is set, which goes back to the pattern. A tertiary line under it says what happens next (`Save the profile to use it.`). The raw CID is behind `show advanced`.
 - Inside a screen, artwork keeps its own colors under the glass.
 
@@ -345,21 +352,21 @@ Libraries are grouped by the relationship, never labelled with the spec's catego
 
 Shared, following, and discovered rows carry replication state, mode with `change`, peers, one `Pause` or `Resume` for replication (whichever applies), unlink, and `…`. Every group previews five rows and ends in `show N more`; `show addresses` under the groups adds each row's short address. Where a category is named in a sentence it reads `yours`, `shared with you`, `followed`, `discovered`: the inspector says `in 2 of yours, 1 followed`.
 
-An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Sharing** (`WHO MAY WRITE`: the capabilities it has issued, with `[issue]` on the stroke opening the Let someone write flow; read-only once retired). Retiring lands on Sharing. The identity's own profile is also edited on Identity.
+An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Writers** (`WHO MAY WRITE`: one line on what it is for, `The people you let add tracks and tags to this library. Revoking stops their new writes, not past ones.`, then the capabilities it has issued, with `[let someone write]` on the stroke opening the Let someone write flow; read-only once retired). The tab is named for what it holds, not the spec's term, so its purpose reads without the help. Retiring lands on Writers. The identity's own profile is also edited on Identity.
 
 ### Step flows (paper)
 
-Linking a library, creating one, and letting someone write to one are their own pages (`/libraries/link`, `/libraries/new`, `/library/sharing/issue`), one question at a time, so attention stays on the step:
+Linking a library, creating one, and letting someone write to one are their own pages (`/libraries/link`, `/libraries/new`, `/library/writers/issue`), one question at a time, so attention stays on the step:
 
 - A 560px column, `--space-3xl` from the head: `STEP 1 OF 2` (xs tertiary uppercase), the question in Departure Mono 24px uppercase in `--color-text`, one 48px input at 15px, one line under it (a tertiary hint or an echo of what was understood, or the error with `!!` in `--color-error`), then `Cancel` or `Back` (ghost) on the left and the primary action on the right.
 - `Enter` continues, from a checkbox or radio too, and `Esc` goes back; the input takes focus on each step. A step whose answer is a choice lists it as 32px checkbox or radio rows at 15px in place of the input.
 - **Link a library** — the address, echoed as its readable form (`Found mixes · …8MnGCA`) or refused as not an address; then an optional alias. It lands on the library's tracks.
 - **New library** — the name (required); then the address name, suggested from the name (`late-night-mixes`), editable, with what it is and that it never changes. It lands on the library's Profile tab.
-- **Let someone write** — who (one or more public keys, echoed as `One identity: 0279be66…f81798`); what they may do (add tracks, add tags, edit the profile, grant to others; add tracks preselected, echoed as a sentence); for how long (until revoked, a day, a week, thirty days, or a date), with the write filter behind a `show advanced` strip. It lands back on Sharing.
+- **Let someone write** — who (one or more public keys, echoed as `One identity: 0279be66…f81798`); what they may do (add tracks, add tags, edit the profile, grant to others; add tracks preselected, echoed as a sentence); for how long (until revoked, a day, a week, thirty days, or a date), with the write filter behind a `show advanced` strip. It lands back on Writers.
 
 ### Settings (paper)
 
-The legacy settings page, restated for v1, as framed sections: Connection (mode, URL, token, test), Storage (snapshot budget, cache size, reset), Shortcuts (the `HOTKEYS` table), Peers (the peer list, folded by default with its count on the rule), Diagnostics. The Diagnostics section's live block (connection state, memory, and for the bundled node its status, PID, and uptime) is a small screen; versions and folders stay paper with `[show in finder]` actions.
+The legacy settings page, restated for v1, as framed sections behind a section index: Connection (mode, URL, token, test), Storage (snapshot budget, cache size, reset), Shortcuts (the `HOTKEYS` table), Peers (the peer list, folded by default with its count on the rule), Diagnostics. The Diagnostics section's live block (connection state, memory, and for the bundled node its status, PID, and uptime) is a small screen; versions and folders stay paper with `[show in finder]` actions.
 
 ### Import (paper, with a screen)
 
@@ -377,7 +384,7 @@ Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the wr
 
 ### Library address
 
-A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`.
+A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. Hovering it shows the action: a small paper tip under the box, `copy` at 10px in secondary ink, over what is below so nothing beside the address moves or is covered; it reads `copied` for a moment after a click. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`.
 
 ### Connection status
 
@@ -405,7 +412,7 @@ Transitions: 0.15s on color and opacity, 0.28s `cubic-bezier(0.32, 0.72, 0, 1)` 
 
 ## Glyphs
 
-Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat, shuffle, queue, history, and the Settings gear have no glyph in either face, so they are drawn as 16px hairline SVGs (`components/player/transport-icons.tsx`, `components/layout/settings-icon.tsx`, a 1.25px square-capped stroke in `currentColor`); nothing else uses an icon. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
+Text glyphs from the mono face, no icon font: `▶` play, `▮▮` pause, `|◀` `▶|` previous and next, `▶` `▼` `▲` at 0.7em for disclosure and sort, `★` adopt (dim when no own library holds the track), `◆` pinned, `●` status, `×` remove, `[x]` close, `!!` error, `//` screen label prefix. Repeat, shuffle, queue, history, the volume's speaker, and the Settings gear have no glyph in either face, so they are drawn as 16px hairline SVGs (`components/player/transport-icons.tsx`, `components/layout/settings-icon.tsx`, a 1.25px square-capped stroke in `currentColor`); nothing else uses an icon. Commit Mono has no `⟲` `⤨` `❚` `▸` `▾` `▴` `☆` `⚙`, so where this document draws one, the glyph above stands in; a glyph outside the face would fall back to a system font. Each glyph-only control carries an `aria-label`.
 
 ## OS Surface (macOS, Electron)
 

@@ -1,6 +1,6 @@
 // A library's profile in the page head (legacy-v0's library header): avatar,
 // name, its short address (copies the whole one), OWNER on an own library,
-// an own recordstore's TRACKS │ PROFILE │ SHARING tabline, and its counts,
+// an own recordstore's TRACKS │ PROFILE │ WRITERS tabline, and its counts,
 // which pulse while the node indexes it.
 
 import { Link } from 'react-router'
@@ -16,7 +16,7 @@ import { use_app_selector } from '#renderer/store/index.ts'
 const TABS: Array<{ tab: LibraryTab, label: string }> = [
   { tab: 'tracks', label: 'Tracks' },
   { tab: 'profile', label: 'Profile' },
-  { tab: 'sharing', label: 'Sharing' }
+  { tab: 'writers', label: 'Writers' }
 ]
 
 export const LibraryProfileHeader = ({ library, tab }: { library: Library, tab: LibraryTab }) => {

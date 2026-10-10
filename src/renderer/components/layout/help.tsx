@@ -8,7 +8,8 @@ import { useEffect, useId, useRef } from 'react'
 import { useLocation } from 'react-router'
 
 import styles from './help.module.css'
-import { ROUTES } from '#renderer/routes.ts'
+import { parse_track_view, ROUTES } from '#renderer/routes.ts'
+import { node_api } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import { help_toggled, shortcuts_toggled } from '#renderer/store/ui.ts'
 
@@ -19,10 +20,25 @@ const HELP: Record<string, string> = {
   [ROUTES.link_library]: 'Linking follows a library: its tracks replicate here and show in your tracks. Only its owner, and those they share it with, can change it.',
   [ROUTES.new_library]: 'A library is a collection with its own address, profile, and the people you let write to it. Your imports go to the library you choose.',
   [ROUTES.library_profile]: 'The profile is how this library introduces itself to the peers who link it.',
-  [ROUTES.issue_capability]: 'A capability lets another identity write to this library. You can revoke it on Sharing later, which stops new writes but not past ones.',
-  [ROUTES.library_sharing]: 'A capability lets another identity write to this library: add tracks or tags, perhaps only some, perhaps until a date. Revoking stops new writes, not past ones.',
+  [ROUTES.issue_capability]: 'A capability lets another identity write to this library. You can revoke it on Writers later, which stops new writes but not past ones.',
+  [ROUTES.library_writers]: 'Writers are the identities you let add tracks or tags to this library, perhaps only some, perhaps until a date. Listening needs no permission: anyone with the address can link it. Revoking stops new writes, not past ones.',
   [ROUTES.import]: 'Add files or folders, drop them here, or paste a URL. Each import goes to the library named as its target.',
   [ROUTES.identity]: 'Your identity signs everything you add, on every device. Back up its key: it is the only way to recover your libraries.'
+}
+
+// A library's track list shares /tracks with All tracks, told apart by its
+// ?library, and reads differently for a library of yours and one you follow.
+const LIBRARY_HELP = {
+  own: 'This library’s tracks. j and k move, Enter plays, t tags, and i opens the details. Imports to it land here; its Profile and Writers tabs are beside Tracks.',
+  followed: 'The tracks of a library you follow, replicated to this node. j and k move, Enter plays, and f adopts a track into a library of yours.'
+}
+
+const use_help_text = (): string | undefined => {
+  const { pathname, search } = useLocation()
+  const own = node_api.endpoints.get_own_libraries.useQuery()
+  const library = pathname === ROUTES.tracks ? parse_track_view(new URLSearchParams(search)).library_address : ''
+  if (library === '') return HELP[pathname]
+  return own.data?.some(({ address }) => address === library) === true ? LIBRARY_HELP.own : LIBRARY_HELP.followed
 }
 
 export const HelpButton = () => {
@@ -32,7 +48,7 @@ export const HelpButton = () => {
   const set_open = (next: boolean): void => { dispatch(help_toggled(next)) }
   const root = useRef<HTMLDivElement>(null)
   const panel_id = useId()
-  const text = HELP[pathname]
+  const text = use_help_text()
 
   // A new page starts with its help closed.
   useEffect(() => { dispatch(help_toggled(false)) }, [pathname, dispatch])

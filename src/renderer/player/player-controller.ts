@@ -28,8 +28,9 @@ import type { Track } from '#renderer/api/types.ts'
 import type { NodeFailure } from '#shared/bridge.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
+import { read_view_pref, write_view_pref } from '#renderer/prefs/view-prefs.ts'
 import { store } from '#renderer/store/index.ts'
-import { cued_position_changed, engine_updated, queue_changed, source_changed, type PlaySource } from '#renderer/store/player.ts'
+import { cued_position_changed, engine_updated, mute_changed, queue_changed, source_changed, type PlaySource } from '#renderer/store/player.ts'
 
 // Previous restarts the current track instead when this far into it.
 const RESTART_THRESHOLD_SECONDS = 3
@@ -72,6 +73,31 @@ const recorder = create_listen_recorder({
 })
 
 const queue = (): QueueState => store.getState().player.queue
+
+// The full track behind each queue entry, for the playing track's menu: an
+// entry keeps only what the player bar shows. Session only, so a queue
+// restored from the snapshot has none until its tracks are queued again.
+const queued_tracks = new Map<string, Track>()
+
+const remember_tracks = (tracks: Track[]): void => {
+  const kept = new Set(queue().entries.map(({ track_id }) => track_id))
+  for (const id of queued_tracks.keys()) if (!kept.has(id)) queued_tracks.delete(id)
+  for (const track of tracks) queued_tracks.set(track.id, track)
+}
+
+// The playing track in full: from a cached track page first, which is fresh
+// after a write (a pin, an adopt), else as it was queued; null when neither
+// has it.
+export const playing_track = (): Track | null => {
+  const entry = current_entry(queue())
+  if (entry === null) return null
+  const state = store.getState()
+  for (const args of node_api.util.selectCachedArgsForQuery(state, 'get_tracks')) {
+    const found = node_api.endpoints.get_tracks.select(args)(state).data?.items.find(({ id }) => id === entry.track_id)
+    if (found !== undefined) return found
+  }
+  return queued_tracks.get(entry.track_id) ?? null
+}
 
 const to_engine_track = (entry: QueueEntry): EngineTrack => ({ key: entry.queue_id, cid: entry.audio_cid })
 
@@ -164,12 +190,14 @@ export const play_tracks = ({ tracks, start_index, library_address, source = nul
 }): void => {
   const entries = tracks.map((track) => to_entry({ track, library_address }))
   store.dispatch(queue_changed(set_entries({ queue: queue(), entries, start_index })))
+  remember_tracks(tracks)
   store.dispatch(source_changed(source))
   play_current()
 }
 
 export const add_to_queue = ({ tracks, at, library_address }: { tracks: Track[], at: 'next' | 'end', library_address: string }): void => {
   commit_queue(add_entries({ queue: queue(), entries: tracks.map((track) => to_entry({ track, library_address })), at }))
+  remember_tracks(tracks)
 }
 
 export const toggle_playback = (): void => {
@@ -250,7 +278,30 @@ export const seek_playback = (position_seconds: number): void => {
   else engine.seek(position_seconds)
 }
 
-export const set_playback_volume = (volume: number): void => { engine.set_volume(volume) }
+// The level persists across launches, as legacy-v0's did. A mute holds the
+// level it silenced and does not persist, so a launch is never silent.
+const VOLUME_PREF = 'player-volume'
+// What the mute control gives when the level was already at zero.
+const UNMUTE_FALLBACK = 0.5
+
+export const set_playback_volume = (volume: number): void => {
+  const level = Math.round(Math.min(Math.max(volume, 0), 1) * 100) / 100
+  if (store.getState().player.muted_volume !== null) store.dispatch(mute_changed(null))
+  engine.set_volume(level)
+  write_view_pref(VOLUME_PREF, level)
+}
+
+export const toggle_mute = (): void => {
+  const { volume, muted_volume } = store.getState().player
+  if (muted_volume !== null) set_playback_volume(muted_volume)
+  else if (volume === 0) set_playback_volume(UNMUTE_FALLBACK)
+  else {
+    store.dispatch(mute_changed(volume))
+    engine.set_volume(0)
+  }
+}
+
+engine.set_volume(read_view_pref(VOLUME_PREF, 1))
 
 // Part of the teardown on a node switch: nothing keeps playing from the old
 // node, and its queue goes with it. Repeat and shuffle stay.

@@ -1,6 +1,7 @@
 // What a track list does with its rows, shared by Tracks and Recently
-// Played: play from a row with its source, queue, tag, adopt, pin, remove,
-// and copy, with the dialogs those open.
+// Played, and the player bar's playing track: play from a row with its
+// source, queue, tag, adopt, pin, remove, and copy, with the dialogs those
+// open.
 
 import { useState, type ReactNode } from 'react'
 import { shallowEqual } from 'react-redux'
@@ -27,7 +28,7 @@ export const use_track_actions = ({ viewed_library, listen_library, source, on_t
   viewed_library: string
   // The library a listen records.
   listen_library: string
-  source: PlaySource
+  source: PlaySource | null
   on_tag_clicked: (input: { tag: string, library_address: string }) => void
   toggle_inspector: () => void
   clear_search: () => boolean

@@ -49,7 +49,7 @@ export const LibraryCapabilities = ({ address, name, retired }: { address: strin
   return (
     <section className={styles.section} data-testid='library-capabilities' aria-label={`Capabilities for ${name}`}>
       {capabilities.error !== undefined && <p className={styles.error}>{'message' in capabilities.error ? capabilities.error.message : 'The node request failed.'}</p>}
-      {capabilities.data?.length === 0 && !retired && <p className={styles.muted}>Only you can write to this library. [issue] lets another identity add tracks or tags.</p>}
+      {capabilities.data?.length === 0 && !retired && <p className={styles.muted}>Only you can write to this library so far.</p>}
       {capabilities.data !== undefined && capabilities.data.length > 0 && (
         <table className={styles.table}>
           <thead><tr><th>Grantee</th><th>Actions</th><th>Filter</th><th>Conditions</th><th>Issued</th><th>Status</th><th /></tr></thead>

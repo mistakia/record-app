@@ -1,5 +1,6 @@
 // Hairline icons for the transport controls the mono faces have no glyph
-// for (STYLE.md § Glyphs): repeat, repeat one, shuffle, queue, history.
+// for (STYLE.md § Glyphs): repeat, repeat one, shuffle, queue, history, and
+// the volume's speaker.
 // 16px, a 1.25px square-capped stroke in currentColor, as crisp as the text
 // glyphs beside them.
 
@@ -33,5 +34,13 @@ export const QueueIcon = () => (
 export const HistoryIcon = () => (
   <Icon>
     <path d='M2.5 8a5.5 5.5 0 1 0 1.6-3.9M2.5 2.5v2.5H5M8 5v3.5l2 1.5' />
+  </Icon>
+)
+
+// The volume's mute control: a speaker, with a slash through it while muted.
+export const SpeakerIcon = ({ muted }: { muted: boolean }) => (
+  <Icon>
+    <path d='M2.5 6v4h2.5l3.5 3V3L5 6z' />
+    {muted ? <path d='M2 2l12 12' /> : <path d='M10.5 6a2.5 2.5 0 0 1 0 4M12 4a5 5 0 0 1 0 8' />}
   </Icon>
 )

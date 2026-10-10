@@ -60,7 +60,7 @@ export interface ListActions {
   add_tag: (input: { tracks: Track[], row: number }) => void
   tag_clicked: (input: { tag: string, library_address: string }) => void
   remove_tag: (input: { track: Track, tag: string, library_address: string }) => void
-  menu_items: (track: Track, row: number) => MenuItem[]
+  menu_items: (track: Track, row: number | null) => MenuItem[]
   toggle_inspector: () => void
   // Esc's outer layers, after the menu: search, then (after the selection)
   // the pane. Each answers whether it closed anything.
