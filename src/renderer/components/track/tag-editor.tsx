@@ -5,26 +5,36 @@
 // being viewed, else the holder written to last, else any holder. A tag is
 // removed only from an own active library, since no capability authorises
 // dropping one (§3.5.6), and removal confirms: × or Backspace arms it, and
-// a second press removes. Keys: Tab takes the first suggestion, Enter adds,
-// Backspace on an empty field arms the last tag, Esc closes.
+// a second press removes. Keys: ↑ and ↓ move through the suggestions, Enter
+// adds the highlighted one or what was typed, Tab completes the field,
+// Backspace on an empty field arms the last tag, Esc closes. The adder stays
+// open after an add, so several tags go in a row.
 
-import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import styles from './tag-editor.module.css'
-import { normalize_tag, suggest_tags } from './tag-suggest.ts'
+import { TagTarget } from './tag-target.tsx'
+import { move_highlight, normalize_tag, suggest_tags, tab_completion, type AdderRow } from './tag-suggest.ts'
+import { tag_key, type ShownTag } from './tag-writes.ts'
+import { use_tag_writes } from './use-tag-writes.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
-import { TargetSelect, use_write_target } from '#renderer/components/library/target-select.tsx'
-import { target_fields } from '#renderer/library/write-targets.ts'
+import { use_write_target } from '#renderer/components/library/target-select.tsx'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
-import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
-import { notified } from '#renderer/store/notifications.ts'
-import { report_write } from '#renderer/store/write.ts'
+import { use_app_selector } from '#renderer/store/index.ts'
 
 const MAX_TAG_LENGTH = 128
 const EDGE_MARGIN = 8
+const WIDTH = 300
+
+// The tag with its matched letters lit.
+const Lit = ({ tag, matched }: { tag: string, matched: readonly number[] }) => (
+  <span className={styles.name}>
+    {[...tag].map((char, at) => matched.includes(at) ? <b key={at} className={styles.lit}>{char}</b> : char)}
+  </span>
+)
 
 export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }: {
   tracks: Track[]
@@ -34,101 +44,136 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
   viewed_library: string
   on_close: () => void
 }) => {
-  const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const visible_tags = node_api.endpoints.get_tags.useQuery(viewed_library === '' ? {} : { library_addresses: [viewed_library] })
   const choice = use_write_target({ action: 'library.append_tag', preferred: viewed_library === '' ? null : viewed_library, holders: initial[0]?.library_addresses ?? [] })
-  const [tracks, set_tracks] = useState(initial)
+  const { tracks, single, shown, fresh, add, remove, unfresh } = use_tag_writes(initial)
   const [draft, set_draft] = useState('')
+  const [highlight, set_highlight] = useState<number | null>(null)
   const [armed, set_armed] = useState<string | null>(null)
-  const [busy, set_busy] = useState(false)
-  const [position, set_position] = useState({ left: anchor.x, top: anchor.y })
+  const [place, set_place] = useState<{ left: number, top?: number, bottom?: number, above: boolean }>({ left: anchor.x, top: anchor.y, above: false })
   const ref = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLInputElement>(null)
-  const single = tracks.length === 1 ? tracks[0] : undefined
-  const editable = writes_allowed && !busy
+  const list_id = useId()
   const removable = new Set((libraries.data ?? []).filter(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore').map(({ address }) => address))
-  const own_tags = single?.tags.filter(({ library_address }) => removable.has(library_address)) ?? []
-  const suggestions = suggest_tags({ query: draft, tags: visible_tags.data ?? [], exclude: single?.tags.map(({ tag }) => tag) ?? [] })
+  const own_tags = single === undefined ? [] : shown.filter(({ library_address }) => removable.has(library_address))
+  const rows = writes_allowed ? suggest_tags({ query: draft, tags: visible_tags.data ?? [], exclude: shown.map(({ tag }) => tag) }) : []
+  const active = highlight !== null && highlight < rows.length ? highlight : null
 
+  // Opens under the row, or above it when it would run off the window,
+  // growing upward from there. Placed again whenever its height changes, as
+  // when the suggestions arrive or chips are added.
   useLayoutEffect(() => {
-    const height = ref.current?.getBoundingClientRect().height ?? 0
-    const top = anchor.y + height + EDGE_MARGIN > window.innerHeight ? Math.max(EDGE_MARGIN, anchor.y - height - 40) : anchor.y
-    set_position({ left: Math.min(anchor.x, window.innerWidth - 300), top })
-    input.current?.focus()
+    const element = ref.current
+    if (element === null) return
+    const place_it = () => {
+      const height = element.getBoundingClientRect().height
+      const left = Math.max(EDGE_MARGIN, Math.min(anchor.x, window.innerWidth - WIDTH - EDGE_MARGIN))
+      if (anchor.y + height + EDGE_MARGIN > window.innerHeight) {
+        set_place({ left, bottom: window.innerHeight - Math.max(EDGE_MARGIN, anchor.y - height - 40) - height, above: true })
+      } else {
+        set_place({ left, top: anchor.y, above: false })
+      }
+    }
+    place_it()
+    const observer = new ResizeObserver(place_it)
+    observer.observe(element)
+    return () => { observer.disconnect() }
   }, [anchor.x, anchor.y])
+
+  useLayoutEffect(() => { input.current?.focus() }, [])
 
   const close = () => {
     on_close()
     list_commands()?.focus()
   }
 
-  const add = async (value: string) => {
-    const { target } = choice
+  const take = (value: string) => {
     const tag = normalize_tag(value)
-    if (!editable || target === null || tag === '' || tag.length > MAX_TAG_LENGTH) return
-    set_busy(true)
-    const updated: Track[] = []
-    for (const track of tracks) {
-      const result = await report_write<Track>({ dispatch, write: dispatch(node_api.endpoints.add_tag.initiate({ track_id: track.id, tag, ...target_fields(target) })), success: null })
-      updated.push(result.ok ? result.data : track)
-    }
-    set_busy(false)
-    set_tracks(updated)
+    const { target } = choice
+    if (!writes_allowed || target === null || tag === '' || tag.length > MAX_TAG_LENGTH) return
+    add(tag, target).then((took) => { if (took) choice.used(target) }).catch(() => {})
     set_draft('')
-    choice.used(target)
-    if (tracks.length > 1) dispatch(notified({ kind: 'info', message: `Tagged ${tracks.length} tracks ${tag}.` }))
-  }
-
-  const remove = async (tag: string, library_address: string) => {
-    if (single === undefined || !editable) return
-    set_busy(true)
-    const updated = await report_write<Track>({ dispatch, write: dispatch(node_api.endpoints.remove_tag.initiate({ track_id: single.id, tag, library_address })), success: null })
-    set_busy(false)
+    set_highlight(null)
     set_armed(null)
-    if (updated.ok) set_tracks([updated.data])
   }
 
-  const arm_or_remove = (tag: string, library_address: string) => {
-    const key = `${library_address} ${tag}`
-    if (armed === key) remove(tag, library_address).catch(() => {})
-    else set_armed(key)
+  const arm_or_remove = (entry: ShownTag) => {
+    const key = tag_key(entry)
+    if (armed === key) {
+      set_armed(null)
+      remove(entry).catch(() => {})
+    } else {
+      set_armed(key)
+    }
   }
 
-  const on_key_down = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
+  const on_key_down = (event: KeyboardEvent<HTMLInputElement>) => {
+    // Keys during an input method's composition belong to it.
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return
+    const completion = event.key === 'Tab' && !event.shiftKey ? tab_completion({ rows, highlight: active, draft }) : null
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
-      event.stopPropagation()
-      close()
-    } else if (event.key === 'Tab' && suggestions[0] !== undefined) {
+      set_highlight(move_highlight({ highlight: active, count: rows.length, step: event.key === 'ArrowDown' ? 1 : -1 }))
+    } else if (event.key === 'Enter') {
       event.preventDefault()
-      set_draft(suggestions[0])
+      take(active === null ? draft : (rows[active]?.tag ?? draft))
+    } else if (completion !== null) {
+      event.preventDefault()
+      set_draft(completion)
+      set_highlight(null)
     } else if (event.key === 'Backspace' && draft === '' && own_tags.length > 0) {
       event.preventDefault()
       const last = own_tags.at(-1)
-      if (last !== undefined) arm_or_remove(last.tag, last.library_address)
-    } else if (event.key !== 'Backspace') {
-      set_armed(null)
+      if (last !== undefined) arm_or_remove(last)
     }
+    if (event.key !== 'Backspace') set_armed(null)
   }
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault()
-    add(draft).catch(() => {})
-  }
+  const row_view = (row: AdderRow, index: number) => (
+    <li
+      key={`${row.kind} ${row.tag}`}
+      id={`${list_id}-${index}`}
+      role='option'
+      aria-selected={index === active}
+      className={row.kind === 'create' ? styles.create : undefined}
+      onMouseEnter={() => { set_highlight(index) }}
+      onClick={() => { take(row.tag) }}
+    >
+      {row.kind === 'tag'
+        ? <><Lit tag={row.tag} matched={row.matched} /><span className={styles.count}>{row.count}</span></>
+        : <span className={styles.name}>create <span className={styles.quoted}>"{row.tag}"</span></span>}
+    </li>
+  )
 
+  const title = single === undefined ? `${tracks.length} tracks` : (single.title ?? 'untitled')
   return (
-    <div ref={ref} className={styles.adder} style={position} role='dialog' aria-label='Add tag' data-testid='tag-editor'>
-      {single !== undefined && single.tags.length > 0 && (
-        <ul className={styles.tags}>
-          {single.tags.map(({ tag, library_address }) => {
-            const key = `${library_address} ${tag}`
+    <div
+      ref={ref}
+      className={styles.adder}
+      style={{ left: place.left, top: place.top, bottom: place.bottom }}
+      data-above={place.above}
+      role='dialog'
+      aria-label='Add tag'
+      data-testid='tag-editor'
+      onKeyDown={(event) => { if (event.key === 'Escape' && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); close() } }}
+      onBlur={(event) => { if (!ref.current?.contains(event.relatedTarget as Node | null)) close() }}
+      // Clicks inside keep the field focused.
+      onMouseDown={(event) => { if (event.target !== input.current) event.preventDefault() }}
+    >
+      <div className={styles.stroke}><span className={styles.title}>tag · {title}</span></div>
+      {shown.length > 0 && (
+        <ul className={styles.tags} aria-label='Tags'>
+          {shown.map((entry) => {
+            const key = tag_key(entry)
+            const can_remove = single !== undefined && removable.has(entry.library_address)
+            const classes = [styles.chip, armed === key ? styles.armed : '', fresh.has(key) ? styles.fresh : ''].filter(Boolean).join(' ')
             return (
-              <li key={key} className={armed === key ? `${styles.chip} ${styles.armed}` : styles.chip}>
-                {tag}
-                {removable.has(library_address) && (
-                  <button type='button' data-variant='glyph' aria-label={armed === key ? `Confirm removing tag ${tag}` : `Remove tag ${tag}`} {...(armed === key ? {} : tip('Remove tag'))} disabled={!editable} onClick={() => { arm_or_remove(tag, library_address) }}>
+              <li key={key} className={classes} aria-busy={entry.pending} onAnimationEnd={() => { unfresh(key) }}>
+                {entry.tag}
+                {can_remove && (
+                  <button type='button' data-variant='glyph' aria-label={armed === key ? `Confirm removing tag ${entry.tag}` : `Remove tag ${entry.tag}`} {...(armed === key ? {} : tip('Remove tag'))} disabled={!writes_allowed} onClick={() => { arm_or_remove({ tag: entry.tag, library_address: entry.library_address }) }}>
                     {armed === key ? 'remove?' : '×'}
                   </button>
                 )}
@@ -137,37 +182,32 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
           })}
         </ul>
       )}
-      {choice.targets.length > 0
+      {choice.targets.length > 0 || choice.resolution.kind === 'loading'
         ? (
-          <form className={styles.form} onSubmit={submit}>
+          <>
             <input
               ref={input}
+              className={styles.field}
               aria-label='New tag'
+              role='combobox'
+              aria-expanded={rows.length > 0}
+              aria-controls={list_id}
+              aria-autocomplete='list'
+              aria-activedescendant={active === null ? undefined : `${list_id}-${active}`}
               value={draft}
               maxLength={MAX_TAG_LENGTH}
-              placeholder={tracks.length > 1 ? `tag ${tracks.length} tracks` : 'tag'}
+              placeholder={single === undefined ? `tag ${tracks.length} tracks` : 'add a tag'}
               spellCheck={false}
               autoComplete='off'
               disabled={!writes_allowed}
-              onChange={(event) => { set_draft(event.target.value.toLowerCase()) }}
+              onChange={(event) => { set_draft(event.target.value.toLowerCase()); set_highlight(null) }}
               onKeyDown={on_key_down}
-              onBlur={(event) => { if (!ref.current?.contains(event.relatedTarget as Node | null)) close() }}
             />
-            <button type='submit' data-size='small' disabled={!editable || normalize_tag(draft) === '' || choice.target === null}>Add</button>
-          </form>
+            {rows.length > 0 && <ul id={list_id} className={styles.suggestions} role='listbox' aria-label='Suggestions' onMouseLeave={() => { set_highlight(null) }}>{rows.map(row_view)}</ul>}
+            <TagTarget choice={choice} on_chosen={() => { input.current?.focus() }} />
+          </>
           )
         : <p className={styles.note}>You have no library to tag into.</p>}
-      {suggestions.length > 0 && (
-        <ul className={styles.suggestions} role='listbox' aria-label='Suggestions'>
-          {suggestions.map((tag, index) => (
-            <li key={tag} role='option' aria-selected={index === 0}>
-              <button type='button' data-variant='glyph' tabIndex={-1} onMouseDown={(event) => { event.preventDefault() }} onClick={() => { add(tag).catch(() => {}) }}>{tag}</button>
-              {index === 0 && <kbd className={styles.key}>Tab</kbd>}
-            </li>
-          ))}
-        </ul>
-      )}
-      {choice.targets.length > 1 && <div className={styles.target}><TargetSelect choice={choice} /></div>}
       {!writes_allowed && <p className={styles.note}>Waiting for the node.</p>}
     </div>
   )

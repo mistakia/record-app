@@ -96,10 +96,10 @@ try {
   const editor = window.getByTestId('tag-editor')
   // Viewing Smoke Mixes, the tag goes there by default.
   const viewed = await viewed_library(window)
-  if (viewed === '' || await editor.getByLabel('Target library').inputValue() !== viewed) throw new Error('the tag target is not the viewed library')
+  if (viewed === '' || await editor.getByTestId('write-target').getAttribute('data-library') !== viewed) throw new Error('the tag target is not the viewed library')
   await editor.getByLabel('New tag').fill('v11-tag')
-  await editor.getByRole('button', { name: 'Add', exact: true }).click()
-  await editor.getByRole('button', { name: 'Remove tag v11-tag' }).waitFor()
+  await editor.getByLabel('New tag').press('Enter')
+  await editor.locator('li[aria-busy=false]').filter({ hasText: 'v11-tag' }).waitFor()
   step('tagged', (await editor.getByRole('listitem').allInnerTexts()).join(' | '))
   await editor.getByLabel('New tag').press('Escape')
   await editor.waitFor({ state: 'detached' })

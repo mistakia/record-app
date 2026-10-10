@@ -9,17 +9,18 @@ import { useLocation, useNavigate } from 'react-router'
 
 import styles from './tracks.module.css'
 import { EmptyState } from '#renderer/components/common/empty-state.tsx'
-import { tip } from '#renderer/components/common/tooltip-logic.ts'
+import { keep_focus } from '#renderer/components/common/keep-focus.ts'
 import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { library_name, own_library_address } from '#renderer/components/library/library-category.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import { Inspector } from '#renderer/components/track/inspector.tsx'
 import { use_inspector_fit } from '#renderer/components/track/use-inspector-fit.ts'
 import { TagFilter } from '#renderer/components/track/tag-filter.tsx'
-import { TrackList, TrackListSkeleton } from '#renderer/components/track/track-list.tsx'
+import { SearchField } from '#renderer/components/track/search-field.tsx'
+import { TrackList, TrackListSkeleton, type ListActions } from '#renderer/components/track/track-list.tsx'
 import { use_tag_navigation, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
-import { SEARCH_INPUT_ID } from '#renderer/hooks/use-hotkeys.ts'
 import { play_tracks, toggle_shuffle_mode } from '#renderer/player/player-controller.ts'
+import { record_search } from '#renderer/prefs/search-history.ts'
 import { parse_track_view, ROUTES, tracks_route, with_filters_cleared, with_sort, with_tag_toggled, type TrackView } from '#renderer/routes.ts'
 import { node_api, track_page_args } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -35,7 +36,6 @@ export const Tracks = () => {
   const { library_address, filters } = view
   const [search, set_search] = useState(filters.query)
   const [inspecting, set_inspecting] = useState(false)
-  const search_ref = useRef<HTMLInputElement>(null)
   const body_ref = useRef<HTMLDivElement>(null)
   use_inspector_fit({ body: body_ref, open: inspecting, close: () => { set_inspecting(false) } })
   const libraries = node_api.endpoints.get_libraries.useQuery()
@@ -69,7 +69,7 @@ export const Tracks = () => {
   const empty = current !== undefined && total === 0 && !filtered
   const open_tag = use_tag_navigation()
 
-  const { actions, dialogs } = use_track_actions({
+  const { actions: row_actions, dialogs } = use_track_actions({
     viewed_library: library_address,
     listen_library,
     source: {
@@ -97,6 +97,10 @@ export const Tracks = () => {
     }
   })
 
+  // Acting on a search's results records it: every row action but the Esc
+  // layers passes through here.
+  const actions = remembering_search(row_actions, filters.query)
+
   const shuffle_play = () => {
     toggle_shuffle_mode()
     const items = current?.items ?? []
@@ -111,30 +115,10 @@ export const Tracks = () => {
         </PageActions>
       )}
       <div className={styles.toolbar}>
-        <div className={styles.search}>
-          <input
-            ref={search_ref}
-            id={SEARCH_INPUT_ID}
-            type='search'
-            aria-label='Search tracks'
-            placeholder='search'
-            spellCheck={false}
-            value={search}
-            onChange={(event) => { set_search(event.target.value) }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === 'ArrowDown') {
-                event.preventDefault()
-                list_commands()?.focus()
-              }
-            }}
-          />
-          {search !== '' && (
-            <button type='button' data-variant='glyph' aria-label='Clear search' {...tip('Clear search')} onClick={() => { set_search(''); search_ref.current?.focus() }}>×</button>
-          )}
-        </div>
+        <SearchField value={search} on_change={set_search} on_submit={() => { list_commands()?.focus() }} />
         <span className={styles.count} data-testid='track-total'>{total} tracks</span>
         {filtered && (
-          <button type='button' data-variant='ghost' data-size='small' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
+          <button type='button' data-variant='ghost' data-size='small' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
         )}
         <button type='button' data-variant='glyph' className={styles.shuffle} aria-pressed={shuffle} onClick={shuffle_play}>Shuffle</button>
       </div>
@@ -144,7 +128,7 @@ export const Tracks = () => {
         ? <TrackListSkeleton />
         : current !== undefined && total === 0
           ? filtered
-            ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
+            ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
             : can_add
               ? <EmptyState headline='Empty' detail='No tracks in this view yet. Add some music, or link a library.' action={<button type='button' data-variant='primary' onClick={() => { navigate(ROUTES.import) }}>Add music</button>} />
               : <EmptyState headline='Empty' detail='No tracks here yet. A library you follow fills in as it replicates.' />
@@ -165,4 +149,24 @@ export const Tracks = () => {
       {dialogs}
     </section>
   )
+}
+
+const remembering_search = (actions: ListActions, query: string): ListActions => {
+  if (query.trim() === '') return actions
+  // Deferred: the row menu asks for its items while it renders.
+  const remember = <A extends unknown[], R>(action: (...args: A) => R) => (...args: A): R => {
+    queueMicrotask(() => { record_search(query) })
+    return action(...args)
+  }
+  return {
+    ...actions,
+    play: remember(actions.play),
+    queue: remember(actions.queue),
+    adopt: remember(actions.adopt),
+    add_tag: remember(actions.add_tag),
+    tag_clicked: remember(actions.tag_clicked),
+    remove_tag: remember(actions.remove_tag),
+    menu_items: remember(actions.menu_items),
+    toggle_inspector: remember(actions.toggle_inspector)
+  }
 }

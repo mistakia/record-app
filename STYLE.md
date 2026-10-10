@@ -268,7 +268,7 @@ The library is driven by keys. Mouse and keys reach the same state through the o
 | `i`                     | Toggle the inspector                                     |
 | `.` or `Shift+F10`      | Open the row's context menu at the row                   |
 | `/` or `Cmd+F`          | Search                                                   |
-| `Esc`                   | Close menu, then clear search, then selection, then pane |
+| `Esc`                   | Close recent searches, then menu, then clear search, then selection, then pane |
 | `Space`                 | Play or pause                                            |
 | `Cmd+←` / `Cmd+→`       | Previous / next track                                    |
 | `Shift+←` / `Shift+→`   | Seek 5s                                                  |
@@ -295,6 +295,7 @@ Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys af
 ### Track list (paper)
 
 - **Header row** — a borderless search field filling the left (48px tall, `/` hint when empty, a `×` clear); on the right the shuffle toggle. Adding music is the page's main action (§ Main action).
+- **Recent searches** — focusing the empty search (or emptying it) drops a paper overlay directly under it: `RECENT` in 10px uppercase tertiary, 13px rows, a `×` per row, `clear` at the foot. `↑`/`↓` highlight, `Enter` or a click runs one; typing closes it. A search is kept when its results are acted on or the field is left with text: newest first, case-insensitively unique, 20 at most, one list for every view, on this machine only, search text without tags. The clear controls never take the focus, so a cleared search is not kept.
 - **Tag strip** — the list's tags as chips with counts, A to Z, one line with a right-edge fade into the paper; scrolls horizontally. Clicking toggles a tag in the filter (AND).
 - **Column header** — 10px uppercase tertiary: `▶ ☆ TITLE ARTIST ALBUM +TAG TAGS KBPS TIME FMT LISTENS`. Sortable headers show `▴` or `▾` on the active sort and turn accent on hover. Filter, search, and sort state live in the route, so back and forward restore them.
 - **Rows** — 36px, 13px mono, virtualized, `--color-border-light` dividers, no zebra.
@@ -309,7 +310,7 @@ Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys af
 - 11px, `--color-text-secondary` ink, 1px `--color-border-light` border, square, `0 6px` padding, count after the label in tertiary.
 - Active filter chip: `--color-accent` ink and border on `--color-accent-wash`.
 - On a row: clicking a chip filters by it; a chip from another library opens that library filtered by the tag. A removable tag (own active library) shows `×` on hover; removal confirms.
-- **Inline tag adder** — `+TAG` or `t` opens a small input at the row (not a centred dialog): lowercase, fuzzy suggestions from the visible tags, `Tab` takes the first suggestion, `Enter` adds, `Backspace` on empty removes the last, `Esc` closes.
+- **Inline tag adder** — `+TAG` or `t` opens a 300px paper overlay at the row (not a centred dialog), fading in over 0.15s from a 4px offset, above the row when it would run off the window and growing upward from there. Framed: `TAG · <title>` or `TAG · 3 TRACKS` on the top stroke. Then the track's tags as chips, the field (lowercase, no `Add` button), and its suggestions: empty, the view's six most used tags the track lacks; typing narrows them by fuzzy rank (the tag itself, prefix, word start, anywhere, letters in order), matched letters in text ink over secondary, the count right-aligned in tertiary. A typed tag the view lacks ends the list as `create "foo"`. `↑`/`↓` move a hover-wash highlight (matched letters turn accent), past either end back to the field; the pointer moves it too. `Enter` adds the highlighted row, else what was typed; `Tab` completes the field (the highlighted row, else the first tag) and otherwise moves on. An added tag shows as a chip at once with a 0.9s accent flash (none under reduced motion), rolled back if the node refuses; the field clears and the adder stays, so tags go in a row. Last, `into <library>` in tertiary, with ` · change` opening the writable libraries as a short list when there is more than one. `Backspace` on empty arms the last own tag, again removes it, the chip going at once and returning if the node refuses; `Esc` closes, and focus returns to the list.
 
 ### Framed section (paper)
 
