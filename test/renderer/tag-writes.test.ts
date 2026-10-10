@@ -73,6 +73,27 @@ describe('tag writes', () => {
     expect(chips()).toEqual(['dub'])
   })
 
+  test('a removal forwards only the tag fields, never a chip\'s display state', async () => {
+    // The adder's chips are `{ tag, library_address, pending }` (tag-writes
+    // ShownEntry); a removal must not spread that whole object, or the node
+    // would refuse the undeclared `pending` query parameter.
+    const received: Array<{ [key: string]: unknown }> = []
+    const writes = create_tag_writes<TaggedTrack>({
+      initial: [{ id: 't1', tags: [{ tag: 'dub', library_address: OWN }] }],
+      add_tag: async () => ({ ok: false }),
+      remove_tag: async (input) => {
+        received.push({ ...input })
+        return { ok: true, data: { id: 't1', tags: [] } } as const
+      },
+      notify: () => {}
+    })
+    // A `ShownEntry` from shown_tags passes the typed `remove` check, since
+    // it adds fields to `ShownTag`; only the engine strips them.
+    const chip: { tag: string, library_address: string, pending: boolean } = { tag: 'dub', library_address: OWN, pending: true }
+    await writes.remove(chip)
+    expect(received).toEqual([{ track_id: 't1', tag: 'dub', library_address: OWN }])
+  })
+
   test('a second removal of the same tag, or one of a tag already gone, sends nothing more', async () => {
     const { node, writes } = setup([{ id: 't1', tags: [{ tag: 'dub', library_address: OWN }] }], { refuse: new Set(['gone']) })
     await Promise.all([writes.remove({ tag: 'dub', library_address: OWN }), writes.remove({ tag: 'dub', library_address: OWN })])

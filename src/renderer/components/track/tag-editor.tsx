@@ -126,7 +126,9 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
     } else if (event.key === 'Backspace' && draft === '' && own_tags.length > 0) {
       event.preventDefault()
       const last = own_tags.at(-1)
-      if (last !== undefined) arm_or_remove(last)
+      // A chip carries the display flag `pending`; only the tag fields may go
+      // into a write, mirroring the × button's `arm_or_remove` call.
+      if (last !== undefined) arm_or_remove({ tag: last.tag, library_address: last.library_address })
     }
     if (event.key !== 'Backspace') set_armed(null)
   }

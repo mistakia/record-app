@@ -115,7 +115,10 @@ export const create_tag_writes = <T extends TaggedTrack>({ initial, add_tag, rem
     set({ removing: [...state.removing, entry] })
     return enqueue(async () => {
       if (carries(track.id, key)) {
-        const result = await remove_tag({ track_id: track.id, ...entry })
+        // The tag fields only: an entry from the UI may carry display state
+        // (a chip's `pending` flag), which the node's validator would refuse
+        // as a query parameter it does not declare.
+        const result = await remove_tag({ track_id: track.id, tag: entry.tag, library_address: entry.library_address })
         if (result.ok) replace(result.data)
       }
       set({ removing: without(state.removing, key) })
