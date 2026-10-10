@@ -28,6 +28,8 @@ bun run smoke:v1-1          # built app against an in-process node: the record-d
 bun run perf                # built app(s) against an in-process node seeded to 200,000 tracks (options in the script header)
 ```
 
+**A session never takes the operator's focus or makes a sound.** `RECORD_BACKGROUND` (`src/main/background.ts`) starts the app as a muted macOS accessory app: no Dock icon, its window shown without activating, the media keys and Now Playing left alone. Playback still runs. `1` keeps the window on screen for the operator to watch; `hidden` makes it invisible and click-through, for scripts. A session starts the dev window with `1`, `RECORD_BACKGROUND=1 node_modules/.bin/electron-vite dev -- --user-data-dir=<dir>`; a main-process restart keeps it. Every script under `test/e2e/`, a throwaway screenshot script included, starts the app hidden through `launch_app` in `test/e2e/launch.ts` and calls `assert_quiet` on its success path, which fails the run when a window took the system focus, the app became active, or audio was not muted, and takes screenshots with `capture`, since Playwright's screenshot hangs on a window behind the operator's; a unit test refuses any other launch or screenshot. The window keeps painting there (`backgroundThrottling` off, Chromium's occlusion backgrounding off). A native dialog, or a hand-off to Finder or the browser, would bring an app to the front, so background mode answers each as cancelled and records it, and `assert_quiet` fails on the record; a script stubs in main a dialog it means to answer. A release build ignores `RECORD_BACKGROUND`.
+
 ## Architecture
 
 ```

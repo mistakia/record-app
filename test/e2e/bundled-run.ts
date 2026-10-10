@@ -11,6 +11,8 @@ import type { ElectronApplication, Page } from 'playwright-core'
 
 import { is_alive } from '#main/bundled/process-probe.ts'
 
+import { assert_quiet } from './launch.ts'
+
 interface BundledView { status: string, pid: number | null, port: number | null, url: string | null, version: string, ingest_disabled: string | null, network_privacy: string, data_dir: string, log_path: string }
 
 export const bundled_state = async (window: Page): Promise<BundledView> =>
@@ -152,6 +154,7 @@ export const check_quit_stops_child = async ({ launch, step }: {
 }): Promise<void> => {
   const { app, window } = await launch()
   const running = await wait_running(window)
+  await assert_quiet(app)
   await app.close()
   step('quit in bundled mode', { child_pid: running.pid, child_alive_after_quit: is_alive(running.pid as number) })
   if (is_alive(running.pid as number)) throw new Error('the bundled node outlived the app')

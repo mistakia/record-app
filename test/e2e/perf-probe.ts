@@ -18,10 +18,11 @@ import { connect, type AddressInfo, type Socket } from 'node:net'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { _electron as electron, type Page } from 'playwright-core'
+import { type Page } from 'playwright-core'
 
 import { start_test_node } from '../integration/node-fixture.ts'
 import { create_seeder } from './seed-library.ts'
+import { capture, launch_app, quiet_violations } from './launch.ts'
 
 const TRACKS = Number(process.env.RECORD_PERF_TRACKS ?? 200_000)
 // Each app root measured in turn against the same node, so a before and an
@@ -194,7 +195,7 @@ const nav = async (window: Page, name: string) => { await window.getByRole('navi
 
 const run_app = async (app_root: string, report: Record<string, unknown>): Promise<void> => {
   const user_data_dir = join(node.work_dir, `profile-${Object.keys(reports).length}`)
-  const app = await electron.launch({ args: [app_root, `--user-data-dir=${user_data_dir}`], timeout: 30_000 })
+  const app = await launch_app({ user_data_dir, app_root })
   const window = await app.firstWindow()
   await window.addInitScript(COMMIT_COUNTER)
   await window.reload()
@@ -206,7 +207,7 @@ const run_app = async (app_root: string, report: Record<string, unknown>): Promi
 
   await measure(report, window, 'connect_to_first_rows', async () => {
     await window.getByRole('dialog').getByRole('button', { name: 'Switch' }).click()
-    await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: 120_000 }).catch(async (error: unknown) => { console.error(await window.getByTestId('events-status').evaluate((el) => el.outerHTML).catch(() => 'no status'), proxy.errors, summarize(proxy.take())); await window.screenshot({ path: '/tmp/perf-fail.png' }); throw error })
+    await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: 120_000 }).catch(async (error: unknown) => { console.error(await window.getByTestId('events-status').evaluate((el) => el.outerHTML).catch(() => 'no status'), proxy.errors, summarize(proxy.take())); await capture(app, '/tmp/perf-fail.png'); throw error })
     await nav(window, 'Tracks')
     await wait_rows(window)
     await window.waitForTimeout(1500)
@@ -302,11 +303,13 @@ const run_app = async (app_root: string, report: Record<string, unknown>): Promi
   await measure(report, window, 'idle_after_burst_5s', async () => await window.evaluate(FRAME_SAMPLER, { frames: 300, kind: 'idle' as const }))
 
   report.main_memory_mb = await app.evaluate(() => Math.round(process.memoryUsage().rss / 1e6))
+  // Reported, not asserted: a build under comparison may predate background mode.
+  report.quiet_violations = await quiet_violations(app)
   await app.close()
 
   // Relaunch on the same profile: the hibernation snapshot, then fresh.
   const relaunch_started = performance.now()
-  const again = await electron.launch({ args: [app_root, `--user-data-dir=${user_data_dir}`], timeout: 30_000 })
+  const again = await launch_app({ user_data_dir, app_root })
   const second = await again.firstWindow()
   await second.getByTestId('track-row').first().waitFor({ timeout: 60_000 })
   const snapshot_rows_ms = Math.round(performance.now() - relaunch_started)

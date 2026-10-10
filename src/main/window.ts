@@ -3,6 +3,8 @@
 
 import { BrowserWindow, shell, type WebContents } from 'electron'
 
+import { BACKGROUND, HIDDEN } from './background.ts'
+
 const EXTERNAL_SCHEMES = new Set(['https:', 'http:', 'mailto:'])
 
 // Spec §8.10.5: parseable, an allowlisted scheme, and no control characters
@@ -62,10 +64,18 @@ export const create_main_window = ({ preload_path, renderer_url }: {
       sandbox: true,
       webSecurity: true,
       allowRunningInsecureContent: false,
-      experimentalFeatures: false
+      experimentalFeatures: false,
+      // A background window sits behind the operator's, where macOS marks it
+      // hidden; it keeps painting and its timers keep their pace.
+      ...(BACKGROUND ? { backgroundThrottling: false } : {})
     }
   })
-  window.once('ready-to-show', () => { window.show() })
+  if (BACKGROUND) window.webContents.setAudioMuted(true)
+  if (HIDDEN) {
+    window.setOpacity(0)
+    window.setIgnoreMouseEvents(true)
+  }
+  window.once('ready-to-show', () => { if (BACKGROUND) window.showInactive(); else window.show() })
   window.loadURL(renderer_url).catch(() => {})
   return window
 }

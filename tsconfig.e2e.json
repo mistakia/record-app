@@ -10,6 +10,7 @@
     ]
   },
   "include": [
-    "test/e2e"
+    "test/e2e",
+    "src/main/build-flags.d.ts"
   ]
 }

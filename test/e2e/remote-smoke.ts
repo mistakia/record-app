@@ -22,11 +22,10 @@ import { execSync } from 'node:child_process'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { _electron as electron, type ElectronApplication, type Page } from 'playwright-core'
+import { type ElectronApplication, type Page } from 'playwright-core'
+import { assert_quiet, capture, launch_app } from './launch.ts'
 
-const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const node_url = process.env.RECORD_NODE_URL ?? 'http://127.0.0.1:8088'
 const title = process.env.RECORD_SMOKE_TITLE ?? 'Intro'
 const artist = process.env.RECORD_SMOKE_ARTIST ?? 'SebastiAn'
@@ -38,7 +37,7 @@ const online_command = process.env.RECORD_SMOKE_ONLINE_CMD
 const run_offline = offline_command !== undefined && online_command !== undefined
 
 const launch = async (user_data_dir: string): Promise<{ app: ElectronApplication, window: Page, console_errors: string[] }> => {
-  const app = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${user_data_dir}`], timeout: 30_000 })
+  const app = await launch_app({ user_data_dir })
   const window = await app.firstWindow()
   const console_errors: string[] = []
   window.on('console', (message) => { if (message.type() === 'error') console_errors.push(message.text()) })
@@ -156,13 +155,14 @@ try {
   const later_position = await window.getByTestId('player-position').textContent()
   console.log('playback:', first_position, '->', later_position)
   if (first_position === later_position) throw new Error('playback position did not advance')
-  await window.screenshot({ path: join(screenshot_dir, 'record-app-smoke-playing.png') })
+  await capture(first.app, join(screenshot_dir, 'record-app-smoke-playing.png'))
 
   // Let the renderer hand main a snapshot (every 5 s), then quit cleanly,
   // which writes it.
   await window.getByTestId('player-bar').getByRole('button', { name: 'Pause', exact: true }).click()
   await window.waitForTimeout(6000)
   if (first.console_errors.length > 0) throw new Error(`renderer console errors:\n${first.console_errors.join('\n')}`)
+  await assert_quiet(first.app)
   await first.app.close()
   const snapshot = JSON.parse(await readFile(join(user_data_dir, 'snapshot.json'), 'utf8')) as {
     libraries: unknown[]
@@ -186,7 +186,7 @@ try {
     const freshness = await second.window.getByTestId('events-status').getAttribute('data-freshness')
     console.log('offline relaunch:', { shown_total, first_title, freshness, snapshot_total: snapshot.active.total, snapshot_first_title: snapshot.active.tracks[0]?.title })
     if (shown_total !== snapshot.active.total || first_title !== (snapshot.active.tracks[0]?.title ?? 'Untitled') || freshness !== 'stale') throw new Error('the offline relaunch did not render the stale snapshot')
-    await second.window.screenshot({ path: join(screenshot_dir, 'record-app-smoke-offline-snapshot.png') })
+    await capture(second.app, join(screenshot_dir, 'record-app-smoke-offline-snapshot.png'))
     execSync(online_command, { stdio: 'inherit' })
     await second.window.getByRole('button', { name: 'Retry now', exact: true }).click()
   }
@@ -202,8 +202,10 @@ try {
   await save_node_url(second.window, UNREACHABLE_URL)
   await second.window.getByTestId('node-unreachable').waitFor({ timeout: 30_000 })
   console.log('unreachable banner:', (await second.window.getByTestId('node-unreachable').innerText()).replaceAll('\n', ' '))
-  await second.window.screenshot({ path: join(screenshot_dir, 'record-app-smoke-unreachable.png') })
+  await capture(second.app, join(screenshot_dir, 'record-app-smoke-unreachable.png'))
   if (second.console_errors.length > 0) throw new Error(`renderer console errors:\n${second.console_errors.join('\n')}`)
+  await assert_quiet(second.app)
+  console.log('quiet: no system focus taken, every window muted')
   await second.app.close()
   console.log('screenshots:', screenshot_dir)
   console.log('remote smoke passed')

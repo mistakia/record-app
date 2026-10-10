@@ -98,7 +98,7 @@ try {
   // A release that ignored the switch would run until the timeout, so a
   // timeout fails too.
   const launched_at = Date.now()
-  const refused = spawnSync('arch', [`-${arch}`, release.binary, `--user-data-dir=${release_profile}`, '--remote-debugging-port=0'], { encoding: 'utf8', timeout: slow(30_000) })
+  const refused = spawnSync('arch', [`-${arch}`, release.binary, `--user-data-dir=${release_profile}`, '--remote-debugging-port=0'], { encoding: 'utf8', timeout: slow(30_000), env: { ...process.env, RECORD_BACKGROUND: 'hidden' } })
   const port_file = await readFile(join(release_profile, 'DevToolsActivePort'), 'utf8').catch(() => null)
   const timed_out = (refused.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT'
   step('release with --remote-debugging-port', { exit_code: refused.status, signal: refused.signal, timed_out, seconds: Math.round((Date.now() - launched_at) / 1000), stderr: refused.stderr?.trim().split('\n').at(-1), devtools_port_file: port_file !== null })
@@ -123,7 +123,7 @@ try {
   await mkdir(profile)
   await writeFile(join(profile, 'bundled-settings.json'), JSON.stringify({ data_dir }))
 
-  const app = spawn('arch', [`-${arch}`, binary, `--user-data-dir=${profile}`, '--remote-debugging-port=0'], { stdio: 'ignore', env: { ...process.env, RECORD_TEST_STARTUP_TIMEOUT_MS: String(slow(30_000)) } })
+  const app = spawn('arch', [`-${arch}`, binary, `--user-data-dir=${profile}`, '--remote-debugging-port=0'], { stdio: 'ignore', env: { ...process.env, RECORD_BACKGROUND: 'hidden', RECORD_TEST_STARTUP_TIMEOUT_MS: String(slow(30_000)) } })
   const exited = new Promise<number | null>((resolve) => { app.once('exit', resolve) })
   try {
     const port = await wait_for(async () => {
@@ -154,7 +154,7 @@ try {
     // The RunAsNode fuse is off: the variable starts a second app instance on
     // this profile, which hands off to this one and exits, instead of
     // running the script as Node.
-    const as_node = execFileSync('arch', [`-${arch}`, binary, '-e', 'process.stdout.write("ran-as-node")', `--user-data-dir=${profile}`], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, encoding: 'utf8', timeout: slow(30_000) })
+    const as_node = execFileSync('arch', [`-${arch}`, binary, '-e', 'process.stdout.write("ran-as-node")', `--user-data-dir=${profile}`], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', RECORD_BACKGROUND: 'hidden' }, encoding: 'utf8', timeout: slow(30_000) })
     step('ELECTRON_RUN_AS_NODE', as_node.includes('ran-as-node') ? 'honored' : 'ignored')
     if (as_node.includes('ran-as-node')) throw new Error('the RunAsNode fuse is on')
 

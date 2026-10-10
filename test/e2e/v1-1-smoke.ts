@@ -12,15 +12,13 @@
 
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { _electron as electron, type Page } from 'playwright-core'
+import { type Page } from 'playwright-core'
 
 import { create_peer, start_peer, stop_peer } from 'record-node'
 
 import { start_test_node } from '../integration/node-fixture.ts'
-
-const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
+import { assert_quiet, launch_app } from './launch.ts'
 
 const node = await start_test_node()
 await node.peer.ingest_file(node.make_audio({ name: 'V11 Alpha.flac', seed: 11 }))
@@ -43,7 +41,7 @@ const unfold = async (window: Page, title: string) => {
 const viewed_library = async (window: Page) => await window.evaluate(() => new URLSearchParams(location.hash.split('?')[1] ?? '').get('library') ?? '')
 const toast = async (window: Page, text: string | RegExp) => { await window.getByTestId('toast').filter({ hasText: text }).first().waitFor({ timeout: 30_000 }) }
 
-const app = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${user_data_dir}`], timeout: 30_000 })
+const app = await launch_app({ user_data_dir })
 try {
   const window = await app.firstWindow()
   const console_errors: string[] = []
@@ -215,6 +213,8 @@ try {
   step('identity own libraries', await window.getByTestId('identity-own-library').allInnerTexts())
 
   if (console_errors.length > 0) throw new Error(`renderer console errors: ${console_errors.join(' | ')}`)
+  await assert_quiet(app)
+  step('quiet', 'no system focus taken, every window muted')
   console.log('v1.1 smoke passed')
 } finally {
   await app.close().catch(() => {})

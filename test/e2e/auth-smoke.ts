@@ -8,14 +8,13 @@
 
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { _electron as electron, type Page } from 'playwright-core'
+import { type Page } from 'playwright-core'
 
 import { create_keychain_token_store } from '../../src/main/token-store.ts'
 import { start_test_node } from '../integration/node-fixture.ts'
+import { assert_quiet, launch_app } from './launch.ts'
 
-const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const TOKEN = `smoke-${process.pid}-${Date.now()}.token`
 
 const node = await start_test_node({ authenticate: (token) => token === TOKEN })
@@ -29,7 +28,7 @@ const step = (label: string, detail: unknown = ''): void => { console.log(`${lab
 const settings = async (window: Page) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Settings', exact: true }).click() }
 const status = (window: Page, value: string) => window.locator(`[data-testid=events-status][data-status=${value}]`)
 
-const app = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${user_data_dir}`], timeout: 30_000 })
+const app = await launch_app({ user_data_dir })
 try {
   const window = await app.firstWindow()
   await status(window, 'unauthorized').waitFor({ timeout: 30_000 })
@@ -82,6 +81,8 @@ try {
   await status(window, 'unauthorized').waitFor({ timeout: 30_000 })
   if (process.platform === 'darwin' && await create_keychain_token_store().get(node.node_url) !== null) throw new Error('log out left the token in the Keychain')
   step('log out', 'token deleted, sign-in needed')
+  await assert_quiet(app)
+  step('quiet', 'no system focus taken, every window muted')
   console.log('auth smoke passed')
 } finally {
   await app.close().catch(() => {})

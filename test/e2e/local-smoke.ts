@@ -12,15 +12,14 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { _electron as electron, type Page } from 'playwright-core'
+import { type Page } from 'playwright-core'
 import { create_peer, start_peer, stop_peer } from 'record-node'
 
 import { start_test_node } from '../integration/node-fixture.ts'
 import { check_quit_stops_child, run_bundled_checks } from './bundled-run.ts'
+import { assert_quiet, capture, launch_app } from './launch.ts'
 
-const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const screenshot_dir = process.env.RECORD_SMOKE_SCREENSHOT_DIR ?? tmpdir()
 
 const node = await start_test_node()
@@ -29,7 +28,7 @@ await start_peer(other)
 await node.peer.ingest_file(node.make_audio({ name: 'Smoke Alpha.flac', seed: 1, seconds: 8 }))
 await node.peer.ingest_file(node.make_audio({ name: 'Smoke Beta.flac', seed: 2, seconds: 8 }))
 const user_data_dir = join(node.work_dir, 'profile')
-const app = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${user_data_dir}`], timeout: 30_000 })
+const app = await launch_app({ user_data_dir })
 
 const step = (label: string, detail: unknown = ''): void => { console.log(`${label}:`, detail) }
 const toast = async (window: Page, text: string | RegExp) => { await window.getByTestId('toast').filter({ hasText: text }).first().waitFor({ timeout: 30_000 }) }
@@ -252,8 +251,10 @@ try {
   await nav(window, 'Settings')
   await unfold(window, 'Peers')
   step('peers', (await window.locator('#settings-peers').innerText()).replaceAll('\n', ' | '))
-  await window.screenshot({ path: join(screenshot_dir, 'record-app-local-smoke.png') })
+  await capture(app, join(screenshot_dir, 'record-app-local-smoke.png'))
   if (console_errors.length > 0) throw new Error(`renderer console errors:\n${console_errors.join('\n')}`)
+  await assert_quiet(app)
+  step('quiet', 'no system focus taken, every window muted')
 } finally {
   await app.close()
 }
@@ -264,7 +265,7 @@ try {
   if (private_key === '' || leaks.length > 0) throw new Error('the exported key reached a file')
   await check_quit_stops_child({
     launch: async () => {
-      const fresh = await electron.launch({ args: [APP_ROOT, `--user-data-dir=${join(node.work_dir, 'profile-quit')}`], timeout: 30_000 })
+      const fresh = await launch_app({ user_data_dir: join(node.work_dir, 'profile-quit') })
       return { app: fresh, window: await fresh.firstWindow() }
     },
     step
