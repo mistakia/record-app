@@ -2,7 +2,7 @@
   position: absolute;
   inset: 0;
   z-index: 20;
-  animation: slide-up 0.28s var(--ease-pane);
+  animation: global(slide-up) 0.28s var(--ease-pane);
 }
 
 .layout {
