@@ -85,3 +85,10 @@
   justify-content: flex-end;
   gap: var(--space-sm);
 }
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-base);
+}

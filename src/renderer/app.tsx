@@ -9,6 +9,7 @@ import { BackupPrompt } from '#renderer/components/identity/backup-prompt.tsx'
 import { BundledBanner } from '#renderer/components/layout/bundled-banner.tsx'
 import { ConnectionBanner } from '#renderer/components/layout/connection-banner.tsx'
 import { IngestGauge } from '#renderer/components/layout/ingest-gauge.tsx'
+import { PageActionsProvider } from '#renderer/components/layout/page-actions.tsx'
 import { PageHead } from '#renderer/components/layout/page-head.tsx'
 import { Sidebar } from '#renderer/components/layout/sidebar.tsx'
 import { PlayerBar } from '#renderer/components/player/player-bar.tsx'
@@ -90,26 +91,28 @@ const Shell = ({ configured }: { configured: boolean }) => {
     <div className={styles.shell}>
       <Sidebar />
       <div className={styles.column}>
-        <div className={styles.page}>
-          <PageHead />
-          <ConnectionBanner />
-          <BundledBanner />
-          <BackupPrompt />
-          <main className={styles.body}>
-            <Routes>
-              <Route path={ROUTES.settings} element={<Settings />} />
-              {NODE_PAGES.map(({ path, element }) => (
-                <Route key={path} path={path} element={configured ? element : <Navigate to={unconfigured_route} replace />} />
-              ))}
-              <Route path='*' element={<Navigate to={configured ? ROUTES.tracks : unconfigured_route} replace />} />
-            </Routes>
-          </main>
-          <IngestGauge />
-          {queue_open && <QueuePanel />}
-          <Toaster />
-          <ShortcutOverlay />
-          <GoPanel />
-        </div>
+        <PageActionsProvider>
+          <div className={styles.page}>
+            <PageHead />
+            <ConnectionBanner />
+            <BundledBanner />
+            <BackupPrompt />
+            <main className={styles.body}>
+              <Routes>
+                <Route path={ROUTES.settings} element={<Settings />} />
+                {NODE_PAGES.map(({ path, element }) => (
+                  <Route key={path} path={path} element={configured ? element : <Navigate to={unconfigured_route} replace />} />
+                ))}
+                <Route path='*' element={<Navigate to={configured ? ROUTES.tracks : unconfigured_route} replace />} />
+              </Routes>
+            </main>
+            <IngestGauge />
+            {queue_open && <QueuePanel />}
+            <Toaster />
+            <ShortcutOverlay />
+            <GoPanel />
+          </div>
+        </PageActionsProvider>
         <PlayerBar />
       </div>
     </div>

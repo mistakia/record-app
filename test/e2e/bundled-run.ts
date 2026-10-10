@@ -44,9 +44,9 @@ export const check_bundled_ingest = async ({ window, step, audio_path, title, tr
   slow?: (ms: number) => number
 }): Promise<void> => {
   const state = await bundled_state(window)
-  // Import has no sidebar link: the track list's [+] opens it.
+  // Import opens from the sidebar's Add music.
   await nav(window, 'Tracks')
-  await window.getByRole('link', { name: 'Import tracks' }).click()
+  await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Add music' }).click()
   step('URL import in bundled mode', await window.getByTestId('url-import-off').innerText())
   if (process.platform !== 'darwin' && state.ingest_disabled !== null) {
     step('import page in bundled mode', await window.getByTestId('ingest-disabled').innerText())

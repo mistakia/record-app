@@ -60,6 +60,8 @@ export const Sidebar = () => {
   const others = sidebar_libraries(libraries.data)
   // While g is up, the first nine carry the digit that opens them.
   const lead_open = use_app_selector((state) => state.ui.lead_open)
+  // Imports still running, counted beside Add music.
+  const importing = use_app_selector((state) => state.imports.items.filter(({ finished }) => !finished).length)
   // The identity has no profile of its own (spec §8.6.9): it goes by its
   // default own library's About name and avatar.
   const identity = own_active[0]
@@ -83,6 +85,10 @@ export const Sidebar = () => {
             const to = tracks_route({ library_address: library.address })
             return <NavItem key={library.id} to={to} current={is_current(to)}>{library_name(library)}</NavItem>
           })}
+        <NavItem to={ROUTES.import} current={is_current(ROUTES.import)}>
+          Add music
+          {importing > 0 && <span className={styles.importing} data-testid='sidebar-importing'>{importing}</span>}
+        </NavItem>
         <NavItem to={ROUTES.libraries} current={is_current(ROUTES.libraries)}>Libraries</NavItem>
       </div>
       <div className={styles.libraries}>

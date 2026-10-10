@@ -225,3 +225,10 @@
 .sidebar :focus-visible {
   outline-offset: -2px;
 }
+
+.importing {
+  margin-left: var(--space-sm);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  font-variant-numeric: tabular-nums;
+}

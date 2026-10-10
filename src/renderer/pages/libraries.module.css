@@ -54,8 +54,15 @@
 }
 
 .empty {
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-base);
   color: var(--color-text-secondary);
+}
+
+.empty p {
+  margin: 0;
 }
 
 .address,

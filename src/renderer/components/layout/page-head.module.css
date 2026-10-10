@@ -118,3 +118,15 @@
 .pulse {
   animation: skeleton-pulse 1.4s ease-in-out infinite;
 }
+
+/* The page's main action, filled by the page; empty, it takes no room. */
+.actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.actions:not(:empty) {
+  margin-left: var(--space-base);
+}

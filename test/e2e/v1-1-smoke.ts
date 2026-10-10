@@ -57,7 +57,7 @@ try {
   step('own libraries at start', await own_rows.allInnerTexts())
   const listens = own_rows.and(window.locator('[data-type=listens]'))
   if (await listens.count() !== 1) throw new Error('expected one listens library')
-  await window.getByRole('link', { name: 'New library' }).click()
+  await window.getByRole('button', { name: 'New library' }).click()
   await window.getByLabel('Library name').fill('Smoke Mixes')
   await window.getByRole('button', { name: 'Continue' }).click()
   const suggested = await window.getByLabel('Address name').inputValue()
@@ -73,7 +73,7 @@ try {
 
   // Write targets: two own libraries now, so writes offer a selector.
   await nav(window, 'Tracks')
-  await window.getByRole('link', { name: 'Import tracks' }).click()
+  await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Add music' }).click()
   // The test id also marks the interim "Finding…" and single-target spans,
   // so wait for the selector itself, holding the new library.
   const import_target = window.locator('select[data-testid=write-target]')
