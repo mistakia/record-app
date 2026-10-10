@@ -8,7 +8,7 @@ import { useEffect } from 'react'
 import { useStore } from 'react-redux'
 import { useNavigate } from 'react-router'
 
-import { resolve_go, resolve_hotkey, type GoTarget, type HotkeyAction } from './hotkeys.ts'
+import { is_field, resolve_go, resolve_hotkey, type GoTarget, type HotkeyAction } from './hotkeys.ts'
 import { section_index_commands } from '#renderer/components/common/indexed-page.tsx'
 import { own_library_address, sidebar_libraries } from '#renderer/components/library/library-category.ts'
 import { now_playing_commands } from '#renderer/components/player/now-playing-commands.ts'
@@ -34,9 +34,6 @@ export const SEARCH_INPUT_ID = 'track-search'
 const SEEK_STEP_SECONDS = 5
 const VOLUME_STEP = 0.05
 const NEXT_REPEAT: Record<RepeatMode, RepeatMode> = { off: 'all', all: 'one', one: 'off' }
-
-const is_field = (target: EventTarget | null): boolean =>
-  target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
 
 export const use_hotkeys = (): void => {
   const navigate = useNavigate()

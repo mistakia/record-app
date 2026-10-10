@@ -130,6 +130,11 @@ const matches = (combo: Combo, press: KeyPress): boolean => {
   return LETTER.test(combo.key) ? press.key.toLowerCase() === combo.key : press.key === combo.key
 }
 
+// A text field, where keys are typing: no shortcut but Esc is live there,
+// and nothing takes focus away from it.
+export const is_field = (target: EventTarget | null): boolean =>
+  target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+
 export const resolve_hotkey = (press: KeyPress): HotkeyAction | null => {
   if (press.key === 'Escape') return press.dialog_open || press.menu_open === true ? null : 'escape'
   if (press.in_field || press.dialog_open || press.menu_open === true || press.alt) return null

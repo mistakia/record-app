@@ -252,7 +252,7 @@ The "feng shui" of base, made concrete for a library: every legacy capability st
 
 The library is driven by keys. Mouse and keys reach the same state through the one action path (`player-controller.ts` for playback, the track list's cursor for selection).
 
-- **Cursor** — the track list always has one cursor row, distinct from the playing row and from the selection. It is a `--color-surface-cursor` wash with 600-weight title ink; no stripe. Focus enters the list on page load and returns there when a dialog, menu, or field closes.
+- **Cursor** — the track list always has one cursor row, distinct from the playing row and from the selection. It is a `--color-surface-cursor` wash with 600-weight title ink; no stripe. Focus enters the list on page load and with each new view, and returns there when a dialog, menu, or field closes. It never leaves a field for the list: a search's results are a new view, and typing stays in the search.
 - **Shortcuts are never live** while typing in a field or with a dialog open (the existing `resolve_hotkey` rule); `Esc` is the one key that always works.
 
 | Key                     | Action                                                   |
