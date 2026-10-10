@@ -90,6 +90,22 @@ try {
   if (await window.getByLabel('Search tracks').inputValue() !== 'Alphat' || await window.getByRole('dialog').count() > 0) throw new Error('a key typed after the results loaded left the search')
   await window.getByRole('button', { name: 'Clear filters' }).click()
   await window.getByTestId('track-total').filter({ hasText: /^2 tracks$/ }).waitFor()
+  // Leaving the field recorded the search: `/` on the empty field lists it,
+  // ↓ Enter runs it, and Esc closes the list before anything else.
+  await window.keyboard.press('/')
+  const recent = window.getByRole('listbox', { name: 'Recent' })
+  await recent.getByRole('option', { name: 'Alphat' }).waitFor({ timeout: 5000 })
+  await window.keyboard.press('ArrowDown')
+  await window.keyboard.press('Enter')
+  if (await window.getByLabel('Search tracks').inputValue() !== 'Alphat') throw new Error('a recent search did not run from the keyboard')
+  await window.getByTestId('track-total').filter({ hasText: /^0 tracks$/ }).waitFor()
+  await window.getByLabel('Search tracks').fill('')
+  await recent.waitFor()
+  await window.keyboard.press('Escape')
+  await recent.waitFor({ state: 'detached' })
+  if (!await window.getByLabel('Search tracks').evaluate((input) => input === document.activeElement)) throw new Error('Esc left the search before closing its recent searches')
+  step('recent searches', 'listed, ran, closed')
+  await window.getByTestId('track-total').filter({ hasText: /^2 tracks$/ }).waitFor()
   // A header click sorts ascending; a second reverses it.
   const list = window.getByTestId('track-list')
   const title_header = list.getByRole('columnheader').filter({ has: window.getByRole('button', { name: 'Title' }) })
