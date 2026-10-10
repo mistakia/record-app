@@ -49,9 +49,25 @@ describe('library address display', () => {
   })
 
   test('names a library by alias, then name, then discriminator', () => {
-    expect(library_name({ alias: 'Friends', name: 'Mixes', address: MIXES })).toBe('Friends')
-    expect(library_name({ alias: null, name: 'Mixes', address: MIXES })).toBe('Mixes')
-    expect(library_name({ alias: null, name: null, address: MIXES })).toBe('mixes')
+    expect(library_name(library({ alias: 'Friends', name: 'Mixes', address: MIXES }))).toBe('Friends')
+    expect(library_name(library({ alias: null, name: 'Mixes', address: MIXES }))).toBe('Mixes')
+    expect(library_name(library({ alias: null, name: null, address: MIXES }))).toBe('mixes')
+  })
+
+  test('names the unnamed default own library My library', () => {
+    const own = { address: '/record/zabc/record', is_own: true }
+    expect(library_name(library(own))).toBe('My library')
+    expect(library_name(library({ ...own, name: 'Crates' }))).toBe('Crates')
+    expect(library_name(library({ ...own, alias: 'Home' }))).toBe('Home')
+    // Only the own default recordstore: not another identity's, not another own one.
+    expect(library_name(library({ address: '/record/zabc/record' }))).toBe('record')
+    expect(library_name(library({ address: MIXES, is_own: true }))).toBe('mixes')
+  })
+
+  test('names the own listens library Play history', () => {
+    expect(library_name(library({ address: '/record/zabc/listens', is_own: true, library_type: 'listens' }))).toBe('Play history')
+    expect(library_name(library({ address: '/record/zabc/listens', is_own: true, library_type: 'listens', name: 'Plays' }))).toBe('Play history')
+    expect(library_name(library({ address: '/record/zabc/listens', library_type: 'listens' }))).toBe('listens')
   })
 })
 

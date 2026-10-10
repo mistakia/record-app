@@ -36,14 +36,21 @@ export const short_address = (address: string): string => {
   return parts === null ? address : `${parts.discriminator} · …${parts.fingerprint}`
 }
 
-// The alias, then the About name; a library with neither goes by its
-// discriminator rather than its whole address.
-export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address'>): string =>
-  library.alias ?? library.name ?? parse_library_address(library.address)?.discriminator ?? library.address
+// The discriminator record-node gives every identity's default own
+// recordstore (record-node src/peer/ownership.ts, OWN_LIBRARY_NAME). The
+// renderer cannot import node code, so it is repeated here.
+export const OWN_LIBRARY_DISCRIMINATOR = 'record'
 
-// An own library's name, where the listens library goes by Play history.
-export const own_library_name = (library: Pick<Library, 'alias' | 'name' | 'address' | 'library_type'>): string =>
-  library.library_type === 'listens' ? 'Play history' : library_name(library)
+// The alias, then the About name; a library with neither goes by its
+// discriminator rather than its whole address. Two own libraries go by a
+// word instead: the listens library is always Play history, and the default
+// own recordstore, unnamed, is My library rather than `record`.
+export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address' | 'is_own' | 'library_type'>): string => {
+  if (library.is_own && library.library_type === 'listens') return 'Play history'
+  const discriminator = parse_library_address(library.address)?.discriminator
+  const fallback = library.is_own && library.library_type === 'recordstore' && discriminator === OWN_LIBRARY_DISCRIMINATOR ? 'My library' : discriminator
+  return library.alias ?? library.name ?? fallback ?? library.address
+}
 
 // The first active own recordstore: chapter 7 v1.1 lists every own library,
 // the listens library and retired ones included.

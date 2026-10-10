@@ -17,7 +17,7 @@ import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
 import { mode_label } from '#renderer/components/library/replication-policy.tsx'
-import { current_progress, is_replicating, library_category, library_name, own_libraries_of, own_library_name, RECENT_LINK_MS, type LibraryCategory } from '#renderer/components/library/library-category.ts'
+import { current_progress, is_replicating, library_category, library_name, own_libraries_of, RECENT_LINK_MS, type LibraryCategory } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -105,11 +105,11 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
   )
 }
 
-// An own library: the listens library goes by Play history and opens
+// An own library: the listens library (Play history, see library_name) opens
 // Recently played; the others open their tracks, whose tabs manage them.
 const OwnRow = ({ library, show_address }: { library: Library, show_address: boolean }) => {
   const listens = library.library_type === 'listens'
-  const name = own_library_name(library)
+  const name = library_name(library)
   return (
     <tr data-testid='own-library-row' data-retired={library.is_retired} data-type={library.library_type}>
       <td>
