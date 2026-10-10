@@ -99,7 +99,7 @@ export const Tracks = () => {
   const shuffle_play = () => {
     toggle_shuffle_mode()
     const items = current?.items ?? []
-    if (!shuffle && items.length > 0) play_tracks({ tracks: items, start_index: Math.floor(Math.random() * items.length), library_address: listen_library })
+    if (!shuffle && items.length > 0) play_tracks({ tracks: items, start_index: Math.floor(Math.random() * items.length), library_address: listen_library, scope: library_address })
   }
 
   return (

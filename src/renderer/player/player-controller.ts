@@ -20,6 +20,7 @@ import {
   set_repeat,
   step,
   toggle_shuffle,
+  track_display,
   type QueueEntry,
   type QueueState,
   type RepeatMode
@@ -27,6 +28,7 @@ import {
 import type { Track } from '#renderer/api/types.ts'
 import type { NodeFailure } from '#shared/bridge.ts'
 import { node_api } from '#renderer/store/api.ts'
+import { freshest_cached_track } from '#renderer/store/cached-track.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { read_view_pref, write_view_pref } from '#renderer/prefs/view-prefs.ts'
 import { store } from '#renderer/store/index.ts'
@@ -85,36 +87,24 @@ const remember_tracks = (tracks: Track[]): void => {
   for (const track of tracks) queued_tracks.set(track.id, track)
 }
 
-// The playing track in full: from a cached track page first, which is fresh
-// after a write (a pin, an adopt), else as it was queued; null when neither
-// has it.
+// The playing track in full: from the newest cached track page first, which
+// is fresh after a write (a tag, a pin, an adopt), else as it was queued;
+// null when neither has it.
 export const playing_track = (): Track | null => {
   const entry = current_entry(queue())
   if (entry === null) return null
-  const state = store.getState()
-  for (const args of node_api.util.selectCachedArgsForQuery(state, 'get_tracks')) {
-    const found = node_api.endpoints.get_tracks.select(args)(state).data?.items.find(({ id }) => id === entry.track_id)
-    if (found !== undefined) return found
-  }
-  return queued_tracks.get(entry.track_id) ?? null
+  return freshest_cached_track({ queries: store.getState()[node_api.reducerPath].queries, track_id: entry.track_id, scope: entry.scope ?? '' }) ?? queued_tracks.get(entry.track_id) ?? null
 }
 
 const to_engine_track = (entry: QueueEntry): EngineTrack => ({ key: entry.queue_id, cid: entry.audio_cid })
 
-const to_entry = ({ track, library_address }: { track: Track, library_address: string }): QueueEntry => ({
+const to_entry = ({ track, library_address, scope }: { track: Track, library_address: string, scope: string }): QueueEntry => ({
   queue_id: crypto.randomUUID(),
   track_id: track.id,
   audio_cid: track.audio_cid,
-  title: track.title ?? null,
-  artist: track.artist ?? null,
-  duration_seconds: track.duration_seconds ?? null,
   library_address,
-  content_cid: track.content_cid,
-  codec: track.codec ?? null,
-  bitrate: track.bitrate ?? null,
-  artwork: track.artwork?.[0] ?? null,
-  tags: [...new Set(track.tags.map(({ tag }) => tag))],
-  have_track: track.have_track
+  scope,
+  ...track_display(track)
 })
 
 // Tells the engine what follows the current entry, for the gapless splice.
@@ -182,21 +172,22 @@ setInterval(() => {
   if (writes_allowed && recorder.pending_count() > 0) recorder.flush_pending()
 }, LISTEN_FLUSH_INTERVAL_MS)
 
-export const play_tracks = ({ tracks, start_index, library_address, source = null }: {
+export const play_tracks = ({ tracks, start_index, library_address, scope, source = null }: {
   tracks: Track[]
   start_index: number
   library_address: string
+  scope: string
   source?: PlaySource | null
 }): void => {
-  const entries = tracks.map((track) => to_entry({ track, library_address }))
+  const entries = tracks.map((track) => to_entry({ track, library_address, scope }))
   store.dispatch(queue_changed(set_entries({ queue: queue(), entries, start_index })))
   remember_tracks(tracks)
   store.dispatch(source_changed(source))
   play_current()
 }
 
-export const add_to_queue = ({ tracks, at, library_address }: { tracks: Track[], at: 'next' | 'end', library_address: string }): void => {
-  commit_queue(add_entries({ queue: queue(), entries: tracks.map((track) => to_entry({ track, library_address })), at }))
+export const add_to_queue = ({ tracks, at, library_address, scope }: { tracks: Track[], at: 'next' | 'end', library_address: string, scope: string }): void => {
+  commit_queue(add_entries({ queue: queue(), entries: tracks.map((track) => to_entry({ track, library_address, scope })), at }))
   remember_tracks(tracks)
 }
 

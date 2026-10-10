@@ -33,6 +33,10 @@ export interface SnapshotQueueEntry {
   duration_seconds: number | null
   // The library the track was played from, which a listen records.
   library_address: string
+  // The library view it was queued from, '' for every library: the node
+  // describes a track (its tags above all) per view, so only a track page of
+  // this view refreshes the entry. Absent in an older snapshot, read as ''.
+  scope?: string
   // What the player bar shows beyond title and artist; absent in a
   // snapshot written before they were kept.
   content_cid?: string
