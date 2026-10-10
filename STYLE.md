@@ -354,7 +354,7 @@ A page's main action is a button, never a bracketed word on a frame stroke, whic
 
 Libraries are grouped by the relationship, never labelled with the spec's category terms. Each group is a full-width framed section with its count on the stroke:
 
-- **YOURS** — own libraries. A row is the 20px avatar, the name, and the track count; it opens the library. The listens library goes by `Play history` here and wherever own libraries are listed (Identity too), with `Where your plays are recorded.` under it, and opens Recently Played. A retired library carries a tertiary `retired` after its name.
+- **YOURS** — own libraries. A row is the 20px avatar, the name, and the track count; it opens the library. The listens library goes by `Play history` here and wherever its name shows (Identity too), with `Where your plays are recorded.` under it, and opens Recently Played. The default own library (discriminator `record`) with no alias or About name goes by `My library` here and wherever its name shows: the sidebar, the page head, write targets, Playing from, toasts, the details pane. An alias or About name still wins, and its short address stays `record · …8MnGCA`. A retired library carries a tertiary `retired` after its name.
 - **SHARED WITH YOU** — libraries this identity holds a capability in, each with a `You may: …` line; absent when empty.
 - **FOLLOWING** — linked libraries; empty, it says how to follow one, with the action.
 - **DISCOVERED** — known only from peer discovery; absent when empty.
@@ -393,7 +393,7 @@ Picker (files and folders), drop zone, and `Paste URL` as in legacy, plus the wr
 
 ### Library address
 
-A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. Hovering it shows the action: a small paper tip under the box, `copy` at 10px in secondary ink, over what is below so nothing beside the address moves or is covered; it reads `copied` for a moment after a click. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`.
+A library address (`/record/<manifest CID>/<discriminator>`) is never shown whole. Every manifest CID opens with the same `zBwWX`, so the visible part is the discriminator and the CID's last six characters: `mixes · …8MnGCA`, 11px tertiary in a `--color-border-light` box. The whole address is its tooltip, and a click copies it. Hovering it shows the action: a small paper tip under the box, `copy` at 10px in secondary ink, over what is below so nothing beside the address moves or is covered; it reads `copied` for a moment after a click. A library with no alias or About name goes by its discriminator, and its address then shows only the tail, `…8MnGCA`; the user's default own library goes by `My library` instead (§ Libraries, YOURS), so its address shows whole.
 
 ### Connection status
 

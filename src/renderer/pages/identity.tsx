@@ -12,7 +12,7 @@ import { IndexedPage, type IndexedSection } from '#renderer/components/common/in
 import { ExportDialog } from '#renderer/components/identity/export-dialog.tsx'
 import { ImportForm } from '#renderer/components/identity/import-form.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
-import { own_libraries_of, own_library_address, own_library_name } from '#renderer/components/library/library-category.ts'
+import { own_libraries_of, library_name, own_library_address } from '#renderer/components/library/library-category.ts'
 import { key_handle } from '#renderer/identity/default-name.ts'
 import { read_last_export, truncate_key } from '#renderer/identity/identity.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -81,7 +81,7 @@ export const Identity = () => {
               ? 'None'
               : own.map((library) => (
                 <span key={library.id} className={styles.library} data-testid='identity-own-library'>
-                  {own_library_name(library)}
+                  {library_name(library)}
                   {library.is_retired && ' (retired)'}
                 </span>
               ))}
