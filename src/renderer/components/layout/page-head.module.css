@@ -116,7 +116,7 @@
 }
 
 .pulse {
-  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  animation: global(skeleton-pulse) 1.4s ease-in-out infinite;
 }
 
 /* The page's main action, filled by the page; empty, it takes no room. */

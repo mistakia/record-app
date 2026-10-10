@@ -1,5 +1,7 @@
 /* Shared animations (STYLE.md § Screen effects, § Progressive Disclosure).
-   prefers-reduced-motion freezes every one of them in base.css. */
+   prefers-reduced-motion freezes every one of them in base.css. A module
+   names one as `global(spin)`: CSS Modules rename a bare name, which then
+   matches nothing (test/unit/style-tokens.test.ts). */
 
 /* Tiny, irregular brightness dips on the scanline mesh. */
 @keyframes crt-flicker {

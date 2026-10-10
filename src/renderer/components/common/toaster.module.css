@@ -79,7 +79,7 @@
   height: 1px;
   background: var(--color-text-tertiary);
   transform-origin: left;
-  animation-name: deplete;
+  animation-name: global(deplete);
   animation-timing-function: linear;
   animation-fill-mode: forwards;
 }

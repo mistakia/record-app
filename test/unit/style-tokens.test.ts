@@ -48,3 +48,39 @@ describe('module CSS reads role tokens only', () => {
     expect(found).toEqual([])
   })
 })
+
+// CSS Modules rename every animation a module names, so a module that names
+// a keyframe from styles/keyframes.css bare animates nothing: the spinner
+// stood still. A shared keyframe is named `global(spin)`.
+export const find_bare_shared_animations = (css: string, shared: readonly string[]): string[] => {
+  const local = new Set([...css.matchAll(/@keyframes\s+([\w-]+)/g)].map((match) => match[1]))
+  const bare: string[] = []
+  strip_comments(css).split('\n').forEach((line, index) => {
+    const value = /\banimation(?:-name)?\s*:([^;]*)/.exec(line)?.[1]
+    if (value === undefined) return
+    for (const name of shared) {
+      if (!local.has(name) && new RegExp(`(^|[\\s,])${name}(?![\\w-])`).test(value)) bare.push(`${index + 1}: ${name}: ${line.trim()}`)
+    }
+  })
+  return bare
+}
+
+describe('module CSS names shared keyframes as global', () => {
+  test('flags a bare shared keyframe and passes global() or a local one', () => {
+    expect(find_bare_shared_animations('a { animation: spin 1s linear infinite; }', ['spin'])).toHaveLength(1)
+    expect(find_bare_shared_animations('a { animation-name: spin; }', ['spin'])).toHaveLength(1)
+    expect(find_bare_shared_animations('a { animation: global(spin) 1s linear infinite; }', ['spin'])).toEqual([])
+    expect(find_bare_shared_animations('a { animation: spin 1s; } @keyframes spin { to { opacity: 0; } }', ['spin'])).toEqual([])
+    expect(find_bare_shared_animations('a { animation: spin-fast 1s; }', ['spin'])).toEqual([])
+  })
+
+  test('no .module.css file under src/renderer names one bare', async () => {
+    const shared = [...(await readFile('src/renderer/styles/keyframes.css', 'utf8')).matchAll(/@keyframes\s+([\w-]+)/g)].map((match) => match[1] ?? '')
+    expect(shared.length).toBeGreaterThan(0)
+    const found: string[] = []
+    for await (const path of new Glob('src/renderer/**/*.module.css').scan('.')) {
+      for (const bare of find_bare_shared_animations(await readFile(path, 'utf8'), shared)) found.push(`${path}:${bare}`)
+    }
+    expect(found).toEqual([])
+  })
+})

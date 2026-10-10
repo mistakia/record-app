@@ -5,7 +5,7 @@
 .bar {
   flex: none;
   height: var(--player-height);
-  animation: slide-up 0.28s var(--ease-pane);
+  animation: global(slide-up) 0.28s var(--ease-pane);
 }
 
 .inner {
@@ -208,7 +208,7 @@
   border: 1px solid currentcolor;
   border-right-color: transparent;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: global(spin) 0.8s linear infinite;
 }
 
 .timeline {
