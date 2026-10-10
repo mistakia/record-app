@@ -3,7 +3,7 @@
 // small paper tip with its label and, when a key also reaches it, the key:
 // on hover after a short wait (none when a tip was just up), and at once on
 // keyboard focus. A press, a key, a scroll, leaving the window, or the
-// control leaving the page hides it. The tip is visual only; the control's
+// control leaving the page hides it; none shows while a button is held. The tip is visual only; the control's
 // aria-label stays its name.
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -18,6 +18,13 @@ interface Shown { anchor: HTMLElement, label: string, keys: string | null }
 const tipped = (target: EventTarget | null): HTMLElement | null =>
   target instanceof Element ? target.closest<HTMLElement>('[data-tip]') : null
 
+// A scroll this soon after focus is the focus bringing its control into
+// view, so the tip moves with it rather than going.
+const FOCUS_SCROLL_MS = 200
+
+const same = (a: Shown | null, b: Shown): boolean =>
+  a !== null && a.anchor === b.anchor && a.label === b.label && a.keys === b.keys
+
 const read = (anchor: HTMLElement): Shown => {
   const hotkey = anchor.dataset.tipHotkey as HotkeyAction | undefined
   return {
@@ -30,6 +37,8 @@ const read = (anchor: HTMLElement): Shown => {
 export const TooltipLayer = () => {
   const [shown, set_shown] = useState<Shown | null>(null)
   const [visible, set_visible] = useState(false)
+  // Bumped to place the tip again where its control now is.
+  const [placed, set_placed] = useState(0)
   const tip = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -40,18 +49,26 @@ export const TooltipLayer = () => {
     let pressed: HTMLElement | null = null
     let timer: ReturnType<typeof setTimeout> | undefined
     let warm_until = 0
+    let focused_at = -Infinity
+
+    // Only a change to what the tip says renders it again; the page mutates
+    // all the time (the elapsed time, every second).
+    const refresh = (anchor: HTMLElement): void => {
+      const next = read(anchor)
+      set_shown((current) => same(current, next) ? current : next)
+    }
 
     const observer = new MutationObserver(() => {
       if (showing === null) return
       if (!showing.isConnected || showing.dataset.tip === undefined) hide({ warm: false })
-      else set_shown(read(showing))
+      else refresh(showing)
     })
 
     const show = (anchor: HTMLElement): void => {
       clearTimeout(timer)
       if (!anchor.isConnected || anchor.dataset.tip === undefined || anchor.dataset.tip === '') return
       showing = anchor
-      set_shown(read(anchor))
+      refresh(anchor)
       set_visible(true)
       observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-tip', 'data-tip-hotkey'] })
     }
@@ -72,7 +89,8 @@ export const TooltipLayer = () => {
       hide({ warm: true })
       hovered = anchor
       pressed = null
-      if (anchor === null) return
+      // A drag, a selection, or a slider being moved: no tips on the way.
+      if (anchor === null || event.buttons !== 0) return
       const delay = was_showing ? 0 : show_delay({ now: performance.now(), warm_until })
       if (delay === 0) show(anchor)
       else timer = setTimeout(() => { if (hovered === anchor && pressed !== anchor) show(anchor) }, delay)
@@ -88,12 +106,19 @@ export const TooltipLayer = () => {
     }
     const on_focusin = (event: FocusEvent): void => {
       const anchor = tipped(event.target)
-      if (anchor !== null && event.target instanceof Element && event.target.matches(':focus-visible')) show(anchor)
+      if (anchor !== null && event.target instanceof Element && event.target.matches(':focus-visible')) {
+        focused_at = performance.now()
+        show(anchor)
+      }
     }
     const on_focusout = (event: FocusEvent): void => {
       if (showing !== null && showing !== hovered && event.target instanceof Node && showing.contains(event.target)) hide({ warm: false })
     }
     const dismiss = (): void => { hide({ warm: false }) }
+    const on_scroll = (): void => {
+      if (showing !== null && performance.now() - focused_at < FOCUS_SCROLL_MS) set_placed((count) => count + 1)
+      else dismiss()
+    }
     const on_blur = (): void => {
       hovered = null
       hide({ warm: false })
@@ -105,7 +130,7 @@ export const TooltipLayer = () => {
     document.addEventListener('focusin', on_focusin)
     document.addEventListener('focusout', on_focusout)
     document.addEventListener('keydown', dismiss, true)
-    document.addEventListener('scroll', dismiss, true)
+    document.addEventListener('scroll', on_scroll, true)
     window.addEventListener('blur', on_blur)
     return () => {
       clearTimeout(timer)
@@ -116,7 +141,7 @@ export const TooltipLayer = () => {
       document.removeEventListener('focusin', on_focusin)
       document.removeEventListener('focusout', on_focusout)
       document.removeEventListener('keydown', dismiss, true)
-      document.removeEventListener('scroll', dismiss, true)
+      document.removeEventListener('scroll', on_scroll, true)
       window.removeEventListener('blur', on_blur)
     }
   }, [])
@@ -132,7 +157,7 @@ export const TooltipLayer = () => {
       viewport: { width: window.innerWidth, height: window.innerHeight }
     })
     element.style.transform = `translate(${left}px, ${top}px)`
-  }, [shown, visible])
+  }, [shown, visible, placed])
 
   return (
     <div ref={tip} className={styles.tip} data-visible={visible} data-testid='tooltip' aria-hidden='true'>

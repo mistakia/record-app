@@ -19,17 +19,25 @@ export interface Box { left: number, top: number, width: number, height: number 
 const GAP = 4
 const MARGIN = 4
 
-// Under the control, centred on it; above it when below would leave the
-// window; held inside the window sideways.
+// Centred on the control, under it, or above it when the control sits in
+// the bottom quarter of the window (the player bar), so a tip never covers
+// the control's own neighbours below the fold; on the other side when the
+// preferred one would leave the window; held inside the window sideways.
+export const LOW_FRACTION = 0.75
+
 export const place_tip = ({ anchor, tip, viewport }: {
   anchor: Box
   tip: { width: number, height: number }
   viewport: { width: number, height: number }
 }): { left: number, top: number, side: 'below' | 'above' } => {
   const below = anchor.top + anchor.height + GAP
-  const fits_below = below + tip.height <= viewport.height - MARGIN
   const above = anchor.top - GAP - tip.height
-  const side = fits_below || above < MARGIN ? 'below' : 'above'
+  const fits_below = below + tip.height <= viewport.height - MARGIN
+  const fits_above = above >= MARGIN
+  const prefers_above = anchor.top + anchor.height / 2 > viewport.height * LOW_FRACTION
+  const side = prefers_above
+    ? fits_above || !fits_below ? 'above' : 'below'
+    : fits_below || !fits_above ? 'below' : 'above'
   const centred = anchor.left + anchor.width / 2 - tip.width / 2
   const left = Math.max(MARGIN, Math.min(centred, viewport.width - MARGIN - tip.width))
   return { left: Math.round(left), top: Math.round(side === 'below' ? below : above), side }

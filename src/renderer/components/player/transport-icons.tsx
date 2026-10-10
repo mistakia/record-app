@@ -48,8 +48,8 @@ export const SpeakerIcon = ({ muted }: { muted: boolean }) => (
 // Pause: two solid bars, drawn because the face's ▮▮ is squat, no taller
 // than ▶ and wider. Filled rather than stroked, to weigh what ▶ weighs, a
 // little taller than it, and boxed tight to the bars so it centres where ▶
-// does. In CSS pixels: bar and gap stay on half pixels, crisp at 2x.
-export const PauseIcon = ({ height = 10, bar = 2.5, gap = 2 }: { height?: number, bar?: number, gap?: number }) => {
+// does. In whole CSS pixels, so the bars are crisp at 1x as at 2x.
+export const PauseIcon = ({ height = 10, bar = 3, gap = 2 }: { height?: number, bar?: number, gap?: number }) => {
   const width = bar * 2 + gap
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill='currentColor' aria-hidden='true'>

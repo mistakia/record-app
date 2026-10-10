@@ -22,6 +22,12 @@ describe('tooltip', () => {
       .toEqual({ left: 70, top: 748, side: 'above' })
   })
 
+  test('opens above a control in the bottom quarter of the window, the player bar', () => {
+    expect(place_tip({ anchor: { left: 100, top: 700, width: 20, height: 20 }, tip: tip_size, viewport }))
+      .toEqual({ left: 70, top: 678, side: 'above' })
+    expect(place_tip({ anchor: { left: 100, top: 560, width: 20, height: 20 }, tip: tip_size, viewport }).side).toBe('below')
+  })
+
   test('stays below when neither side fits, rather than leave the top', () => {
     expect(place_tip({ anchor: { left: 100, top: 2, width: 20, height: 20 }, tip: tip_size, viewport: { width: 1000, height: 30 } }).side).toBe('below')
   })
