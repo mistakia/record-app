@@ -7,6 +7,7 @@ import { app, BrowserWindow, powerMonitor, session } from 'electron'
 
 import { IPC_CHANNELS } from '#shared/bridge.ts'
 import { install_app_menu } from './app-menu.ts'
+import { BACKGROUND, enter_background_mode } from './background.ts'
 import { APP_ORIGIN, register_app_scheme, serve_app_files } from './app-protocol.ts'
 import { open_connection_store } from './connection-store.ts'
 import { register_ipc } from './ipc.ts'
@@ -142,6 +143,8 @@ const start = async (): Promise<void> => {
   })
 }
 
+enter_background_mode()
+
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
@@ -149,7 +152,7 @@ if (!app.requestSingleInstanceLock()) {
     const [window] = BrowserWindow.getAllWindows()
     if (window === undefined) return
     if (window.isMinimized()) window.restore()
-    window.focus()
+    if (!BACKGROUND) window.focus()
   })
   register_app_scheme()
   app.on('web-contents-created', (_event, contents) => { guard_web_contents(contents) })
