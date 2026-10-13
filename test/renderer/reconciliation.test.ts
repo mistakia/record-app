@@ -275,6 +275,47 @@ describe('reconcile and the write gate', () => {
     subscription.unsubscribe()
   })
 
+  test('a surface that failed while the node was unreachable refetches in the first attempt, so no retry refetches everything', async () => {
+    const page = track_page_args({ library_address: '/a', page: 0 })
+    const respond = (request: NodeRequest): NodeResult<unknown> => ({
+      ok: true,
+      data: request.path_template === '/libraries' ? [library('/a', ['h1'])] : request.path_template === '/identity/meta-log' ? { address: '/i', heads: ['i1'], items: [], total: 0 } : { items: [], total: 0 }
+    })
+    const sent: string[] = []
+    const run = async (connection_id: number, waits: number[]) => {
+      store.dispatch(events_state_changed(open_state(connection_id)))
+      const reconciling = store.dispatch(reconcile({ connection_id, wait: async (ms) => { if (ms > 0) waits.push(ms); await settle() } }))
+      const progress = { done: false }
+      reconciling.then(() => { progress.done = true }).catch(() => { progress.done = true })
+      while (!progress.done) {
+        await settle()
+        for (const { request, resolve } of requests.splice(0)) {
+          sent.push(request.path_template)
+          resolve(respond(request))
+        }
+      }
+    }
+    const subscriptions = [store.dispatch(node_api.endpoints.get_libraries.initiate()), store.dispatch(node_api.endpoints.get_tracks.initiate(page))]
+    await settle()
+    for (const { request, resolve } of requests.splice(0)) resolve(respond(request))
+    // The first connection records the head baseline.
+    await run(50, [])
+    // The node stalls: a refetch of the page times out.
+    const timed_out = store.dispatch(node_api.endpoints.get_tracks.initiate(page, { forceRefetch: true, subscribe: false }))
+    await settle()
+    for (const { resolve } of requests.splice(0)) resolve({ ok: false, failure: { kind: 'network', message: 'timed out', code: 'ETIMEDOUT' } })
+    await timed_out
+    expect(node_api.endpoints.get_tracks.select(page)(store.getState()).isError).toBe(true)
+
+    sent.length = 0
+    const waits: number[] = []
+    await run(51, waits)
+    expect(store.getState().connection.freshness).toBe('fresh')
+    expect(waits).toEqual([])
+    expect(sent.sort()).toEqual(['/identity/meta-log', '/libraries', '/tracks'])
+    for (const subscription of subscriptions) subscription.unsubscribe()
+  })
+
   test('retries stop once the connection drops', async () => {
     const subscription = store.dispatch(node_api.endpoints.get_libraries.initiate())
     await settle()
