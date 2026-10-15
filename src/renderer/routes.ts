@@ -71,7 +71,7 @@ export const settings_route = (section?: SettingsSection): string =>
 // The path alone, for matching a route that carries a query.
 export const route_path = (route: string): string => route.split('?')[0] ?? route
 
-// A tag chip toggles the tag in the filter (all must match).
+// A label toggles in the filter (label-facets.ts says how labels combine).
 export const with_tag_toggled = (view: TrackView, tag: string): TrackView => ({
   ...view,
   filters: { ...view.filters, tags: view.filters.tags.includes(tag) ? view.filters.tags.filter((item) => item !== tag) : [...view.filters.tags, tag] }

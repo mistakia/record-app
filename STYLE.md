@@ -296,14 +296,14 @@ Every shortcut is in the `HOTKEYS` table, with where it is live, and the keys af
 
 - **Header row** — a borderless search field filling the left (48px tall, `/` hint when empty, a `×` clear); on the right the shuffle toggle. Adding music is the page's main action (§ Main action).
 - **Recent searches** — focusing the empty search (or emptying it) drops a paper overlay directly under it: `RECENT` in 10px uppercase tertiary, 13px rows, a `×` per row, `clear` at the foot. `↑`/`↓` highlight, `Enter` or a click runs one; typing closes it. A search is kept when its results are acted on or the field is left with text: newest first, case-insensitively unique, 20 at most, one list for every view, on this machine only, search text without tags. The clear controls never take the focus, so a cleared search is not kept.
-- **Tag strip** — the list's tags as chips with counts, A to Z, one line with a right-edge fade into the paper; scrolls horizontally. Clicking toggles a tag in the filter (AND).
+- **Facet sidebar** — a 200px column left of the list, scrolling on its own: the library's labels grouped by prefix (`tier/…`, `origin/…`), each group a foldable full-width framed section titled by the prefix with its label count; the exporter's facets first, other prefixes A to Z, unprefixed labels last under `LABELS`. A group of 12 or fewer opens unfolded the first time. Rows are 22px, 11px secondary ink, the value without its prefix and the count right-aligned in tertiary; a selected row takes the active-chip accent border and wash. Clicking toggles a label in the filter: any label within a group, every group, and each unprefixed label on its own. Counts are the library's, not narrowed by the filter.
 - **Column header** — 10px uppercase tertiary: `▶ ☆ TITLE ARTIST ALBUM +TAG TAGS KBPS TIME FMT LISTENS`. Sortable headers show `▴` or `▾` on the active sort and turn accent on hover. Filter, search, and sort state live in the route, so back and forward restore them.
 - **Rows** — 36px, 13px mono, virtualized, `--color-border-light` dividers, no zebra.
   - Index column (4ch): the row number in tertiary at rest; `▶` on hover or cursor; the drawn pause bars or a spinner on the playing row, in vermilion.
   - `☆` adopt: dim at rest, brightens on hover; `★` in `--color-selected` when an own library holds the track.
   - Playing row: title in `--color-accent`. Cursor row: the cursor wash. Selected rows: `--color-selected-bg` with `--color-selected` ink. A row whose menu is open keeps the hover wash.
   - Pinned: a tertiary `◆` after the title.
-- The same list renders Tracks, a library's tracks, and Recently Played (Recently Played has no tag strip or search; rows keep every action).
+- The same list renders Tracks, a library's tracks, and Recently Played (Recently Played has no facet sidebar or search; rows keep every action).
 
 ### Tag chips
 
@@ -362,7 +362,7 @@ Libraries are grouped by the relationship, never labelled with the spec's catego
 
 Shared, following, and discovered rows carry replication state, mode with `change`, peers, one `Pause` or `Resume` for replication (whichever applies), unlink, and `…`. Every group previews five rows and ends in `show N more`; `show addresses` under the groups adds each row's short address. Where a category is named in a sentence it reads `yours`, `shared with you`, `followed`, `discovered`: the inspector says `in 2 of yours, 1 followed`.
 
-An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Writers** (`WHO MAY WRITE`: one line on what it is for, `The people you let add tracks and tags to this library. Revoking stops their new writes, not past ones.`, then the capabilities it has issued; `ADD WRITER` in the head opens the Add a writer flow; read-only once retired). The tab is named for what it holds, not the spec's term, so its purpose reads without the help. Retiring lands on Writers. The identity's own profile is also edited on Identity.
+An own library is managed beside its tracks, on its tabs: **Profile** (the about editor, then `COLLECTION MAP`: the library's `view/` labels as cards, name over `N tracks` in tertiary, most tracks first, each opening the track list filtered to it; then a folded `RETIRE` section with the consequence in words and a danger button that confirms) and **Writers** (`WHO MAY WRITE`: one line on what it is for, `The people you let add tracks and tags to this library. Revoking stops their new writes, not past ones.`, then the capabilities it has issued; `ADD WRITER` in the head opens the Add a writer flow; read-only once retired). The tab is named for what it holds, not the spec's term, so its purpose reads without the help. Retiring lands on Writers. The identity's own profile is also edited on Identity.
 
 ### Step flows (paper)
 

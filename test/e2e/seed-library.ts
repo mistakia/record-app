@@ -13,6 +13,18 @@ const dist = (path: string) => fileURLToPath(new URL(`../../node_modules/record-
 const ARTISTS = 1200
 const ALBUMS_PER_ARTIST = 6
 const TAGS = ['house', 'techno', 'ambient', 'disco', 'jazz', 'dub', 'electro', 'soul', 'funk', 'garage', 'breaks', 'acid']
+const TIERS = ['personal', 'personal-picks', 'family', 'vacay-catalogue']
+
+// Facet labels shaped like the record-node-library exporter's: a tier and an
+// origin on every track, and playlist and DJ-session labels on some, so the
+// facet sidebar lists about 900 labels.
+const facet_labels = (index: number): string[] => [
+  `tier/${TIERS[index % TIERS.length] as string}`,
+  `origin/family-${index % 14}`,
+  ...(index % 5 === 0 ? [`playlist/show-${index % 300}`] : []),
+  ...(index % 7 === 0 ? [`dj-session/2015-${String(index % 500).padStart(3, '0')}`] : []),
+  ...(index % 11 === 0 ? [`view/cluster-${index % 9}`] : [])
+]
 
 export interface Seeder {
   library_address: string
@@ -68,7 +80,7 @@ export const create_seeder = async (node: TestNode): Promise<Seeder> => {
             },
             audio: { ...content.audio, duration: 120 + (index % 400) }
           },
-          tags: index % 3 === 0 ? [TAGS[index % TAGS.length] as string] : [],
+          tags: [...(index % 3 === 0 ? [TAGS[index % TAGS.length] as string] : []), ...facet_labels(index)],
           timestamp: 1_700_000_000_000 + index
         })
         const entry = target.handle.oplog.entries.get(track.entry_hash)

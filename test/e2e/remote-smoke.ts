@@ -122,13 +122,13 @@ try {
   await nav(window, 'Tracks')
   await settled(window)
 
-  const tag_buttons = window.getByTestId('tag-filter').getByRole('button')
+  const tag_buttons = window.getByTestId('facet-sidebar').locator('button[aria-pressed]')
   if (await tag_buttons.count() > 0) {
     const tag = (await tag_buttons.first().innerText()).replace(/\s+\d+$/, '')
     await tag_buttons.first().click()
     // The tag shows pressed in the same render as the filtered view, so the
     // wait that follows cannot pass on the unfiltered list.
-    await window.getByTestId('tag-filter').locator('[aria-pressed=true]').first().waitFor()
+    await window.getByTestId('facet-sidebar').locator('[aria-pressed=true]').first().waitFor()
     await settled(window)
     console.log(`tag filter "${tag}":`, await window.getByTestId('track-total').textContent())
     await window.getByRole('button', { name: 'Clear filters' }).click()

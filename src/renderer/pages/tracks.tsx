@@ -15,7 +15,7 @@ import { library_name, own_library_address } from '#renderer/components/library/
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import { Inspector } from '#renderer/components/track/inspector.tsx'
 import { use_inspector_fit } from '#renderer/components/track/use-inspector-fit.ts'
-import { TagFilter } from '#renderer/components/track/tag-filter.tsx'
+import { FacetSidebar } from '#renderer/components/track/facet-sidebar.tsx'
 import { SearchField } from '#renderer/components/track/search-field.tsx'
 import { TrackList, TrackListSkeleton, type ListActions } from '#renderer/components/track/track-list.tsx'
 import { use_tag_navigation, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
@@ -141,30 +141,34 @@ export const Tracks = () => {
         )}
         <button type='button' data-variant='glyph' className={styles.shuffle} aria-pressed={shuffle} onClick={shuffle_play}>Shuffle</button>
       </div>
-      <TagFilter library_address={library_address} selected={filters.tags} on_toggle={(tag) => { go(with_tag_toggled(view, tag)) }} />
-      {error !== undefined && <p className={styles.error}>!! {'message' in error ? error.message : 'The node request failed.'}</p>}
-      {current === undefined && first_page.isFetching && error === undefined
-        ? <TrackListSkeleton />
-        : current !== undefined && total === 0
-          ? filtered
-            ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
-            : can_add
-              ? <EmptyState headline='Empty' detail='No tracks in this view yet. Add some music, or link a library.' action={<button type='button' data-variant='primary' onClick={() => { navigate(ROUTES.import) }}>Add music</button>} />
-              : <EmptyState headline='Empty' detail='No tracks here yet. A library you follow fills in as it replicates.' />
-          : (
-            <div ref={body_ref} className={styles.body}>
-              <TrackList
-                source={{ kind: 'tracks', library_address, filters }}
-                view_key={tracks_route(view)}
-                total={total}
-                busy={first_page.isFetching}
-                sort={{ sort: filters.sort, order: filters.order, on_sort: (sort) => { go(with_sort(view, sort)) } }}
-                actions={actions}
-                beside_pane={inspecting}
-              />
-              {inspecting && <Inspector source={{ kind: 'tracks', library_address, filters }} on_close={() => { set_inspecting(false) }} />}
-            </div>
-            )}
+      <div className={styles.main}>
+        <FacetSidebar library_address={library_address} selected={filters.tags} on_toggle={(tag) => { go(with_tag_toggled(view, tag)) }} />
+        <div className={styles.content}>
+          {error !== undefined && <p className={styles.error}>!! {'message' in error ? error.message : 'The node request failed.'}</p>}
+          {current === undefined && first_page.isFetching && error === undefined
+            ? <TrackListSkeleton />
+            : current !== undefined && total === 0
+              ? filtered
+                ? <EmptyState headline='No match' detail='No track in this view matches the search and tags.' action={<button type='button' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>} />
+                : can_add
+                  ? <EmptyState headline='Empty' detail='No tracks in this view yet. Add some music, or link a library.' action={<button type='button' data-variant='primary' onClick={() => { navigate(ROUTES.import) }}>Add music</button>} />
+                  : <EmptyState headline='Empty' detail='No tracks here yet. A library you follow fills in as it replicates.' />
+              : (
+                <div ref={body_ref} className={styles.body}>
+                  <TrackList
+                    source={{ kind: 'tracks', library_address, filters }}
+                    view_key={tracks_route(view)}
+                    total={total}
+                    busy={first_page.isFetching}
+                    sort={{ sort: filters.sort, order: filters.order, on_sort: (sort) => { go(with_sort(view, sort)) } }}
+                    actions={actions}
+                    beside_pane={inspecting}
+                  />
+                  {inspecting && <Inspector source={{ kind: 'tracks', library_address, filters }} on_close={() => { set_inspecting(false) }} />}
+                </div>
+                )}
+        </div>
+      </div>
       {dialogs}
     </section>
   )

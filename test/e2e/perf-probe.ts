@@ -274,6 +274,29 @@ const run_app = async (app_root: string, report: Record<string, unknown>): Promi
   await window.getByLabel('Clear search').click().catch(() => {})
   await window.waitForTimeout(1500)
 
+  // The facet sidebar: a label toggled on and off, then a second facet
+  // narrowing the first, each timed from the click to the filtered rows
+  // (spec §8.11.4, a tag filter toggle within 150 ms).
+  await measure(report, window, 'facet_toggle_x4', async () => {
+    const sidebar = window.getByTestId('facet-sidebar')
+    const toggle_times: number[] = []
+    const toggle = async (name: string) => {
+      const total_before = await window.getByTestId('track-total').textContent()
+      const started = performance.now()
+      await sidebar.getByRole('button', { name: new RegExp(`^${name} \\d+$`) }).click()
+      await window.getByTestId('track-total').filter({ hasNotText: total_before ?? '' }).waitFor()
+      await wait_rows(window)
+      toggle_times.push(Math.round(performance.now() - started))
+    }
+    // A facet of more than 12 labels opens folded.
+    await sidebar.getByRole('button', { name: /origin/, expanded: false }).click()
+    await toggle('personal-picks')
+    await toggle('family-3')
+    await toggle('family-3')
+    await toggle('personal-picks')
+    return { toggle_ms: toggle_times }
+  })
+
   await measure(report, window, 'ipc_tracks_page_x5', async () => await window.evaluate(async () => {
     const times: number[] = []
     for (let call = 0; call < 5; call++) {

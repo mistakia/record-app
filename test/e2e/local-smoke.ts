@@ -162,7 +162,7 @@ try {
   if (await editor.getByTestId('write-target').count() > 0) throw new Error('the tag adder names its only target library')
   await editor.getByLabel('New tag').press('Escape')
   await editor.waitFor({ state: 'detached' })
-  await window.getByTestId('tag-filter').getByRole('button', { name: /smoke-tag/ }).click()
+  await window.getByTestId('facet-sidebar').getByRole('button', { name: /smoke-tag/ }).click()
   await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
   step('tag filter "smoke-tag"', await titles(window))
   await window.getByRole('button', { name: 'Clear filters' }).click()
