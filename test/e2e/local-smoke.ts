@@ -206,6 +206,15 @@ try {
   await playing_editor.getByLabel('New tag').press('Escape')
   await window.getByTestId('now-playing').getByText('playing-tag', { exact: true }).waitFor({ timeout: 10_000 })
   step('now playing tags', 'playing-tag shown at once')
+  // Backspace on the empty adder arms the last tag and a second removes it;
+  // the now-playing block drops it once the node has.
+  await window.keyboard.press('t')
+  await playing_editor.getByLabel('New tag').press('Backspace')
+  await playing_editor.getByLabel('New tag').press('Backspace')
+  await playing_editor.locator('li').filter({ hasText: 'playing-tag' }).waitFor({ state: 'detached' })
+  await playing_editor.getByLabel('New tag').press('Escape')
+  await window.getByTestId('now-playing').getByText('playing-tag', { exact: true }).waitFor({ state: 'detached', timeout: 10_000 })
+  step('tag removal', 'Backspace twice removed playing-tag')
 
   // Ingest: main's picker (stubbed in main, as a user's choice), a drop, a URL, and a CID.
   await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Add music' }).click()
