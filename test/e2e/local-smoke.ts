@@ -112,6 +112,27 @@ try {
   if (!await window.getByLabel('Search tracks').evaluate((input) => input === document.activeElement)) throw new Error('Esc left the search before closing its recent searches')
   step('recent searches', 'listed, ran, closed')
   await window.getByTestId('track-total').filter({ hasText: /^2 tracks$/ }).waitFor()
+  // Enter while a search's results load moves into them once they land, and
+  // Esc there clears the search. Main holds the node's track pages until the
+  // list has given way to the skeleton, so Enter meets no list.
+  await app.evaluate(() => {
+    const scope = globalThis as unknown as { release_tracks: () => void }
+    const original = globalThis.fetch
+    const held = new Promise<void>((resolve) => { scope.release_tracks = () => { globalThis.fetch = original; resolve() } })
+    globalThis.fetch = async (input, init) => {
+      if (new URL(input instanceof Request ? input.url : String(input)).pathname.endsWith('/tracks')) await held
+      return await original(input, init)
+    }
+  })
+  await window.getByLabel('Search tracks').fill('Smoke Alpha')
+  await window.getByTestId('track-list').waitFor({ state: 'detached' })
+  await window.keyboard.press('Enter')
+  await app.evaluate(() => { (globalThis as unknown as { release_tracks: () => void }).release_tracks() })
+  await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
+  await window.waitForFunction(() => document.querySelector('[data-testid=track-list]')?.contains(document.activeElement) === true, null, { timeout: 5000 })
+  await window.keyboard.press('Escape')
+  await window.getByTestId('track-total').filter({ hasText: /^2 tracks$/ }).waitFor()
+  step('enter while a search loads', 'focus moved into the results')
   // A header click sorts ascending; a second reverses it.
   const list = window.getByTestId('track-list')
   const title_header = list.getByRole('columnheader').filter({ has: window.getByRole('button', { name: 'Title' }) })

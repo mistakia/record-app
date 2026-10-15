@@ -19,6 +19,7 @@ import { TagFilter } from '#renderer/components/track/tag-filter.tsx'
 import { SearchField } from '#renderer/components/track/search-field.tsx'
 import { TrackList, TrackListSkeleton, type ListActions } from '#renderer/components/track/track-list.tsx'
 import { use_tag_navigation, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
+import { SEARCH_INPUT_ID } from '#renderer/hooks/use-hotkeys.ts'
 import { play_tracks, toggle_shuffle_mode } from '#renderer/player/player-controller.ts'
 import { record_search } from '#renderer/prefs/search-history.ts'
 import { parse_track_view, ROUTES, tracks_route, with_filters_cleared, with_sort, with_tag_toggled, type TrackView } from '#renderer/routes.ts'
@@ -101,6 +102,24 @@ export const Tracks = () => {
   // layers passes through here.
   const actions = remembering_search(row_actions, filters.query)
 
+  // Enter or ↓ in the search moves into its results: typed within the
+  // debounce, the search runs now, and while its results load the focus
+  // waits for the list, taken only if the search still holds it then.
+  const list_wanted = useRef(false)
+  const submit_search = () => {
+    if (search === filters.query && current !== undefined) {
+      list_commands()?.focus()
+      return
+    }
+    if (search !== filters.query) go({ ...view, filters: { ...filters, query: search } }, true)
+    list_wanted.current = true
+  }
+  useEffect(() => {
+    if (!list_wanted.current || current === undefined) return
+    list_wanted.current = false
+    if (document.activeElement?.id === SEARCH_INPUT_ID) list_commands()?.focus()
+  }, [current])
+
   const shuffle_play = () => {
     toggle_shuffle_mode()
     const items = current?.items ?? []
@@ -115,7 +134,7 @@ export const Tracks = () => {
         </PageActions>
       )}
       <div className={styles.toolbar}>
-        <SearchField value={search} on_change={set_search} on_submit={() => { list_commands()?.focus() }} />
+        <SearchField value={search} on_change={(value) => { list_wanted.current = false; set_search(value) }} on_submit={submit_search} />
         <span className={styles.count} data-testid='track-total'>{total} tracks</span>
         {filtered && (
           <button type='button' data-variant='ghost' data-size='small' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
