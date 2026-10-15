@@ -28,6 +28,19 @@
   text-transform: uppercase;
 }
 
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
 .body {
   display: flex;
   flex: 1;

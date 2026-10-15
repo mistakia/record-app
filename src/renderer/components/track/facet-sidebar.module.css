@@ -1,0 +1,54 @@
+.sidebar {
+  flex: none;
+  width: 200px;
+  overflow-y: auto;
+  padding: 0 var(--space-sm) var(--space-lg) var(--space-lg);
+  scrollbar-width: thin;
+}
+
+.labels {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A label row (STYLE.md § Facet sidebar): the value, its count right-aligned. */
+.label {
+  display: flex;
+  width: 100%;
+  height: 22px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: 0 6px;
+  border: 1px solid transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+}
+
+.label:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-accent);
+}
+
+.label[aria-pressed='true'],
+.label[aria-pressed='true']:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-wash);
+  color: var(--color-accent);
+}
+
+.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  flex: none;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}

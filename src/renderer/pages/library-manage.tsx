@@ -1,6 +1,7 @@
 // An own library's Profile and Writers tabs (spec §8.6.1, §8.6.4, §4.8.3),
-// beside its track list: the profile, with retirement at its foot, and who
-// may write to it, the capabilities it has issued. The library is the route's ?library.
+// beside its track list: the profile and collection map, with retirement at
+// its foot, and who may write to it, the capabilities it has issued. The
+// library is the route's ?library.
 
 import { useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router'
@@ -13,6 +14,7 @@ import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
+import { CollectionMap } from '#renderer/components/library/collection-map.tsx'
 import { can_retire, has_profile, library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
 import { issue_route, library_route } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -54,6 +56,9 @@ export const LibraryProfile = () => {
     <section className={styles.page} data-testid='library-profile-tab'>
       <FramedSection title='Profile'>
         <AboutEditor key={library.address} address={library.address} note='How this library introduces itself to the peers who link it.' />
+      </FramedSection>
+      <FramedSection title='Collection map' width='full'>
+        <CollectionMap library_address={library.address} />
       </FramedSection>
       {can_retire(library) && (
         <FramedSection title='Retire' fold_id='library-retire' default_open={false}>

@@ -1,5 +1,5 @@
 // Recently Played (GET /listens): tracks by most recent listen, through the
-// same list as Tracks, with no tag strip or search; rows keep every action.
+// same list as Tracks, with no facet sidebar or search; rows keep every action.
 
 import { useRef, useState } from 'react'
 import { Link } from 'react-router'

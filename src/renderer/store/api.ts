@@ -8,6 +8,7 @@ import { TRACK_PAGE_SIZE, type About, type Capability, type ReplicationMode, typ
 import { select_writes_allowed, type ConnectionState } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
 import { library_ids } from './cache-ids.ts'
+import { label_filter_args } from './label-facets.ts'
 import { compressed_public_key } from '#renderer/identity/identity.ts'
 
 const READ_METHODS = new Set(['get', 'head'])
@@ -42,6 +43,8 @@ export interface GetTracksArgs {
   library_addresses?: string[]
   query?: string
   tags?: string[]
+  // JSON: an array of label groups (label-facets.ts).
+  tag_groups?: string
   sort?: TrackSort
   order?: SortOrder
 }
@@ -58,7 +61,7 @@ export const track_page_args = ({ library_address, page, filters = DEFAULT_TRACK
   limit: TRACK_PAGE_SIZE,
   ...(library_address === '' ? {} : { library_addresses: [library_address] }),
   ...(filters.query.trim() === '' ? {} : { query: filters.query.trim() }),
-  ...(filters.tags.length === 0 ? {} : { tags: [...filters.tags].sort() }),
+  ...label_filter_args(filters.tags),
   ...(filters.sort === 'added_at' ? {} : { sort: filters.sort }),
   ...(filters.order === 'desc' ? {} : { order: filters.order })
 })
@@ -129,8 +132,8 @@ export const node_api = createApi({
       // Per library, so the head-check refetches only what moved (§8.8.5).
       providesTags: (_result, _error, args) => library_ids(args.library_addresses).map((id) => ({ type: 'tracks' as const, id }))
     }),
-    get_tags: build.query<TagCount[], { library_addresses?: string[] }>({
-      query: ({ library_addresses }) => ({ method: 'get', path_template: '/tags', query: { library_addresses } }),
+    get_tags: build.query<TagCount[], { library_addresses?: string[], prefix?: string }>({
+      query: ({ library_addresses, prefix }) => ({ method: 'get', path_template: '/tags', query: { library_addresses, ...(prefix === undefined ? {} : { prefix }) } }),
       providesTags: (_result, _error, { library_addresses }) => library_ids(library_addresses).map((id) => ({ type: 'tags' as const, id }))
     }),
     // A library that never set a profile answers 404: null, not a failure,
