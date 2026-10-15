@@ -67,13 +67,13 @@ const Entry = ({ entry, index, list, offset, on_drag }: {
 
 export const QueuePanel = () => {
   const dispatch = use_app_dispatch()
-  const { player, current } = use_player()
+  const { player, entries, current } = use_player()
   const source = use_app_selector((state) => state.player.source)
   const { queue } = player
   const count = queued_count(queue)
   const upcoming_start = queue.index + 1
-  const queued = queue.entries.slice(upcoming_start, upcoming_start + count)
-  const rest = queue.entries.slice(upcoming_start + count)
+  const queued = entries.slice(upcoming_start, upcoming_start + count)
+  const rest = entries.slice(upcoming_start + count)
   const [dragging, set_dragging] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
