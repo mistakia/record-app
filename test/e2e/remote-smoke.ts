@@ -6,8 +6,8 @@
 // renders at once and turns fresh, and points the app at a closed port to
 // check the unreachable banner. Read-only against the node. Runs under Node:
 //
-//   RECORD_NODE_URL=http://127.0.0.1:8088 RECORD_SMOKE_TITLE=Intro \
-//     RECORD_SMOKE_ARTIST=SebastiAn node test/e2e/remote-smoke.ts
+//   RECORD_NODE_URL=http://127.0.0.1:8088 RECORD_SMOKE_TITLE='European Introduction To Moombahton' \
+//     RECORD_SMOKE_ARTIST=Brodinski node test/e2e/remote-smoke.ts
 //
 // RECORD_SMOKE_EXPECT_LIVE=1 also waits for the track count to change on its
 // own, which needs the node to be ingesting while the smoke runs.
@@ -27,8 +27,8 @@ import { type ElectronApplication, type Page } from 'playwright-core'
 import { assert_quiet, capture, launch_app } from './launch.ts'
 
 const node_url = process.env.RECORD_NODE_URL ?? 'http://127.0.0.1:8088'
-const title = process.env.RECORD_SMOKE_TITLE ?? 'Intro'
-const artist = process.env.RECORD_SMOKE_ARTIST ?? 'SebastiAn'
+const title = process.env.RECORD_SMOKE_TITLE ?? 'European Introduction To Moombahton'
+const artist = process.env.RECORD_SMOKE_ARTIST ?? 'Brodinski'
 const expect_live = process.env.RECORD_SMOKE_EXPECT_LIVE === '1'
 const screenshot_dir = process.env.RECORD_SMOKE_SCREENSHOT_DIR ?? tmpdir()
 const UNREACHABLE_URL = 'http://127.0.0.1:9'
