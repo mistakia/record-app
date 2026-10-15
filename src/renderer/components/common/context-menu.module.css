@@ -41,8 +41,6 @@
 }
 
 .shortcut {
-  border: none;
-  padding: 0;
   color: var(--color-text-tertiary);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
