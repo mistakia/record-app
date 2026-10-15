@@ -1,6 +1,7 @@
 // An own library's Profile and Writers tabs (spec §8.6.1, §8.6.4, §4.8.3),
-// beside its track list: the profile and collection map, with retirement at its foot, and who
-// may write to it, the capabilities it has issued. The library is the route's ?library.
+// beside its track list: the profile and collection map, with retirement at
+// its foot, and who may write to it, the capabilities it has issued. The
+// library is the route's ?library.
 
 import { useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router'

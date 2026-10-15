@@ -14,6 +14,8 @@ const VIEW_PREFIX = 'view/'
 
 export const CollectionMap = ({ library_address }: { library_address: string }) => {
   const views = node_api.endpoints.get_tags.useQuery({ library_addresses: [library_address], prefix: VIEW_PREFIX })
+  if (views.isLoading) return null
+  if (views.isError) return <p className={styles.muted}>!! The node did not answer for this library's views.</p>
   const cards = [...(views.data ?? [])].sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
   if (cards.length === 0) return <p className={styles.muted}>No views yet. A track labelled view/&lt;name&gt; shows here.</p>
   return (

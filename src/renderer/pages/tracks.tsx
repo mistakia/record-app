@@ -79,7 +79,7 @@ export const Tracks = () => {
       subtitle: filters.tags.length === 0 ? null : filters.tags.join(' + '),
       library_address
     },
-    // A chip filters this view by its tag, or opens the library it came from.
+    // A chip toggles its label in this view's filter, or opens the library it came from.
     on_tag_clicked: ({ tag, library_address: tag_library }) => {
       if (library_address === '' || tag_library === library_address) go(with_tag_toggled(view, tag))
       else open_tag({ tag, library_address: tag_library })
@@ -142,7 +142,8 @@ export const Tracks = () => {
         <button type='button' data-variant='glyph' className={styles.shuffle} aria-pressed={shuffle} onClick={shuffle_play}>Shuffle</button>
       </div>
       <div className={styles.main}>
-        <FacetSidebar library_address={library_address} selected={filters.tags} on_toggle={(tag) => { go(with_tag_toggled(view, tag)) }} />
+        {/* The inspector takes the sidebar's room, so the list beside it keeps its width. */}
+        {!inspecting && <FacetSidebar library_address={library_address} selected={filters.tags} on_toggle={(tag) => { go(with_tag_toggled(view, tag)) }} />}
         <div className={styles.content}>
           {error !== undefined && <p className={styles.error}>!! {'message' in error ? error.message : 'The node request failed.'}</p>}
           {current === undefined && first_page.isFetching && error === undefined

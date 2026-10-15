@@ -19,30 +19,37 @@ export const FacetSidebar = ({ library_address, selected, on_toggle }: {
 }) => {
   const tags = node_api.endpoints.get_tags.useQuery(library_address === '' ? {} : { library_addresses: [library_address] })
   const facets = group_facets(tags.data ?? [])
+  // While a library's labels load the column holds its width, so the list
+  // does not jump sideways when they arrive.
+  if (tags.isLoading) return <aside className={styles.sidebar} aria-busy='true' />
   if (facets.length === 0) return null
   return (
     <aside className={styles.sidebar} aria-label='Filter by label' data-testid='facet-sidebar'>
-      {facets.map(({ facet, labels }) => (
-        <FramedSection
-          key={facet ?? ''}
-          title={facet ?? 'Labels'}
-          fold_id={`facet:${facet ?? ''}`}
-          default_open={labels.length <= OPEN_UP_TO}
-          count={labels.length}
-          width='full'
-        >
-          <ul className={styles.labels}>
-            {labels.map(({ tag, count }) => (
-              <li key={tag}>
-                <button type='button' aria-pressed={selected.includes(tag)} className={styles.label} title={tag} onClick={() => { on_toggle(tag) }}>
-                  <span className={styles.value}>{label_value(tag)}</span>{' '}
-                  <span className={styles.count}>{count}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </FramedSection>
-      ))}
+      {facets.map(({ facet, labels }) => {
+        // A folded facet still says when it holds part of the filter.
+        const chosen = labels.filter(({ tag }) => selected.includes(tag)).length
+        return (
+          <FramedSection
+            key={facet ?? ''}
+            title={`${facet ?? 'Labels'}${chosen === 0 ? '' : ` · ${chosen} on`}`}
+            fold_id={`facet:${facet ?? ''}`}
+            default_open={labels.length <= OPEN_UP_TO}
+            count={labels.length}
+            width='full'
+          >
+            <ul className={styles.labels}>
+              {labels.map(({ tag, count }) => (
+                <li key={tag}>
+                  <button type='button' aria-pressed={selected.includes(tag)} aria-label={`${tag} ${count}`} className={styles.label} title={tag} onClick={() => { on_toggle(tag) }}>
+                    <span className={styles.value}>{label_value(tag)}</span>{' '}
+                    <span className={styles.count}>{count}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </FramedSection>
+        )
+      })}
     </aside>
   )
 }

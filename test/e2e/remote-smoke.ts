@@ -130,11 +130,11 @@ try {
     // wait that follows cannot pass on the unfiltered list.
     await window.getByTestId('facet-sidebar').locator('[aria-pressed=true]').first().waitFor()
     await settled(window)
-    console.log(`tag filter "${tag}":`, await window.getByTestId('track-total').textContent())
+    console.log(`label filter "${tag}":`, await window.getByTestId('track-total').textContent())
     await window.getByRole('button', { name: 'Clear filters' }).click()
     await settled(window)
   } else {
-    console.log('tag filter: the node has no tags yet')
+    console.log('label filter: the node has no labels yet')
   }
 
   await window.getByLabel('Search tracks').fill(artist)

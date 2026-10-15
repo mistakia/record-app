@@ -11,11 +11,12 @@ import type { TagCount } from '#renderer/api/types.ts'
 // other prefix A to Z; hand labels come last.
 const FACET_ORDER = ['tier', 'origin', 'listening-era', 'playlist', 'dj-session', 'discovered-via', 'view']
 
+// A facet prefix is a lowercase slug, as the exporter writes them, so a hand
+// label that merely contains a slash (`AC/DC`) stays a hand label.
+const FACET_LABEL = /^([a-z0-9]+(?:-[a-z0-9]+)*)\/./
+
 // The facet a label belongs to, or null for a hand label.
-export const label_facet = (label: string): string | null => {
-  const slash = label.indexOf('/')
-  return slash > 0 ? label.slice(0, slash) : null
-}
+export const label_facet = (label: string): string | null => FACET_LABEL.exec(label)?.[1] ?? null
 
 // The label without its facet prefix, as a facet lists it.
 export const label_value = (label: string): string => {

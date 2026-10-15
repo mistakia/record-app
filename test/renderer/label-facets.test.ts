@@ -9,6 +9,8 @@ describe('label facets', () => {
     expect(label_facet('playlist/a/b')).toBe('playlist')
     expect(label_facet('house')).toBeNull()
     expect(label_facet('/odd')).toBeNull()
+    expect(label_facet('AC/DC')).toBeNull()
+    expect(label_facet('empty/')).toBeNull()
     expect(label_value('playlist/a/b')).toBe('a/b')
     expect(label_value('house')).toBe('house')
   })

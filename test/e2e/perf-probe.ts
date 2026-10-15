@@ -284,16 +284,17 @@ const run_app = async (app_root: string, report: Record<string, unknown>): Promi
       const total_before = await window.getByTestId('track-total').textContent()
       const started = performance.now()
       await sidebar.getByRole('button', { name: new RegExp(`^${name} \\d+$`) }).click()
-      await window.getByTestId('track-total').filter({ hasNotText: total_before ?? '' }).waitFor()
+      await window.getByTestId('track-total').filter({ hasNotText: new RegExp(`^${total_before ?? ''}$`) }).waitFor()
       await wait_rows(window)
       toggle_times.push(Math.round(performance.now() - started))
     }
     // A facet of more than 12 labels opens folded.
     await sidebar.getByRole('button', { name: /origin/, expanded: false }).click()
-    await toggle('personal-picks')
-    await toggle('family-3')
-    await toggle('family-3')
-    await toggle('personal-picks')
+    // Four selections never fetched before, so each times a node query.
+    await toggle('tier/personal-picks')
+    await toggle('origin/family-3')
+    await toggle('origin/family-5')
+    await toggle('tier/family')
     return { toggle_ms: toggle_times }
   })
 

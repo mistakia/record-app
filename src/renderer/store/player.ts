@@ -11,7 +11,7 @@ import { EMPTY_QUEUE, type QueueState } from '#renderer/player/queue-manager.ts'
 export interface PlaySource {
   route: string
   label: string
-  // The active tag filter, if any.
+  // The active label filter, if any.
   subtitle: string | null
   library_address: string
 }

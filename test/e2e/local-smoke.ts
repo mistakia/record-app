@@ -1,6 +1,6 @@
 // The built app (`bun run build` first) against an in-process record-node
 // it owns, so every write stays off any shared node. It walks browsing
-// (search, sort, the tag filter), tagging, ingest (main's file picker, a
+// (search, sort, the label filter), tagging, ingest (main's file picker, a
 // drop, a URL, add by CID), libraries (link, disconnect, connect, unlink,
 // the own about), identity (public key, export, and no trace of the key in
 // any file the app wrote), listens, peers, the list and player hotkeys
@@ -152,7 +152,7 @@ try {
   await title_header.and(window.locator('[aria-sort=ascending]')).waitFor()
   await settled(window)
 
-  // Tagging with t at the cursor row, then the tag filter.
+  // Tagging with t at the cursor row, then the label filter.
   await focus_row(window, 'Smoke Alpha')
   await window.keyboard.press('t')
   const editor = window.getByTestId('tag-editor')
@@ -160,11 +160,19 @@ try {
   await editor.getByLabel('New tag').press('Enter')
   await editor.locator('li[aria-busy=false]').filter({ hasText: 'smoke-tag' }).waitFor()
   if (await editor.getByTestId('write-target').count() > 0) throw new Error('the tag adder names its only target library')
+  // A prefixed label, so the filter goes out as tag_groups (label-facets.ts).
+  await editor.getByLabel('New tag').fill('smoke-facet/one')
+  await editor.getByLabel('New tag').press('Enter')
+  await editor.locator('li[aria-busy=false]').filter({ hasText: 'smoke-facet/one' }).waitFor()
   await editor.getByLabel('New tag').press('Escape')
   await editor.waitFor({ state: 'detached' })
   await window.getByTestId('facet-sidebar').getByRole('button', { name: /smoke-tag/ }).click()
   await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
-  step('tag filter "smoke-tag"', await titles(window))
+  step('label filter "smoke-tag"', await titles(window))
+  await window.getByRole('button', { name: 'Clear filters' }).click()
+  await window.getByTestId('facet-sidebar').getByRole('button', { name: /^smoke-facet\/one \d+$/ }).click()
+  await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
+  step('facet filter "smoke-facet/one"', await titles(window))
   await window.getByRole('button', { name: 'Clear filters' }).click()
 
   // Gapless playback with a listen and Media Session: Alpha alone from the
