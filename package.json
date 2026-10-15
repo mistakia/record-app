@@ -40,7 +40,7 @@
     "package:mac:test": "bun run package:prepare && RECORD_TEST_BUILD=1 electron-vite build && electron-builder --mac --publish never -c.directories.output=release-test"
   },
   "dependencies": {
-    "record-node": "git+https://github.com/mistakia/record-node.git#4304d840aa323985de6cd19286736960db605ff2"
+    "record-node": "git+https://github.com/mistakia/record-node.git#3b1c7cd6de99a42e7a4483d5dce866deb8e5661b"
   },
   "devDependencies": {
     "@electron/fuses": "2.1.3",

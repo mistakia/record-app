@@ -23,6 +23,14 @@ export interface paths {
                     library_addresses?: string[];
                     /** @description Filter by tag labels. All supplied tags must match (AND semantics). */
                     tags?: string[];
+                    /**
+                     * @description Filter by label groups, given as a JSON array of arrays of
+                     *     labels. A track matches a group when it carries any label in
+                     *     it, and matches the filter when it matches every group.
+                     *     Combines with `tags`, each of which acts as a group of one.
+                     *     Labels count from every scoped library, as for `tags`.
+                     */
+                    tag_groups?: string;
                     /** @description Full-text search across title, artist, album, remixer. */
                     query?: string;
                     /** @description Randomize result order (overrides sort). */
@@ -59,6 +67,14 @@ export interface paths {
          *     the identity does not own needs a capability granting
          *     `library.append_track`. For URL ingest use `POST /import/url`; for
          *     file upload use `POST /import/file`.
+         *
+         *     `tags` gives the entry's envelope labels (spec §2.4.3), so a track
+         *     joins the library with its labels in one PUT. A track the target
+         *     already holds keeps its entry when its labels equal `tags` as a
+         *     set, and otherwise is relabelled to them with a PUT of its current
+         *     content, as `PATCH /tracks/{id}/tags` with `set` would. Without
+         *     `tags`, a held track is left as it is and a new one carries no
+         *     labels.
          */
         post: {
             parameters: {
@@ -71,6 +87,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         content_cid: string;
+                        tags?: components["schemas"]["Label"][];
                         library_address?: components["schemas"]["WriteTargetAddress"];
                         capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
@@ -303,6 +320,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tracks/{id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Track id (sha256 of the AcoustID fingerprint, lowercase hex). */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change a track's labels in the target library.
+         * @description Appends a PUT of the track's current content with the envelope
+         *     labels (spec §2.4.3) the request gives: `add` and `remove` change
+         *     the current labels, and `set` replaces them. `set` excludes `add`
+         *     and `remove`, a request gives at least one of the three, and no
+         *     label is both added and removed; otherwise it fails with 400.
+         *     Adding a label the track carries, or removing one it does not,
+         *     changes nothing. A request that leaves the labels equal as a set
+         *     appends nothing, so it is safe to repeat.
+         *
+         *     Under a capability, a change that only adds labels needs
+         *     `library.append_tag` or `library.append_track`, and any other
+         *     needs `library.append_track` (spec §3.5.6).
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Track id (sha256 of the AcoustID fingerprint, lowercase hex). */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        add?: components["schemas"]["Label"][];
+                        remove?: components["schemas"]["Label"][];
+                        set?: components["schemas"]["Label"][];
+                        library_address?: components["schemas"]["WriteTargetAddress"];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
+                    };
+                };
+            };
+            responses: {
+                /** @description The track as the target library now holds it. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Track"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        trace?: never;
+    };
     "/tracks/{cid}/pin": {
         parameters: {
             query?: never;
@@ -405,6 +494,11 @@ export interface paths {
                 query?: {
                     /** @description Optional filter by library addresses. */
                     library_addresses?: string[];
+                    /**
+                     * @description Only labels that begin with this string, compared code point
+                     *     by code point, e.g. `view/` for the labels under `view/`.
+                     */
+                    prefix?: string;
                 };
                 header?: never;
                 path?: never;
@@ -442,7 +536,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         track_id: string;
-                        tag: string;
+                        tag: components["schemas"]["Label"];
                         library_address?: components["schemas"]["WriteTargetAddress"];
                         capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
@@ -510,6 +604,72 @@ export interface paths {
                 500: components["responses"]["InternalError"];
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tags/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change the labels of many tracks in the target library.
+         * @description Applies each item as `PATCH /tracks/{id}/tags` would, in request
+         *     order, to the one target library, and answers with one result per
+         *     item in the same order. Items naming the same track apply one
+         *     after the other. An item whose track the target does not hold, or
+         *     whose change the cited capability does not authorise, fails alone
+         *     and the others still apply. A request that fails as a whole (its
+         *     target, or an item breaking the rules of `PATCH
+         *     /tracks/{id}/tags`) fails before any item applies.
+         *
+         *     The node appends the changed entries as one batch: it sends one
+         *     `library:index-updated` event for the batch, and no `track:added`
+         *     event per track.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["LabelBatchItem"][];
+                        library_address?: components["schemas"]["WriteTargetAddress"];
+                        capability_id?: components["schemas"]["WriteCapabilityId"];
+                    };
+                };
+            };
+            responses: {
+                /** @description One result per item, in request order. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            results: components["schemas"]["LabelBatchResult"][];
+                        };
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2205,6 +2365,40 @@ export interface components {
             /** @description Library address that applied the tag. */
             library_address: string;
             tag: string;
+        };
+        /** @description An envelope label (spec §2.4.3). */
+        Label: string;
+        /**
+         * @description One track's label change, under the rules of `PATCH
+         *     /tracks/{id}/tags`.
+         */
+        LabelBatchItem: {
+            track_id: string;
+            add?: components["schemas"]["Label"][];
+            remove?: components["schemas"]["Label"][];
+            set?: components["schemas"]["Label"][];
+        };
+        LabelBatchResult: {
+            track_id: string;
+            /**
+             * @description `updated` appended a PUT with the new labels. `unchanged`
+             *     appended nothing, since the labels were already equal as a
+             *     set. `failed` appended nothing, for the reason in `error`.
+             * @enum {string}
+             */
+            status: "updated" | "unchanged" | "failed";
+            /** @description The track's labels after the item; absent when it failed. */
+            tags?: string[];
+            /** @description Present when the item failed. */
+            error?: {
+                /**
+                 * @description `VALIDATION_ERROR` when the item's entry breaks a protocol
+                 *     rule, such as the payload size bound (spec §2.9).
+                 * @enum {string}
+                 */
+                code: "NOT_FOUND" | "FORBIDDEN" | "CAPABILITY_EXPIRED" | "CAPABILITY_REVOKED" | "VALIDATION_ERROR";
+                message: string;
+            };
         };
         TagCount: {
             tag: string;

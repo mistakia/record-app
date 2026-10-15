@@ -27,8 +27,10 @@ export const TARGETED_WRITES: Record<string, 'body' | 'query'> = {
   'patch /tracks/{id}': 'body',
   'post /tracks/{id}/rederive': 'body',
   'delete /tracks/{id}': 'query',
+  'patch /tracks/{id}/tags': 'body',
   'post /tags': 'body',
   'delete /tags': 'query',
+  'post /tags/batch': 'body',
   'post /import/url': 'body'
 }
 
