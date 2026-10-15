@@ -59,6 +59,16 @@ export const check_bundled_ingest = async ({ window, step, audio_path, title, tr
   const dropped = { name: basename(audio_path), base64: (await readFile(audio_path)).toString('base64') }
   // A drop before the page can write is refused, as the enabled picker shows.
   await window.locator('[data-testid=drop-zone] button:enabled').waitFor({ timeout: slow(10_000) })
+  // The sidebar counts running imports beside Add music; the ingest can end
+  // inside a second, so every count it shows is recorded as it changes.
+  await window.evaluate(() => {
+    const counts: string[] = []
+    ;(globalThis as unknown as { sidebar_import_counts: string[] }).sidebar_import_counts = counts
+    new MutationObserver(() => {
+      const text = document.querySelector('[data-testid=sidebar-importing]')?.textContent ?? ''
+      if (counts.at(-1) !== text) counts.push(text)
+    }).observe(document.body, { subtree: true, childList: true, characterData: true })
+  })
   await window.evaluate(async ({ name, base64 }) => {
     const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))
     const transfer = new DataTransfer()
@@ -68,6 +78,10 @@ export const check_bundled_ingest = async ({ window, step, audio_path, title, tr
   const item = window.locator('[data-testid=import-item][data-finished=true]').last()
   await item.waitFor({ timeout: slow(60_000) })
   step('bundled file import', (await item.innerText()).replaceAll('\n', ' | '))
+  await window.getByTestId('sidebar-importing').waitFor({ state: 'detached' })
+  const counts = await window.evaluate(() => (globalThis as unknown as { sidebar_import_counts: string[] }).sidebar_import_counts)
+  if (counts.filter((count) => count !== '').join(' ') !== '1' || counts.at(-1) !== '') throw new Error(`the sidebar's running import count read ${JSON.stringify(counts)}, not 1 and then nothing`)
+  step('sidebar import count', '1 while the import ran, then none')
   await nav(window, 'Tracks')
   await window.getByTestId('track-total').filter({ hasText: new RegExp(`^${tracks_before + 1} tracks$`) }).waitFor({ timeout: slow(30_000) })
   await window.getByTestId('track-row').filter({ hasText: title }).first().waitFor()

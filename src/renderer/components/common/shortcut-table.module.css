@@ -40,7 +40,7 @@
   color: var(--color-text-secondary);
 }
 
-kbd {
+.row kbd {
   padding: 0 var(--space-xs);
   border: 1px solid var(--color-border);
   font-family: var(--font-mono);

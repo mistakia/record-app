@@ -84,3 +84,53 @@ describe('module CSS names shared keyframes as global', () => {
     expect(found).toEqual([])
   })
 })
+
+// CSS Modules scope classes only, so a selector with no class in it styles
+// the whole app: a bare `kbd` in the shortcut table boxed every key cap.
+// Each selector of a module rule names one of the module's classes.
+const top_level_split = (prelude: string): string[] => {
+  const parts: string[] = []
+  let depth = 0
+  let start = 0
+  for (let index = 0; index < prelude.length; index++) {
+    const char = prelude[index]
+    if (char === '(') depth++
+    else if (char === ')') depth--
+    else if (char === ',' && depth === 0) {
+      parts.push(prelude.slice(start, index))
+      start = index + 1
+    }
+  }
+  parts.push(prelude.slice(start))
+  return parts.map((part) => part.trim())
+}
+
+export const find_unscoped_selectors = (css: string): string[] => {
+  const rules = strip_comments(css).replace(/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '')
+  const unscoped: string[] = []
+  for (const match of rules.matchAll(/([^{};]+)\{/g)) {
+    const prelude = (match[1] ?? '').trim()
+    if (prelude.startsWith('@')) continue
+    for (const selector of top_level_split(prelude)) if (!selector.includes('.')) unscoped.push(selector)
+  }
+  return unscoped
+}
+
+describe('module CSS scopes every selector to a class', () => {
+  test('flags an element selector and passes a scoped one', () => {
+    expect(find_unscoped_selectors('kbd { border: 0; }')).toEqual(['kbd'])
+    expect(find_unscoped_selectors('.row dt, dd { margin: 0; }')).toEqual(['dd'])
+    expect(find_unscoped_selectors('.row kbd { border: 0; }')).toEqual([])
+    expect(find_unscoped_selectors('.input input:not([type=\'checkbox\'], [type=\'radio\']) { margin: 0; }')).toEqual([])
+    expect(find_unscoped_selectors('@media (width < 720px) { .row { gap: 0; } }')).toEqual([])
+    expect(find_unscoped_selectors('@keyframes pulse { from { opacity: 0; } to { opacity: 1; } }')).toEqual([])
+  })
+
+  test('no .module.css file under src/renderer leaves one unscoped', async () => {
+    const found: string[] = []
+    for await (const path of new Glob('src/renderer/**/*.module.css').scan('.')) {
+      for (const selector of find_unscoped_selectors(await readFile(path, 'utf8'))) found.push(`${path}: ${selector}`)
+    }
+    expect(found).toEqual([])
+  })
+})

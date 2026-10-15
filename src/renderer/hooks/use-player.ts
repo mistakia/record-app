@@ -3,9 +3,10 @@
 // functions as the player bar.
 
 import { createSelector } from '@reduxjs/toolkit'
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useStore } from 'react-redux'
 
+import type { Track } from '#renderer/api/types.ts'
 import { install_media_session } from '#renderer/player/media-session.ts'
 import {
   next_track,
@@ -16,27 +17,39 @@ import {
   stop_playback
 } from '#renderer/player/player-controller.ts'
 import { cached_image, load_image, subscribe_images } from '#renderer/images/image-cache.ts'
-import { current_entry, track_display } from '#renderer/player/queue-manager.ts'
+import { track_display, type QueueEntry } from '#renderer/player/queue-manager.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { freshest_cached_track } from '#renderer/store/cached-track.ts'
 import { use_app_selector, type RootState } from '#renderer/store/index.ts'
 
-// The playing track's newest description, recomputed only when the cache
-// or the playing track changes, not on every position tick.
-const select_fresh_track = createSelector(
-  [(state: RootState) => state[node_api.reducerPath].queries, (state: RootState) => current_entry(state.player.queue)],
-  (queries, entry) => entry === null ? null : freshest_cached_track({ queries, track_id: entry.track_id, scope: entry.scope ?? '' })
+// Each queue entry as the node now describes its track, so a tag added or a
+// title edited while it is queued shows at once in the player bar, the queue
+// panel, and the OS, and a queue restored from an older snapshot catches up
+// once a page holds its track. Recomputed only when the cache or the queue
+// changes, not on every position tick; an entry whose track no page holds
+// keeps what it was queued with.
+const merged = new WeakMap<QueueEntry, { track: Track, entry: QueueEntry }>()
+
+const fresh_entry = (queries: RootState[typeof node_api.reducerPath]['queries'], entry: QueueEntry): QueueEntry => {
+  const track = freshest_cached_track({ queries, track_id: entry.track_id, scope: entry.scope ?? '' })
+  if (track === null) return entry
+  const known = merged.get(entry)
+  if (known?.track === track) return known.entry
+  const fresh = { ...entry, ...track_display(track) }
+  merged.set(entry, { track, entry: fresh })
+  return fresh
+}
+
+export const select_fresh_entries = createSelector(
+  [(state: RootState) => state[node_api.reducerPath].queries, (state: RootState) => state.player.queue.entries],
+  (queries, entries) => entries.map((entry) => fresh_entry(queries, entry))
 )
 
-// The current entry shows its track as the node now describes it, so a tag
-// added while it plays appears at once, and a queue restored from an older
-// snapshot catches up once a page holds its track.
 export const use_player = () => {
   const player = use_app_selector((state) => state.player)
-  const fresh = use_app_selector(select_fresh_track)
-  const entry = current_entry(player.queue)
-  const current = useMemo(() => entry === null || fresh === null ? entry : { ...entry, ...track_display(fresh) }, [entry, fresh])
-  return { player, current }
+  const entries = use_app_selector(select_fresh_entries)
+  const current = entries[player.queue.index] ?? null
+  return { player, entries, current }
 }
 
 export const use_media_session = (): void => {
@@ -56,8 +69,9 @@ export const use_media_session = (): void => {
     })
     let last = ''
     const update = (): void => {
-      const { player } = store.getState()
-      const entry = current_entry(player.queue)
+      const state_now = store.getState()
+      const { player } = state_now
+      const entry = select_fresh_entries(state_now)[player.queue.index] ?? null
       const artwork_cid = entry?.artwork ?? null
       const artwork_url = artwork_cid === null ? null : cached_image(artwork_cid)
       if (artwork_cid !== null && artwork_url === undefined) load_image(artwork_cid).catch(() => {})
