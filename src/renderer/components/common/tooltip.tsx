@@ -13,7 +13,7 @@ import { hotkey_text, place_tip, show_delay, TIP_WARM_MS } from './tooltip-logic
 import { list_commands } from '#renderer/components/track/list-commands.ts'
 import type { HotkeyAction } from '#renderer/hooks/hotkeys.ts'
 
-interface Shown { anchor: HTMLElement, label: string, keys: string | null }
+interface Shown { anchor: HTMLElement, label: string, keys: string | null, scroll: boolean }
 
 const tipped = (target: EventTarget | null): HTMLElement | null =>
   target instanceof Element ? target.closest<HTMLElement>('[data-tip]') : null
@@ -22,15 +22,20 @@ const tipped = (target: EventTarget | null): HTMLElement | null =>
 // view, so the tip moves with it rather than going.
 const FOCUS_SCROLL_MS = 200
 
+// A scroll tip's marquee moves at this many CSS pixels per second, whatever
+// the title's length, so a long one reads as slowly as a short one.
+const MARQUEE_PX_PER_SECOND = 30
+
 const same = (a: Shown | null, b: Shown): boolean =>
-  a !== null && a.anchor === b.anchor && a.label === b.label && a.keys === b.keys
+  a !== null && a.anchor === b.anchor && a.label === b.label && a.keys === b.keys && a.scroll === b.scroll
 
 const read = (anchor: HTMLElement): Shown => {
   const hotkey = anchor.dataset.tipHotkey as HotkeyAction | undefined
   return {
     anchor,
     label: anchor.dataset.tip ?? '',
-    keys: hotkey === undefined ? null : hotkey_text(hotkey, list_commands() !== null)
+    keys: hotkey === undefined ? null : hotkey_text(hotkey, list_commands() !== null),
+    scroll: anchor.dataset.tipScroll === 'true'
   }
 }
 
@@ -70,7 +75,7 @@ export const TooltipLayer = () => {
       showing = anchor
       refresh(anchor)
       set_visible(true)
-      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-tip', 'data-tip-hotkey'] })
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-tip', 'data-tip-hotkey', 'data-tip-scroll'] })
     }
 
     const hide = ({ warm }: { warm: boolean }): void => {
@@ -150,6 +155,15 @@ export const TooltipLayer = () => {
   useLayoutEffect(() => {
     const element = tip.current
     if (shown === null || element === null || !visible) return
+    // A scroll tip: hold the duration so its text moves at a constant pace,
+    // and stop the loop when it fits whole inside the tip's width.
+    if (shown.scroll) {
+      const copy = element.querySelector<HTMLElement>(`.${styles.ticker} > span:first-child`)
+      const copy_width = copy?.getBoundingClientRect().width ?? 0
+      const loops = copy_width > 0 && copy_width > element.clientWidth
+      element.dataset.animate = loops ? 'true' : 'false'
+      if (loops) element.style.setProperty('--marquee-duration', `${(copy_width / MARQUEE_PX_PER_SECOND).toFixed(2)}s`)
+    }
     const anchor = shown.anchor.getBoundingClientRect()
     const { left, top } = place_tip({
       anchor: { left: anchor.left, top: anchor.top, width: anchor.width, height: anchor.height },
@@ -160,8 +174,17 @@ export const TooltipLayer = () => {
   }, [shown, visible, placed])
 
   return (
-    <div ref={tip} className={styles.tip} data-visible={visible} data-testid='tooltip' aria-hidden='true'>
-      {shown?.label}
+    <div ref={tip} className={styles.tip} data-visible={visible} data-scroll={shown?.scroll === true ? 'true' : undefined} data-testid='tooltip' aria-hidden='true'>
+      {shown?.scroll === true
+        ? (
+          <span className={styles.marquee}>
+            <span className={styles.ticker}>
+              <span>{shown.label}</span>
+              <span>{shown.label}</span>
+            </span>
+          </span>
+          )
+        : shown?.label}
       {shown?.keys != null && <kbd className={styles.key}>{shown.keys}</kbd>}
     </div>
   )

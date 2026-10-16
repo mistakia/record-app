@@ -4,7 +4,7 @@
 // from". Hidden while nothing is playing and the queue is empty. Every
 // control calls player-controller.ts, the one action path.
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import styles from './player-bar.module.css'
@@ -13,7 +13,7 @@ import { HistoryIcon, PauseIcon, QueueIcon, RepeatIcon, ShuffleIcon, SpeakerIcon
 import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { Avatar } from '#renderer/components/common/avatar.tsx'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
-import { tip } from '#renderer/components/common/tooltip-logic.ts'
+import { tip, tip_scroll } from '#renderer/components/common/tooltip-logic.ts'
 import { copy_text } from '#renderer/components/common/copy-text.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { Screen } from '#renderer/components/common/screen.tsx'
@@ -85,6 +85,10 @@ export const PlayerBar = () => {
   const [adopting, set_adopting] = useState(false)
   const [menu, set_menu] = useState<{ x: number, y: number, items: MenuItem[] } | null>(null)
   const now_playing = useRef<HTMLDivElement>(null)
+  // The title, and whether the bar's width clips it: clipped, hover shows a
+  // tooltip that scrolls the whole title; whole, nothing shows.
+  const title = useRef<HTMLSpanElement>(null)
+  const [title_clipped, set_title_clipped] = useState(false)
   // Set each render below; the key commands registered once call the latest.
   const open_menu_at = useRef<(x: number, y: number) => void>(() => {})
   // The menu closes on the mousedown that starts a click on …; that click
@@ -114,6 +118,18 @@ export const PlayerBar = () => {
       }
     })
   }, [has_current, adoptable])
+  const title_text = current === null ? undefined : current.title ?? 'Untitled'
+  // The clip is a property of the bar's width as much as of the text, so a
+  // change of either re-checks it.
+  useLayoutEffect(() => {
+    const node = title.current
+    if (node === null) return
+    const check = (): void => { set_title_clipped(node.scrollWidth > node.clientWidth) }
+    check()
+    const observer = new ResizeObserver(check)
+    observer.observe(node)
+    return () => { observer.disconnect() }
+  }, [title_text])
   const source_library = source === null || source.library_address === '' ? undefined : libraries.data?.find(({ address }) => address === source.library_address)
   const { queue } = player
   if (queue.entries.length === 0) return null
@@ -174,7 +190,7 @@ export const PlayerBar = () => {
             </div>
             <Artwork cid={current?.artwork} size={65} testid='player-artwork' />
             <div className={styles.text}>
-              <span className={styles.title}>{current === null ? 'Nothing playing' : current.title ?? 'Untitled'}</span>
+              <span ref={title} className={styles.title} {...(current !== null && title_clipped ? tip_scroll(current.title ?? 'Untitled') : {})}>{current === null ? 'Nothing playing' : current.title ?? 'Untitled'}</span>
               <span className={styles.artist}>{current?.artist ?? ''}</span>
               <span className={styles.meta}>{player.state === 'error' ? `!! ${player.error ?? 'playback failed'}` : meta}</span>
               {current?.tags !== undefined && current.tags.length > 0 && (

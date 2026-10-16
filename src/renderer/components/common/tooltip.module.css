@@ -29,6 +29,68 @@
   opacity: 1;
 }
 
+/* A scroll tip (a clipped now-playing title): the text bounded to a width,
+   its marquee running one seamless copy into the next. Under reduced motion
+   the marquee gives way to the whole title, wrapped. */
+.tip[data-scroll='true'] {
+  max-width: 420px;
+  overflow: hidden;
+}
+
+.marquee {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ticker {
+  display: inline-flex;
+  animation: tip-marquee var(--marquee-duration, 0s) linear infinite;
+}
+
+.ticker > span {
+  flex: none;
+  white-space: nowrap;
+  padding-right: var(--space-lg);
+}
+
+.tip[data-scroll='true'][data-animate='false'] .ticker {
+  animation: none;
+}
+
+@keyframes tip-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip[data-scroll='true'] {
+    max-width: min(52ch, calc(100vw - var(--space-lg)));
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .tip[data-scroll='true'] .marquee {
+    overflow: visible;
+  }
+
+  .tip[data-scroll='true'] .ticker {
+    display: block;
+    animation: none;
+  }
+
+  .tip[data-scroll='true'] .ticker > span {
+    display: block;
+    white-space: normal;
+    padding-right: 0;
+  }
+
+  .tip[data-scroll='true'] .ticker > span:last-child {
+    display: none;
+  }
+}
+
 .key {
   color: var(--color-text-tertiary);
   font: inherit;

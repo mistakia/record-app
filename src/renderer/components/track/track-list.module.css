@@ -57,8 +57,33 @@
   color: var(--color-text-secondary);
 }
 
-.end {
-  text-align: right;
+/* A resizable data column: the label or sort button, and the drag handle
+   seated on the column's right edge. */
+.col {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.col.end {
+  justify-content: flex-end;
+  /* Room so the handle does not sit on a right-aligned label. */
+  padding-right: 9px;
+}
+
+.resize_handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 9px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.resize_handle:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--color-focus-ring);
 }
 
 .scroller {

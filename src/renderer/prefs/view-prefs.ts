@@ -1,6 +1,7 @@
 // The app's own view choices — dismissed help banners, folded sections,
-// hidden columns — kept in local storage across launches: application
-// state, not node state (spec §8.8.4 Layer C), and the same on every node.
+// hidden columns and their resized widths — kept in local storage across
+// launches: application state, not node state (spec §8.8.4 Layer C), and
+// the same on every node.
 
 import { useCallback, useSyncExternalStore } from 'react'
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { hotkey_text, place_tip, show_delay, tip, TIP_DELAY_MS } from '#renderer/components/common/tooltip-logic.ts'
+import { hotkey_text, place_tip, show_delay, tip, tip_scroll, TIP_DELAY_MS } from '#renderer/components/common/tooltip-logic.ts'
 
 const viewport = { width: 1000, height: 800 }
 const tip_size = { width: 80, height: 18 }
@@ -50,5 +50,10 @@ describe('tooltip', () => {
   test('tip() sets the label, and the hotkey only when there is one', () => {
     expect(tip('Settings')).toEqual({ 'data-tip': 'Settings' })
     expect(tip('Play queue', 'toggle_queue')).toEqual({ 'data-tip': 'Play queue', 'data-tip-hotkey': 'toggle_queue' })
+  })
+
+  test('tip_scroll() opts a long tip into the scrolling marquee', () => {
+    expect(tip_scroll('A very long now-playing title'))
+      .toEqual({ 'data-tip': 'A very long now-playing title', 'data-tip-scroll': 'true' })
   })
 })

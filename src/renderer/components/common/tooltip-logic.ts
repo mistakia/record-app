@@ -57,3 +57,8 @@ export const hotkey_text = (action: HotkeyAction, list_shown: boolean): string |
 // The attributes a tipped control carries, spread onto it.
 export const tip = (label: string, hotkey?: HotkeyAction): { 'data-tip': string, 'data-tip-hotkey'?: HotkeyAction } =>
   hotkey === undefined ? { 'data-tip': label } : { 'data-tip': label, 'data-tip-hotkey': hotkey }
+
+// A tip whose text can run long (the now-playing title, once it is clipped)
+// scrolls its marquee when the tooltip too would clip it.
+export const tip_scroll = (label: string): { 'data-tip': string, 'data-tip-scroll': 'true' } =>
+  ({ 'data-tip': label, 'data-tip-scroll': 'true' })

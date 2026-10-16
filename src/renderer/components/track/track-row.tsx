@@ -33,6 +33,9 @@ const kbps = (bitrate: number | null | undefined): string => bitrate == null || 
 
 const cell_text = (track: Track, column: Column): string => {
   switch (column.id) {
+    // title never reaches this switch: the title cell is its own markup
+    // below; the case keeps the switch exhaustive over ColumnId.
+    case 'title': return ''
     case 'artist': return track.artist ?? ''
     case 'album': return track.album ?? ''
     case 'kbps': return kbps(track.bitrate)
@@ -202,8 +205,10 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
   )
 })
 
-// Ragged width ranges per column kind, in percent of the cell.
+// Ragged width ranges per column kind, in percent of the cell. Title's range
+// also fills the skeleton's own title bar below.
 const SKELETON_WIDTHS: Record<Column['id'], [number, number]> = {
+  title: [40, 85],
   artist: [35, 80],
   album: [30, 75],
   tags: [20, 55],

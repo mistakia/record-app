@@ -5,11 +5,11 @@
 // answers the list hotkeys while it is mounted.
 
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import { shallowEqual, useStore } from 'react-redux'
 
 import styles from './track-list.module.css'
-import { COLUMNS, grid_min_width, grid_template, NO_HIDDEN_COLUMNS, visible_columns, type ColumnId } from './columns.ts'
+import { COLUMNS, grid_min_width, grid_template, NO_COLUMN_WIDTHS, NO_HIDDEN_COLUMNS, visible_columns, type ColumnId, type ColumnWidths } from './columns.ts'
 import { register_list_commands } from './list-commands.ts'
 import { PageSubscription, select_list_page, type ListSource } from './list-source.ts'
 import { pages_for_rows, row_location } from './track-pages.ts'
@@ -24,6 +24,12 @@ import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/st
 import { action_rows, cursor_moved, row_clicked, selection_cleared, selection_toggled, view_entered } from '#renderer/store/list-cursor.ts'
 
 const ROW_HEIGHT = 36
+// A column's narrowest and widest a drag or a key step can hold it, and the
+// keyboard step (Shift makes it four). Home on the handle restores the
+// column's default width.
+const COLUMN_MIN_PX = 48
+const COLUMN_MAX_PX = 720
+const COLUMN_STEP_PX = 8
 // How long the viewport must rest on a set of pages before they are
 // fetched, when it moved on from the last set sooner than that. A fling
 // across a large library passes pages it never stops on; a node answers
@@ -73,9 +79,10 @@ export interface ListActions {
 // The first page loading: skeleton rows on the list's column grid.
 export const TrackListSkeleton = ({ rows = 12 }: { rows?: number }) => {
   const [hidden] = use_view_pref<readonly ColumnId[]>('hidden-columns', NO_HIDDEN_COLUMNS)
+  const [widths] = use_view_pref<ColumnWidths>('column-widths', NO_COLUMN_WIDTHS)
   const visible = visible_columns(hidden)
   return (
-    <div className={styles.list} style={{ '--track-columns': grid_template(visible), '--track-min-width': grid_min_width(visible) } as React.CSSProperties} aria-busy='true' aria-label='Loading' data-testid='skeleton'>
+    <div className={styles.list} style={{ '--track-columns': grid_template(visible, widths), '--track-min-width': grid_min_width(visible, widths) } as React.CSSProperties} aria-busy='true' aria-label='Loading' data-testid='skeleton'>
       {Array.from({ length: rows }, (_, index) => <TrackRowSkeleton key={index} index={index} columns={visible} />)}
     </div>
   )
@@ -99,6 +106,18 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
   const [menu, set_menu] = useState<{ x: number, y: number, track: Track, row: number } | null>(null)
   const [columns_menu, set_columns_menu] = useState<{ x: number, y: number } | null>(null)
   const [hidden, set_hidden] = use_view_pref<readonly ColumnId[]>('hidden-columns', NO_HIDDEN_COLUMNS)
+  const [widths, set_widths] = use_view_pref<ColumnWidths>('column-widths', NO_COLUMN_WIDTHS)
+  // The column being dragged together with its width so far: it wins over the
+  // persisted widths until the drag ends, so a drag repaints each move without
+  // writing local storage on every one.
+  const [dragging, set_dragging] = useState<{ id: ColumnId, width: number } | null>(null)
+  const widths_ref = useRef(widths)
+  widths_ref.current = widths
+  const widths_used = useMemo<ColumnWidths>(
+    () => dragging === null ? widths : { ...widths, [dragging.id]: dragging.width },
+    [widths, dragging]
+  )
+  const resize_origin = useRef<{ id: ColumnId, client_x: number, width: number } | null>(null)
   const visible = useMemo(() => visible_columns(hidden, beside_pane), [hidden, beside_pane])
   const virtualizer = useVirtualizer({ count: total, getScrollElement: () => scroller.current, estimateSize: () => ROW_HEIGHT, overscan: 12 })
   const rows = virtualizer.getVirtualItems()
@@ -147,6 +166,57 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
     const element = scroller.current?.querySelector(`[data-row='${row}']`)
     const rect = element?.getBoundingClientRect()
     set_menu({ x: x ?? (rect?.left ?? 0) + 48, y: y ?? rect?.bottom ?? 0, track: found.track, row })
+  }
+
+  // Resizing a column with the drag handle on its header: the pointer starts
+  // the drag, capture keeps the moves reaching the handle off it, and the
+  // width commits to the persisted set on release.
+  const resize_start = (id: ColumnId, event: PointerEvent<HTMLElement>): void => {
+    if (resize_origin.current !== null) return
+    const cell = event.currentTarget.parentElement
+    const width = cell === null ? undefined : cell.getBoundingClientRect().width
+    if (width === undefined || width <= 0) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    resize_origin.current = { id, client_x: event.clientX, width }
+    set_dragging({ id, width })
+  }
+  const resize_move = (event: PointerEvent<HTMLElement>): void => {
+    const origin = resize_origin.current
+    if (origin === null) return
+    const width = Math.min(Math.max(origin.width + (event.clientX - origin.client_x), COLUMN_MIN_PX), COLUMN_MAX_PX)
+    set_dragging({ id: origin.id, width })
+  }
+  const resize_end = (): void => {
+    if (resize_origin.current === null) return
+    resize_origin.current = null
+    // A pointer-move and the release commit the row before the release
+    // handler runs, so `dragging` here is the width the drag reached.
+    if (dragging !== null) set_widths({ ...widths_ref.current, [dragging.id]: Math.round(dragging.width) })
+    set_dragging(null)
+  }
+  // The keyboard path, a focused handle in the header (the list's keys would
+  // otherwise move the cursor, so the arrows stop here). Left / Right step by
+  // COLUMN_STEP_PX from the column's current width, Shift makes four, and
+  // Home restores the default.
+  const resize_step = (id: ColumnId, event: KeyboardEvent<HTMLElement>): void => {
+    if (event.key === 'Home') {
+      const next = { ...widths_ref.current }
+      delete next[id]
+      set_widths(next)
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
+    const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0
+    if (direction === 0) return
+    const cell = event.currentTarget.parentElement
+    const current_px = cell?.getBoundingClientRect().width ?? 0
+    const step = event.shiftKey ? COLUMN_STEP_PX * 4 : COLUMN_STEP_PX
+    const width = Math.min(Math.max(current_px + direction * step, COLUMN_MIN_PX), COLUMN_MAX_PX)
+    set_widths({ ...widths_ref.current, [id]: Math.round(width) })
+    event.preventDefault()
+    event.stopPropagation()
   }
 
   // The latest closure for the registered commands, which outlive a render.
@@ -220,6 +290,8 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
     return engine_state === 'loading' ? 'loading' : engine_state === 'playing' ? 'playing' : 'paused'
   }
 
+  const resize_handlers: ResizeHandlers = { start: resize_start, move: resize_move, end: resize_end, step: resize_step }
+
   return (
     <div
       className={styles.list}
@@ -228,7 +300,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
       aria-busy={busy}
       aria-rowcount={total}
       data-testid='track-list'
-      style={{ '--track-columns': grid_template(visible), '--track-min-width': grid_min_width(visible) } as React.CSSProperties}
+      style={{ '--track-columns': grid_template(visible, widths_used), '--track-min-width': grid_min_width(visible, widths_used) } as React.CSSProperties}
     >
       <div
         ref={header}
@@ -254,10 +326,14 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
           </button>
         </span>
         <span role='columnheader' aria-label='Adopt' {...tip('Adopt to library', 'adopt')}>★</span>
-        <SortHeader label='Title' column_sort='title' sort={sort} />
-        {visible.filter(({ lead }) => lead === true).map((column) => <SortHeader key={column.id} label={column.label} column_sort={column.sort} sort={sort} />)}
+        <ColumnHeader id='title' label='Title' column_sort='title' sort={sort} resize_handlers={resize_handlers} />
+        {visible.filter(({ lead }) => lead === true).map((column) => (
+          <ColumnHeader key={column.id} id={column.id} label={column.label} column_sort={column.sort} sort={sort} resize_handlers={resize_handlers} />
+        ))}
         <span role='columnheader'>+tag</span>
-        {visible.filter(({ lead }) => lead !== true).map((column) => <SortHeader key={column.id} label={column.label} column_sort={column.sort} sort={sort} align={column.align} />)}
+        {visible.filter(({ lead }) => lead !== true).map((column) => (
+          <ColumnHeader key={column.id} id={column.id} label={column.label} column_sort={column.sort} sort={sort} align={column.align} resize_handlers={resize_handlers} />
+        ))}
         <span role='columnheader' />
       </div>
       {subscribed.map((page) => <PageSubscription key={page} source={source} page={page} />)}
@@ -314,20 +390,48 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
   )
 }
 
-const SortHeader = ({ label, column_sort, sort, align }: {
+interface ResizeHandlers {
+  start: (id: ColumnId, event: PointerEvent<HTMLElement>) => void
+  move: (event: PointerEvent<HTMLElement>) => void
+  end: () => void
+  step: (id: ColumnId, event: KeyboardEvent<HTMLElement>) => void
+}
+
+// A data column's header: its label or sort button, and the drag handle seated
+// on the column's right edge, focusable so a handle steps the width by keys
+// too. `data-col` lets a start measure the column's current pixel width.
+const ColumnHeader = ({ id, label, column_sort, sort, align, resize_handlers }: {
+  id: ColumnId
   label: string
   column_sort: TrackSort | undefined
   sort: { sort: TrackSort, order: SortOrder, on_sort: (sort: TrackSort) => void } | undefined
   align?: 'end' | undefined
+  resize_handlers: ResizeHandlers
 }) => {
-  const class_name = align === 'end' ? styles.end : undefined
-  if (column_sort === undefined || sort === undefined) return <span role='columnheader' className={class_name}>{label}</span>
-  const active = sort.sort === column_sort
+  const class_name = [align === 'end' ? styles.end : '', styles.col].filter((name) => name !== '').join(' ')
+  const sortable = column_sort !== undefined && sort !== undefined
+  const active = sortable && sort.sort === column_sort
   return (
-    <span role='columnheader' className={class_name} aria-sort={active ? (sort.order === 'asc' ? 'ascending' : 'descending') : 'none'}>
-      <button type='button' data-variant='glyph' className={active ? `${styles.sort} ${styles.sort_active}` : styles.sort} onClick={() => { sort.on_sort(column_sort) }}>
-        {label}{active && <span className={styles.small_glyph}>{sort.order === 'asc' ? ' ▲' : ' ▼'}</span>}
-      </button>
+    <span role='columnheader' data-col={id} className={class_name} aria-sort={sortable ? (active ? (sort.order === 'asc' ? 'ascending' : 'descending') : 'none') : undefined}>
+      {sortable
+        ? (
+          <button type='button' data-variant='glyph' className={active ? `${styles.sort} ${styles.sort_active}` : styles.sort} onClick={() => { sort.on_sort(column_sort) }}>
+            {label}{active && <span className={styles.small_glyph}>{sort.order === 'asc' ? ' ▲' : ' ▼'}</span>}
+          </button>
+          )
+        : label}
+      <span
+        role='separator'
+        aria-orientation='vertical'
+        aria-label={`Resize ${label} column`}
+        tabIndex={0}
+        className={styles.resize_handle}
+        onPointerDown={(event) => { resize_handlers.start(id, event) }}
+        onPointerMove={(event) => { resize_handlers.move(event) }}
+        onPointerUp={() => { resize_handlers.end() }}
+        onPointerCancel={() => { resize_handlers.end() }}
+        onKeyDown={(event) => { resize_handlers.step(id, event) }}
+      />
     </span>
   )
 }
