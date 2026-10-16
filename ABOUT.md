@@ -39,6 +39,7 @@ The Record ecosystem spans several repos. This one is the user-facing desktop ap
 
 - [[user:repository/active/record-docs/ABOUT.md]] — protocol specification (canonical for protocol semantics)
 - `repository/active/record-node/` — node implementation (networking, storage, indexing, the HTTP API)
+- [[user:repository/active/record-ios/ABOUT.md]] — native iPhone client, porting this app's logic under parity fixtures
 - `repository/active/record-chrome-extension/` — web import tool
 - `repository/active/record-resolver/` — URL resolution for ingest
 
