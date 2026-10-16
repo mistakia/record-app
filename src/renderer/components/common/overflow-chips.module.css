@@ -1,0 +1,107 @@
+/* A line of chips with a +N chip for those that do not fit (STYLE.md § Tag
+   chips), and the paper popover that shows them all. */
+.line {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* The first chip gives way when the line cannot hold it whole beside +N,
+   its label ellipsized. */
+.line > [data-chip]:first-child {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.line > [data-chip]:first-child > :first-child {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A chip past the fit: out of the flow and unseen, still measurable. */
+.folded {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.more {
+  justify-content: center;
+}
+
+.more > button[data-variant='glyph'] {
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.popover {
+  position: fixed;
+  z-index: 30;
+  top: 0;
+  left: 0;
+  display: flex;
+  max-width: 300px;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  user-select: none;
+}
+
+.label {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.all {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: var(--color-accent);
+}
+
+.chip > button[data-variant='glyph'] {
+  padding: 0;
+  color: inherit;
+  font-size: var(--font-size-xs);
+}
+
+.chip > button[data-variant='glyph']:hover:not(:disabled) {
+  color: var(--color-accent);
+}
+
+/* A chip's second control (remove) shows on hover, as on the row. */
+.chip > button:not(:first-child) {
+  display: none;
+  margin-left: var(--space-xxs);
+}
+
+.chip:hover > button:not(:first-child) {
+  display: inline-flex;
+}

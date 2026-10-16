@@ -109,13 +109,8 @@
 
 /* Tags as legacy's chips, fading out at the right edge. */
 .tags {
-  position: relative;
-  display: flex;
   gap: var(--space-xs);
   margin-top: var(--space-sm);
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(to right, black 55%, transparent);
-  mask-image: linear-gradient(to right, black 55%, transparent);
 }
 
 .chip {
@@ -128,6 +123,11 @@
   color: var(--color-text-tertiary);
   font-size: 8px;
   white-space: nowrap;
+}
+
+.chip_more button {
+  color: inherit;
+  font-size: inherit;
 }
 
 /* Never narrower than its seven 40px controls; the thirds beside it give

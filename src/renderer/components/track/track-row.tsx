@@ -9,6 +9,7 @@ import styles from './track-row.module.css'
 import type { Column } from './columns.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
+import { OverflowChips } from '#renderer/components/common/overflow-chips.tsx'
 import { ragged_width, SkeletonBar } from '#renderer/components/common/skeleton.tsx'
 import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import type { HotkeyAction } from '#renderer/hooks/hotkeys.ts'
@@ -46,39 +47,49 @@ const cell_text = (track: Track, column: Column): string => {
   }
 }
 
+// Every tag stays reachable: those the cell fits whole, then +N for the rest,
+// which shows them all.
 const Tags = ({ track, removable, handlers }: { track: Track, removable: ReadonlySet<string>, handlers: RowHandlers }) => (
-  <span role='cell' className={`${styles.cell} ${styles.tags}`}>
-    {track.tags.map(({ tag, library_address }) => (
-      <span key={`${library_address} ${tag}`} className={styles.chip}>
-        <button
-          type='button'
-          data-variant='glyph'
-          tabIndex={-1}
-          onClick={(event) => {
-            event.stopPropagation()
-            handlers.on_tag({ tag, library_address })
-          }}
-        >
-          {tag}
-        </button>
-        {removable.has(library_address) && (
-          <button
-            type='button'
-            data-variant='glyph'
-            className={styles.chip_remove}
-            tabIndex={-1}
-            aria-label={`Remove tag ${tag}`}
-            {...tip('Remove tag')}
-            onClick={(event) => {
-              event.stopPropagation()
-              handlers.on_remove_tag({ track, tag, library_address })
-            }}
-          >
-            ×
-          </button>
-        )}
-      </span>
-    ))}
+  <span role='cell' className={styles.cell}>
+    <OverflowChips
+      className={styles.tags}
+      chip_class={styles.chip}
+      label='Tags'
+      chips={track.tags.map(({ tag, library_address }) => ({
+        key: `${library_address} ${tag}`,
+        content: (
+          <>
+            <button
+              type='button'
+              data-variant='glyph'
+              tabIndex={-1}
+              onClick={(event) => {
+                event.stopPropagation()
+                handlers.on_tag({ tag, library_address })
+              }}
+            >
+              {tag}
+            </button>
+            {removable.has(library_address) && (
+              <button
+                type='button'
+                data-variant='glyph'
+                className={styles.chip_remove}
+                tabIndex={-1}
+                aria-label={`Remove tag ${tag}`}
+                {...tip('Remove tag')}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  handlers.on_remove_tag({ track, tag, library_address })
+                }}
+              >
+                ×
+              </button>
+            )}
+          </>
+        )
+      }))}
+    />
   </span>
 )
 

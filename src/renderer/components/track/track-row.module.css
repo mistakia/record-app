@@ -141,7 +141,6 @@
 }
 
 .tags {
-  display: flex;
   gap: var(--space-xs);
 }
 

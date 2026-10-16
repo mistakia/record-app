@@ -16,6 +16,7 @@ import { ContextMenu, type MenuItem } from '#renderer/components/common/context-
 import { tip, tip_scroll } from '#renderer/components/common/tooltip-logic.ts'
 import { copy_text } from '#renderer/components/common/copy-text.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
+import { OverflowChips } from '#renderer/components/common/overflow-chips.tsx'
 import { Screen } from '#renderer/components/common/screen.tsx'
 import { AdoptDialog } from '#renderer/components/track/adopt-dialog.tsx'
 import { use_tag_navigation, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
@@ -194,9 +195,14 @@ export const PlayerBar = () => {
               <span className={styles.artist}>{current?.artist ?? ''}</span>
               <span className={styles.meta}>{player.state === 'error' ? `!! ${player.error ?? 'playback failed'}` : meta}</span>
               {current?.tags !== undefined && current.tags.length > 0 && (
-                <span className={styles.tags}>
-                  {current.tags.map((tag) => <span key={tag} className={styles.chip}>{tag}</span>)}
-                </span>
+                <OverflowChips
+                  className={styles.tags}
+                  chip_class={styles.chip}
+                  more_class={styles.chip_more}
+                  label='Tags'
+                  focusable
+                  chips={current.tags.map((tag) => ({ key: tag, content: <span>{tag}</span> }))}
+                />
               )}
             </div>
             {current !== null && (
