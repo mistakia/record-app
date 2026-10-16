@@ -435,7 +435,11 @@ Every glyph-only or icon-only control carries a paper tip naming what it does, a
 - **Scrollbars** — thin overlay scrollbars in `--color-border`, visible on scroll.
 - **Text selection** — `::selection` in `--color-accent-wash`; chrome (nav, buttons, row indices) is `user-select: none`, values (titles, identifiers in the inspector) are selectable.
 - **Media Session** — the OS now-playing surface shows title, artist, and the track's artwork from `GET /images/{cid}`.
-- **Platforms off macOS** — the same paper and screens; the native frame stays and the drag regions are omitted.
+- **Platforms off macOS** — the same paper and screens; the native frame stays and the drag regions are omitted. On iOS (`record-ios`), touch changes four things:
+  - Touch replaces hover and the keyboard cursor: rows and buttons show `surfacePressed` (the cursor wash) while pressed, and actions a hover would reveal sit in swipes and the long-press menu.
+  - Type runs about 2pt over this scale for reading distance (13px rows become 15pt) and grows with Dynamic Type. The bottom chrome, the nav strip and mini-player, stops growing at the largest standard size, as the system tab bar does.
+  - Departure Mono is used on paper only from 20pt up, and inside a screen for the 13pt `// ` labels the glow carries.
+  - Interactive targets are at least 44pt, so small and medium buttons are 32pt and 40pt tall.
 
 ## Anti-Patterns
 
