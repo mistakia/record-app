@@ -201,7 +201,7 @@ export const PlayerBar = () => {
                   more_class={styles.chip_more}
                   label='Tags'
                   focusable
-                  chips={current.tags.map((tag) => ({ key: tag, content: <span>{tag}</span> }))}
+                  chips={current.tags.map((tag) => ({ key: tag, text: tag, content: <span>{tag}</span> }))}
                 />
               )}
             </div>

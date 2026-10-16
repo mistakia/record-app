@@ -2,17 +2,22 @@
 // that fit whole, then a +N chip for the rest. Hovering +N, or pressing it,
 // opens a paper popover with every chip, wrapped; the pointer can move into
 // it, and the chips there act as they do on the line. Esc, a click
-// elsewhere, a scroll, or leaving both closes it. The track row's tags and
-// the now-playing block's share it.
+// elsewhere, a scroll, or leaving both closes it. Its `filter` discloses a
+// text field that narrows the chips and holds the popover open; Esc puts
+// the field away before it closes the popover. The track row's tags and the
+// now-playing block's share it.
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
 import { createPortal } from 'react-dom'
 
 import styles from './overflow-chips.module.css'
+import { FilterField, FilterToggle } from './filter-field.tsx'
 import { fit_count } from './overflow-chips-logic.ts'
+import { matches_filter } from './text-filter.ts'
 import { place_tip, TIP_DELAY_MS } from './tooltip-logic.ts'
 
-export interface Chip { key: string, content: ReactNode }
+// text is what the popover's filter matches.
+export interface Chip { key: string, text: string, content: ReactNode }
 
 // The pointer may cross the gap between +N and the popover this long
 // before the popover goes.
@@ -40,6 +45,10 @@ export const OverflowChips = ({ chips, className, chip_class, more_class, label,
   // Open by hover goes when the pointer leaves; open by press stays.
   const [open, set_open] = useState<'hover' | 'pressed' | null>(null)
   const [position, set_position] = useState<{ left: number, top: number } | null>(null)
+  // The popover's filter, null while put away.
+  const [query, set_query] = useState<string | null>(null)
+  const query_ref = useRef(query)
+  query_ref.current = query
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   // The chips' identity: a new set is measured again, a re-render is not.
   const keys = chips.map(({ key }) => key).join('\n')
@@ -70,6 +79,7 @@ export const OverflowChips = ({ chips, className, chip_class, more_class, label,
   const close = (): void => {
     clearTimeout(timer.current)
     set_open(null)
+    set_query(null)
   }
 
   // Placed as a tip is: under +N, or above it in the bottom quarter.
@@ -82,7 +92,7 @@ export const OverflowChips = ({ chips, className, chip_class, more_class, label,
     const { width, height } = popover.current.getBoundingClientRect()
     const { left, top } = place_tip({ anchor, tip: { width, height }, viewport: { width: window.innerWidth, height: window.innerHeight } })
     set_position({ left, top })
-  }, [open, keys])
+  }, [open, keys, query])
 
   useEffect(() => {
     if (open === null) return
@@ -94,7 +104,8 @@ export const OverflowChips = ({ chips, className, chip_class, more_class, label,
       if (event.key !== 'Escape') return
       event.preventDefault()
       event.stopPropagation()
-      close()
+      if (query_ref.current !== null) set_query(null)
+      else close()
     }
     const scrolled = (event: Event): void => { if (popover.current?.contains(event.target as Node) !== true) close() }
     window.addEventListener('mousedown', outside)
@@ -112,6 +123,14 @@ export const OverflowChips = ({ chips, className, chip_class, more_class, label,
   // Nothing left to disclose (a tag removed, the line widened): it closes.
   useEffect(() => { if (hidden === 0) close() }, [hidden])
   useEffect(() => () => { clearTimeout(timer.current) }, [])
+
+  const listed = query === null ? chips : chips.filter(({ text }) => matches_filter(text, query))
+  // Asking for the filter pins the popover, so the pointer may wander.
+  const open_filter = (): void => {
+    clearTimeout(timer.current)
+    set_open('pressed')
+    set_query('')
+  }
 
   const enter = (): void => {
     clearTimeout(timer.current)
@@ -174,9 +193,14 @@ export const OverflowChips = ({ chips, className, chip_class, more_class, label,
           onMouseDown={contain}
           onContextMenu={contain}
         >
-          <span className={styles.label}>{label} · {chips.length}</span>
+          <span className={styles.head}>
+            <span className={styles.label}>{label} · {listed.length === chips.length ? chips.length : `${listed.length} of ${chips.length}`}</span>
+            {query === null && <FilterToggle label={label} on_open={() => { open_filter() }} />}
+          </span>
+          {query !== null && <FilterField label={label} value={query} on_change={set_query} on_dismiss={() => { set_query(null) }} />}
           <span className={styles.all}>
-            {chips.map(({ key, content }) => <span key={key} className={styles.chip}>{content}</span>)}
+            {listed.map(({ key, content }) => <span key={key} className={styles.chip}>{content}</span>)}
+            {listed.length === 0 && <span className={styles.none}>no tag matches</span>}
           </span>
         </div>,
         document.body

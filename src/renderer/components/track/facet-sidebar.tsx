@@ -2,10 +2,16 @@
 // facets (label-facets.ts), each a foldable framed section listing its
 // labels with their counts. A label toggles in the filter; a track matches
 // any label within a facet and every facet selected, and each hand label on
-// its own. Counts are the library's, not narrowed by the filter.
+// its own. Counts are the library's, not narrowed by the filter. A text
+// filter, disclosed on demand, narrows the labels shown: every facet holding
+// a match opens, the rest go, and a selected label stays in sight.
+
+import { useState } from 'react'
 
 import styles from './facet-sidebar.module.css'
+import { FilterField, FilterToggle } from '#renderer/components/common/filter-field.tsx'
 import { FramedSection } from '#renderer/components/common/framed-section.tsx'
+import { matches_filter } from '#renderer/components/common/text-filter.ts'
 import { group_facets, label_value } from '#renderer/store/label-facets.ts'
 import { node_api } from '#renderer/store/api.ts'
 
@@ -19,13 +25,27 @@ export const FacetSidebar = ({ library_address, selected, on_toggle }: {
 }) => {
   const tags = node_api.endpoints.get_tags.useQuery(library_address === '' ? {} : { library_addresses: [library_address] })
   const facets = group_facets(tags.data ?? [])
+  // null while the filter is put away.
+  const [query, set_query] = useState<string | null>(null)
+  const filtering = query !== null && query.trim() !== ''
+  const shown = filtering
+    ? facets
+      .map(({ facet, labels }) => ({ facet, labels: labels.filter(({ tag }) => selected.includes(tag) || matches_filter(tag, query)) }))
+      .filter(({ labels }) => labels.length > 0)
+    : facets
   // While a library's labels load the column holds its width, so the list
   // does not jump sideways when they arrive.
   if (tags.isLoading) return <aside className={styles.sidebar} aria-busy='true' />
   if (facets.length === 0) return null
   return (
     <aside className={styles.sidebar} aria-label='Filter by label' data-testid='facet-sidebar'>
-      {facets.map(({ facet, labels }) => {
+      <div className={styles.filter}>
+        {query === null
+          ? <FilterToggle label='Labels' on_open={() => { set_query('') }} />
+          : <FilterField label='Labels' value={query} on_change={set_query} on_dismiss={() => { set_query(null) }} />}
+      </div>
+      {filtering && shown.length === 0 && <p className={styles.none}>no label matches</p>}
+      {shown.map(({ facet, labels }) => {
         // A folded facet still says when it holds part of the filter.
         const chosen = labels.filter(({ tag }) => selected.includes(tag)).length
         return (
@@ -34,6 +54,7 @@ export const FacetSidebar = ({ library_address, selected, on_toggle }: {
             title={`${facet ?? 'Labels'}${chosen === 0 ? '' : ` · ${chosen} on`}`}
             fold_id={`facet:${facet ?? ''}`}
             default_open={labels.length <= OPEN_UP_TO}
+            force_open={filtering}
             count={labels.length}
             width='full'
           >

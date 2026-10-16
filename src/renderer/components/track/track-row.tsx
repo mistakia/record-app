@@ -50,13 +50,14 @@ const cell_text = (track: Track, column: Column): string => {
 // Every tag stays reachable: those the cell fits whole, then +N for the rest,
 // which shows them all.
 const Tags = ({ track, removable, handlers }: { track: Track, removable: ReadonlySet<string>, handlers: RowHandlers }) => (
-  <span role='cell' className={styles.cell}>
+  <span role='cell' data-col='tags' className={styles.cell}>
     <OverflowChips
       className={styles.tags}
       chip_class={styles.chip}
       label='Tags'
       chips={track.tags.map(({ tag, library_address }) => ({
         key: `${library_address} ${tag}`,
+        text: tag,
         content: (
           <>
             <button
@@ -121,7 +122,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
   const render_column = (column: Column) => column.id === 'tags'
     ? <Tags key='tags' track={track} removable={removable} handlers={handlers} />
     : (
-      <span key={column.id} role='cell' className={[styles.cell, column.quiet === true ? styles.quiet : '', column.align === 'end' ? styles.end : '', column.id === 'artist' || column.id === 'album' ? styles.secondary : ''].join(' ')}>
+      <span key={column.id} role='cell' data-col={column.id} className={[styles.cell, column.quiet === true ? styles.quiet : '', column.align === 'end' ? styles.end : '', column.id === 'artist' || column.id === 'album' ? styles.secondary : ''].join(' ')}>
         {cell_text(track, column)}
       </span>
       )
@@ -173,7 +174,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
           ★
         </button>
       </span>
-      <span role='cell' className={`${styles.cell} ${styles.title_cell}`}>
+      <span role='cell' data-col='title' className={`${styles.cell} ${styles.title_cell}`}>
         <span className={styles.title}>{track.title ?? 'Untitled'}</span>
         {track.is_pinned === true && <span className={styles.pinned} aria-label='Pinned' data-testid='pinned' {...tip('Pinned')}>◆</span>}
       </span>

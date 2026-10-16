@@ -74,3 +74,9 @@ export const grid_min_width = (visible: readonly Column[], widths: ColumnWidths 
   const minimums = tracks.map((width) => /^minmax\(([^,]+),/.exec(width)?.[1]?.trim() ?? width)
   return `calc(${minimums.join(' + ')} + ${tracks.length - 1} * var(--space-sm) + var(--space-sm) + var(--space-lg))`
 }
+
+// The width that fits a column to what it holds: the widest of its header and
+// the cells measured, rounded up with a hair of room, held to the resize
+// bounds.
+export const fit_column_width = ({ contents, min, max }: { contents: readonly number[], min: number, max: number }): number =>
+  Math.min(Math.max(Math.ceil(Math.max(0, ...contents)) + 2, min), max)

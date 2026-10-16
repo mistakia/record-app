@@ -57,6 +57,17 @@
   user-select: none;
 }
 
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.none {
+  color: var(--color-text-tertiary);
+}
+
 .label {
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xxs);

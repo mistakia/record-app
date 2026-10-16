@@ -6,6 +6,22 @@
   scrollbar-width: thin;
 }
 
+/* The on-demand label filter, above the facets. */
+.filter {
+  display: flex;
+  height: 22px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: var(--space-xs);
+}
+
+.none {
+  margin: 0;
+  padding: 0 6px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
 .labels {
   margin: 0;
   padding: 0;

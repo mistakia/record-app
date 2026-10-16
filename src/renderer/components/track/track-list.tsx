@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEve
 import { shallowEqual, useStore } from 'react-redux'
 
 import styles from './track-list.module.css'
-import { COLUMNS, grid_min_width, grid_template, NO_COLUMN_WIDTHS, NO_HIDDEN_COLUMNS, visible_columns, type ColumnId, type ColumnWidths } from './columns.ts'
+import { COLUMNS, fit_column_width, grid_min_width, grid_template, NO_COLUMN_WIDTHS, NO_HIDDEN_COLUMNS, visible_columns, type ColumnId, type ColumnWidths } from './columns.ts'
 import { register_list_commands } from './list-commands.ts'
 import { PageSubscription, select_list_page, type ListSource } from './list-source.ts'
 import { pages_for_rows, row_location } from './track-pages.ts'
@@ -200,6 +200,12 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
   // COLUMN_STEP_PX from the column's current width, Shift makes four, and
   // Home restores the default.
   const resize_step = (id: ColumnId, event: KeyboardEvent<HTMLElement>): void => {
+    if (event.key === 'Enter') {
+      resize_fit(id)
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
     if (event.key === 'Home') {
       const next = { ...widths_ref.current }
       delete next[id]
@@ -217,6 +223,28 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
     set_widths({ ...widths_ref.current, [id]: Math.round(width) })
     event.preventDefault()
     event.stopPropagation()
+  }
+
+  // A double-click on the handle, or Enter on a focused one, fits the column
+  // to the widest of its header and the rows on screen (the list renders only
+  // those), each measured at its natural width rather than its clipped one.
+  const resize_fit = (id: ColumnId): void => {
+    const natural = (node: Node): number => {
+      const range = document.createRange()
+      range.selectNodeContents(node)
+      return range.getBoundingClientRect().width
+    }
+    const label = header.current?.querySelector(`[data-col=${id}]`)?.firstChild
+    const contents = [...(scroller.current?.querySelectorAll<HTMLElement>(`[role=cell][data-col=${id}]`) ?? [])].map((cell) => {
+      if (id !== 'tags') return natural(cell)
+      // Every chip whole, folded ones too: they are measured where they hide.
+      const line = cell.firstElementChild
+      const chips = [...(line?.querySelectorAll<HTMLElement>(':scope > [data-chip]') ?? [])]
+      const gap = line === null || line === undefined ? 0 : Number.parseFloat(getComputedStyle(line).columnGap) || 0
+      return chips.reduce((sum, chip) => sum + chip.offsetWidth, 0) + gap * Math.max(0, chips.length - 1)
+    })
+    if (label !== undefined && label !== null) contents.push(natural(label))
+    set_widths({ ...widths_ref.current, [id]: fit_column_width({ contents, min: COLUMN_MIN_PX, max: COLUMN_MAX_PX }) })
   }
 
   // The latest closure for the registered commands, which outlive a render.
@@ -290,7 +318,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
     return engine_state === 'loading' ? 'loading' : engine_state === 'playing' ? 'playing' : 'paused'
   }
 
-  const resize_handlers: ResizeHandlers = { start: resize_start, move: resize_move, end: resize_end, step: resize_step }
+  const resize_handlers: ResizeHandlers = { start: resize_start, move: resize_move, end: resize_end, step: resize_step, fit: resize_fit }
 
   return (
     <div
@@ -395,6 +423,7 @@ interface ResizeHandlers {
   move: (event: PointerEvent<HTMLElement>) => void
   end: () => void
   step: (id: ColumnId, event: KeyboardEvent<HTMLElement>) => void
+  fit: (id: ColumnId) => void
 }
 
 // A data column's header: its label or sort button, and the drag handle seated
@@ -431,6 +460,10 @@ const ColumnHeader = ({ id, label, column_sort, sort, align, resize_handlers }: 
         onPointerUp={() => { resize_handlers.end() }}
         onPointerCancel={() => { resize_handlers.end() }}
         onKeyDown={(event) => { resize_handlers.step(id, event) }}
+        onDoubleClick={(event) => {
+          event.stopPropagation()
+          resize_handlers.fit(id)
+        }}
       />
     </span>
   )
