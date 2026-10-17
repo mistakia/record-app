@@ -52,9 +52,11 @@
   margin-right: 5px;
 }
 
+/* Centred on the block, beside the artist rather than the title, so it never
+   reads as the clipped title's own ellipsis. */
 .more {
   flex: none;
-  align-self: flex-start;
+  align-self: center;
   padding: 0 var(--space-xs);
   color: var(--color-text-secondary);
   opacity: 0;
@@ -107,7 +109,7 @@
   white-space: nowrap;
 }
 
-/* Tags as legacy's chips, fading out at the right edge. */
+/* Tags as legacy's chips, those that fit, then +N (overflow-chips.tsx). */
 .tags {
   gap: var(--space-xs);
   margin-top: var(--space-sm);
@@ -125,9 +127,13 @@
   white-space: nowrap;
 }
 
-.chip_more button {
+.chip button {
   color: inherit;
   font-size: inherit;
+}
+
+.chip:hover {
+  border-color: var(--color-accent);
 }
 
 /* Never narrower than its seven 40px controls; the thirds beside it give

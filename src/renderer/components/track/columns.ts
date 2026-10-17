@@ -24,7 +24,7 @@ export interface Column {
 export const COLUMNS: readonly Column[] = [
   { id: 'artist', label: 'Artist', width: 'minmax(80px, 1fr)', sort: 'artist', lead: true },
   { id: 'album', label: 'Album', width: 'minmax(80px, 1fr)', sort: 'album', lead: true },
-  { id: 'tags', label: 'Tags', width: 'minmax(80px, 0.9fr)' },
+  { id: 'tags', label: 'Tags', width: 'minmax(100px, 1.4fr)' },
   { id: 'kbps', label: 'Kbps', width: '6ch', sort: 'bitrate', quiet: true, align: 'end' },
   { id: 'time', label: 'Time', width: '6ch', sort: 'duration', quiet: true, align: 'end' },
   { id: 'format', label: 'Fmt', width: '5ch', quiet: true },

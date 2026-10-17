@@ -106,6 +106,10 @@ export const PlayerBar = () => {
     close_pane: () => false
   })
   const adoptable = current?.content_cid !== undefined
+  // The queue keeps tag names only; a click opens the library the tag came
+  // from, as a row's chip does, else the one the track was queued from.
+  const tag_library = (tag: string): string =>
+    playing_track()?.tags.find((entry) => entry.tag === tag)?.library_address ?? current?.library_address ?? ''
   const has_current = current !== null
 
   // Off a track list, f adopts the playing track and . opens its menu.
@@ -198,10 +202,17 @@ export const PlayerBar = () => {
                 <OverflowChips
                   className={styles.tags}
                   chip_class={styles.chip}
-                  more_class={styles.chip_more}
                   label='Tags'
                   focusable
-                  chips={current.tags.map((tag) => ({ key: tag, text: tag, content: <span>{tag}</span> }))}
+                  chips={current.tags.map((tag) => ({
+                    key: tag,
+                    text: tag,
+                    content: (
+                      <button type='button' data-variant='glyph' onClick={() => { on_tag_clicked({ tag, library_address: tag_library(tag) }) }}>
+                        {tag}
+                      </button>
+                    )
+                  }))}
                 />
               )}
             </div>
