@@ -61,6 +61,9 @@ const show_notice = ({ title, body }: ImportNotice): void => {
     return
   }
   const notice = new Notification({ title, body })
+  // macOS refuses an ad-hoc signed app (UNErrorDomain 1); a release build is
+  // ad-hoc, so only a build signed with a real identity shows the notice.
+  notice.on('failed', (_event, error) => { console.warn(`notice refused by the OS: ${error}`) })
   notice.on('click', () => {
     const [window] = BrowserWindow.getAllWindows()
     if (window === undefined) {
