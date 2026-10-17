@@ -53,7 +53,11 @@ export const create_import_notices = ({ show, window_focused }: {
         progress.errors.push(typeof error?.error?.message === 'string' ? error.error.message : 'failed')
       } else if (type === 'import:finished') {
         imports.delete(payload.import_id)
-        if (!window_focused()) show(notice_for_import(progress))
+        if (window_focused()) {
+          console.info(`notice: import ${payload.import_id} finished with the window in front; the toast covers it`)
+          return
+        }
+        show(notice_for_import(progress))
       }
     }
   }

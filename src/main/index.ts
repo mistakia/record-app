@@ -60,6 +60,7 @@ const show_notice = ({ title, body }: ImportNotice): void => {
     console.info(`notice not shown: ${title}: ${body}`)
     return
   }
+  console.info(`notice: ${title}: ${body}`)
   const notice = new Notification({ title, body })
   // macOS refuses an ad-hoc signed app (UNErrorDomain 1); a release build is
   // ad-hoc, so only a build signed with a real identity shows the notice.
@@ -93,7 +94,15 @@ const start = async (): Promise<void> => {
     settings_path: join(user_data, 'snapshot-settings.json')
   })
   const settings = await open_settings_store({ file_path: join(user_data, 'settings.json') })
-  const import_notices = create_import_notices({ show: show_notice, window_focused: () => BrowserWindow.getFocusedWindow() !== null })
+  // A macOS window stays key while another app is in front, so the window
+  // counts as in front only while the app is active too.
+  let app_active = true
+  app.on('did-become-active', () => { app_active = true })
+  app.on('did-resign-active', () => { app_active = false })
+  const import_notices = create_import_notices({
+    show: show_notice,
+    window_focused: () => (process.platform !== 'darwin' || app_active) && BrowserWindow.getFocusedWindow() !== null
+  })
   const node_session = create_node_session({
     broadcast,
     on_event: import_notices.on_event,
