@@ -42,8 +42,10 @@ const probe_node = ({ sent, on_unauthorized, check = test_connection }: {
   return result.ok || (result.failure.kind !== 'network' && result.failure.kind !== 'tls')
 }
 
-export const create_node_session = ({ broadcast, on_unauthorized = () => {}, open_events = open_node_events, check = test_connection }: {
+export const create_node_session = ({ broadcast, on_event: on_node_event = () => {}, on_unauthorized = () => {}, open_events = open_node_events, check = test_connection }: {
   broadcast: (channel: string, payload: EventsState | NodeEventMessage) => void
+  // Each event of the current connection, for main's own consumers.
+  on_event?: (message: NodeEventMessage) => void
   // The node answered 401 to the credentials the session sent.
   on_unauthorized?: (sent: SentCredentials) => void
   open_events?: typeof open_node_events
@@ -92,7 +94,9 @@ export const create_node_session = ({ broadcast, on_unauthorized = () => {}, ope
         token,
         probe,
         on_event: (message) => {
-          if (started === generation) broadcast(IPC_CHANNELS.events_message, message)
+          if (started !== generation) return
+          broadcast(IPC_CHANNELS.events_message, message)
+          on_node_event(message)
         },
         on_state: (state) => {
           if (started !== generation) return

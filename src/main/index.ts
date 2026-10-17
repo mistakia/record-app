@@ -3,7 +3,7 @@
 
 import { join } from 'node:path'
 
-import { app, BrowserWindow, powerMonitor, session } from 'electron'
+import { app, BrowserWindow, Notification, powerMonitor, session } from 'electron'
 
 import { IPC_CHANNELS } from '#shared/bridge.ts'
 import { install_app_menu } from './app-menu.ts'
@@ -15,6 +15,7 @@ import { create_bundled_node, logs_dir } from './bundled/bundled-node.ts'
 import { create_diagnostics } from './diagnostics.ts'
 import { create_node_auth } from './node-auth.ts'
 import { create_node_connection } from './node-connection.ts'
+import { create_import_notices, type ImportNotice } from './import-notices.ts'
 import { create_node_session } from './node-session.ts'
 import { open_settings_store } from './settings-store.ts'
 import { open_snapshot_store } from './snapshot-store.ts'
@@ -52,6 +53,27 @@ const broadcast = (channel: string, payload: unknown): void => {
   for (const window of BrowserWindow.getAllWindows()) window.webContents.send(channel, payload)
 }
 
+// A macOS notification; clicking it brings the window forward. Background
+// mode shows none, since a session must make no sound and draw no eye.
+const show_notice = ({ title, body }: ImportNotice): void => {
+  if (BACKGROUND || !Notification.isSupported()) {
+    console.info(`notice not shown: ${title}: ${body}`)
+    return
+  }
+  const notice = new Notification({ title, body })
+  notice.on('click', () => {
+    const [window] = BrowserWindow.getAllWindows()
+    if (window === undefined) {
+      open_window()
+      return
+    }
+    if (window.isMinimized()) window.restore()
+    window.show()
+    window.focus()
+  })
+  notice.show()
+}
+
 // Started from whenReady rather than a top-level await, which would hold the
 // module's evaluation open and stall tooling that waits for it to finish.
 const start = async (): Promise<void> => {
@@ -68,8 +90,10 @@ const start = async (): Promise<void> => {
     settings_path: join(user_data, 'snapshot-settings.json')
   })
   const settings = await open_settings_store({ file_path: join(user_data, 'settings.json') })
+  const import_notices = create_import_notices({ show: show_notice, window_focused: () => BrowserWindow.getFocusedWindow() !== null })
   const node_session = create_node_session({
     broadcast,
+    on_event: import_notices.on_event,
     on_unauthorized: (sent) => { connection.unauthorized(sent) }
   })
   const manager = create_bundled_node({
