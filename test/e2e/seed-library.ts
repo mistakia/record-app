@@ -13,14 +13,14 @@ const dist = (path: string) => fileURLToPath(new URL(`../../node_modules/record-
 const ARTISTS = 1200
 const ALBUMS_PER_ARTIST = 6
 const TAGS = ['house', 'techno', 'ambient', 'disco', 'jazz', 'dub', 'electro', 'soul', 'funk', 'garage', 'breaks', 'acid']
-const TIERS = ['personal', 'personal-picks', 'family', 'vacay-catalogue']
+const TIERS = ['personal', 'personal-pick', 'family', 'vacay-catalogue']
 
-// Facet labels shaped like the record-node-library exporter's: a tier and an
-// origin on every track, and playlist and DJ-session labels on some, so the
+// Facet labels shaped like the record-node-library exporter's: a collection
+// tier and a file origin on every track, and playlist and DJ-session labels on some, so the
 // facet sidebar lists about 900 labels.
 const facet_labels = (index: number): string[] => [
-  `tier/${TIERS[index % TIERS.length] as string}`,
-  `origin/family-${index % 14}`,
+  `collection-tier/${TIERS[index % TIERS.length] as string}`,
+  `file-origin/family-${index % 14}`,
   ...(index % 5 === 0 ? [`playlist/show-${index % 300}`] : []),
   ...(index % 7 === 0 ? [`dj-session/2015-${String(index % 500).padStart(3, '0')}`] : []),
   ...(index % 11 === 0 ? [`view/cluster-${index % 9}`] : [])

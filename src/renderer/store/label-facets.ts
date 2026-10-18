@@ -1,5 +1,5 @@
-// Labels grouped into facets by their prefix: `tier/personal` belongs to the
-// `tier` facet, and a label with no `/` is a hand label. A track filter
+// Labels grouped into facets by their prefix: `collection-tier/personal` belongs
+// to the `collection-tier` facet, and a label with no `/` is a hand label. A track filter
 // matches any label within a facet and every facet selected, while each
 // hand label must match on its own, as the flat tag filter did. The node
 // takes that as `tag_groups` (any-of within a group, all-of across groups)
@@ -9,7 +9,7 @@ import type { TagCount } from '#renderer/api/types.ts'
 
 // The exporter's facets first, in the order a reader narrows by, then any
 // other prefix A to Z; hand labels come last.
-const FACET_ORDER = ['tier', 'origin', 'listening-era', 'playlist', 'dj-session', 'discovered-via', 'view']
+const FACET_ORDER = ['collection-tier', 'view', 'operator-tag', 'rating', 'play-history', 'genre', 'mood', 'energy', 'listening-era', 'playlist', 'dj-session', 'discovered-via', 'file-origin', 'imported-library']
 
 // A facet prefix is a lowercase slug, as the exporter writes them, so a hand
 // label that merely contains a slash (`AC/DC`) stays a hand label.
