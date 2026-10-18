@@ -83,6 +83,15 @@ const install = async (dmg: string, name: string): Promise<{ app_path: string, b
 // wait on the Intel slice is scaled.
 const slow = (ms: number): number => (arch === 'x86_64' ? 4 * ms : ms)
 
+// The bundled node boots Electron's utility process under Rosetta, and on the
+// hosted runner that path alone costs about two minutes: the v1.0.0 Intel
+// smoke passed at ~119 s against the old 120 s limit, a ~1% margin that any
+// runner variance fails (record-node itself listens in ~2 s under Rosetta on a
+// real Mac, so the cost is the runner's utility-process boot, not the node).
+// The base is sized so the 4x Intel scale leaves real headroom rather than
+// just clearing the observed time.
+const NODE_STARTUP_TIMEOUT_MS = 90_000
+
 const check_fuses = async (app_path: string, label: string): Promise<void> => {
   const wire = await getCurrentFuseWire(app_path)
   const read = Object.fromEntries(Object.entries(wire).filter(([key]) => key !== 'version').map(([key, state]) => [key, state === FuseState.ENABLE]))
@@ -123,7 +132,7 @@ try {
   await mkdir(profile)
   await writeFile(join(profile, 'bundled-settings.json'), JSON.stringify({ data_dir }))
 
-  const app = spawn('arch', [`-${arch}`, binary, `--user-data-dir=${profile}`, '--remote-debugging-port=0'], { stdio: 'ignore', env: { ...process.env, RECORD_BACKGROUND: 'hidden', RECORD_TEST_STARTUP_TIMEOUT_MS: String(slow(30_000)) } })
+  const app = spawn('arch', [`-${arch}`, binary, `--user-data-dir=${profile}`, '--remote-debugging-port=0'], { stdio: 'ignore', env: { ...process.env, RECORD_BACKGROUND: 'hidden', RECORD_TEST_STARTUP_TIMEOUT_MS: String(slow(NODE_STARTUP_TIMEOUT_MS)) } })
   const exited = new Promise<number | null>((resolve) => { app.once('exit', resolve) })
   try {
     const port = await wait_for(async () => {
@@ -141,9 +150,13 @@ try {
       const state = await bundled_state(window)
       if (state.status === 'failed') throw new Error(`the bundled node failed: ${JSON.stringify(state)}`)
       return state.status === 'running' ? state : null
-    }, 'the bundled node', slow(60_000))
+    }, 'the bundled node', slow(NODE_STARTUP_TIMEOUT_MS + 30_000))
     const child_command = execFileSync('ps', ['-o', 'command=', '-p', String(running.pid)], { encoding: 'utf8' }).trim()
     step('bundled node', { pid: running.pid, url: running.url, version: running.version, data_dir: running.data_dir, ingest_disabled: running.ingest_disabled })
+    // The node's own startup line, so a passing run records how close it ran
+    // to NODE_STARTUP_TIMEOUT_MS and the next budget change has a measurement.
+    const node_log = await readFile(join(profile, 'logs', 'node.log'), 'utf8').catch(() => '')
+    step('bundled node startup', node_log.split('\n').findLast((line) => line.includes('listening on http'))?.replace(/^\S+ out /, '') ?? '(no startup line)')
     // Which of node-datachannel's two binaries the child loaded shows the slice it runs.
     const native = execFileSync('lsof', ['-p', String(running.pid)], { encoding: 'utf8' }).split('\n').find((line) => line.includes('node_datachannel.node'))?.match(/@node-datachannel\/([\w-]+)/)?.[1] ?? 'none'
     step('bundled node process', { native, command: child_command.slice(0, 160) })
