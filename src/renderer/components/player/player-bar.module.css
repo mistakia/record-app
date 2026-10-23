@@ -396,15 +396,26 @@
   white-space: nowrap;
 }
 
+/* Clamped exactly as the label is, so a narrow right third ellipsizes every
+   playing-from line instead of the subtitle and kicker running at full width
+   over the volume. */
 .subtitle {
+  max-width: 100%;
+  overflow: hidden;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xxs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .kicker {
+  max-width: 100%;
+  overflow: hidden;
   color: var(--color-text-tertiary);
   font-size: 8px;
   letter-spacing: 0.5px;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
