@@ -21,9 +21,10 @@ import { use_hotkeys } from '#renderer/hooks/use-hotkeys.ts'
 import { use_node_events } from '#renderer/hooks/use-node-events.ts'
 import { use_media_session } from '#renderer/hooks/use-player.ts'
 import { Identity } from '#renderer/pages/identity.tsx'
-import { LibraryProfile, LibraryWriters } from '#renderer/pages/library-manage.tsx'
+import { LibraryAbout, LibraryWriters } from '#renderer/pages/library-manage.tsx'
 import { LinkLibrary } from '#renderer/pages/link-library.tsx'
 import { IssueCapability } from '#renderer/pages/issue-capability.tsx'
+import { FirstRun, use_first_run } from '#renderer/pages/first-run.tsx'
 import { NewLibrary } from '#renderer/pages/new-library.tsx'
 import { Importer } from '#renderer/pages/importer.tsx'
 import { Libraries } from '#renderer/pages/libraries.tsx'
@@ -68,14 +69,14 @@ export const App = () => {
 }
 
 // Pages that need a node; without one they send the user to Settings ›
-// Connection.
+// Connection. A bundled node's first run asks the person's name first.
 const NODE_PAGES: Array<{ path: string, element: ReactElement }> = [
   { path: ROUTES.tracks, element: <Tracks /> },
   { path: ROUTES.listens, element: <Listens /> },
   { path: ROUTES.libraries, element: <Libraries /> },
   { path: ROUTES.link_library, element: <LinkLibrary /> },
   { path: ROUTES.new_library, element: <NewLibrary /> },
-  { path: ROUTES.library_profile, element: <LibraryProfile /> },
+  { path: ROUTES.library_about, element: <LibraryAbout /> },
   { path: ROUTES.library_writers, element: <LibraryWriters /> },
   { path: ROUTES.issue_capability, element: <IssueCapability /> },
   { path: ROUTES.import, element: <Importer /> },
@@ -86,6 +87,7 @@ const NODE_PAGES: Array<{ path: string, element: ReactElement }> = [
 // body over the player bar.
 const Shell = ({ configured }: { configured: boolean }) => {
   use_hotkeys()
+  const first_run = use_first_run()
   const queue_open = use_app_selector((state) => state.ui.queue_open)
   const unconfigured_route = settings_route('connection')
   return (
@@ -102,7 +104,7 @@ const Shell = ({ configured }: { configured: boolean }) => {
               <Routes>
                 <Route path={ROUTES.settings} element={<Settings />} />
                 {NODE_PAGES.map(({ path, element }) => (
-                  <Route key={path} path={path} element={configured ? element : <Navigate to={unconfigured_route} replace />} />
+                  <Route key={path} path={path} element={configured ? first_run ? <FirstRun /> : element : <Navigate to={unconfigured_route} replace />} />
                 ))}
                 <Route path='*' element={<Navigate to={configured ? ROUTES.tracks : unconfigured_route} replace />} />
               </Routes>

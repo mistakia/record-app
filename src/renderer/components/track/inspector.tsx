@@ -15,7 +15,7 @@ import { Artwork } from '#renderer/components/common/artwork.tsx'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { ShowStrip } from '#renderer/components/common/show-strip.tsx'
 import { tip } from '#renderer/components/common/tooltip-logic.ts'
-import { CATEGORY_LABELS, describe_holders, library_category, library_name, short_address } from '#renderer/components/library/library-category.ts'
+import { CATEGORY_LABELS, describe_holders, library_category, library_name, unnamed_library } from '#renderer/components/library/library-category.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 
@@ -36,7 +36,7 @@ export const Inspector = ({ source, on_close }: { source: ListSource, on_close: 
   const libraries = node_api.endpoints.get_libraries.useQuery().data
   const name_of = (address: string): string => {
     const library = libraries?.find((candidate) => candidate.address === address)
-    return library === undefined ? short_address(address) : library_name(library)
+    return library === undefined ? unnamed_library(address) : library_name(library)
   }
 
   return (

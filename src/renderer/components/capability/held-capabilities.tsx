@@ -7,7 +7,7 @@
 import styles from './capabilities.module.css'
 import { CapabilityRow } from './library-capabilities.tsx'
 import { LibraryAddress } from '#renderer/components/library/library-address.tsx'
-import { library_name, short_address } from '#renderer/components/library/library-category.ts'
+import { library_name, unnamed_library } from '#renderer/components/library/library-category.ts'
 import { short_key } from '#renderer/library/capabilities.ts'
 import { set_left, use_left_libraries } from '#renderer/library/left-libraries.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -20,7 +20,7 @@ export const HeldCapabilities = () => {
   const left = use_left_libraries(node_key)
   const name_of = (address: string): string => {
     const library = libraries.data?.find((each) => each.address === address)
-    return library === undefined ? short_address(address) : library_name(library)
+    return library === undefined ? unnamed_library(address) : library_name(library)
   }
   const not_served = held.error !== undefined && 'status' in held.error && held.error.status === 404
   // Held from others: a grant in one of the identity's own libraries is not.

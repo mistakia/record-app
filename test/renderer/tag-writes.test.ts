@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
-import { create_tag_writes, shown_tags, type ShownTag, type TaggedTrack } from '#renderer/components/track/tag-writes.ts'
+import { create_tag_writes, merge_label_result, shown_tags, type TaggedTrack } from '#renderer/components/track/tag-writes.ts'
 import type { WriteOutcome } from '#renderer/store/write.ts'
+import type { Track } from '#renderer/api/types.ts'
 import type { WriteTarget } from '#renderer/library/write-targets.ts'
 
 const OWN = '/record/own/a'
@@ -14,14 +15,16 @@ const fake_node = (tracks: TaggedTrack[], { refuse = new Set<string>() }: { refu
   const answer = (id: string): WriteOutcome<TaggedTrack> => ({ ok: true, data: { id, tags: [...(held.get(id) ?? [])] } })
   return {
     calls,
-    add_tag: async ({ track_id, tag }: { track_id: string, tag: string, target: WriteTarget }) => {
+    add_tag: async ({ track, tag }: { track: TaggedTrack, tag: string, target: WriteTarget }) => {
+      const track_id = track.id
       calls.push(`add ${track_id} ${tag}`)
       const tags = held.get(track_id) ?? []
       if (refuse.has(tag) || tags.some((each) => each.tag === tag)) return { ok: false } as const
       tags.push({ tag, library_address: OWN })
       return answer(track_id)
     },
-    remove_tag: async ({ track_id, tag }: { track_id: string } & ShownTag) => {
+    remove_tag: async ({ track, tag }: { track: TaggedTrack, tag: string, target: WriteTarget }) => {
+      const track_id = track.id
       calls.push(`remove ${track_id} ${tag}`)
       const tags = held.get(track_id) ?? []
       if (refuse.has(tag) || !tags.some((each) => each.tag === tag)) return { ok: false } as const
@@ -55,11 +58,11 @@ describe('tag writes', () => {
 
   test('a removal hides the chip at once and brings it back when the node refuses', async () => {
     const { writes, chips } = setup([{ id: 't1', tags: [{ tag: 'dub', library_address: OWN }, { tag: 'keep', library_address: OWN }] }], { refuse: new Set(['keep']) })
-    const removed = writes.remove({ tag: 'dub', library_address: OWN })
+    const removed = writes.remove({ tag: 'dub', library_address: OWN }, target)
     expect(chips()).toEqual(['keep'])
     await removed
     expect(chips()).toEqual(['keep'])
-    const refused = writes.remove({ tag: 'keep', library_address: OWN })
+    const refused = writes.remove({ tag: 'keep', library_address: OWN }, target)
     expect(chips()).toEqual([])
     await refused
     expect(chips()).toEqual(['keep'])
@@ -67,13 +70,13 @@ describe('tag writes', () => {
 
   test('a tag removed and added again is written again', async () => {
     const { node, writes, chips } = setup([{ id: 't1', tags: [{ tag: 'dub', library_address: OWN }] }])
-    await writes.remove({ tag: 'dub', library_address: OWN })
+    await writes.remove({ tag: 'dub', library_address: OWN }, target)
     expect(await writes.add('dub', target)).toBe(true)
     expect(node.calls).toEqual(['remove t1 dub', 'add t1 dub'])
     expect(chips()).toEqual(['dub'])
   })
 
-  test('a removal forwards only the tag fields, never a chip\'s display state', async () => {
+  test('a removal forwards the tag and its target, never a chip\'s display state', async () => {
     // The adder's chips are `{ tag, library_address, pending }` (tag-writes
     // ShownEntry); a removal must not spread that whole object, or the node
     // would refuse the undeclared `pending` query parameter.
@@ -81,8 +84,8 @@ describe('tag writes', () => {
     const writes = create_tag_writes<TaggedTrack>({
       initial: [{ id: 't1', tags: [{ tag: 'dub', library_address: OWN }] }],
       add_tag: async () => ({ ok: false }),
-      remove_tag: async (input) => {
-        received.push({ ...input })
+      remove_tag: async ({ track, tag, target: used }) => {
+        received.push({ track_id: track.id, tag, target: used })
         return { ok: true, data: { id: 't1', tags: [] } } as const
       },
       notify: () => {}
@@ -90,15 +93,16 @@ describe('tag writes', () => {
     // A `ShownEntry` from shown_tags passes the typed `remove` check, since
     // it adds fields to `ShownTag`; only the engine strips them.
     const chip: { tag: string, library_address: string, pending: boolean } = { tag: 'dub', library_address: OWN, pending: true }
-    await writes.remove(chip)
-    expect(received).toEqual([{ track_id: 't1', tag: 'dub', library_address: OWN }])
+    await writes.remove(chip, target)
+    expect(received).toEqual([{ track_id: 't1', tag: 'dub', target }])
+    expect(writes.get().removing).toEqual([])
   })
 
   test('a second removal of the same tag, or one of a tag already gone, sends nothing more', async () => {
     const { node, writes } = setup([{ id: 't1', tags: [{ tag: 'dub', library_address: OWN }] }], { refuse: new Set(['gone']) })
-    await Promise.all([writes.remove({ tag: 'dub', library_address: OWN }), writes.remove({ tag: 'dub', library_address: OWN })])
+    await Promise.all([writes.remove({ tag: 'dub', library_address: OWN }, target), writes.remove({ tag: 'dub', library_address: OWN }, target)])
     await writes.add('gone', target)
-    await writes.remove({ tag: 'gone', library_address: OWN })
+    await writes.remove({ tag: 'gone', library_address: OWN }, target)
     expect(node.calls).toEqual(['remove t1 dub', 'add t1 gone'])
   })
 
@@ -116,5 +120,13 @@ describe('tag writes', () => {
     expect(await again.writes.add('dub', target)).toBe(true)
     expect(again.node.calls).toEqual([])
     expect(again.notes).toEqual(['2 tracks already tagged dub.'])
+  })
+
+  test('a write answering with only the target\'s labels replaces that library\'s labels on the track', () => {
+    const track = { id: 't1', audio_cid: 'a', tags: [{ tag: 'dub', library_address: OWN }, { tag: 'mix', library_address: '/record/other/b' }] } as unknown as Track
+    const merged = merge_label_result({ track, result: { track_id: 't1', tags: ['dub', 'late'] }, library_address: OWN })
+    expect(merged.tags).toEqual([{ tag: 'mix', library_address: '/record/other/b' }, { library_address: OWN, tag: 'dub' }, { library_address: OWN, tag: 'late' }])
+    const whole = { ...track, tags: [] } as Track
+    expect(merge_label_result({ track, result: whole, library_address: OWN })).toBe(whole)
   })
 })

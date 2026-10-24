@@ -1,7 +1,7 @@
 // What an identity goes by before it names itself: a two-word handle read
 // from its public key, so the same identity reads the same on every device
 // and two identities rarely share one. A display default only; nothing is
-// written to the profile. Its avatar is its default library's pattern
+// written to the profile. Its avatar is the pattern its key gives it
 // (components/common/avatar-pattern.ts).
 
 const ADJECTIVES = [

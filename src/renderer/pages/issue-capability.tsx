@@ -11,7 +11,7 @@ import { ShowStrip } from '#renderer/components/common/show-strip.tsx'
 import { StepForm } from '#renderer/components/common/step-form.tsx'
 import { FilterEditor } from '#renderer/components/filter/filter-editor.tsx'
 import { CAPABILITY_FIELDS, filter_problems } from '#renderer/filter/filter-spec.ts'
-import { describe_action, ISSUABLE_ACTIONS, parse_grantee_keys, short_key } from '#renderer/library/capabilities.ts'
+import { describe_action, ISSUABLE_ACTIONS, label_scope_filter, parse_grantee_keys, short_key } from '#renderer/library/capabilities.ts'
 import { use_managed_library } from '#renderer/pages/library-manage.tsx'
 import { library_route } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -46,6 +46,8 @@ export const IssueCapability = () => {
   const [duration, set_duration] = useState<Duration>('revoked')
   const [date, set_date] = useState('')
   const [filter, set_filter] = useState<unknown>(null)
+  // Labels they may write only under this prefix, as `mix/`; empty for any.
+  const [prefix, set_prefix] = useState('')
   const [issuing, set_issuing] = useState(false)
   if (loading) return null
   if (library === undefined || library.is_retired) return <Navigate to={library_route({ tab: 'tracks', library_address: library?.address ?? '' })} replace />
@@ -55,7 +57,10 @@ export const IssueCapability = () => {
   const chosen = DURATIONS.find(({ id }) => id === duration)
   const expires_at = duration === 'date' ? (date === '' ? Number.NaN : new Date(date).getTime()) : chosen?.ms == null ? null : Date.now() + chosen.ms
   const expiry_ok = expires_at === null || (Number.isFinite(expires_at) && expires_at > Date.now())
-  const filter_ok = filter === null || (filter !== undefined && filter_problems(filter).length === 0)
+  const labelling = actions.includes('library.write_label')
+  const prefix_ok = prefix === '' || new TextEncoder().encode(prefix).length <= 128
+  const scoped = filter === undefined ? undefined : label_scope_filter({ prefix: labelling ? prefix : '', actions, filter })
+  const filter_ok = prefix_ok && (scoped === null || (scoped !== undefined && filter_problems(scoped).length === 0))
 
   const issue = async () => {
     if (!grantee.ok || !expiry_ok || !filter_ok) return
@@ -66,7 +71,7 @@ export const IssueCapability = () => {
         address: library.address,
         grantee: grantee.grantee,
         actions,
-        ...(filter === null ? {} : { filter }),
+        ...(scoped === null ? {} : { filter: scoped }),
         ...(expires_at === null ? {} : { conditions: [{ type: 'expires_at', at: expires_at }] })
       })),
       success: 'Capability issued.'
@@ -103,9 +108,11 @@ export const IssueCapability = () => {
         step={2}
         steps={3}
         question='What may they do?'
-        hint={actions.length === 0 ? 'Choose at least one.' : `They may ${sentence(actions.map((verb) => describe_action(verb).toLowerCase()))}.`}
+        hint={actions.length === 0
+          ? 'Choose at least one.'
+          : `They may ${sentence(actions.map((verb) => describe_action(verb).toLowerCase()))}${labelling && prefix !== '' ? `, labels starting ${prefix} only` : ''}.`}
         next_label='Continue'
-        next_disabled={actions.length === 0}
+        next_disabled={actions.length === 0 || !prefix_ok}
         on_next={() => { set_step(3) }}
         on_back={() => { set_step(1) }}
       >
@@ -121,6 +128,12 @@ export const IssueCapability = () => {
               {label}
             </label>
           ))}
+          {labelling && (
+            <label className={styles.prefix}>
+              Only labels starting with
+              <input aria-label='Label prefix' placeholder='any label' spellCheck={false} maxLength={128} value={prefix} onChange={(event) => { set_prefix(event.target.value) }} />
+            </label>
+          )}
         </fieldset>
       </StepForm>
     )

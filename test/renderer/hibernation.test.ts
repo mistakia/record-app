@@ -48,10 +48,12 @@ describe('hibernation snapshot', () => {
     expect(build_snapshot({ state: store.getState(), route: '/tracks' })).toBeNull()
   })
 
-  test('captures the libraries, the active first page, and the queue, and restores them into the cache', async () => {
+  test('captures the libraries, the profile, the active first page, and the queue, and restores them into the cache', async () => {
     store.dispatch(connection_loaded({ mode: 'remote', node_url: NODE_URL, node_key: NODE_URL, auth: { status: 'none', persistent: true } }))
     store.dispatch(library_selected(ADDRESS))
     await store.dispatch(node_api.util.upsertQueryData('get_libraries', undefined, [library]))
+    const profile = { public_key: `02${'ab'.repeat(32)}`, name: 'Ada', bio: null, avatar: null }
+    await store.dispatch(node_api.util.upsertQueryData('get_profile', undefined, profile))
     await store.dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address: ADDRESS, page: 0 }), { items: [track], total: 1 }))
     // A later page is never captured.
     await store.dispatch(node_api.util.upsertQueryData('get_tracks', track_page_args({ library_address: ADDRESS, page: 1 }), { items: [track], total: 1 }))
@@ -70,6 +72,7 @@ describe('hibernation snapshot', () => {
     const state = store.getState()
     expect(state.ui.library_address).toBe(ADDRESS)
     expect(node_api.endpoints.get_libraries.select()(state).data).toEqual([library])
+    expect(node_api.endpoints.get_profile.select()(state).data).toEqual(profile)
     const page = node_api.endpoints.get_tracks.select(track_page_args({ library_address: ADDRESS, page: 0 }))(state).data
     expect(page?.total).toBe(1)
     expect(page?.items[0]).toMatchObject({ id: track.id, title: 'Intro', audio_cid: 'audio', tags: track.tags })

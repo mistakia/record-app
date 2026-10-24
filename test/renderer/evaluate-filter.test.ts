@@ -32,6 +32,15 @@ describe('evaluate_filter', () => {
     expect(evaluate_filter({ type: 'range', field: 'artist', gte: 0 }, subject)).toBe(false)
   })
 
+  test('prefix holds for a string or an array element that starts with it, as a label scope reads a pair', () => {
+    const pair = { type: 'label', track_id: 'a'.repeat(64), label: 'mix/late', op: 'set' }
+    expect(evaluate_filter({ type: 'prefix', field: 'label', prefix: 'mix/' }, pair)).toBe(true)
+    expect(evaluate_filter({ type: 'prefix', field: 'label', prefix: 'rating/' }, pair)).toBe(false)
+    expect(evaluate_filter({ type: 'prefix', field: 'tags', prefix: 'li' }, subject)).toBe(true)
+    expect(evaluate_filter({ type: 'prefix', field: 'missing', prefix: 'a' }, subject)).toBe(false)
+    expect(evaluate_filter({ type: 'prefix', field: 'duration_seconds', prefix: '3' }, subject)).toBe(false)
+  })
+
   test('and, or, not, and fail closed on anything unknown, even under not', () => {
     expect(evaluate_filter({ type: 'and', filters: [{ type: 'match', fields: { tags: 'house' } }, { type: 'not', filter: { type: 'match', fields: { tags: 'techno' } } }] }, subject)).toBe(true)
     expect(evaluate_filter({ type: 'or', filters: [{ type: 'match', fields: { tags: 'techno' } }, { type: 'match', fields: { artist: 'x' } }] }, subject)).toBe(false)
@@ -48,11 +57,13 @@ describe('storage estimate', () => {
   const library_address = '/record/z/linked'
   const sample = [
     track({ audio_size_bytes: 10_000_000, tags: [{ library_address, tag: 'keep' }] }),
-    track({ audio_size_bytes: 30_000_000, tags: [{ library_address: '/record/z/other', tag: 'keep' }] })
+    track({ audio_size_bytes: 30_000_000, tags: [{ library_address: '/record/z/other', tag: 'drop' }] })
   ]
 
-  test('builds the track view from the library\'s own tags only', () => {
-    expect(track_view(sample[1] as Track, library_address).tags).toEqual([])
+  test('builds the track view from every counted library\'s labels, once each (§4.6.1)', () => {
+    const labelled = track({ tags: [{ library_address, tag: 'keep' }, { library_address: '/record/z/labels', tag: 'keep' }, { library_address: '/record/z/labels', tag: 'late' }] })
+    expect(track_view(labelled, library_address).tags).toEqual(['keep', 'late'])
+    expect(track_view(sample[1] as Track, library_address).tags).toEqual(['drop'])
     expect(track_view(sample[0] as Track, library_address)).toMatchObject({ library_address, tags: ['keep'], cid: 'bAudio', audio_size_bytes: 10_000_000 })
   })
 

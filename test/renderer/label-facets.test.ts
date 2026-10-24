@@ -17,13 +17,13 @@ describe('label facets', () => {
 
   test('groups exporter facets first, other prefixes A to Z, hand labels last', () => {
     const facets = group_facets([
-      { tag: 'house', count: 3 },
-      { tag: 'zeta/x', count: 1 },
-      { tag: 'collection-tier/personal-pick', count: 5 },
-      { tag: 'alpha/y', count: 2 },
-      { tag: 'collection-tier/personal', count: 9 },
-      { tag: 'view/warmup', count: 4 },
-      { tag: 'file-origin/vinyl', count: 6 }
+      { tag: 'house', count: 3, managed: false },
+      { tag: 'zeta/x', count: 1, managed: false },
+      { tag: 'collection-tier/personal-pick', count: 5, managed: false },
+      { tag: 'alpha/y', count: 2, managed: false },
+      { tag: 'collection-tier/personal', count: 9, managed: false },
+      { tag: 'view/warmup', count: 4, managed: false },
+      { tag: 'file-origin/vinyl', count: 6, managed: false }
     ])
     expect(facets.map(({ facet }) => facet)).toEqual(['collection-tier', 'view', 'file-origin', 'alpha', 'zeta', null])
     expect(facets[0]?.labels.map(({ tag }) => tag)).toEqual(['collection-tier/personal', 'collection-tier/personal-pick'])

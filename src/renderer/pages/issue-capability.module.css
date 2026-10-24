@@ -21,3 +21,19 @@
   margin: var(--space-xs) 0 var(--space-sm);
   padding: 0 var(--space-sm);
 }
+
+/* The label prefix, under its action: xs tertiary like a field label. */
+.prefix {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-left: calc(var(--space-sm) + 16px);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.prefix input {
+  flex: 1;
+  height: 32px;
+  padding: 0 var(--space-sm);
+}

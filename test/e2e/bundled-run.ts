@@ -1,8 +1,9 @@
 // The bundled-mode part of smoke:local. A fresh profile starts in bundled
 // mode (spec 8.3.3): the app spawns its own record-node, which must answer,
-// show its details, survive a crash, and stop when the user switches to a
-// remote node, after the confirmation 8.3.4 requires. On the way it reads
-// Diagnostics (8.9.1) and moves the data directory (8.4.1).
+// ask the person's name for the profile (8.9.1), show its details, survive
+// a crash, and stop when the user switches to a remote node, after the
+// confirmation 8.3.4 requires. On the way it reads Diagnostics (8.9.1) and
+// moves the data directory (8.4.1).
 
 import { mkdir, readFile, realpath, stat, writeFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
@@ -30,6 +31,28 @@ const wait_running = async (window: Page, not_pid: number | null = null): Promis
     if (Date.now() > deadline) throw new Error(`the bundled node did not come up: ${JSON.stringify(state)}`)
     await window.waitForTimeout(200)
   }
+}
+
+// The bundled first run (spec 8.9.1): the node pages ask the person's name
+// until it is given, and it becomes the identity's profile, which the
+// sidebar then names. A fresh profile lands on Settings, which never asks,
+// so the walk opens Tracks.
+export const answer_first_run = async ({ window, step, name, slow = (ms) => ms }: {
+  window: Page
+  step: (label: string, detail?: unknown) => void
+  name: string
+  slow?: (ms: number) => number
+}): Promise<void> => {
+  await nav(window, 'Tracks')
+  const first_run = window.getByTestId('first-run')
+  await first_run.waitFor({ timeout: slow(30_000) })
+  await first_run.getByLabel('Your name').fill(name)
+  await first_run.getByRole('button', { name: 'Continue', exact: true }).click()
+  await first_run.waitFor({ state: 'detached', timeout: slow(10_000) })
+  await window.getByTestId('identity-name').filter({ hasText: new RegExp(`^${name}$`) }).waitFor({ timeout: slow(10_000) })
+  const profile = await window.evaluate(async () => await (window as unknown as { record: { request: (request: unknown) => Promise<{ ok: boolean, data?: { name?: unknown } }> } }).record.request({ method: 'get', path_template: '/identity/profile' }))
+  if (profile.data?.name !== name) throw new Error(`the first run did not write the profile name: ${JSON.stringify(profile)}`)
+  step('first run', `named ${name} in the profile, shown in the sidebar`)
 }
 
 // The bundled ingest: the pinned ffmpeg and fpcalc pass record-node's
@@ -99,6 +122,7 @@ export const run_bundled_checks = async ({ app, window, step, remote_url, user_d
   const started = await wait_running(window)
   await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: 30_000 })
   step('bundled node', { status: started.status, url: started.url, pid: started.pid, version: started.version, ingest_disabled: started.ingest_disabled })
+  await answer_first_run({ window, step, name: 'Smoke Person' })
 
   await nav(window, 'Settings')
   step('bundled details', (await window.getByTestId('bundled-details').innerText()).replaceAll('\n', ' | '))

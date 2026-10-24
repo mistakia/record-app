@@ -12,12 +12,11 @@ import { track_page_args } from '#renderer/store/api.ts'
 import { mark_restored_page } from '#renderer/snapshot/restored.ts'
 import type { Library } from '#renderer/api/types.ts'
 
-const library = (address: string, heads: string[], library_type = 'recordstore'): Library => ({
+const library = (address: string, heads: string[], library_type: Library['library_type'] = 'recordstore'): Library => ({
   id: address,
   address,
   library_type,
   track_count: 0,
-  linked_library_count: 0,
   audio_size_bytes: 0,
   length: 0,
   heads,
@@ -59,8 +58,9 @@ describe('tags_for_event', () => {
     expect(tags_for_event('track:added')).toEqual(['tracks', 'tags'])
     expect(tags_for_event('track:removed')).toEqual(['tracks', 'tags'])
     expect(tags_for_event('library:index-updated')).toEqual(['tracks', 'tags', 'libraries'])
+    expect(tags_for_event('library:labels-changed')).toEqual(['tracks', 'tags'])
     expect(tags_for_event('library:replicate-progress')).toEqual(['libraries'])
-    expect(tags_for_event('library:linked')).toEqual(['libraries', 'tracks', 'tags', 'about'])
+    expect(tags_for_event('library:linked')).toEqual(['libraries', 'tracks', 'tags', 'about', 'profile'])
     expect(tags_for_event('library:peer-joined')).toEqual(['libraries', 'peers'])
     expect(tags_for_event('peer:joined')).toEqual(['peers'])
     expect(tags_for_event('import:finished')).toEqual([])
@@ -406,10 +406,11 @@ describe('reconcile and the write gate', () => {
     expect(moved.map(({ address }) => address).sort()).toEqual(['/gone', '/l', '/new'])
     expect(tags_for_moved({ moved })).toContainEqual('listens')
     expect(tags_for_moved({ moved })).not.toContainEqual('tracks')
-    expect(tags_for_moved({ moved: [], identity_moved: true })).toEqual(['tracks', 'listens'])
+    expect(tags_for_moved({ moved: [], identity_moved: true })).toEqual(['tracks', 'listens', 'profile'])
     const own = mark_libraries([{ ...library('/own', ['h']), is_own: true }]).get('/own')
     if (own === undefined) throw new Error('no mark')
     expect(tags_for_moved({ moved: [own] })).toContainEqual('tracks')
+    expect(tags_for_moved({ moved: [own] })).toContainEqual('tags')
     expect(tags_for_moved({ moved: [] })).toEqual([])
   })
 })

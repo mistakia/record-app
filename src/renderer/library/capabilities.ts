@@ -7,8 +7,8 @@ import { describe_filter } from '#renderer/filter/filter-spec.ts'
 
 export const ISSUABLE_ACTIONS = [
   { verb: 'library.append_track', label: 'Add tracks' },
-  { verb: 'library.append_tag', label: 'Add tags' },
-  { verb: 'library.update_about', label: 'Edit the profile' },
+  { verb: 'library.write_label', label: 'Add and remove labels' },
+  { verb: 'library.update_about', label: 'Rename the library' },
   { verb: 'library.grant_capability', label: 'Grant capabilities to others' }
 ] as const
 
@@ -44,13 +44,44 @@ export const describe_conditions = (conditions: readonly unknown[]): string[] =>
   return `(unknown condition: ${String(type)})`
 })
 
+// The prefix of a filter label_scope_filter made, alone; null for any other.
+const label_prefix_of = (filter: unknown): string | null => {
+  const record = as_record(filter)
+  const scope = record.type === 'or' && Array.isArray(record.filters) ? as_record(record.filters[1]) : record
+  if (scope.type !== 'prefix' || scope.field !== 'label' || typeof scope.prefix !== 'string') return null
+  const prefix = scope.prefix
+  const actions = record.type === 'or' ? ['library.append_track', 'library.write_label'] : ['library.write_label']
+  return JSON.stringify(label_scope_filter({ prefix, actions, filter: null })) === JSON.stringify(filter) ? prefix : null
+}
+
+// A capability's filter in words. A label prefix reads as one, whatever
+// shape the filter takes to bind label pairs only.
+export const describe_capability_filter = (filter: unknown): string => {
+  const prefix = label_prefix_of(filter)
+  return prefix === null ? describe_filter(filter) : `labels starting ${JSON.stringify(prefix)}`
+}
+
 // What a held or issued capability permits, in one line (spec §8.6.1: the
 // scope of a shared library's held capabilities).
 export const describe_scope = (capability: Pick<Capability, 'actions' | 'filter' | 'conditions'>): string => [
   capability.actions.map(describe_action).join(', '),
-  capability.filter === null ? null : `only ${describe_filter(capability.filter)}`,
+  capability.filter === null ? null : label_prefix_of(capability.filter) === null ? `only ${describe_filter(capability.filter)}` : `${describe_capability_filter(capability.filter)} only`,
   ...describe_conditions(capability.conditions)
 ].filter((part) => part !== null).join('; ')
+
+// The filter a capability carries for a label prefix (spec §3.5.6, §3.5.7):
+// a label pair passes when its label starts with the prefix. A capability
+// filter holds for every subject the capability authorises, and a track or
+// About entry has no label, so when other actions share the capability the
+// prefix binds label pairs only. Combined with any filter given as well.
+export const label_scope_filter = ({ prefix, actions, filter }: { prefix: string, actions: readonly string[], filter: unknown }): unknown => {
+  if (prefix === '' || !actions.includes('library.write_label')) return filter
+  const on_label = { type: 'prefix', field: 'label', prefix }
+  const scope = actions.every((verb) => verb === 'library.write_label')
+    ? on_label
+    : { type: 'or', filters: [{ type: 'not', filter: { type: 'match', fields: { type: 'label' } } }, on_label] }
+  return filter === null ? scope : { type: 'and', filters: [filter, scope] }
+}
 
 // A compressed secp256k1 public key (spec §3.1).
 export const PUBLIC_KEY = /^0[23][0-9a-f]{64}$/

@@ -1,10 +1,10 @@
 // The inline tag adder (STYLE.md § Tag chips), opened by +TAG or t at the
-// row rather than as a centred dialog. Tags are per library (spec §8.6.3,
-// §8.6.9): one is added into a writable library (an own one, or a shared one
-// whose capability grants library.append_tag), defaulting to the library
-// being viewed, else the holder written to last, else any holder. A tag is
-// removed only from an own active library, since no capability authorises
-// dropping one (§3.5.6), and removal confirms: × or Backspace arms it, and
+// row rather than as a centred dialog. A label goes to the identity's
+// labels library, or in a co-managed library to that library when the user
+// picks `shared` (spec §8.6.3, tag-target.tsx). A label is removed from the
+// library applying it wherever that write is authorised: an own library,
+// or a shared one whose capability admits it (§3.5.6), never a node-managed
+// label (TagCount.managed). Removal confirms: × or Backspace arms it, and
 // a second press removes. Keys: ↑ and ↓ move through the suggestions, Enter
 // adds the highlighted one or what was typed, Tab completes the field,
 // Backspace on an empty field arms the last tag, Esc closes. The adder stays
@@ -13,17 +13,19 @@
 import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import styles from './tag-editor.module.css'
-import { TagTarget } from './tag-target.tsx'
+import { TagTarget, use_label_target } from './tag-target.tsx'
 import { move_highlight, normalize_tag, suggest_tags, tab_completion, type AdderRow } from './tag-suggest.ts'
 import { tag_key, type ShownTag } from './tag-writes.ts'
 import { use_tag_writes } from './use-tag-writes.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
-import { use_write_target } from '#renderer/components/library/target-select.tsx'
+import { library_name, own_libraries_of, unnamed_library } from '#renderer/components/library/library-category.ts'
+import { label_write_target, removal_target, type WriteTarget } from '#renderer/library/write-targets.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
-import { use_app_selector } from '#renderer/store/index.ts'
+import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
+import { notified } from '#renderer/store/notifications.ts'
 
 const MAX_TAG_LENGTH = 128
 const EDGE_MARGIN = 8
@@ -40,14 +42,17 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
   tracks: Track[]
   // Where the adder opens: under the row it tags.
   anchor: { x: number, y: number }
-  // The library the track list shows ('' for all), the default target.
+  // The library the track list shows ('' for all).
   viewed_library: string
   on_close: () => void
 }) => {
+  const dispatch = use_app_dispatch()
   const writes_allowed = use_app_selector(select_writes_allowed)
   const libraries = node_api.endpoints.get_libraries.useQuery()
+  const own = node_api.endpoints.get_own_libraries.useQuery()
+  const held = node_api.endpoints.get_held_capabilities.useQuery()
   const visible_tags = node_api.endpoints.get_tags.useQuery(viewed_library === '' ? {} : { library_addresses: [viewed_library] })
-  const choice = use_write_target({ action: 'library.append_tag', preferred: viewed_library === '' ? null : viewed_library, holders: initial[0]?.library_addresses ?? [] })
+  const choice = use_label_target({ viewed: viewed_library })
   const { tracks, single, shown, fresh, add, remove, unfresh } = use_tag_writes(initial)
   const [draft, set_draft] = useState('')
   const [highlight, set_highlight] = useState<number | null>(null)
@@ -56,8 +61,17 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
   const ref = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLInputElement>(null)
   const list_id = useId()
-  const removable = new Set((libraries.data ?? []).filter(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore').map(({ address }) => address))
-  const own_tags = single === undefined ? [] : shown.filter(({ library_address }) => removable.has(library_address))
+  const managed = new Set((visible_tags.data ?? []).filter((count) => count.managed).map(({ tag }) => tag))
+  const own_list = own_libraries_of({ own: own.data, libraries: libraries.data })
+  const name_of = (address: string): string => {
+    const library = own_list.find((each) => each.address === address) ?? libraries.data?.find((each) => each.address === address)
+    return library === undefined ? unnamed_library(address) : library_name(library)
+  }
+  // Where each shown label could be removed from, or null where it cannot.
+  const removal_of = (entry: ShownTag): WriteTarget | null => single === undefined
+    ? null
+    : removal_target({ library_address: entry.library_address, tag: entry.tag, track_id: single.id, libraries: libraries.data ?? [], own: own_list, held: held.data ?? [], managed })
+  const own_tags = shown.filter((entry) => removal_of(entry) !== null)
   const rows = writes_allowed ? suggest_tags({ query: draft, tags: visible_tags.data ?? [], exclude: shown.map(({ tag }) => tag) }) : []
   const active = highlight !== null && highlight < rows.length ? highlight : null
 
@@ -91,9 +105,15 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
 
   const take = (value: string) => {
     const tag = normalize_tag(value)
-    const { target } = choice
-    if (!writes_allowed || target === null || tag === '' || tag.length > MAX_TAG_LENGTH) return
-    add(tag, target).then((took) => { if (took) choice.used(target) }).catch(() => {})
+    const first = tracks[0]
+    if (!writes_allowed || choice.target === null || first === undefined || tag === '' || tag.length > MAX_TAG_LENGTH) return
+    // A shared library's capability may cover only some labels (a prefix).
+    const target = label_write_target({ target: choice.target, held: held.data ?? [], subject: { type: 'label', track_id: first.id, label: tag, op: 'set' } })
+    if (target === null) {
+      dispatch(notified({ kind: 'error', message: `Your capability in ${name_of(choice.target.library_address)} does not cover the label ${tag}.` }))
+      return
+    }
+    add(tag, target).catch(() => {})
     set_draft('')
     set_highlight(null)
     set_armed(null)
@@ -101,9 +121,11 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
 
   const arm_or_remove = (entry: ShownTag) => {
     const key = tag_key(entry)
+    const target = removal_of(entry)
+    if (target === null) return
     if (armed === key) {
       set_armed(null)
-      remove(entry).catch(() => {})
+      remove(entry, target).catch(() => {})
     } else {
       set_armed(key)
     }
@@ -169,7 +191,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
         <ul className={styles.tags} aria-label='Tags'>
           {shown.map((entry) => {
             const key = tag_key(entry)
-            const can_remove = single !== undefined && removable.has(entry.library_address)
+            const can_remove = removal_of(entry) !== null
             const classes = [styles.chip, armed === key ? styles.armed : '', fresh.has(key) ? styles.fresh : ''].filter(Boolean).join(' ')
             return (
               <li key={key} className={classes} aria-busy={entry.pending} onAnimationEnd={() => { unfresh(key) }}>
@@ -184,7 +206,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
           })}
         </ul>
       )}
-      {choice.targets.length > 0 || choice.resolution.kind === 'loading'
+      {choice.target !== null || choice.loading
         ? (
           <>
             <input
@@ -206,7 +228,7 @@ export const TagEditor = ({ tracks: initial, anchor, viewed_library, on_close }:
               onKeyDown={on_key_down}
             />
             {rows.length > 0 && <ul id={list_id} className={styles.suggestions} role='listbox' aria-label='Suggestions' onMouseLeave={() => { set_highlight(null) }}>{rows.map(row_view)}</ul>}
-            <TagTarget choice={choice} on_chosen={() => { input.current?.focus() }} />
+            <TagTarget choice={choice} name={name_of(viewed_library)} on_chosen={() => { input.current?.focus() }} />
           </>
           )
         : <p className={styles.note}>You have no library to tag into.</p>}

@@ -19,6 +19,9 @@ export type ApiError = Schemas['Error']
 export type Capability = Schemas['Capability']
 export type ReplicationPolicy = Schemas['ReplicationPolicy']
 export type ReplicationMode = Schemas['ReplicationMode']
+export type Profile = Schemas['Profile']
+export type TrackLabels = Schemas['TrackLabels']
+export type LabelWriteResult = Schemas['LabelWriteResult']
 
 interface LibraryAddressPayload { library_address: string }
 
@@ -35,7 +38,6 @@ interface NodeEventPayloads {
   'library:replicate-progress': LibraryAddressPayload & { progress: number, total: number }
   'library:index-updated': LibraryAddressPayload & {
     track_count: number
-    linked_library_count: number
     is_processing_index: boolean
     processing_count: number
   }
@@ -43,7 +45,8 @@ interface NodeEventPayloads {
   'library:peer-left': LibraryAddressPayload & { peer_id: string }
   'identity:library-created': { library: Library }
   'identity:library-retired': LibraryAddressPayload
-  'library:entries-inert': LibraryAddressPayload & { capability_id: string, entry_hashes: string[], track_ids: string[] }
+  'library:entries-inert': LibraryAddressPayload & { capability_id: string, entry_hashes: string[], label_entry_ids?: string[], track_ids: string[] }
+  'library:labels-changed': LibraryAddressPayload & { track_ids: string[] }
   'library:replication-policy-changed': LibraryAddressPayload & { policy: ReplicationPolicy }
   'capability:issued': { capability: Capability }
   'capability:revoked': { capability: Capability }

@@ -11,8 +11,7 @@ import styles from './capabilities.module.css'
 import type { Capability } from '#renderer/api/types.ts'
 import { Dialog } from '#renderer/components/common/dialog.tsx'
 import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
-import { describe_filter } from '#renderer/filter/filter-spec.ts'
-import { describe_action, describe_conditions, describe_grantee } from '#renderer/library/capabilities.ts'
+import { describe_action, describe_capability_filter, describe_conditions, describe_grantee } from '#renderer/library/capabilities.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
@@ -22,7 +21,7 @@ export const CapabilityRow = ({ capability, lead, action }: { capability: Capabi
   <tr data-testid='capability-row' data-status={capability.status}>
     <td>{lead}</td>
     <td>{capability.actions.map(describe_action).join(', ')}</td>
-    <td>{capability.filter === null ? 'Any' : describe_filter(capability.filter)}</td>
+    <td>{capability.filter === null ? 'Any' : describe_capability_filter(capability.filter)}</td>
     <td>{capability.conditions.length === 0 ? 'None' : describe_conditions(capability.conditions).join('; ')}</td>
     <td>{new Date(capability.issued_at_ms).toLocaleString()}</td>
     <td><span className={`${styles.status} ${styles[capability.status] ?? ''}`}>{capability.status}</span></td>

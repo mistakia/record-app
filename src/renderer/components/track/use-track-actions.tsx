@@ -5,7 +5,7 @@
 
 import { useState, type ReactNode } from 'react'
 import { shallowEqual } from 'react-redux'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 
 import type { ListActions } from './track-list.tsx'
 import type { Track } from '#renderer/api/types.ts'
@@ -16,8 +16,10 @@ import { DialogActions } from '#renderer/components/common/dialog-actions.tsx'
 import { AdoptDialog } from '#renderer/components/track/adopt-dialog.tsx'
 import { RemoveDialog, removable_from } from '#renderer/components/track/remove-dialog.tsx'
 import { TagEditor } from '#renderer/components/track/tag-editor.tsx'
+import { use_label_removal } from '#renderer/components/track/use-label-removal.ts'
+import { target_fields } from '#renderer/library/write-targets.ts'
 import { add_to_queue, play_tracks, remove_from_queue, toggle_playback } from '#renderer/player/player-controller.ts'
-import { tracks_route } from '#renderer/routes.ts'
+import { parse_track_view, ROUTES, tracks_route, with_tag_toggled } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector } from '#renderer/store/index.ts'
 import type { PlaySource } from '#renderer/store/player.ts'
@@ -36,6 +38,7 @@ export const use_track_actions = ({ viewed_library, listen_library, source, on_t
 }): { actions: ListActions, dialogs: ReactNode } => {
   const dispatch = use_app_dispatch()
   const libraries = node_api.endpoints.get_libraries.useQuery()
+  const removal = use_label_removal()
   // Compared entry by entry: the slice is a new array on every store update,
   // which would re-render the page, the list, and every row on each one.
   const upcoming = use_app_selector((state) => state.player.queue.entries.slice(state.player.queue.index + 1), shallowEqual)
@@ -78,11 +81,15 @@ export const use_track_actions = ({ viewed_library, listen_library, source, on_t
     ]
   }
 
+  // The label leaves the library applying it, citing the capability that
+  // authorises that there (§8.6.3).
   const remove_tag = async () => {
     if (untagging === null) return
     const { track, tag, library_address } = untagging
     set_untagging(null)
-    await report_write({ dispatch, write: dispatch(node_api.endpoints.remove_tag.initiate({ track_id: track.id, tag, library_address })), success: `Removed ${tag}.` })
+    const target = removal({ library_address, tag, track_id: track.id })
+    if (target === null) return
+    await report_write({ dispatch, write: dispatch(node_api.endpoints.remove_tag.initiate({ track_id: track.id, tag, ...target_fields(target) })), success: `Removed ${tag}.` })
   }
 
   const actions: ListActions = {
@@ -119,8 +126,14 @@ export const use_track_actions = ({ viewed_library, listen_library, source, on_t
   return { actions, dialogs }
 }
 
-// A chip from another library opens that library filtered by the tag.
-export const use_tag_navigation = (): ((input: { tag: string, library_address: string }) => void) => {
+// A label clicked off a track list (the player bar, Recently played)
+// filters the track list on screen by it, or else every library's tracks;
+// it never opens the library the label came from (spec §8.6.7).
+export const use_label_filter = (): ((input: { tag: string }) => void) => {
   const navigate = useNavigate()
-  return ({ tag, library_address }) => { navigate(tracks_route({ library_address, filters: { query: '', tags: [tag], sort: 'added_at', order: 'desc' } })) }
+  const { pathname, search } = useLocation()
+  return ({ tag }) => {
+    const view = pathname === ROUTES.tracks ? parse_track_view(new URLSearchParams(search)) : { library_address: '', filters: { query: '', tags: [], sort: 'added_at' as const, order: 'desc' as const } }
+    navigate(tracks_route(with_tag_toggled(view, tag)))
+  }
 }

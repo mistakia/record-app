@@ -1,9 +1,11 @@
 // The built app (`bun run build` first) against an in-process record-node
 // it owns, so every write stays off any shared node. It walks browsing
-// (search, sort, the label filter), tagging, ingest (main's file picker, a
-// drop, a URL, add by CID), libraries (link, disconnect, connect, unlink,
-// the own about), identity (public key, export, and no trace of the key in
-// any file the app wrote), listens, peers, the list and player hotkeys
+// (search, sort, the label filter), labelling (into the labels library by
+// default, counted in an own library's view, `shared` in a co-managed one,
+// a chip filtering in place), ingest (main's file picker, a drop, a URL,
+// add by CID), libraries (link, disconnect, connect, unlink), identity (the
+// profile, public key, export, and no trace of the key in any file the app
+// wrote), listens, peers, the list and player hotkeys
 // (t, q, Shift+Q, Space), and gapless playback with its listen and Media
 // Session, and that the app:// scheme serves only the renderer. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
@@ -32,9 +34,18 @@ const app = await launch_app({ user_data_dir })
 
 const step = (label: string, detail: unknown = ''): void => { console.log(`${label}:`, detail) }
 const toast = async (window: Page, text: string | RegExp) => { await window.getByTestId('toast').filter({ hasText: text }).first().waitFor({ timeout: 30_000 }) }
-// The sidebar's first 'Tracks' is every library; a second, under My
-// library, is the own one.
+// The sidebar's first 'Tracks' is every library; a second, under Your
+// libraries, is the own one.
 const nav = async (window: Page, name: string) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name, exact: true }).first().click() }
+const own_tracks = async (window: Page) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Tracks', exact: true }).nth(1).click() }
+// The node's own word on where labels are held (chapter 7).
+const node_get = async <T>(path: string): Promise<T> => {
+  const response = await fetch(`${node.node_url}/api${path}`)
+  if (!response.ok) throw new Error(`GET ${path}: ${response.status}`)
+  return await response.json() as T
+}
+const labels_in = async (library_address: string): Promise<Array<{ track_id: string, tags: string[] }>> =>
+  (await node_get<{ items: Array<{ track_id: string, tags: string[] }> }>(`/libraries/${encodeURIComponent(library_address)}/labels`)).items
 const rows = (window: Page) => window.getByTestId('track-row')
 // The title is the first child of a row's third cell (index, adopt, title).
 const titles = async (window: Page) => await rows(window).evaluateAll((elements) => elements.map((row) => row.querySelectorAll('[role=cell]')[2]?.firstElementChild?.textContent ?? ''))
@@ -159,7 +170,7 @@ try {
   await editor.getByLabel('New tag').fill('smoke-tag')
   await editor.getByLabel('New tag').press('Enter')
   await editor.locator('li[aria-busy=false]').filter({ hasText: 'smoke-tag' }).waitFor()
-  if (await editor.getByTestId('write-target').count() > 0) throw new Error('the tag adder names its only target library')
+  if (await editor.getByTestId('label-scope').count() > 0) throw new Error('the tag adder offers a shared label outside a co-managed library')
   // A prefixed label, so the filter goes out as tag_groups (label-facets.ts).
   await editor.getByLabel('New tag').fill('smoke-facet/one')
   await editor.getByLabel('New tag').press('Enter')
@@ -174,6 +185,53 @@ try {
   await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
   step('facet filter "smoke-facet/one"', await titles(window))
   await window.getByRole('button', { name: 'Clear filters' }).click()
+
+  // The label went to the labels library, not the library holding the
+  // track, and an own library's view counts it (spec 8.6.3, 8.6.7).
+  const own_address = node.peer.identity().own_address
+  const own_libraries = await node_get<Array<{ address: string, library_type: string }>>('/identity/libraries')
+  const labels_address = own_libraries.find(({ library_type }) => library_type === 'labels')?.address
+  if (labels_address === undefined) throw new Error('the node has no labels library')
+  const [alpha_track] = (await node.peer.list_tracks({ offset: 0, limit: 1, shuffle: false, sort: 'title', order: 'asc', query: 'Alpha' })).items
+  if (alpha_track === undefined) throw new Error('no Smoke Alpha on the node')
+  if (!(await labels_in(labels_address)).some(({ track_id, tags }) => track_id === alpha_track.id && tags.includes('smoke-tag'))) throw new Error('the label did not land in the labels library')
+  if ((await labels_in(own_address)).some(({ tags }) => tags.includes('smoke-tag'))) throw new Error('the label landed in the library holding the track')
+  await own_tracks(window)
+  await window.getByTestId('library-profile').waitFor()
+  await window.getByTestId('facet-sidebar').getByRole('button', { name: 'smoke-tag 1', exact: true }).waitFor({ timeout: 10_000 })
+  step('labels library', 'smoke-tag held there and counted in the own library\'s facets')
+  // A chip filters this view in place, whichever library applies it.
+  await rows(window).filter({ hasText: 'Smoke Alpha' }).getByRole('button', { name: 'smoke-tag', exact: true }).click()
+  await window.getByTestId('track-total').filter({ hasText: /^1 tracks$/ }).waitFor()
+  if (!new URLSearchParams(new URL(window.url()).hash.split('?')[1] ?? '').has('library')) throw new Error('a chip left the library being viewed')
+  step('chip filter', 'stayed in the own library')
+  await window.getByRole('button', { name: 'Clear filters' }).click()
+  await settled(window)
+  // Once it lets someone else write, the own library is co-managed: the
+  // adder offers `shared`, which writes to it rather than to the labels library.
+  const issued = await fetch(`${node.node_url}/api/libraries/${encodeURIComponent(own_address)}/capabilities`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ grantee: { type: 'key', key: '02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5' }, actions: ['library.write_label'] })
+  })
+  if (!issued.ok) throw new Error(`issuing a capability failed: ${issued.status}`)
+  await focus_row(window, 'Smoke Alpha')
+  await window.keyboard.press('t')
+  const shared_editor = window.getByTestId('tag-editor')
+  const scope = shared_editor.getByTestId('label-scope')
+  await scope.and(window.locator('[data-scope=just_me]')).waitFor({ timeout: 10_000 })
+  await scope.getByRole('button', { name: 'shared', exact: true }).click()
+  await scope.and(window.locator('[data-scope=shared]')).waitFor()
+  await shared_editor.getByLabel('New tag').fill('smoke-shared')
+  await shared_editor.getByLabel('New tag').press('Enter')
+  await shared_editor.locator('li[aria-busy=false]').filter({ hasText: 'smoke-shared' }).waitFor()
+  await shared_editor.getByLabel('New tag').press('Escape')
+  await shared_editor.waitFor({ state: 'detached' })
+  if (!(await labels_in(own_address)).some(({ track_id, tags }) => track_id === alpha_track.id && tags.includes('smoke-shared'))) throw new Error('the shared label did not land in the co-managed library')
+  if ((await labels_in(labels_address)).some(({ tags }) => tags.includes('smoke-shared'))) throw new Error('the shared label landed in the labels library')
+  step('shared label', 'smoke-shared written to the co-managed own library')
+  await nav(window, 'Tracks')
+  await settled(window)
 
   // Gapless playback with a listen and Media Session: Alpha alone from the
   // menu, Beta queued with q, seen in the queue overlay; a hotkey pauses it.
@@ -253,8 +311,7 @@ try {
   step('tracks on the node after ingest', total)
   if (total !== 5) throw new Error('ingest did not add three tracks')
 
-  // Libraries: link through its step flow, disconnect, connect, unlink, and
-  // the own about.
+  // Libraries: link through its step flow, disconnect, connect, unlink.
   await nav(window, 'Libraries')
   await window.getByRole('link', { name: 'Link a library' }).first().click()
   await window.getByLabel('Library address').fill(other.identity().own_address)
@@ -274,12 +331,17 @@ try {
   await window.getByRole('dialog').getByRole('button', { name: 'Unlink' }).click()
   await linked.waitFor({ state: 'detached' })
 
-  // Identity: the profile it goes by, then the key.
+  // Identity: the profile, the person's own and never a library's name,
+  // then the key.
   await nav(window, 'Identity')
   await window.getByTestId('identity-profile').locator('input[name=name]').fill('Smoke Own')
   await window.getByRole('button', { name: 'Save profile' }).click()
   await toast(window, 'Profile saved.')
-  step('own about on the node', await node.peer.get_about(node.peer.identity().own_address))
+  await window.getByTestId('identity-name').filter({ hasText: /^Smoke Own$/ }).waitFor({ timeout: 10_000 })
+  const profile = await node_get<{ name: string | null }>('/identity/profile')
+  step('profile on the node', profile)
+  if (profile.name !== 'Smoke Own') throw new Error('the profile name did not reach the node')
+  if ((await node_get<{ name: string | null } | null>(`/libraries/${encodeURIComponent(own_address)}/about`).catch(() => null))?.name === 'Smoke Own') throw new Error('the profile renamed a library')
   step('key holder', await window.getByTestId('key-holder').innerText())
   await window.getByRole('button', { name: 'Show public key' }).click()
   step('public key', await window.getByTestId('public-key').locator('code').textContent())

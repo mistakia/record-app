@@ -14,12 +14,13 @@ import { register_list_commands } from './list-commands.ts'
 import { PageSubscription, select_list_page, type ListSource } from './list-source.ts'
 import { pages_for_rows, row_location } from './track-pages.ts'
 import { TrackRow, TrackRowSkeleton, type RowHandlers, type RowPlayState } from './track-row.tsx'
+import { use_label_removal } from './use-label-removal.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
 import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { is_field } from '#renderer/hooks/hotkeys.ts'
 import { use_view_pref } from '#renderer/prefs/view-prefs.ts'
-import { node_api, type SortOrder, type TrackSort } from '#renderer/store/api.ts'
+import type { SortOrder, TrackSort } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/store/index.ts'
 import { action_rows, cursor_moved, row_clicked, selection_cleared, selection_toggled, view_entered } from '#renderer/store/list-cursor.ts'
 
@@ -121,8 +122,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
   const visible = useMemo(() => visible_columns(hidden, beside_pane), [hidden, beside_pane])
   const virtualizer = useVirtualizer({ count: total, getScrollElement: () => scroller.current, estimateSize: () => ROW_HEIGHT, overscan: 12 })
   const rows = virtualizer.getVirtualItems()
-  const libraries = node_api.endpoints.get_libraries.useQuery().data
-  const removable = useMemo(() => new Set((libraries ?? []).filter(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore').map(({ address }) => address)), [libraries])
+  const removal = use_label_removal()
   // The way the list last moved, which a stop (direction null) keeps.
   const direction = useRef<'forward' | 'backward'>('forward')
   if (virtualizer.scrollDirection !== null) direction.current = virtualizer.scrollDirection
@@ -392,7 +392,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
                       is_cursor={cursor.cursor === row.index}
                       is_selected={cursor.selected.includes(row.index)}
                       menu_open={menu?.row === row.index}
-                      removable={removable}
+                      removal={removal}
                       handlers={row_handlers}
                     />
                     )}

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router'
 
 import type { Library } from '#renderer/api/types.ts'
 import { StepForm } from '#renderer/components/common/step-form.tsx'
-import { parse_library_address, short_address } from '#renderer/components/library/library-category.ts'
+import { address_tail, parse_library_address } from '#renderer/components/library/library-category.ts'
 import { tracks_route } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
@@ -45,7 +45,7 @@ export const LinkLibrary = () => {
         step={1}
         steps={2}
         question='Paste the library’s address'
-        hint={parsed === null ? 'It looks like /record/zBwWX…/mixes. Ask its owner to copy it from their library’s header.' : `Found ${short_address(library_address)}.`}
+        hint={parsed === null ? 'It looks like /record/zBwWX…/mixes. Ask its owner to copy it from their library’s header.' : `Found the library ${address_tail(library_address)}.`}
         error={library_address !== '' && parsed === null ? 'That is not a library address.' : null}
         next_label='Continue'
         next_disabled={parsed === null}
@@ -61,7 +61,7 @@ export const LinkLibrary = () => {
       step={2}
       steps={2}
       question='What do you call it?'
-      hint={`Only you see this name. Leave it empty to use the name ${short_address(library_address)} gives itself.`}
+      hint='Only you see this name. Leave it empty to use the name the library gives itself.'
       next_label={linking ? 'Linking' : 'Link library'}
       next_disabled={!writes_allowed || linking}
       on_next={() => { link(alias).catch(() => { set_linking(false) }) }}

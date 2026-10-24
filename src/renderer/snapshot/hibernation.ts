@@ -2,7 +2,7 @@
 // the store from one at launch. The restored data renders at once but is
 // stale until the first reconcile, like everything else after a connect.
 
-import type { Library, TrackList } from '#renderer/api/types.ts'
+import type { Library, Profile, TrackList } from '#renderer/api/types.ts'
 import { mark_restored_page } from './restored.ts'
 import { seed_head_baseline } from '#renderer/store/head-check.ts'
 import { node_api, track_page_args } from '#renderer/store/api.ts'
@@ -57,6 +57,7 @@ export const build_snapshot = ({ state, route, previous_active = null }: {
     node_key,
     route,
     libraries: libraries as unknown as Array<Record<string, unknown>>,
+    profile: (node_api.endpoints.get_profile.select()(state).data ?? null) as Record<string, unknown> | null,
     active: first_page !== undefined
       ? to_snapshot_active({ page: first_page, library_address })
       : previous_active?.library_address === library_address ? previous_active : null,
@@ -70,6 +71,7 @@ export const build_snapshot = ({ state, route, previous_active = null }: {
 // the routes finds it rather than issuing queries of its own.
 export const restore_snapshot = async ({ dispatch, snapshot }: { dispatch: AppDispatch, snapshot: HibernationSnapshot }): Promise<void> => {
   await dispatch(node_api.util.upsertQueryData('get_libraries', undefined, snapshot.libraries as unknown as Library[]))
+  if (snapshot.profile !== undefined && snapshot.profile !== null) await dispatch(node_api.util.upsertQueryData('get_profile', undefined, snapshot.profile as unknown as Profile))
   // The heads the snapshot saw are the baseline the first head-check compares.
   seed_head_baseline({ node_key: snapshot.node_key, libraries: snapshot.libraries as unknown as Library[] })
   if (snapshot.active !== null) {

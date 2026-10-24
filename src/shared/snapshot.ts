@@ -57,8 +57,11 @@ export interface HibernationSnapshot {
   written_at_ms: number
   // Last-visited route, as the hash router path.
   route: string
-  // The library list with its about fields. Never evicted.
+  // The library list with its About names. Never evicted.
   libraries: Array<Record<string, unknown>>
+  // The identity's profile (spec §4.8.2), so the sidebar names the person
+  // at launch. Never evicted; absent in an older snapshot or before it loads.
+  profile?: Record<string, unknown> | null
   // The first track page of the most recently active library ('' is the
   // aggregated view of all libraries). Evicted first when over budget.
   active: { library_address: string, total: number, tracks: SnapshotTrack[] } | null

@@ -10,12 +10,13 @@ export type FilterSpec =
   | { type: 'match', fields: Record<string, Scalar> }
   | { type: 'any_of', field: string, values: Scalar[] }
   | { type: 'range', field: string, gte?: number, gt?: number, lte?: number, lt?: number }
+  | { type: 'prefix', field: string, prefix: string }
   | { type: 'and', filters: FilterSpec[] }
   | { type: 'or', filters: FilterSpec[] }
   | { type: 'not', filter: FilterSpec }
 
 export type FilterType = FilterSpec['type']
-export const FILTER_TYPES: readonly FilterType[] = ['match', 'any_of', 'range', 'and', 'or', 'not']
+export const FILTER_TYPES: readonly FilterType[] = ['match', 'any_of', 'range', 'prefix', 'and', 'or', 'not']
 
 export const MAX_DEPTH = 16
 const RANGE_BOUNDS = ['gte', 'gt', 'lte', 'lt'] as const
@@ -23,6 +24,7 @@ const ALLOWED_KEYS: Record<FilterType, readonly string[]> = {
   match: ['type', 'fields'],
   any_of: ['type', 'field', 'values'],
   range: ['type', 'field', ...RANGE_BOUNDS],
+  prefix: ['type', 'field', 'prefix'],
   and: ['type', 'filters'],
   or: ['type', 'filters'],
   not: ['type', 'filter']
@@ -67,6 +69,10 @@ export const filter_problems = (spec: unknown, depth = 1, at = 'filter'): string
       for (const bound of bounds) if (typeof spec[bound] !== 'number' || !Number.isFinite(spec[bound])) problems.push(`${at} (range) bound ${bound} must be a number.`)
       break
     }
+    case 'prefix':
+      if (!is_field_path(spec.field)) problems.push(`${at} (starts with) needs a field.`)
+      if (typeof spec.prefix !== 'string' || spec.prefix === '' || new TextEncoder().encode(spec.prefix).length > 128) problems.push(`${at} (starts with) needs a prefix of 1 to 128 bytes.`)
+      break
     case 'and':
     case 'or':
       if (!Array.isArray(spec.filters) || spec.filters.length < 1 || spec.filters.length > 64) problems.push(`${at} (${type}) needs 1 to 64 filters.`)
@@ -98,6 +104,8 @@ export const describe_filter = (spec: unknown): string => {
       const words = { gte: 'at least', gt: 'over', lte: 'at most', lt: 'under' }
       return `${String(spec.field)} ${RANGE_BOUNDS.filter((bound) => spec[bound] !== undefined).map((bound) => `${words[bound]} ${show(spec[bound])}`).join(' and ')}${suffix}`
     }
+    case 'prefix':
+      return `${String(spec.field)} starts with ${show(spec.prefix)}${suffix}`
     case 'and':
     case 'or':
       return Array.isArray(spec.filters) ? `(${spec.filters.map(describe_filter).join(type === 'and' ? ' and ' : ' or ')})${suffix}` : `(unreadable ${type})`
@@ -114,11 +122,15 @@ export interface FilterField {
   kind: FieldKind
 }
 
-// A capability's filter reads the entry envelope as written (§2.2, §3.5.6):
-// the content payload is a CID there, so only envelope fields resolve.
+// A capability's filter reads each action's subject (§3.5.6): the entry
+// envelope as written for a track or About write, where the content payload
+// is a CID, so only envelope fields resolve; and each pair of a label
+// record, { type: "label", track_id, label, op }.
 export const CAPABILITY_FIELDS: readonly FilterField[] = [
-  { path: 'tags', label: 'Tags', kind: 'list' },
-  { path: 'type', label: 'Entry type (track, about)', kind: 'text' },
+  { path: 'label', label: 'Label (label writes)', kind: 'text' },
+  { path: 'op', label: 'Label change: set or unset (label writes)', kind: 'text' },
+  { path: 'track_id', label: 'Track id (label writes)', kind: 'text' },
+  { path: 'type', label: 'Entry type (track, about, label)', kind: 'text' },
   { path: 'timestamp', label: 'Written at (ms since 1970)', kind: 'number' },
   { path: 'id', label: 'Track id', kind: 'text' },
   { path: 'content', label: 'Content CID', kind: 'text' }

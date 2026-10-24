@@ -1,20 +1,19 @@
 // Write targets (spec §8.6.3): which libraries a write may go to, the
-// capability chosen for a shared one without asking, and the default.
+// capability chosen for a shared one without asking, and the default; and
+// where a label goes and where it can be removed from.
 
 import { describe, expect, test } from 'bun:test'
 
 import type { Capability, Library } from '#renderer/api/types.ts'
 import { describe_holders } from '#renderer/components/library/library-category.ts'
 import { removable_from } from '#renderer/components/track/remove-dialog.tsx'
-import { suggest_discriminator } from '#renderer/pages/new-library.tsx'
-import { choose_capability, default_target, resolve_target, target_fields, write_targets } from '#renderer/library/write-targets.ts'
+import { choose_capability, default_target, label_targets, label_write_target, removal_target, resolve_target, target_fields, write_targets } from '#renderer/library/write-targets.ts'
 
 const library = (overrides: Partial<Library>): Library => ({
   id: overrides.address ?? 'x',
   address: '/record/z/x',
   library_type: 'recordstore',
   track_count: 0,
-  linked_library_count: 0,
   audio_size_bytes: 0,
   length: 0,
   heads: [],
@@ -49,6 +48,7 @@ const LIBRARIES = [
   library({ address: '/record/z/own2', is_own: true }),
   library({ address: '/record/z/retired', is_own: true, is_retired: true }),
   library({ address: '/record/z/listens', is_own: true, library_type: 'listens' }),
+  library({ address: '/record/z/labels', is_own: true, library_type: 'labels' }),
   library({ address: '/record/z/linked', is_linked: true }),
   library({ address: '/record/z/shared', is_linked: true, held_capability_ids: ['cap'] })
 ]
@@ -61,8 +61,8 @@ describe('write targets', () => {
       { library_address: '/record/z/own2', category: 'own', capability_id: null },
       { library_address: '/record/z/shared', category: 'shared', capability_id: 'cap' }
     ])
-    // The capability does not grant tagging.
-    expect(write_targets({ libraries: LIBRARIES, held, action: 'library.append_tag' }).map(({ library_address }) => library_address)).toEqual(['/record/z/own', '/record/z/own2'])
+    // The capability does not grant labelling.
+    expect(write_targets({ libraries: LIBRARIES, held, action: 'library.write_label' }).map(({ library_address }) => library_address)).toEqual(['/record/z/own', '/record/z/own2'])
     for (const status of ['expired', 'revoked', 'inert'] as const) {
       expect(write_targets({ libraries: LIBRARIES, held: [capability({ status })], action: 'library.append_track' })).toHaveLength(2)
     }
@@ -102,11 +102,6 @@ describe('write targets', () => {
     expect(default_target({ targets, recent: '/record/z/own2', preferred: '/record/z/shared' })?.library_address).toBe('/record/z/shared')
     // A preferred library that is not writable falls through.
     expect(default_target({ targets, recent: '/record/z/gone', preferred: '/record/z/linked' })?.library_address).toBe('/record/z/own')
-    // Among the track's holders, the one written to last, else the first writable one.
-    const holders = ['/record/z/linked', '/record/z/own', '/record/z/own2']
-    expect(default_target({ targets, recent: '/record/z/own2', holders })?.library_address).toBe('/record/z/own2')
-    expect(default_target({ targets, recent: '/record/z/shared', holders })?.library_address).toBe('/record/z/own')
-    expect(default_target({ targets, recent: null, preferred: '/record/z/shared', holders })?.library_address).toBe('/record/z/shared')
     expect(default_target({ targets: [], recent: null })).toBeNull()
   })
 
@@ -131,10 +126,48 @@ describe('holders', () => {
   })
 })
 
-describe('the address name suggested from a new library name', () => {
-  test('is lowercase letters, digits, and single hyphens', () => {
-    expect(suggest_discriminator('Late Night Mixes')).toBe('late-night-mixes')
-    expect(suggest_discriminator('  Café — B-sides!! ')).toBe('cafe-b-sides')
-    expect(suggest_discriminator('***')).toBe('')
+describe('label targets', () => {
+  const OWN = LIBRARIES.filter(({ is_own }) => is_own)
+  const labelling = capability({ capability_id: 'labels', actions: ['library.write_label'] })
+  const prefixed = capability({ capability_id: 'mix', actions: ['library.write_label'], filter: { type: 'prefix', field: 'label', prefix: 'mix/' } as unknown as Capability['filter'] })
+
+  test('a label goes to the labels library, and in a co-managed library may go to it instead', () => {
+    const just_me = { library_address: '/record/z/labels', category: 'own' as const, capability_id: null }
+    expect(label_targets({ own: OWN, libraries: LIBRARIES, held: [], viewed: '', co_managed: false })).toEqual({ just_me, shared: null })
+    // An own recordstore offers shared only once it has let someone write.
+    expect(label_targets({ own: OWN, libraries: LIBRARIES, held: [], viewed: '/record/z/own', co_managed: false }).shared).toBeNull()
+    expect(label_targets({ own: OWN, libraries: LIBRARIES, held: [], viewed: '/record/z/own', co_managed: true }).shared).toEqual({ library_address: '/record/z/own', category: 'own', capability_id: null })
+    // Another identity's library, through a capability granting write_label.
+    expect(label_targets({ own: OWN, libraries: LIBRARIES, held: [capability({})], viewed: '/record/z/shared', co_managed: false }).shared).toBeNull()
+    expect(label_targets({ own: OWN, libraries: LIBRARIES, held: [labelling], viewed: '/record/z/shared', co_managed: false }).shared).toEqual({ library_address: '/record/z/shared', category: 'shared', capability_id: 'labels' })
+    expect(label_targets({ own: OWN, libraries: LIBRARIES, held: [labelling], viewed: '/record/z/linked', co_managed: false }).shared).toBeNull()
+    // No labels library (a node that has not made one yet): nowhere to label.
+    expect(label_targets({ own: [], libraries: LIBRARIES, held: [], viewed: '', co_managed: false }).just_me).toBeNull()
+  })
+
+  test('a shared label write cites a capability whose prefix admits the label', () => {
+    const target = { library_address: '/record/z/shared', category: 'shared' as const, capability_id: 'mix' }
+    const subject = (label: string) => ({ type: 'label' as const, track_id: 'a'.repeat(64), label, op: 'set' as const })
+    expect(label_write_target({ target, held: [prefixed], subject: subject('mix/late') })?.capability_id).toBe('mix')
+    expect(label_write_target({ target, held: [prefixed], subject: subject('dub') })).toBeNull()
+    expect(label_write_target({ target, held: [prefixed, labelling], subject: subject('dub') })?.capability_id).toBe('labels')
+    const own = { library_address: '/record/z/labels', category: 'own' as const, capability_id: null }
+    expect(label_write_target({ target: own, held: [], subject: subject('dub') })).toBe(own)
+  })
+
+  test('a label is removable where the write is authorised, never a node-managed one', () => {
+    const removal = (library_address: string, tag: string, held: Capability[] = [], managed: ReadonlySet<string> = new Set()) =>
+      removal_target({ library_address, tag, track_id: 'a'.repeat(64), libraries: LIBRARIES, own: OWN, held, managed })
+    expect(removal('/record/z/labels', 'dub')?.library_address).toBe('/record/z/labels')
+    expect(removal('/record/z/own', 'dub')?.capability_id).toBeNull()
+    expect(removal('/record/z/retired', 'dub')).toBeNull()
+    expect(removal('/record/z/linked', 'dub')).toBeNull()
+    expect(removal('/record/z/shared', 'dub')).toBeNull()
+    expect(removal('/record/z/shared', 'dub', [labelling])?.capability_id).toBe('labels')
+    expect(removal('/record/z/shared', 'mix/late', [prefixed])?.capability_id).toBe('mix')
+    expect(removal('/record/z/shared', 'dub', [prefixed])).toBeNull()
+    // A managed label is read-only outside the labels library.
+    expect(removal('/record/z/own', 'genre/dub', [], new Set(['genre/dub']))).toBeNull()
+    expect(removal('/record/z/labels', 'genre/dub', [], new Set(['genre/dub']))?.library_address).toBe('/record/z/labels')
   })
 })

@@ -1,8 +1,10 @@
 // Fills an in-process node's own library with synthetic tracks, enough to
 // reproduce a real library's size (the canonical node holds about 200,000).
 // One real file is ingested as the template; every other track reuses its
-// audio and artwork with its own fingerprint, title, artist, album, and tags,
-// appended through record-node's own PUT path and indexed in batches.
+// audio and artwork with its own fingerprint, title, artist, and album,
+// appended through record-node's own PUT path and indexed in batches. Its
+// labels follow as label records in the same library (spec §2.5), through
+// the peer's batch label write.
 
 import { fileURLToPath } from 'node:url'
 
@@ -14,6 +16,8 @@ const ARTISTS = 1200
 const ALBUMS_PER_ARTIST = 6
 const TAGS = ['house', 'techno', 'ambient', 'disco', 'jazz', 'dub', 'electro', 'soul', 'funk', 'garage', 'breaks', 'acid']
 const TIERS = ['personal', 'personal-pick', 'family', 'vacay-catalogue']
+// Tracks per label record: about 600 pairs, well under the 256 KiB entry bound.
+const LABEL_BATCH = 200
 
 // Facet labels shaped like the record-node-library exporter's: a collection
 // tier and a file origin on every track, and playlist and DJ-session labels on some, so the
@@ -40,7 +44,7 @@ interface Context {
 }
 interface Target { address: string, handle: { oplog: { entries: Map<string, unknown> } } }
 interface Internals {
-  put_track: (input: { target: unknown, content: Record<string, unknown>, tags?: string[], timestamp?: number }) => Promise<{ entry_hash: string }>
+  put_track: (input: { target: unknown, content: Record<string, unknown>, timestamp?: number }) => Promise<{ entry_hash: string, track_id: string }>
   resolve_write_target: (context: Context, input: Record<string, never>) => Target
   decode_payload: (bytes: Uint8Array) => unknown
 }
@@ -58,12 +62,14 @@ export const create_seeder = async (node: TestNode): Promise<Seeder> => {
   const content = decode_payload(bytes) as { tags: Record<string, unknown>, audio: Record<string, unknown> }
   const track_target = { oplog: target.handle.oplog, key_pair: context.identity.key_pair, content_store: context.content_store }
   const { libraries } = context
+  const { change_labels_batch } = peer as unknown as { change_labels_batch: (input: { library_address: string, items: Array<{ track_id: string, add: string[] }> }) => Promise<unknown> }
   let next = 0
   const add: Seeder['add'] = async ({ count, batch = 2000, on_progress }) => {
     const first = next
     next += count
     for (let start = first; start < first + count; start += batch) {
       const entries: unknown[] = []
+      const labelled: Array<{ track_id: string, add: string[] }> = []
       for (let index = start; index < Math.min(first + count, start + batch); index++) {
         const artist = index % ARTISTS
         const track = await put_track({
@@ -80,13 +86,17 @@ export const create_seeder = async (node: TestNode): Promise<Seeder> => {
             },
             audio: { ...content.audio, duration: 120 + (index % 400) }
           },
-          tags: [...(index % 3 === 0 ? [TAGS[index % TAGS.length] as string] : []), ...facet_labels(index)],
           timestamp: 1_700_000_000_000 + index
         })
+        labelled.push({ track_id: track.track_id, add: [...(index % 3 === 0 ? [TAGS[index % TAGS.length] as string] : []), ...facet_labels(index)] })
         const entry = target.handle.oplog.entries.get(track.entry_hash)
         if (entry !== undefined) entries.push(entry)
       }
       await libraries.register({ library_address: target.address, entries })
+      // One label record per write, kept under the §2.8.3 signed entry bound.
+      for (let at = 0; at < labelled.length; at += LABEL_BATCH) {
+        await change_labels_batch({ library_address: target.address, items: labelled.slice(at, at + LABEL_BATCH) })
+      }
       on_progress?.(Math.min(first + count, start + batch) - first)
     }
   }

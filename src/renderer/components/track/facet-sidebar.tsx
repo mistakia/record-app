@@ -1,8 +1,10 @@
-// The label filter over GET /tags for the shown library: a column of
+// The label filter over GET /tags for the shown library, whose labels
+// count from the person's own libraries and the shown one wherever they
+// are held (the node's label_libraries default, spec §8.6.7): a column of
 // facets (label-facets.ts), each a foldable framed section listing its
 // labels with their counts. A label toggles in the filter; a track matches
 // any label within a facet and every facet selected, and each hand label on
-// its own. Counts are the library's, not narrowed by the filter. A text
+// its own. Counts are the view's, not narrowed by the filter. A text
 // filter, disclosed on demand, narrows the labels shown: every facet holding
 // a match opens, the rest go, and a selected label stays in sight.
 

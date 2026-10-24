@@ -40,12 +40,13 @@ export const moved_libraries = ({ before, after }: { before: ReadonlyMap<string,
   ...[...before.values()].filter(({ address }) => !after.has(address))
 ]
 
-type StaleTag = 'tracks' | 'tags' | 'listens' | { type: 'tracks' | 'tags' | 'about', id: string }
+type StaleTag = 'tracks' | 'tags' | 'listens' | 'profile' | { type: 'tracks' | 'tags' | 'about', id: string }
 
 // The cache tags moved libraries, and a moved identity library, make stale.
-// A move in an own library changes have_track on rows of every view, and an
-// identity-library move can change is_pinned on any row, so both stale every
-// track page.
+// A move in an own library changes have_track on rows of every view, and its
+// labels count in every view (spec §8.6.7), so it stales every track page
+// and tag count; an identity-library move can change is_pinned on any row
+// and the profile.
 export const tags_for_moved = ({ moved, identity_moved = false }: { moved: readonly LibraryMark[], identity_moved?: boolean }): StaleTag[] => {
   if (moved.length === 0 && !identity_moved) return []
   const tags: StaleTag[] = moved.flatMap(({ address }) => [
@@ -54,7 +55,10 @@ export const tags_for_moved = ({ moved, identity_moved = false }: { moved: reado
     { type: 'about' as const, id: address }
   ])
   if (moved.length > 0) tags.push({ type: 'tracks', id: AGGREGATE }, { type: 'tags', id: AGGREGATE })
-  if (identity_moved || moved.some(({ is_own }) => is_own)) tags.push('tracks')
+  const own_moved = moved.some(({ is_own }) => is_own)
+  if (identity_moved || own_moved) tags.push('tracks')
+  if (own_moved) tags.push('tags')
   if (identity_moved || moved.some(({ library_type }) => library_type === 'listens')) tags.push('listens')
+  if (identity_moved) tags.push('profile')
   return tags
 }

@@ -35,6 +35,7 @@ export const check_snapshot = (input: unknown): input is HibernationSnapshot => 
   if (typeof node_key !== 'string' || typeof written_at_ms !== 'number') return false
   if (typeof route !== 'string' || !route.startsWith('/') || route.length > 200) return false
   if (!Array.isArray(libraries) || libraries.length > MAX_LIBRARIES || !libraries.every(is_object)) return false
+  if (input.profile !== undefined && input.profile !== null && !is_object(input.profile)) return false
   if (active !== null && !(is_object(active) && typeof active.library_address === 'string' && Array.isArray(active.tracks) && active.tracks.length <= MAX_ACTIVE_TRACKS)) return false
   if (queue !== null && !(is_object(queue) && Array.isArray(queue.entries) && queue.entries.length <= MAX_QUEUE_ENTRIES)) return false
   return true

@@ -103,7 +103,7 @@ export type GoTarget = 'tracks' | 'listens' | 'library' | 'libraries' | 'import'
 export const GO_KEYS: ReadonlyArray<{ key: string, label: string, target: GoTarget }> = [
   { key: 't', label: 'All tracks', target: 'tracks' },
   { key: 'r', label: 'Recently played', target: 'listens' },
-  { key: 'l', label: 'My library', target: 'library' },
+  { key: 'l', label: 'Your library', target: 'library' },
   { key: 'b', label: 'Libraries', target: 'libraries' },
   { key: 'i', label: 'Import', target: 'import' },
   { key: 'a', label: 'Identity', target: 'identity' },

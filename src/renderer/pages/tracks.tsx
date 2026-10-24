@@ -18,7 +18,7 @@ import { use_inspector_fit } from '#renderer/components/track/use-inspector-fit.
 import { FacetSidebar } from '#renderer/components/track/facet-sidebar.tsx'
 import { SearchField } from '#renderer/components/track/search-field.tsx'
 import { TrackList, TrackListSkeleton, type ListActions } from '#renderer/components/track/track-list.tsx'
-import { use_tag_navigation, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
+import { use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
 import { SEARCH_INPUT_ID } from '#renderer/hooks/use-hotkeys.ts'
 import { play_tracks, toggle_shuffle_mode } from '#renderer/player/player-controller.ts'
 import { record_search } from '#renderer/prefs/search-history.ts'
@@ -42,7 +42,8 @@ export const Tracks = () => {
   const libraries = node_api.endpoints.get_libraries.useQuery()
   const first_page = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address, page: 0, filters }))
   const shuffle = use_app_selector((state) => state.player.queue.shuffle)
-  const own_address = own_library_address(libraries.data)
+  const default_own = node_api.endpoints.get_identity.useQuery().data?.own_library_address ?? null
+  const own_address = own_library_address(libraries.data, default_own)
   // A listen records the library a track was played from: the shown one,
   // or in the aggregated view the own library.
   const listen_library = library_address !== '' ? library_address : own_address ?? ''
@@ -64,18 +65,10 @@ export const Tracks = () => {
   const total = current?.total ?? 0
   const error = first_page.error ?? libraries.error
   const filtered = filters.query.trim() !== '' || filters.tags.length > 0
-  // In one library a label filter counts only the labels that library holds
-  // (spec §8.6.9), so tracks here can carry the label from another library and
-  // still be left out. The same filter over every library says what this view
-  // misses; its args are the aggregated view's first page, so following the
-  // link opens from cache.
-  const everywhere = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address: '', page: 0, filters }), { skip: library_address === '' || filters.tags.length === 0 })
-  const everywhere_total = current === undefined ? undefined : everywhere.currentData?.total
   // Music is added to an own library: on All tracks, or on one of yours
   // that is not retired; never on a library you follow.
   const can_add = own_address !== null && (library_address === '' || (viewed?.is_own === true && !viewed.is_retired))
   const empty = current !== undefined && total === 0 && !filtered
-  const open_tag = use_tag_navigation()
 
   const { actions: row_actions, dialogs } = use_track_actions({
     viewed_library: library_address,
@@ -86,11 +79,9 @@ export const Tracks = () => {
       subtitle: filters.tags.length === 0 ? null : filters.tags.join(' + '),
       library_address
     },
-    // A chip toggles its label in this view's filter, or opens the library it came from.
-    on_tag_clicked: ({ tag, library_address: tag_library }) => {
-      if (library_address === '' || tag_library === library_address) go(with_tag_toggled(view, tag))
-      else open_tag({ tag, library_address: tag_library })
-    },
+    // A chip toggles its label in this view's filter, whichever library
+    // applies it (spec §8.6.7).
+    on_tag_clicked: ({ tag }) => { go(with_tag_toggled(view, tag)) },
     toggle_inspector: () => { set_inspecting((open) => !open) },
     clear_search: () => {
       if (search === '' && filters.query === '') return false
@@ -143,11 +134,6 @@ export const Tracks = () => {
       <div className={styles.toolbar}>
         <SearchField value={search} on_change={(value) => { list_wanted.current = false; set_search(value) }} on_submit={submit_search} />
         <span className={styles.count} data-testid='track-total'>{total} tracks</span>
-        {everywhere_total !== undefined && everywhere_total > total && (
-          <button type='button' data-variant='glyph' className={styles.count} data-testid='track-total-everywhere' onClick={() => { go({ ...view, library_address: '' }) }}>
-            {everywhere_total} in all libraries
-          </button>
-        )}
         {filtered && (
           <button type='button' data-variant='ghost' data-size='small' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
         )}

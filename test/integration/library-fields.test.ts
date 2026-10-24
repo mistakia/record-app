@@ -34,7 +34,7 @@ beforeAll(async () => {
   await node.peer.ingest_file(node.make_audio({ name: 'Fields Seed.flac', seed: 31 }))
   await node.peer.ingest_file(node.make_audio({ name: 'Fields Other.flac', seed: 32, seconds: 9 }))
   first = node.peer.identity().own_address
-  second = (await call<Library>({ method: 'post', path_template: '/identity/libraries', body: { discriminator: 'fields', about: { name: 'Fields' } } })).address
+  second = (await call<Library>({ method: 'post', path_template: '/identity/libraries', body: { name: 'Fields' } })).address
   const found = (await tracks([first])).find(({ title }) => title === 'Fields Seed')
   if (found === undefined) throw new Error('no seed track')
   seed = found

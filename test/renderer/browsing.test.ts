@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import { import_fraction } from '#renderer/components/common/char-gauge.ts'
 import { format_age } from '#renderer/components/common/format-age.ts'
 import { is_cid } from '#renderer/components/library/cid.ts'
-import { current_progress, is_replicating, library_category, library_name, own_library_address, parse_library_address, RECENT_LINK_MS, short_address } from '#renderer/components/library/library-category.ts'
+import { current_progress, is_replicating, library_category, library_name, own_library_address, parse_library_address, RECENT_LINK_MS, address_tail } from '#renderer/components/library/library-category.ts'
 import { pages_for_rows, row_location } from '#renderer/components/track/track-pages.ts'
 import type { Library } from '#renderer/api/types.ts'
 import { DEFAULT_TRACK_FILTERS, track_page_args } from '#renderer/store/api.ts'
@@ -17,7 +17,6 @@ const library = (overrides: Partial<Library> = {}): Library => ({
   address: '/record/zabc/record',
   library_type: 'recordstore',
   track_count: 0,
-  linked_library_count: 0,
   audio_size_bytes: 0,
   length: 0,
   heads: [],
@@ -38,36 +37,29 @@ const library = (overrides: Partial<Library> = {}): Library => ({
 const MIXES = '/record/zBwWX7ayGQu2GevKxpfRiHbcuNjtqkbRghTqUtCPRKbeRGLdtphXDbHThj9HcnMwMXQhF9GZY9rhYt7Yaibr4Z5Bsed4o/mixes'
 
 describe('library address display', () => {
-  test('parses the discriminator and the manifest CID tail', () => {
+  test('parses the discriminator and shows only the manifest CID tail', () => {
     expect(parse_library_address(MIXES)).toEqual({ discriminator: 'mixes', fingerprint: 'Bsed4o' })
-    expect(short_address(MIXES)).toBe('mixes · …Bsed4o')
+    expect(address_tail(MIXES)).toBe('…Bsed4o')
   })
 
   test('leaves an address of another shape whole', () => {
     expect(parse_library_address('/orbitdb/zdpu/record')).toBeNull()
-    expect(short_address('/orbitdb/zdpu/record')).toBe('/orbitdb/zdpu/record')
+    expect(address_tail('/orbitdb/zdpu/record')).toBe('/orbitdb/zdpu/record')
   })
 
-  test('names a library by alias, then name, then discriminator', () => {
+  test('names a library by alias, then name, then Library and its address tail, never its discriminator', () => {
     expect(library_name(library({ alias: 'Friends', name: 'Mixes', address: MIXES }))).toBe('Friends')
     expect(library_name(library({ alias: null, name: 'Mixes', address: MIXES }))).toBe('Mixes')
-    expect(library_name(library({ alias: null, name: null, address: MIXES }))).toBe('mixes')
+    expect(library_name(library({ alias: null, name: null, address: MIXES }))).toBe('Library · …Bsed4o')
+    expect(library_name(library({ address: '/record/zabc/record', is_own: true }))).toBe('Library · …zabc')
+    expect(library_name(library({ address: '/record/zabc/record' }))).toBe('Library · …zabc')
   })
 
-  test('names the unnamed default own library My library', () => {
-    const own = { address: '/record/zabc/record', is_own: true }
-    expect(library_name(library(own))).toBe('My library')
-    expect(library_name(library({ ...own, name: 'Crates' }))).toBe('Crates')
-    expect(library_name(library({ ...own, alias: 'Home' }))).toBe('Home')
-    // Only the own default recordstore: not another identity's, not another own one.
-    expect(library_name(library({ address: '/record/zabc/record' }))).toBe('Unnamed library')
-    expect(library_name(library({ address: MIXES, is_own: true }))).toBe('mixes')
-  })
-
-  test('names the own listens library Play history', () => {
+  test('names the own listens library Play history and the labels library Your labels', () => {
     expect(library_name(library({ address: '/record/zabc/listens', is_own: true, library_type: 'listens' }))).toBe('Play history')
     expect(library_name(library({ address: '/record/zabc/listens', is_own: true, library_type: 'listens', name: 'Plays' }))).toBe('Play history')
-    expect(library_name(library({ address: '/record/zabc/listens', library_type: 'listens' }))).toBe('listens')
+    expect(library_name(library({ address: '/record/zabc/listens', library_type: 'listens' }))).toBe('Library · …zabc')
+    expect(library_name(library({ address: '/record/zabc/labels', is_own: true, library_type: 'labels' }))).toBe('Your labels')
   })
 })
 

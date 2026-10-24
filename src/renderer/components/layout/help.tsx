@@ -19,7 +19,7 @@ const HELP: Record<string, string> = {
   [ROUTES.libraries]: 'Your libraries hold what you import and tag. Follow someone else’s by linking its address; its tracks replicate to this node.',
   [ROUTES.link_library]: 'Linking follows a library: its tracks replicate here and show in your tracks. Only its owner, and those they share it with, can change it.',
   [ROUTES.new_library]: 'A library is a collection with its own address, profile, and the people you let write to it. Your imports go to the library you choose.',
-  [ROUTES.library_profile]: 'The profile is how this library introduces itself to the peers who link it.',
+  [ROUTES.library_about]: 'Its name is what peers who link this library call it; who you are is your profile, on Identity.',
   [ROUTES.issue_capability]: 'A capability lets another identity write to this library. You can revoke it on Writers later, which stops new writes but not past ones.',
   [ROUTES.library_writers]: 'Writers are the identities you let add tracks or tags to this library, perhaps only some, perhaps until a date. Listening needs no permission: anyone with the address can link it. Revoking stops new writes, not past ones.',
   [ROUTES.import]: 'Add files or folders, drop them here, or paste a URL. Each import goes to the library named as its target.',

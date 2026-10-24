@@ -17,7 +17,8 @@ import { ContextMenu } from '#renderer/components/common/context-menu.tsx'
 import { tip } from '#renderer/components/common/tooltip-logic.ts'
 import { ConnectionStatus } from '#renderer/components/layout/connection-banner.tsx'
 import { use_library_actions } from '#renderer/components/library/library-actions.tsx'
-import { current_progress, has_profile, is_replicating, library_name, own_libraries_of, sidebar_libraries } from '#renderer/components/library/library-category.ts'
+import { LibraryAvatar } from '#renderer/components/library/library-avatar.tsx'
+import { current_progress, is_active_recordstore, is_replicating, library_name, own_libraries_of, sidebar_libraries } from '#renderer/components/library/library-category.ts'
 import { parse_track_view, ROUTES, settings_route, tracks_route } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
@@ -57,18 +58,17 @@ export const Sidebar = () => {
   const own = node_api.endpoints.get_own_libraries.useQuery()
   const actions = use_library_actions()
   const [menu, set_menu] = useState<{ x: number, y: number, library: Library } | null>(null)
-  const own_active = own_libraries_of({ own: own.data, libraries: libraries.data }).filter(has_profile)
+  const own_active = own_libraries_of({ own: own.data, libraries: libraries.data }).filter(is_active_recordstore)
   const others = sidebar_libraries(libraries.data)
   // While g is up, the first nine carry the digit that opens them.
   const lead_open = use_app_selector((state) => state.ui.lead_open)
   // Imports still running, counted beside Add music.
   const importing = use_app_selector((state) => state.imports.items.filter(({ finished }) => !finished).length)
-  // The identity has no profile of its own (spec §8.6.9): it goes by its
-  // default own library's About name and avatar.
-  const identity = own_active[0]
+  // The identity's own profile (spec §8.5.7); unnamed, it goes by the
+  // handle its key gives it.
+  const profile = node_api.endpoints.get_profile.useQuery().data
   const public_key = node_api.endpoints.get_public_key.useQuery().data
-  // Unnamed, it goes by the handle its key gives it.
-  const identity_name = identity?.name ?? (public_key === undefined ? null : key_handle(public_key))
+  const identity_name = profile?.name ?? (public_key === undefined ? null : key_handle(public_key))
 
   return (
     <nav className={styles.sidebar} aria-label='Library'>
@@ -104,7 +104,7 @@ export const Sidebar = () => {
               <Link to={to} className={styles.library_link}>
                 {lead_open && index < MAX_JUMP_LABELS
                   ? <kbd className={styles.jump} data-testid='jump-label'>{index + 1}</kbd>
-                  : <Avatar address={library.address} size={24} cid={library.avatar} />}
+                  : <LibraryAvatar address={library.address} size={24} />}
                 <span className={styles.name}>{library_name(library)}</span>
                 <ReplicationGauge library={library} fetched_at={libraries.fulfilledTimeStamp} />
               </Link>
@@ -129,8 +129,8 @@ export const Sidebar = () => {
       <div className={styles.footer}>
         <div className={styles.footer_row}>
           <Link to={ROUTES.identity} className={styles.identity} aria-label='Identity' {...tip('Identity')} aria-current={is_current(ROUTES.identity) ? 'page' : undefined}>
-            <Avatar address={identity?.address ?? ''} size={28} cid={identity?.avatar} />
-            {identity_name !== null && <span className={styles.name}>{identity_name}</span>}
+            <Avatar seed={public_key ?? ''} size={28} cid={profile?.avatar} />
+            {identity_name !== null && <span className={styles.name} data-testid='identity-name'>{identity_name}</span>}
           </Link>
           <Link to={ROUTES.settings} className={styles.gear} aria-label='Settings' {...tip('Settings', 'go_settings')} aria-current={is_current(ROUTES.settings) ? 'page' : undefined}><SettingsIcon /></Link>
         </div>

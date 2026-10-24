@@ -7,6 +7,7 @@ import { memo, type MouseEvent } from 'react'
 
 import styles from './track-row.module.css'
 import type { Column } from './columns.ts'
+import type { LabelRemoval } from './use-label-removal.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { OverflowChips } from '#renderer/components/common/overflow-chips.tsx'
@@ -49,7 +50,7 @@ const cell_text = (track: Track, column: Column): string => {
 
 // Every tag stays reachable: those the cell fits whole, then +N for the rest,
 // which shows them all.
-const Tags = ({ track, removable, handlers }: { track: Track, removable: ReadonlySet<string>, handlers: RowHandlers }) => (
+const Tags = ({ track, removal, handlers }: { track: Track, removal: LabelRemoval, handlers: RowHandlers }) => (
   <span role='cell' data-col='tags' className={styles.cell}>
     <OverflowChips
       className={styles.tags}
@@ -71,7 +72,7 @@ const Tags = ({ track, removable, handlers }: { track: Track, removable: Readonl
             >
               {tag}
             </button>
-            {removable.has(library_address) && (
+            {removal({ library_address, tag, track_id: track.id }) !== null && (
               <button
                 type='button'
                 data-variant='glyph'
@@ -94,10 +95,10 @@ const Tags = ({ track, removable, handlers }: { track: Track, removable: Readonl
   </span>
 )
 
-export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is_selected, menu_open, removable, handlers }: {
+export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is_selected, menu_open, removal, handlers }: {
   track: Track
-  // Own active libraries, whose tags the row may remove.
-  removable: ReadonlySet<string>
+  // Where each of the row's labels can be removed from, if anywhere.
+  removal: LabelRemoval
   index: number
   columns: readonly Column[]
   play_state: RowPlayState
@@ -120,7 +121,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
   const lead = columns.filter(({ lead: is_lead }) => is_lead === true)
   const rest = columns.filter(({ lead: is_lead }) => is_lead !== true)
   const render_column = (column: Column) => column.id === 'tags'
-    ? <Tags key='tags' track={track} removable={removable} handlers={handlers} />
+    ? <Tags key='tags' track={track} removal={removal} handlers={handlers} />
     : (
       <span key={column.id} role='cell' data-col={column.id} className={[styles.cell, column.quiet === true ? styles.quiet : '', column.align === 'end' ? styles.end : '', column.id === 'artist' || column.id === 'album' ? styles.secondary : ''].join(' ')}>
         {cell_text(track, column)}

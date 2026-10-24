@@ -1,6 +1,6 @@
 // A library or identity avatar (STYLE.md § Artwork and avatars): square, its
-// image when it has one, and otherwise the pattern its library's address
-// gives it.
+// image when it has one, and otherwise the pattern its seed gives it: a
+// library's address, or the identity's public key.
 
 import { avatar_pattern } from './avatar-pattern.ts'
 import styles from './avatar.module.css'
@@ -21,11 +21,11 @@ const Pattern = ({ cells, size }: { cells: readonly boolean[], size: number }) =
   )
 }
 
-export const Avatar = ({ address, size, cid }: { address: string, size: number, cid?: string | null | undefined }) => {
+export const Avatar = ({ seed, size, cid }: { seed: string, size: number, cid?: string | null | undefined }) => {
   const url = use_image(cid)
   return (
     <span className={styles.avatar} style={{ width: size, height: size }} aria-hidden='true' data-testid='avatar'>
-      {url !== null ? <img src={url} alt='' draggable={false} /> : address === '' ? null : <Pattern cells={avatar_pattern(address)} size={size} />}
+      {url !== null ? <img src={url} alt='' draggable={false} /> : seed === '' ? null : <Pattern cells={avatar_pattern(seed)} size={size} />}
     </span>
   )
 }

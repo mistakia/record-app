@@ -12,6 +12,7 @@ export type FilterDraft =
   | { type: 'match', rows: Array<{ path: string, text: string }> }
   | { type: 'any_of', field: string, values: string[] }
   | { type: 'range', field: string, bounds: Record<BoundKey, string> }
+  | { type: 'prefix', field: string, prefix: string }
   | { type: 'and' | 'or', children: FilterDraft[] }
   | { type: 'not', child: FilterDraft }
 
@@ -23,6 +24,7 @@ export const blank_draft = (type: FilterType, field = 'tags'): FilterDraft => {
     case 'match': return { type, rows: [{ path: field, text: '' }] }
     case 'any_of': return { type, field, values: [''] }
     case 'range': return { type, field, bounds: { ...empty_bounds(), gte: '0' } }
+    case 'prefix': return { type, field, prefix: '' }
     case 'and':
     case 'or': return { type, children: [blank_draft('match', field)] }
     case 'not': return { type, child: blank_draft('match', field) }
@@ -35,6 +37,7 @@ export const to_draft = (spec: FilterSpec): FilterDraft => {
     case 'match': return { type: 'match', rows: Object.entries(spec.fields).map(([path, value]) => ({ path, text: show(value) })) }
     case 'any_of': return { type: 'any_of', field: spec.field, values: spec.values.map(show) }
     case 'range': return { type: 'range', field: spec.field, bounds: { gte: show(spec.gte), gt: show(spec.gt), lte: show(spec.lte), lt: show(spec.lt) } }
+    case 'prefix': return { type: 'prefix', field: spec.field, prefix: spec.prefix }
     case 'and':
     case 'or': return { type: spec.type, children: spec.filters.map(to_draft) }
     case 'not': return { type: 'not', child: to_draft(spec.filter) }
@@ -75,6 +78,8 @@ export const from_draft = (draft: FilterDraft, fields: readonly FilterField[]): 
       }
       return { ok: true, spec }
     }
+    case 'prefix':
+      return draft.prefix === '' ? { ok: false, reason: 'Enter the text it starts with.' } : { ok: true, spec: { type: 'prefix', field: draft.field.trim(), prefix: draft.prefix } }
     case 'and':
     case 'or': {
       const filters: FilterSpec[] = []

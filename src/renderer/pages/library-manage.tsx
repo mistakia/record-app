@@ -1,5 +1,5 @@
-// An own library's Profile and Writers tabs (spec §8.6.1, §8.6.4, §4.8.3),
-// beside its track list: the profile and collection map, with retirement at
+// An own library's About and Writers tabs (spec §8.6.1, §8.6.4, §4.8.3),
+// beside its track list: its name and collection map, with retirement at
 // its foot, and who may write to it, the capabilities it has issued. The
 // library is the route's ?library.
 
@@ -15,7 +15,7 @@ import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { PageActions } from '#renderer/components/layout/page-actions.tsx'
 import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
 import { CollectionMap } from '#renderer/components/library/collection-map.tsx'
-import { can_retire, has_profile, library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
+import { can_retire, is_active_recordstore, library_name, own_libraries_of } from '#renderer/components/library/library-category.ts'
 import { issue_route, library_route } from '#renderer/routes.ts'
 import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
@@ -34,7 +34,7 @@ export const use_managed_library = (): { library: Library | undefined, loading: 
 
 const NotOwn = () => <p className={styles.muted}>This is not one of your libraries.</p>
 
-export const LibraryProfile = () => {
+export const LibraryAbout = () => {
   const dispatch = use_app_dispatch()
   const navigate = useNavigate()
   const writes_allowed = use_app_selector(select_writes_allowed)
@@ -43,8 +43,8 @@ export const LibraryProfile = () => {
   if (loading) return null
   if (library === undefined) return <section className={styles.page}><NotOwn /></section>
   const writers = library_route({ tab: 'writers', library_address: library.address })
-  // A retired library has no profile to edit, so a stale link goes on to Writers.
-  if (!has_profile(library)) return <Navigate to={writers} replace />
+  // A retired library cannot be renamed, so a stale link goes on to Writers.
+  if (!is_active_recordstore(library)) return <Navigate to={writers} replace />
 
   const retire = async () => {
     set_retiring(false)
@@ -53,9 +53,9 @@ export const LibraryProfile = () => {
   }
 
   return (
-    <section className={styles.page} data-testid='library-profile-tab'>
-      <FramedSection title='Profile'>
-        <AboutEditor key={library.address} address={library.address} note='How this library introduces itself to the peers who link it.' />
+    <section className={styles.page} data-testid='library-about-tab'>
+      <FramedSection title='Name'>
+        <AboutEditor key={library.address} address={library.address} note='What peers who link this library call it. Who you are is your profile, on Identity.' />
       </FramedSection>
       <FramedSection title='Collection map' width='full'>
         <CollectionMap library_address={library.address} />

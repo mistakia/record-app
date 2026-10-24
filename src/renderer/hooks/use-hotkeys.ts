@@ -58,7 +58,7 @@ export const use_hotkeys = (): void => {
         const library = sidebar_libraries(libraries())[target.library]
         if (library !== undefined) navigate(tracks_route({ library_address: library.address }))
       } else if (target === 'library') {
-        const own = own_library_address(libraries())
+        const own = own_library_address(libraries(), node_api.endpoints.get_identity.select()(store.getState()).data?.own_library_address ?? null)
         navigate(own === null ? ROUTES.libraries : tracks_route({ library_address: own }))
       } else {
         navigate(PAGES[target])

@@ -1,7 +1,8 @@
 // One step of a guided flow (STYLE.md § Step flows): a kicker with the step
-// count, one question in the display face, one input, one line of hint or
-// echo, and back and continue. Enter continues, from a checkbox or radio
-// too, which a form does not submit on its own; Esc goes back.
+// count when there is more than one, one question in the display face, one
+// input, one line of hint or echo, and back and continue. Enter continues,
+// from a checkbox or radio too, which a form does not submit on its own;
+// Esc goes back.
 
 import type { ReactNode } from 'react'
 
@@ -18,7 +19,8 @@ export const StepForm = ({ step, steps, question, children, hint, error, next_la
   next_label: string
   next_disabled: boolean
   on_next: () => void
-  on_back: () => void
+  // Absent on a flow with nowhere to go back to.
+  on_back?: (() => void) | undefined
   // An optional step offers to continue without an answer.
   skip?: (() => void) | undefined
 }) => (
@@ -28,19 +30,19 @@ export const StepForm = ({ step, steps, question, children, hint, error, next_la
     data-step={step}
     onSubmit={(event) => { event.preventDefault(); if (!next_disabled) on_next() }}
     onKeyDown={(event) => {
-      if (event.key === 'Escape') { event.preventDefault(); on_back() }
+      if (event.key === 'Escape' && on_back !== undefined) { event.preventDefault(); on_back() }
       const target = event.target as HTMLInputElement
       if (event.key === 'Enter' && (target.type === 'checkbox' || target.type === 'radio')) { event.preventDefault(); if (!next_disabled) on_next() }
     }}
   >
-    <p className={styles.kicker}>Step {step} of {steps}</p>
+    {steps > 1 && <p className={styles.kicker}>Step {step} of {steps}</p>}
     <h2 className={styles.question}>{question}</h2>
     <div className={styles.input}>{children}</div>
     {error !== null && error !== undefined
       ? <p className={styles.error} role='alert'>!! {error}</p>
       : <p className={styles.hint}>{hint ?? ' '}</p>}
     <div className={styles.actions}>
-      <button type='button' data-variant='ghost' onClick={on_back}>{step === 1 ? 'Cancel' : 'Back'}</button>
+      {on_back !== undefined && <button type='button' data-variant='ghost' onClick={on_back}>{step === 1 ? 'Cancel' : 'Back'}</button>}
       <span className={styles.spacer} />
       {skip !== undefined && <button type='button' data-variant='ghost' onClick={skip}>Skip</button>}
       <button type='submit' data-variant='primary' disabled={next_disabled}>{next_label}</button>

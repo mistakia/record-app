@@ -1,7 +1,8 @@
 // Writes with a target library (chapter 7 write targets, spec §8.6.3) against
 // an in-process record-node whose identity owns two recordstores: without a
-// target a write is refused, and tags, file import, and adoption by content
-// CID land in the library named.
+// target a track write is refused and a label lands in the labels library,
+// and labels, file import, and adoption by content CID land in the library
+// named.
 
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
@@ -39,18 +40,22 @@ beforeAll(async () => {
   node = await start_test_node()
   await node.peer.ingest_file(node.make_audio({ name: 'Target Seed.flac', seed: 21 }))
   first = node.peer.identity().own_address
-  second = (await call<Library>({ method: 'post', path_template: '/identity/libraries', body: { discriminator: 'second', about: { name: 'Second' } } })).address
+  second = (await call<Library>({ method: 'post', path_template: '/identity/libraries', body: { name: 'Second' } })).address
 }, 120_000)
 
 afterAll(async () => { await node.stop() })
 
 describe('write targets', () => {
-  test('both own recordstores are targets, and a write without one is refused', async () => {
+  test('both own recordstores are targets; a track write without one is refused, and a label goes to the labels library', async () => {
     const libraries = await call<Library[]>({ method: 'get', path_template: '/libraries' })
     expect(write_targets({ libraries, held: [], action: 'library.append_track' }).map(({ library_address }) => library_address).sort()).toEqual([first, second].sort())
     const [seed] = await tracks_in(first)
     if (seed === undefined) throw new Error('no seed track')
-    expect(await send({ method: 'post', path_template: '/tags', body: { track_id: seed.id, tag: 'untargeted' } })).toMatchObject({ ok: false, failure: { status: 400 } })
+    expect(await send({ method: 'post', path_template: '/tracks', body: { content_cid: seed.content_cid } })).toMatchObject({ ok: false, failure: { status: 400 } })
+    const labels = (await call<Library[]>({ method: 'get', path_template: '/identity/libraries' })).find(({ library_type }) => library_type === 'labels')
+    if (labels === undefined) throw new Error('no labels library')
+    const labelled = await call<Track>({ method: 'post', path_template: '/tags', body: { track_id: seed.id, tag: 'untargeted' } })
+    expect(labelled.tags).toContainEqual({ library_address: labels.address, tag: 'untargeted' })
   })
 
   test('adopts a track into the second library by content CID, then tags and untags it there', async () => {

@@ -46,7 +46,7 @@ export const head_check = ({ extra = [] }: { extra?: Array<{ type: 'tracks', id:
     const identity_heads = identity.data?.heads ?? null
     const after = mark_libraries(libraries.data)
     if (known === null) {
-      dispatch(node_api.util.invalidateTags(['tracks', 'tags', 'about', 'listens']))
+      dispatch(node_api.util.invalidateTags(['tracks', 'tags', 'about', 'listens', 'profile']))
       baseline = { node_key, libraries: after, identity_heads }
       return { moved: null }
     }

@@ -4,7 +4,7 @@
 import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react'
 
 import type { NodeFailure, NodeRequest } from '#shared/bridge.ts'
-import { TRACK_PAGE_SIZE, type About, type Capability, type ReplicationMode, type ReplicationPolicy, type ImportAck, type Library, type Peer, type Settings, type TagCount, type Track, type TrackList } from '#renderer/api/types.ts'
+import { TRACK_PAGE_SIZE, type About, type Capability, type LabelWriteResult, type Profile, type ReplicationMode, type ReplicationPolicy, type ImportAck, type Library, type Peer, type Settings, type TagCount, type Track, type TrackList } from '#renderer/api/types.ts'
 import { select_writes_allowed, type ConnectionState } from './connection.ts'
 import { NODE_API_TAGS } from './event-invalidation.ts'
 import { library_ids } from './cache-ids.ts'
@@ -107,7 +107,12 @@ export const node_api = createApi({
       },
       providesTags: ['libraries']
     }),
-    // Every own library, active and retired, the listens library included.
+    // The identity: its key and its default own library (own_library_address).
+    get_identity: build.query<{ public_key: string, own_library_address: string, meta_log_address: string }, void>({
+      query: () => ({ method: 'get', path_template: '/identity' }),
+      providesTags: ['libraries']
+    }),
+    // Every own library, active and retired, the listens and labels libraries included.
     get_own_libraries: build.query<Library[], void>({
       query: () => ({ method: 'get', path_template: '/identity/libraries' }),
       providesTags: ['libraries', 'own_libraries']
@@ -136,8 +141,9 @@ export const node_api = createApi({
       query: ({ library_addresses, prefix }) => ({ method: 'get', path_template: '/tags', query: { library_addresses, ...(prefix === undefined ? {} : { prefix }) } }),
       providesTags: (_result, _error, { library_addresses }) => library_ids(library_addresses).map((id) => ({ type: 'tags' as const, id }))
     }),
-    // A library that never set a profile answers 404: null, not a failure,
-    // which would keep reconcile from ever marking the data fresh.
+    // The library's name (spec §2.6). A library that never wrote one
+    // answers 404: null, not a failure, which would keep reconcile from
+    // ever marking the data fresh.
     get_about: build.query<About | null, string>({
       queryFn: async (address) => {
         const result = await window.record.request({ method: 'get', path_template: '/libraries/{address}/about', params: encode(address) })
@@ -145,6 +151,22 @@ export const node_api = createApi({
         return result.failure.kind === 'http' && result.failure.status === 404 ? { data: null } : { error: result.failure }
       },
       providesTags: (_result, _error, address) => [{ type: 'about' as const, id: address }]
+    }),
+    // The identity's own profile (spec §4.8.2): every field null until written.
+    get_profile: build.query<Profile, void>({
+      query: () => ({ method: 'get', path_template: '/identity/profile' }),
+      providesTags: ['profile']
+    }),
+    // The profile of a library's owner: the identity's own for an own
+    // library, else the one its owner's announcement carried (§5.3.2). None
+    // known, or a library with several writers, answers 404: null.
+    get_library_profile: build.query<Profile | null, string>({
+      queryFn: async (address) => {
+        const result = await window.record.request({ method: 'get', path_template: '/libraries/{address}/profile', params: encode(address) })
+        if (result.ok) return { data: result.data as Profile }
+        return result.failure.kind === 'http' && result.failure.status === 404 ? { data: null } : { error: result.failure }
+      },
+      providesTags: ['profile']
     }),
     get_listens: build.query<TrackList, { offset: number, limit: number }>({
       query: ({ offset, limit }) => ({ method: 'get', path_template: '/listens', query: { offset, limit } }),
@@ -161,14 +183,15 @@ export const node_api = createApi({
     }),
     // Every write that appends to a library names its target (chapter 7
     // write targets) and, for a library another identity owns, the
-    // capability authorising it.
-    add_tag: build.mutation<Track, { track_id: string, tag: string } & TargetFields>({
+    // capability authorising it. A label write names the labels library
+    // too, rather than leave it to the node's default.
+    add_tag: build.mutation<LabelWriteResult, { track_id: string, tag: string } & TargetFields>({
       query: (body) => ({ method: 'post', path_template: '/tags', body }),
       invalidatesTags: ['tracks', 'tags']
     }),
-    // Only an own library: no capability authorises dropping a tag (§3.5.6).
-    remove_tag: build.mutation<Track, { track_id: string, tag: string, library_address: string }>({
-      query: (query) => ({ method: 'delete', path_template: '/tags', query }),
+    // An own library, or a shared one under library.write_label (§3.5.6).
+    remove_tag: build.mutation<LabelWriteResult, { track_id: string, tag: string } & TargetFields>({
+      query: (query) => ({ method: 'delete', path_template: '/tags', query: { ...query } }),
       invalidatesTags: ['tracks', 'tags']
     }),
     // A DEL in an own library; no capability authorises one (§3.5.6).
@@ -218,7 +241,8 @@ export const node_api = createApi({
       query: ({ address, capability_id }) => ({ method: 'delete', path_template: '/libraries/{address}/capabilities/{id}', params: { address, id: capability_id } }),
       invalidatesTags: ['capabilities', 'libraries']
     }),
-    create_own_library: build.mutation<Library, { discriminator?: string, about?: { name: string } }>({
+    // The node picks the address (§3.6.1); the library takes only a name.
+    create_own_library: build.mutation<Library, { name: string }>({
       query: (body) => ({ method: 'post', path_template: '/identity/libraries', body }),
       invalidatesTags: ['libraries', 'about']
     }),
@@ -235,11 +259,17 @@ export const node_api = createApi({
         const result = await window.record.identity.import({ private_key })
         return result.ok ? { data: result.data } : { error: result.failure }
       },
-      invalidatesTags: ['libraries', 'tracks', 'tags', 'about', 'listens']
+      invalidatesTags: ['libraries', 'tracks', 'tags', 'about', 'listens', 'profile']
     }),
-    update_about: build.mutation<About, { address: string, about: Partial<Omit<About, 'library_address'>> }>({
-      query: ({ address, about }) => ({ method: 'post', path_template: '/libraries/{address}/about', params: encode(address), body: about }),
+    // Renames a library: its About record carries the name only (§2.6).
+    update_about: build.mutation<About, { address: string, name: string }>({
+      query: ({ address, name }) => ({ method: 'post', path_template: '/libraries/{address}/about', params: encode(address), body: { name } }),
       invalidatesTags: ['about', 'libraries']
+    }),
+    // Replaces the whole profile: a field left out is absent afterwards.
+    update_profile: build.mutation<Profile, { name?: string, bio?: string, avatar?: string }>({
+      query: (body) => ({ method: 'put', path_template: '/identity/profile', body }),
+      invalidatesTags: ['profile']
     })
   })
 })

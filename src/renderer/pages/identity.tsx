@@ -1,7 +1,7 @@
-// The identity surface (spec §8.5.7, §8.9.1): the profile the identity goes
-// by, which is its default own library's (§8.6.9), who holds the key, the public
-// key on request, the own libraries, the capabilities held from others, the
-// last export, and export and import, behind a section index.
+// The identity surface (spec §8.5.7, §8.9.1): the identity's own profile
+// (§4.8.2), who holds the key, the public key on request, the own
+// libraries, the capabilities held from others, the last export, and
+// export and import, behind a section index.
 
 import { useState } from 'react'
 
@@ -11,8 +11,8 @@ import { FramedSection } from '#renderer/components/common/framed-section.tsx'
 import { IndexedPage, type IndexedSection } from '#renderer/components/common/indexed-page.tsx'
 import { ExportDialog } from '#renderer/components/identity/export-dialog.tsx'
 import { ImportForm } from '#renderer/components/identity/import-form.tsx'
-import { AboutEditor } from '#renderer/components/library/about-editor.tsx'
-import { own_libraries_of, library_name, own_library_address } from '#renderer/components/library/library-category.ts'
+import { ProfileEditor } from '#renderer/components/identity/profile-editor.tsx'
+import { own_libraries_of, library_name } from '#renderer/components/library/library-category.ts'
 import { key_handle } from '#renderer/identity/default-name.ts'
 import { read_last_export, truncate_key } from '#renderer/identity/identity.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -30,7 +30,6 @@ export const Identity = () => {
   const mode = config?.mode ?? 'remote'
   const last_export = read_last_export(node_key)
   const own = own_libraries_of({ own: own_libraries.data, libraries: libraries.data })
-  const profile_address = own_library_address(own)
   const public_key_query = node_api.endpoints.get_public_key.useQuery()
   const public_key = public_key_query.data
   const handle = public_key === undefined ? undefined : key_handle(public_key)
@@ -38,22 +37,20 @@ export const Identity = () => {
 
   const held = node_api.endpoints.get_held_capabilities.useQuery()
   const own_addresses = new Set(own.map(({ address }) => address))
+  // The libraries a person names and browses; the listens and labels
+  // libraries are not listed (§8.6.1).
+  const browsable = own.filter(({ library_type }) => library_type === 'recordstore')
   const held_count = held.data?.filter(({ library_address }) => !own_addresses.has(library_address)).length
 
   const sections: IndexedSection[] = [
-    ...(profile_address === null
+    ...(public_key === undefined
       ? []
       : [{
           id: 'profile',
           title: 'Profile',
           node: (
             <FramedSection title='Profile' testid='identity-profile'>
-              <AboutEditor
-                key={profile_address}
-                address={profile_address}
-                note={`The name and avatar you go by. They are your default library’s profile, so peers who link it see them too.${handle === undefined ? '' : ` Until you name yourself, you go by ${handle}, from your key.`}`}
-                default_name={handle}
-              />
+              <ProfileEditor public_key={public_key} default_name={handle} />
             </FramedSection>
           )
         }]),
@@ -77,9 +74,9 @@ export const Identity = () => {
               {key_error !== null && <span className={styles.error}>!! {key_error}</span>}
             </dd>
             <dt>Own libraries</dt>
-            <dd>{own.length === 0
+            <dd>{browsable.length === 0
               ? 'None'
-              : own.map((library) => (
+              : browsable.map((library) => (
                 <span key={library.id} className={styles.library} data-testid='identity-own-library'>
                   {library_name(library)}
                   {library.is_retired && ' (retired)'}

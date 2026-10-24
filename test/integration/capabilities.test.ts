@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { request_node } from '#main/node-client.ts'
 import { open_node_events, type NodeEvents } from '#main/node-events.ts'
 import { filter_problems } from '#renderer/filter/filter-spec.ts'
-import { describe_scope, parse_grantee_keys } from '#renderer/library/capabilities.ts'
+import { describe_scope, label_scope_filter, parse_grantee_keys } from '#renderer/library/capabilities.ts'
 import { tags_for_event } from '#renderer/store/event-invalidation.ts'
 import type { Capability } from '#renderer/api/types.ts'
 import type { NodeEventMessage, NodeRequest, NodeResult } from '#shared/bridge.ts'
@@ -60,17 +60,18 @@ describe('capabilities', () => {
   test('issues a filtered, expiring capability, lists it active, and revokes it', async () => {
     const grantee = parse_grantee_keys(new_key())
     if (!grantee.ok) throw new Error(grantee.reason)
-    const filter = { type: 'any_of', field: 'tags', values: ['house', 'techno'] }
+    // A label right scoped to a prefix, as Add a writer issues it.
+    const filter = label_scope_filter({ prefix: 'mix/', actions: ['library.write_label'], filter: null })
     expect(filter_problems(filter)).toEqual([])
     const expires_at = Date.now() + 3_600_000
     const issued = await call<Capability>({
       method: 'post',
       path_template: '/libraries/{address}/capabilities',
       params: { address: own },
-      body: { grantee: grantee.grantee, actions: ['library.append_tag'], filter, conditions: [{ type: 'expires_at', at: expires_at }] }
+      body: { grantee: grantee.grantee, actions: ['library.write_label'], filter, conditions: [{ type: 'expires_at', at: expires_at }] }
     })
-    expect(issued).toMatchObject({ status: 'active', library_address: own, actions: ['library.append_tag'], filter, expires_at_ms: expires_at })
-    expect(describe_scope(issued)).toContain('Add tags; only tags is any of "house", "techno"; expires')
+    expect(issued).toMatchObject({ status: 'active', library_address: own, actions: ['library.write_label'], filter, expires_at_ms: expires_at })
+    expect(describe_scope(issued)).toContain('Add and remove labels; labels starting "mix/" only; expires')
     expect((await list()).map(({ capability_id }) => capability_id)).toContain(issued.capability_id)
     await wait_for(() => messages.some(({ type, payload }) => type === 'capability:issued' && (payload.capability as Capability).capability_id === issued.capability_id), 'capability:issued')
     expect(tags_for_event('capability:issued')).toContain('capabilities')

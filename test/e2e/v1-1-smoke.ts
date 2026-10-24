@@ -1,8 +1,10 @@
 // The built app (`bun run build` first) against an in-process record-node,
-// walking the record-docs v1.1 surfaces: own-library management (create,
-// the listens library, retire, profile choice) and write targets (the
-// importer's selector, adoption into a chosen library, tagging into it),
-// capability management (issue with a filter, revoke, the held list),
+// walking the record-docs v1.1 and v2.0 surfaces: own-library management
+// (create from a name alone, the listens and labels libraries unlisted,
+// retire) and write targets (the importer's selector, adoption into a
+// chosen library, a label into the labels library from any view),
+// capability management (issue a label right under a prefix, revoke, the
+// held list),
 // pinning from the track menu, holders in the aggregated view, removal
 // from an own library, and the replication-policy editor on a
 // linked library. Writes stay on the
@@ -52,22 +54,24 @@ try {
   await nav(window, 'Libraries')
   const own_rows = window.getByTestId('own-library-row')
   await own_rows.first().waitFor()
-  step('own libraries at start', await own_rows.allInnerTexts())
-  const listens = own_rows.and(window.locator('[data-type=listens]'))
-  if (await listens.count() !== 1) throw new Error('expected one listens library')
+  const at_start = await own_rows.allInnerTexts()
+  step('own libraries at start', at_start)
+  // The listens and labels libraries are not places a person browses (spec 8.6.1).
+  if (at_start.length !== 1 || at_start.some((text) => /Play history|Your labels/.test(text))) throw new Error('the listens or labels library is listed among the own libraries')
+  // Creating asks only a name; the node picks the address.
   await window.getByRole('button', { name: 'New library' }).click()
+  if (await window.getByLabel('Address name').count() !== 0) throw new Error('creating a library asks for an address name')
   await window.getByLabel('Library name').fill('Smoke Mixes')
-  await window.getByRole('button', { name: 'Continue' }).click()
-  const suggested = await window.getByLabel('Address name').inputValue()
-  if (suggested !== 'smoke-mixes') throw new Error(`the address name was not suggested from the name: ${suggested}`)
   await window.getByRole('button', { name: 'Create library' }).click()
   await toast(window, 'Library created.')
-  await window.getByTestId('library-profile-tab').getByTestId('about-editor').locator('input[name=name]').and(window.locator('[value="Smoke Mixes"]')).waitFor()
+  await window.getByTestId('library-about-tab').getByTestId('about-editor').locator('input[name=name]').and(window.locator('[value="Smoke Mixes"]')).waitFor()
+  const mixes_address = new URLSearchParams(new URL(window.url()).hash.split('?')[1] ?? '').get('library') ?? ''
+  if (!/\/[a-z2-7]{26}$/.test(mixes_address)) throw new Error(`the new library's address does not end in an opaque discriminator: ${mixes_address}`)
   await nav(window, 'Libraries')
   const created = own_rows.filter({ hasText: 'Smoke Mixes' })
   await created.waitFor()
   step('created', (await created.innerText()).replaceAll('\n', ' | '))
-  step('profile', 'a new library lands on its Profile tab')
+  step('about', 'a new library lands on its About tab, under an address the node picked')
 
   // Write targets: two own libraries now, so writes offer a selector.
   await nav(window, 'Tracks')
@@ -94,15 +98,22 @@ try {
   await row.getByRole('cell').nth(2).click()
   await window.keyboard.press('t')
   const editor = window.getByTestId('tag-editor')
-  // Viewing Smoke Mixes, the tag goes there by default.
+  // Viewing Smoke Mixes, which no one else writes to, the label is the
+  // person's own: it goes to the labels library, with no choice offered.
   const viewed = await viewed_library(window)
-  if (viewed === '' || await editor.getByTestId('write-target').getAttribute('data-library') !== viewed) throw new Error('the tag target is not the viewed library')
+  if (viewed !== mixes_address) throw new Error('the track list is not showing Smoke Mixes')
   await editor.getByLabel('New tag').fill('v11-tag')
   await editor.getByLabel('New tag').press('Enter')
   await editor.locator('li[aria-busy=false]').filter({ hasText: 'v11-tag' }).waitFor()
+  if (await editor.getByTestId('label-scope').count() !== 0) throw new Error('the adder offers a shared label in a library no one else writes to')
   step('tagged', (await editor.getByRole('listitem').allInnerTexts()).join(' | '))
   await editor.getByLabel('New tag').press('Escape')
   await editor.waitFor({ state: 'detached' })
+  const labels_address = (await node.peer.list_own_libraries()).find(({ library_type }) => library_type === 'labels')?.address
+  if (labels_address === undefined) throw new Error('the node has no labels library')
+  const held = await (await fetch(`${node.node_url}/api/libraries/${encodeURIComponent(labels_address)}/labels`)).json() as { items: Array<{ tags: string[] }> }
+  if (!held.items.some(({ tags }) => tags.includes('v11-tag'))) throw new Error('the label did not land in the labels library')
+  step('label target', 'the labels library')
   await row.click({ button: 'right' })
   await window.getByRole('menuitem', { name: 'Pin', exact: true }).click()
   await toast(window, 'Pinned: kept on all your devices.')
@@ -142,20 +153,20 @@ try {
   const flow = window.getByTestId('step-form')
   await flow.getByLabel('Grantee public keys').fill('0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798')
   await flow.getByRole('button', { name: 'Continue' }).click()
-  await flow.getByLabel('Add tags').check()
+  // A label right under a prefix, beside adding tracks.
+  await flow.getByLabel('Add and remove labels').check()
+  await flow.getByLabel('Label prefix').fill('mix/')
   step('actions', await flow.locator('p').last().innerText())
   await flow.getByRole('button', { name: 'Continue' }).click()
   await flow.getByLabel('One week').check()
-  await flow.getByRole('button', { name: 'show advanced' }).click()
-  await flow.getByLabel('Use a filter').check()
-  await flow.getByTestId('filter-editor').getByLabel('Value').fill('house')
-  step('filter', await flow.getByTestId('filter-summary').innerText())
   await flow.getByRole('button', { name: 'Issue', exact: true }).click()
   await toast(window, 'Capability issued.')
   const panel = window.getByTestId('library-capabilities')
   const capability_row = panel.getByTestId('capability-row').first()
   await capability_row.and(window.locator('[data-status=active]')).waitFor()
-  step('issued', (await capability_row.innerText()).replaceAll('\n', ' | ').replaceAll('\t', ' | '))
+  const issued_text = (await capability_row.innerText()).replaceAll('\n', ' | ').replaceAll('\t', ' | ')
+  step('issued', issued_text)
+  if (!issued_text.includes('labels starting "mix/"')) throw new Error('the issued capability does not carry the label prefix')
   await capability_row.getByRole('button', { name: 'Revoke' }).click()
   const revoke_text = await window.getByRole('dialog').innerText()
   if (!revoke_text.includes('not retroactive')) throw new Error('the revoke confirmation does not warn that revocation is not retroactive')
@@ -164,15 +175,15 @@ try {
   await panel.getByTestId('capability-row').and(window.locator('[data-status=revoked]')).first().waitFor()
   step('revoked', 'listed as revoked')
 
-  await window.getByRole('tab', { name: 'Profile' }).click()
+  await window.getByRole('tab', { name: 'About' }).click()
   await unfold(window, 'Retire')
   await window.getByRole('button', { name: 'Retire library' }).click()
   await window.getByRole('dialog').getByRole('button', { name: 'Retire permanently' }).click()
   await toast(window, /Retired /)
-  // Retiring lands on Writers, read-only, and the Profile tab is gone.
+  // Retiring lands on Writers, read-only, and the About tab is gone.
   await window.getByTestId('library-capabilities').getByText('This library is retired').waitFor()
   if (await window.getByTestId('issue-capability').count() !== 0) throw new Error('a retired library offers issuing')
-  if (await window.getByRole('tab', { name: 'Profile' }).count() !== 0) throw new Error('a retired library still offers its Profile')
+  if (await window.getByRole('tab', { name: 'About' }).count() !== 0) throw new Error('a retired library still offers its About tab')
   await nav(window, 'Libraries')
   await own_rows.filter({ hasText: 'Smoke Mixes' }).and(window.locator('[data-retired=true]')).waitFor()
   step('retired', 'marked retired; capabilities read-only')

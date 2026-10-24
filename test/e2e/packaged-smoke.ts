@@ -22,7 +22,7 @@ import { chromium, type Page } from 'playwright-core'
 import { create_peer, start_peer, stop_peer } from 'record-node'
 
 import { is_alive } from '#main/bundled/process-probe.ts'
-import { bundled_state, check_bundled_ingest } from './bundled-run.ts'
+import { answer_first_run, bundled_state, check_bundled_ingest } from './bundled-run.ts'
 
 const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const { version } = JSON.parse(await readFile(join(APP_ROOT, 'package.json'), 'utf8')) as { version: string }
@@ -171,8 +171,9 @@ try {
     step('ELECTRON_RUN_AS_NODE', as_node.includes('ran-as-node') ? 'honored' : 'ignored')
     if (as_node.includes('ran-as-node')) throw new Error('the RunAsNode fuse is on')
 
-    // Play the seeded track.
+    // Play the seeded track, once the first run has the person's name.
     await window.locator('[data-testid=events-status][data-status=open][data-freshness=fresh]').waitFor({ timeout: slow(30_000) })
+    await answer_first_run({ window, step, name: 'Packaged Person', slow })
     // The sidebar's first Tracks is every library; Enter plays from the
     // cursor, which a click on the row's title moves there.
     await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Tracks', exact: true }).first().click()

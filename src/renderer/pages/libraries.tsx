@@ -22,7 +22,7 @@ import { node_api } from '#renderer/store/api.ts'
 import { select_writes_allowed } from '#renderer/store/connection.ts'
 import { use_app_selector } from '#renderer/store/index.ts'
 import { ROUTES, tracks_route } from '#renderer/routes.ts'
-import { Avatar } from '#renderer/components/common/avatar.tsx'
+import { LibraryAvatar } from '#renderer/components/library/library-avatar.tsx'
 import { describe_scope } from '#renderer/library/capabilities.ts'
 import { use_left_libraries } from '#renderer/library/left-libraries.ts'
 
@@ -61,11 +61,11 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
     <tr data-testid='library-row' data-category={category}>
       <td>
         <Link className={styles.name} to={tracks_route({ library_address: library.address })}>
-          <Avatar address={library.address} size={20} cid={library.avatar} />
+          <LibraryAvatar address={library.address} size={20} />
           <span className={styles.label}>{library_name(library)}</span>
           {library.is_retired && <span className={styles.note}>retired</span>}
         </Link>
-        {show_address && <span className={styles.address}><LibraryAddress address={library.address} name={library_name(library)} /></span>}
+        {show_address && <span className={styles.address}><LibraryAddress address={library.address} /></span>}
         {scope.map((line) => <span key={line} className={styles.scope} data-testid='shared-scope'>You may: {line}</span>)}
         {left && <span className={styles.scope}>You left this shared library; the app offers no writes to it.</span>}
       </td>
@@ -105,21 +105,20 @@ const LibraryRow = ({ library, libraries_fetched_at, now, show_address, actions 
   )
 }
 
-// An own library: the listens library (Play history, see library_name) opens
-// Recently played; the others open their tracks, whose tabs manage them.
+// An own recordstore opens its tracks, whose tabs manage it. The listens
+// and labels libraries are not listed (spec §8.6.1): they show as Recently
+// played and as labels on tracks.
 const OwnRow = ({ library, show_address }: { library: Library, show_address: boolean }) => {
-  const listens = library.library_type === 'listens'
   const name = library_name(library)
   return (
-    <tr data-testid='own-library-row' data-retired={library.is_retired} data-type={library.library_type}>
+    <tr data-testid='own-library-row' data-retired={library.is_retired}>
       <td>
-        <Link className={styles.name} to={listens ? ROUTES.listens : tracks_route({ library_address: library.address })}>
-          <Avatar address={library.address} size={20} cid={library.avatar} />
+        <Link className={styles.name} to={tracks_route({ library_address: library.address })}>
+          <LibraryAvatar address={library.address} size={20} />
           <span className={styles.label}>{name}</span>
           {library.is_retired && <span className={styles.note}>retired</span>}
         </Link>
-        {listens && <span className={styles.scope}>Where your plays are recorded.</span>}
-        {show_address && <span className={styles.address}><LibraryAddress address={library.address} name={name} /></span>}
+        {show_address && <span className={styles.address}><LibraryAddress address={library.address} /></span>}
       </td>
       <td className='tabular'>{library.track_count}</td>
     </tr>
@@ -155,7 +154,7 @@ export const Libraries = () => {
   }, [has_recent_link])
 
   const navigate = useNavigate()
-  const own = own_libraries_of({ own: own_query.data, libraries: libraries.data })
+  const own = own_libraries_of({ own: own_query.data, libraries: libraries.data }).filter(({ library_type }) => library_type === 'recordstore')
   const others = (libraries.data ?? []).filter(({ is_own }) => !is_own)
   const error = libraries.error ?? own_query.error
 

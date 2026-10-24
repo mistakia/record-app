@@ -63,7 +63,7 @@ export interface BundledNetwork {
 }
 
 // GET /api/settings for the peer_id, and GET /api/identity for the
-// identity's default own library.
+// identity library address, which keys the node (node-connection.ts).
 export const probe_health = async (url: string): Promise<Health | null> => {
   try {
     const settings = await (await fetch(`${url}/api/settings`, { signal: AbortSignal.timeout(1_000) })).json() as { peer_id?: unknown }

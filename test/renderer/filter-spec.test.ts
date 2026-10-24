@@ -6,16 +6,21 @@ import { describe, expect, test } from 'bun:test'
 
 import { blank_draft, can_draft, from_draft, to_draft } from '#renderer/filter/filter-draft.ts'
 import { CAPABILITY_FIELDS, describe_filter, filter_problems, FILTER_TYPES, REPLICATION_FIELDS, type FilterSpec } from '#renderer/filter/filter-spec.ts'
-import { describe_action, describe_conditions, describe_grantee, describe_scope, parse_grantee_keys } from '#renderer/library/capabilities.ts'
+import { evaluate_filter } from '#renderer/filter/evaluate-filter.ts'
+import { describe_action, describe_conditions, describe_grantee, describe_scope, label_scope_filter, parse_grantee_keys } from '#renderer/library/capabilities.ts'
+import type { Capability } from '#renderer/api/types.ts'
 
 const KEY = `02${'ab'.repeat(32)}`
 
 describe('filter problems', () => {
-  test('a blank draft of every type converts to a sound filter', () => {
-    for (const type of FILTER_TYPES) {
+  test('a blank draft of every type converts to a sound filter, but a prefix waits for its text', () => {
+    for (const type of FILTER_TYPES.filter((each) => each !== 'prefix')) {
       const result = from_draft(blank_draft(type), CAPABILITY_FIELDS)
       expect(result.ok && filter_problems(result.spec)).toEqual([])
     }
+    expect(from_draft(blank_draft('prefix', 'label'), CAPABILITY_FIELDS).ok).toBe(false)
+    const prefix = from_draft({ type: 'prefix', field: 'label', prefix: 'mix/' }, CAPABILITY_FIELDS)
+    expect(prefix).toEqual({ ok: true, spec: { type: 'prefix', field: 'label', prefix: 'mix/' } })
   })
 
   test('catches what the node would refuse or what would match nothing', () => {
@@ -29,7 +34,10 @@ describe('filter problems', () => {
       { type: 'range', field: 'duration_seconds', gte: 'ten' },
       { type: 'and', filters: [] },
       { type: 'not', filter: { type: 'unknown' } },
-      { type: 'match', fields: { '': 'a' } }
+      { type: 'match', fields: { '': 'a' } },
+      { type: 'prefix', field: 'label', prefix: '' },
+      { type: 'prefix', field: 'label', prefix: 'x'.repeat(129) },
+      { type: 'prefix', field: 'label' }
     ]
     for (const spec of cases) expect(filter_problems(spec).length).toBeGreaterThan(0)
     let deep: unknown = { type: 'match', fields: { tags: 'a' } }
@@ -94,8 +102,27 @@ describe('descriptions', () => {
     expect(describe_grantee({ type: 'key', key: KEY, scope: 'x' })).toContain('(unknown fields: scope)')
     expect(describe_conditions([{ type: 'expires_at', at: 5, tz: 'utc' }])[0]).toContain('(unknown fields: tz)')
     expect(describe_conditions([{ type: 'expires_at', at: 'soon' }])).toEqual(['(malformed expires_at)'])
-    expect(describe_scope({ actions: ['library.append_tag', 'x.y'], filter: { type: 'match', fields: { tags: 'a' } }, conditions: [] }))
-      .toBe('Add tags, (unknown action: x.y); only tags is "a"')
+    expect(describe_scope({ actions: ['library.write_label', 'x.y'], filter: { type: 'prefix', field: 'title', prefix: 'mix/' }, conditions: [] }))
+      .toBe('Add and remove labels, (unknown action: x.y); only title starts with "mix/"')
+    // A label prefix reads as one, alone or beside other actions.
+    const actions = ['library.append_track', 'library.write_label']
+    expect(describe_scope({ actions, filter: label_scope_filter({ prefix: 'mix/', actions, filter: null }) as Capability['filter'], conditions: [] }))
+      .toBe('Add tracks, Add and remove labels; labels starting "mix/" only')
+  })
+
+  test('scopes label writes to a prefix, binding only label pairs when other actions share the capability', () => {
+    const on_label = { type: 'prefix', field: 'label', prefix: 'mix/' }
+    expect(label_scope_filter({ prefix: '', actions: ['library.write_label'], filter: null })).toBeNull()
+    expect(label_scope_filter({ prefix: 'mix/', actions: ['library.append_track'], filter: null })).toBeNull()
+    expect(label_scope_filter({ prefix: 'mix/', actions: ['library.write_label'], filter: null })).toEqual(on_label)
+    const shared = label_scope_filter({ prefix: 'mix/', actions: ['library.append_track', 'library.write_label'], filter: null })
+    expect(filter_problems(shared)).toEqual([])
+    // A track entry passes; a label pair passes only under the prefix.
+    expect(evaluate_filter(shared, { type: 'track', id: 'x' })).toBe(true)
+    expect(evaluate_filter(shared, { type: 'label', label: 'mix/a', op: 'set', track_id: 'x' })).toBe(true)
+    expect(evaluate_filter(shared, { type: 'label', label: 'dub', op: 'set', track_id: 'x' })).toBe(false)
+    const given = { type: 'match', fields: { op: 'set' } }
+    expect(label_scope_filter({ prefix: 'mix/', actions: ['library.write_label'], filter: given })).toEqual({ type: 'and', filters: [given, on_label] })
   })
 
   test('parses grantee keys into a key or a key set, refusing anything else', () => {

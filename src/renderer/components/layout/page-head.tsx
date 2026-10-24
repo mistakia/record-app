@@ -26,7 +26,7 @@ const TITLES: Record<string, string> = {
 
 const TAB_OF: Record<string, LibraryTab> = {
   [ROUTES.tracks]: 'tracks',
-  [ROUTES.library_profile]: 'profile',
+  [ROUTES.library_about]: 'about',
   [ROUTES.library_writers]: 'writers'
 }
 

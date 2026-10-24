@@ -5,6 +5,7 @@
 // already carries is not added again and one it no longer carries is not
 // removed again.
 
+import type { LabelWriteResult, Track } from '#renderer/api/types.ts'
 import type { WriteOutcome } from '#renderer/store/write.ts'
 import type { WriteTarget } from '#renderer/library/write-targets.ts'
 
@@ -33,6 +34,15 @@ export interface TagWritesState<T extends TaggedTrack> {
 
 export type ShownEntry = ShownTag & { pending: boolean }
 
+// A label write's answer as the track (chapter 7 LabelWriteResult): the
+// track itself, or, for a track no library the node shows holds, only the
+// target's labels on it, which replace that library's in the track as last
+// seen.
+export const merge_label_result = ({ track, result, library_address }: { track: Track, result: LabelWriteResult, library_address: string }): Track =>
+  'audio_cid' in result
+    ? result
+    : { ...track, tags: [...track.tags.filter((entry) => entry.library_address !== library_address), ...result.tags.map((tag) => ({ library_address, tag }))] }
+
 // The chips: what the node holds, less removals under way, plus adds under way.
 export const shown_tags = <T extends TaggedTrack>(state: TagWritesState<T>): ShownEntry[] => {
   const single = state.tracks.length === 1 ? state.tracks[0] : undefined
@@ -45,10 +55,12 @@ export const shown_tags = <T extends TaggedTrack>(state: TagWritesState<T>): Sho
   ].filter((entry) => !removing.has(tag_key(entry)))
 }
 
+// Each write is handed the track as last answered, so a reply carrying only
+// the target's labels (a track no shown library holds) can be merged into it.
 export const create_tag_writes = <T extends TaggedTrack>({ initial, add_tag, remove_tag, notify }: {
   initial: readonly T[]
-  add_tag: (input: { track_id: string, tag: string, target: WriteTarget }) => Promise<WriteOutcome<T>>
-  remove_tag: (input: { track_id: string } & ShownTag) => Promise<WriteOutcome<T>>
+  add_tag: (input: { track: T, tag: string, target: WriteTarget }) => Promise<WriteOutcome<T>>
+  remove_tag: (input: { track: T, tag: string, target: WriteTarget }) => Promise<WriteOutcome<T>>
   notify: (message: string) => void
 }) => {
   let state: TagWritesState<T> = { tracks: initial, adding: [], removing: [], added: [], fresh: new Set() }
@@ -83,12 +95,12 @@ export const create_tag_writes = <T extends TaggedTrack>({ initial, add_tag, rem
     return enqueue(async () => {
       let wrote = 0
       let had = 0
-      for (const { id } of state.tracks) {
-        if (carries(id, key)) {
+      for (const track of state.tracks) {
+        if (carries(track.id, key)) {
           had++
           continue
         }
-        const result = await add_tag({ track_id: id, tag, target })
+        const result = await add_tag({ track, tag, target })
         if (result.ok) {
           wrote++
           replace(result.data)
@@ -107,18 +119,19 @@ export const create_tag_writes = <T extends TaggedTrack>({ initial, add_tag, rem
     })
   }
 
-  // Only with one track: chips are not removable when tagging several.
-  const remove = (entry: ShownTag): Promise<void> => {
-    const track = state.tracks.length === 1 ? state.tracks[0] : undefined
+  // Only with one track: chips are not removable when tagging several. The
+  // target is the library applying the label, with the capability that
+  // authorises unsetting it there.
+  const remove = (entry: ShownTag, target: WriteTarget): Promise<void> => {
     const key = tag_key(entry)
-    if (track === undefined || state.removing.some((each) => tag_key(each) === key)) return Promise.resolve()
-    set({ removing: [...state.removing, entry] })
+    if (state.tracks.length !== 1 || state.removing.some((each) => tag_key(each) === key)) return Promise.resolve()
+    // The tag fields only: an entry from the UI may carry display state (a
+    // chip's `pending` flag), which must never reach a write.
+    set({ removing: [...state.removing, { tag: entry.tag, library_address: entry.library_address }] })
     return enqueue(async () => {
-      if (carries(track.id, key)) {
-        // The tag fields only: an entry from the UI may carry display state
-        // (a chip's `pending` flag), which the node's validator would refuse
-        // as a query parameter it does not declare.
-        const result = await remove_tag({ track_id: track.id, tag: entry.tag, library_address: entry.library_address })
+      const track = state.tracks[0]
+      if (track !== undefined && carries(track.id, key)) {
+        const result = await remove_tag({ track, tag: entry.tag, target })
         if (result.ok) replace(result.data)
       }
       set({ removing: without(state.removing, key) })

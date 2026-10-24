@@ -1,5 +1,5 @@
 // The FilterSpec builder (spec §8.6.6, §8.9.1): a structured editor over the
-// six node types, with field paths suggested from the consumer's subject,
+// seven node types, with field paths suggested from the consumer's subject,
 // and an advanced JSON mode. It edits a draft that keeps the typed text
 // (filter-draft.ts) and emits a FilterSpec when the draft reads as one, or
 // undefined while it does not, so a caller never sends a filter other than
@@ -17,6 +17,7 @@ const TYPE_LABELS: Record<FilterType, string> = {
   match: 'Field equals',
   any_of: 'Field is any of',
   range: 'Number in range',
+  prefix: 'Text starts with',
   and: 'All of',
   or: 'Any of',
   not: 'Not'
@@ -100,6 +101,17 @@ const DraftNode = ({ draft, fields, list_id, depth, on_change, on_remove }: {
                 <input aria-label={BOUND_LABELS[key]} inputMode='decimal' value={draft.bounds[key]} onChange={(event) => { on_change({ ...draft, bounds: { ...draft.bounds, [key]: event.target.value } }) }} />
               </label>
             ))}
+          </div>
+        </div>
+      )
+    case 'prefix':
+      return (
+        <div className={styles.node}>
+          {header}
+          <div className={styles.row}>
+            <FieldInput value={draft.field} fields={fields} list_id={list_id} on_change={(field) => { on_change({ ...draft, field }) }} />
+            <span>starts with</span>
+            <input aria-label='Prefix' spellCheck={false} maxLength={128} value={draft.prefix} onChange={(event) => { on_change({ ...draft, prefix: event.target.value }) }} />
           </div>
         </div>
       )

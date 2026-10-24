@@ -1,7 +1,7 @@
-// The avatar a library has before it is given an image: a 5×5 mirrored
-// pattern read from its address, so the same library looks the same on
-// every device and to every peer, and two libraries rarely look alike. The
-// identity goes by its default library's, so it shares that pattern.
+// The avatar a library or identity has without an image: a 5×5 mirrored
+// pattern read from a library's address or the identity's public key, so
+// each looks the same on every device and to every peer, and two rarely
+// look alike.
 
 // FNV-1a, 32 bits: enough for the 15 free cells.
 const hash = (seed: string): number => {

@@ -30,35 +30,32 @@ export const parse_library_address = (address: string): LibraryAddressParts | nu
   return { discriminator: match[2], fingerprint: match[1].slice(-FINGERPRINT_LENGTH) }
 }
 
-// The address as people read it: `mixes · …8MnGCA`.
-export const short_address = (address: string): string => {
+// The address as people read it: the tail of its manifest CID, `…8MnGCA`.
+// The discriminator is never shown, since it is not a name (spec §8.6.9).
+export const address_tail = (address: string): string => {
   const parts = parse_library_address(address)
-  return parts === null ? address : `${parts.discriminator} · …${parts.fingerprint}`
+  return parts === null ? address : `…${parts.fingerprint}`
 }
 
-// The discriminator record-node gives every identity's default own
-// recordstore (record-node src/peer/ownership.ts, OWN_LIBRARY_NAME). The
-// renderer cannot import node code, so it is repeated here.
-export const OWN_LIBRARY_DISCRIMINATOR = 'record'
+// What a library with no name goes by (spec §8.6.9): `Library · …8MnGCA`.
+export const unnamed_library = (address: string): string => `Library · ${address_tail(address)}`
 
-// The alias, then the About name; a library with neither goes by its
-// discriminator rather than its whole address. The own listens library is
-// always Play history, and an unnamed default recordstore never goes by the
-// node's internal `record`: My library when it is yours, Unnamed library
-// when it is another identity's.
+// The alias, then the About name, then `Library · …<tail>`. The own listens
+// library is always Play history and the labels library Your labels.
 export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address' | 'is_own' | 'library_type'>): string => {
   if (library.is_own && library.library_type === 'listens') return 'Play history'
-  const discriminator = parse_library_address(library.address)?.discriminator
-  const fallback = discriminator === OWN_LIBRARY_DISCRIMINATOR && library.library_type === 'recordstore'
-    ? library.is_own ? 'My library' : 'Unnamed library'
-    : discriminator
-  return library.alias ?? library.name ?? fallback ?? library.address
+  if (library.is_own && library.library_type === 'labels') return 'Your labels'
+  return library.alias ?? library.name ?? unnamed_library(library.address)
 }
 
-// The first active own recordstore: chapter 7 v1.1 lists every own library,
-// the listens library and retired ones included.
-export const own_library_address = (libraries: readonly Library[] | undefined): string | null =>
-  libraries?.find(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore')?.address ?? null
+// The identity's default own library: Identity.own_library_address, the
+// oldest active own recordstore, while the list holds it; else the first
+// active own recordstore listed (chapter 7 lists every own library, the
+// listens and labels libraries and retired ones included).
+export const own_library_address = (libraries: readonly Library[] | undefined, preferred: string | null = null): string | null => {
+  const active = (libraries ?? []).filter(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore')
+  return active.find(({ address }) => address === preferred)?.address ?? active[0]?.address ?? null
+}
 
 // The own libraries: from GET /identity/libraries when the node serves it,
 // else from GET /libraries, which lists own libraries too (an older node, a
@@ -68,14 +65,16 @@ export const own_libraries_of = ({ own, libraries }: {
   libraries: readonly Library[] | undefined
 }): Library[] => [...(own ?? libraries?.filter(({ is_own }) => is_own) ?? [])]
 
-// A profile is edited on an active recordstore: the node refuses writes to a
-// retired library, and the listens library holds listens only.
-export const has_profile = (library: Pick<Library, 'is_retired' | 'library_type'>): boolean =>
+// The own libraries a person browses and names: active recordstores. The
+// node refuses writes to a retired library, and the listens and labels
+// libraries are shown as listen history and as labels (spec §8.6.1).
+export const is_active_recordstore = (library: Pick<Library, 'is_retired' | 'library_type'>): boolean =>
   !library.is_retired && library.library_type === 'recordstore'
 
-// Retirement is permanent, and the listens library is never retired (§4.8.3).
+// Retirement is permanent, and the listens and labels libraries are never
+// retired (§4.8.3, §4.9).
 export const can_retire = (library: Pick<Library, 'is_retired' | 'library_type'>): boolean =>
-  !library.is_retired && library.library_type !== 'listens'
+  !library.is_retired && library.library_type === 'recordstore'
 
 // How long a fresh link counts as replicating while the node reports
 // nothing for it, so it is never shown as simply empty (spec §8.6.5) but

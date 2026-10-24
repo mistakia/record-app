@@ -8,7 +8,7 @@
 import { useState } from 'react'
 
 import styles from './target-select.module.css'
-import { library_name, short_address } from './library-category.ts'
+import { library_name, unnamed_library } from './library-category.ts'
 import { resolve_target, write_targets, type TargetResolution, type WriteAction, type WriteTarget } from '#renderer/library/write-targets.ts'
 import { use_left_libraries } from '#renderer/library/left-libraries.ts'
 import { node_api } from '#renderer/store/api.ts'
@@ -26,11 +26,9 @@ export interface WriteTargetChoice {
   name_of: (library_address: string) => string
 }
 
-export const use_write_target = ({ action, preferred = null, holders = [], exclude = [] }: {
+export const use_write_target = ({ action, preferred = null, exclude = [] }: {
   action: WriteAction
   preferred?: string | null
-  // The libraries holding the track written to (Track.library_addresses).
-  holders?: readonly string[]
   exclude?: readonly string[]
 }): WriteTargetChoice => {
   const dispatch = use_app_dispatch()
@@ -45,11 +43,11 @@ export const use_write_target = ({ action, preferred = null, holders = [], exclu
     .filter(({ library_address, category }) => !exclude.includes(library_address) && !(category === 'shared' && left.includes(library_address)))
   // A 404 from an older node settles the capability list as empty (§8.7.6).
   const loading = libraries.isLoading || held.isLoading
-  const resolution = resolve_target({ targets, chosen, recent, preferred, holders, loading })
+  const resolution = resolve_target({ targets, chosen, recent, preferred, loading })
   const target = resolution.kind === 'target' ? resolution.target : null
   const name_of = (library_address: string): string => {
     const library = libraries.data?.find(({ address }) => address === library_address)
-    return library === undefined ? short_address(library_address) : library_name(library)
+    return library === undefined ? unnamed_library(library_address) : library_name(library)
   }
   return {
     targets,

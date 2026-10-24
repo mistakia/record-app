@@ -11,7 +11,7 @@ import styles from './player-bar.module.css'
 import { register_now_playing_commands } from './now-playing-commands.ts'
 import { HistoryIcon, PauseIcon, QueueIcon, RepeatIcon, ShuffleIcon, SpeakerIcon } from './transport-icons.tsx'
 import { Artwork } from '#renderer/components/common/artwork.tsx'
-import { Avatar } from '#renderer/components/common/avatar.tsx'
+import { LibraryAvatar } from '#renderer/components/library/library-avatar.tsx'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
 import { tip, tip_scroll } from '#renderer/components/common/tooltip-logic.ts'
 import { copy_text } from '#renderer/components/common/copy-text.ts'
@@ -19,7 +19,7 @@ import { format_seconds } from '#renderer/components/common/format-seconds.ts'
 import { OverflowChips } from '#renderer/components/common/overflow-chips.tsx'
 import { Screen } from '#renderer/components/common/screen.tsx'
 import { AdoptDialog } from '#renderer/components/track/adopt-dialog.tsx'
-import { use_tag_navigation, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
+import { use_label_filter, use_track_actions } from '#renderer/components/track/use-track-actions.tsx'
 import { use_player } from '#renderer/hooks/use-player.ts'
 import {
   next_track,
@@ -95,7 +95,7 @@ export const PlayerBar = () => {
   // The menu closes on the mousedown that starts a click on …; that click
   // must not open it again.
   const more_pressed_while_open = useRef(false)
-  const on_tag_clicked = use_tag_navigation()
+  const on_tag_clicked = use_label_filter()
   const { actions, dialogs } = use_track_actions({
     viewed_library: '',
     listen_library: current?.library_address ?? '',
@@ -106,10 +106,6 @@ export const PlayerBar = () => {
     close_pane: () => false
   })
   const adoptable = current?.content_cid !== undefined
-  // The queue keeps tag names only; a click opens the library the tag came
-  // from, as a row's chip does, else the one the track was queued from.
-  const tag_library = (tag: string): string =>
-    playing_track()?.tags.find((entry) => entry.tag === tag)?.library_address ?? current?.library_address ?? ''
   const has_current = current !== null
 
   // Off a track list, f adopts the playing track and . opens its menu.
@@ -208,7 +204,7 @@ export const PlayerBar = () => {
                     key: tag,
                     text: tag,
                     content: (
-                      <button type='button' data-variant='glyph' onClick={() => { on_tag_clicked({ tag, library_address: tag_library(tag) }) }}>
+                      <button type='button' data-variant='glyph' onClick={() => { on_tag_clicked({ tag }) }}>
                         {tag}
                       </button>
                     )
@@ -293,7 +289,7 @@ export const PlayerBar = () => {
                   {source.subtitle !== null && <span className={styles.subtitle}>{source.subtitle}</span>}
                   <span className={styles.kicker}>Playing from</span>
                 </span>
-                {source_library !== undefined && <Avatar address={source_library.address} size={65} cid={source_library.avatar} />}
+                {source_library !== undefined && <LibraryAvatar address={source_library.address} size={65} />}
               </button>
             )}
           </div>

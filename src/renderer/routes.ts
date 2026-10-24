@@ -10,7 +10,7 @@ export const ROUTES = {
   libraries: '/libraries',
   link_library: '/libraries/link',
   new_library: '/libraries/new',
-  library_profile: '/library/profile',
+  library_about: '/library/about',
   library_writers: '/library/writers',
   issue_capability: '/library/writers/issue',
   import: '/import',
@@ -54,12 +54,12 @@ export const parse_track_view = (search: URLSearchParams): TrackView => {
 }
 
 // An own library's management tabs, beside its track list.
-export type LibraryTab = 'tracks' | 'profile' | 'writers'
+export type LibraryTab = 'tracks' | 'about' | 'writers'
 
 export const library_route = ({ tab, library_address }: { tab: LibraryTab, library_address: string }): string =>
   tab === 'tracks'
     ? tracks_route({ library_address })
-    : `${tab === 'profile' ? ROUTES.library_profile : ROUTES.library_writers}?${new URLSearchParams({ library: library_address }).toString()}`
+    : `${tab === 'about' ? ROUTES.library_about : ROUTES.library_writers}?${new URLSearchParams({ library: library_address }).toString()}`
 
 // The step flow that lets another identity write to an own library.
 export const issue_route = (library_address: string): string =>

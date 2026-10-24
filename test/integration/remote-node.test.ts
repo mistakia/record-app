@@ -107,7 +107,7 @@ describe('node client against an in-process record-node with cors_origins: []', 
 
   test('lists libraries, fetches one by its encoded address, and lists its tracks', async () => {
     const libraries = await request<Library[]>({ method: 'get', path_template: '/libraries' })
-    const own = libraries.find((library) => library.is_own)
+    const own = libraries.find((library) => library.is_own && library.library_type === 'recordstore')
     if (own === undefined) throw new Error('no own library')
     expect(own.address.includes('/')).toBe(true)
     const fetched = await request<Library>({ method: 'get', path_template: '/libraries/{address}', params: { address: own.address } })

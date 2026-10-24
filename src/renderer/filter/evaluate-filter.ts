@@ -1,5 +1,6 @@
-// FilterSpec evaluation (spec §3.5.7) for the replication-policy editor's
-// storage estimate: field paths resolve through maps, scalars compare by
+// FilterSpec evaluation (spec §3.5.7), for the replication-policy editor's
+// storage estimate and for picking a label capability whose filter admits
+// the label (§3.5.6): field paths resolve through maps, scalars compare by
 // type and value, arrays match on any element, and a filter with anything
 // this version does not define matches nothing (fail closed). The node is
 // the authority on what a selective policy fetches; this only previews it.
@@ -37,6 +38,11 @@ const holds = (spec: FilterSpec, subject: unknown): boolean => {
       return (spec.gte === undefined || value >= spec.gte) && (spec.gt === undefined || value > spec.gt) &&
         (spec.lte === undefined || value <= spec.lte) && (spec.lt === undefined || value < spec.lt)
     }
+    case 'prefix': {
+      const value = resolve(subject, spec.field)
+      const starts = (each: unknown): boolean => typeof each === 'string' && each.startsWith(spec.prefix)
+      return Array.isArray(value) ? value.some(starts) : starts(value)
+    }
     case 'and': return spec.filters.every((child) => holds(child, subject))
     case 'or': return spec.filters.some((child) => holds(child, subject))
     case 'not': return !holds(spec.filter, subject)
@@ -46,13 +52,15 @@ const holds = (spec: FilterSpec, subject: unknown): boolean => {
 export const evaluate_filter = (spec: unknown, subject: unknown): boolean =>
   filter_problems(spec).length === 0 && holds(spec as FilterSpec, subject)
 
-// The §4.6.1 track view, as far as chapter 7's Track shows it: added_by is
-// not exposed, and added_at is the node's first-seen time, not the envelope
-// timestamp, so filters on those two preview loosely.
+// The §4.6.1 track view, as far as chapter 7's Track shows it: its labels
+// are the ones that apply from the counted libraries (label_libraries, as
+// Track.tags gives them), wherever they are held; added_by is not exposed,
+// and added_at is the node's first-seen time, not the envelope timestamp,
+// so filters on those two preview loosely.
 export const track_view = (track: Track, library_address: string): Record<string, unknown> => {
   const view: Record<string, unknown> = {
     library_address,
-    tags: track.tags.filter((tag) => tag.library_address === library_address).map(({ tag }) => tag),
+    tags: [...new Set(track.tags.map(({ tag }) => tag))],
     cid: track.audio_cid,
     audio_size_bytes: track.audio_size_bytes,
     source: (track.resolvers ?? []).map((resolver) => (resolver as { extractor?: unknown }).extractor).filter((extractor) => typeof extractor === 'string')

@@ -13,7 +13,6 @@ const library = (overrides: Partial<Library>): Library => ({
   library_type: 'recordstore',
   name: 'Linked',
   track_count: 0,
-  linked_library_count: 0,
   audio_size_bytes: 0,
   length: 0,
   heads: [],

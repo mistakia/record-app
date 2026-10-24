@@ -19,16 +19,32 @@ export interface paths {
                     offset?: components["parameters"]["Offset"];
                     /** @description Maximum results per page. Default 100, max 500. */
                     limit?: components["parameters"]["Limit"];
-                    /** @description Filter by one or more library addresses. */
+                    /**
+                     * @description Membership scope: only tracks a live PUT in one of these
+                     *     libraries holds. Without it, every library the node shows.
+                     *     Membership only; which labels count is `label_libraries`.
+                     */
                     library_addresses?: string[];
-                    /** @description Filter by tag labels. All supplied tags must match (AND semantics). */
+                    /**
+                     * @description The libraries whose labels count, for `tags`, `tag_groups`,
+                     *     `Track.tags`, and `TagCount`. A library here need not hold the
+                     *     tracks it labels. Default: every own library of type
+                     *     `recordstore` or `labels`, active and retired, plus the
+                     *     `library_addresses` of the request; with no `library_addresses`,
+                     *     every library the node shows.
+                     */
+                    label_libraries?: components["parameters"]["LabelLibraries"];
+                    /**
+                     * @description Filter by labels. All supplied labels must apply (AND
+                     *     semantics), each from any library in `label_libraries`.
+                     */
                     tags?: string[];
                     /**
                      * @description Filter by label groups, given as a JSON array of arrays of
                      *     labels. A track matches a group when it carries any label in
                      *     it, and matches the filter when it matches every group.
                      *     Combines with `tags`, each of which acts as a group of one.
-                     *     Labels count from every scoped library, as for `tags`.
+                     *     Labels count from `label_libraries`, as for `tags`.
                      */
                     tag_groups?: string;
                     /** @description Full-text search across title, artist, album, remixer. */
@@ -68,13 +84,12 @@ export interface paths {
          *     `library.append_track`. For URL ingest use `POST /import/url`; for
          *     file upload use `POST /import/file`.
          *
-         *     `tags` gives the entry's envelope labels (spec §2.4.3), so a track
-         *     joins the library with its labels in one PUT. A track the target
-         *     already holds keeps its entry when its labels equal `tags` as a
-         *     set, and otherwise is relabelled to them with a PUT of its current
-         *     content, as `PATCH /tracks/{id}/tags` with `set` would. Without
-         *     `tags`, a held track is left as it is and a new one carries no
-         *     labels.
+         *     A track the target already holds keeps its entry. `tags` sets the
+         *     target's labels on the track, as `PATCH /tracks/{id}/tags` with
+         *     `set` would: the node appends the track PUT, when needed, and one
+         *     label record in one batch, so the track joins with its labels.
+         *     Under a capability, `tags` also needs `library.write_label`
+         *     (spec §3.5.6). Without `tags`, no label record is written.
          */
         post: {
             parameters: {
@@ -134,14 +149,17 @@ export interface paths {
          * Remove a track from an own library.
          * @description Appends a DEL to the target library. No capability action
          *     authorises a DEL (spec §3.5.6), so the target must be an own
-         *     library.
+         *     library. The library's labels on the track stay, and apply again
+         *     if the track returns (spec §2.5).
          */
         delete: {
             parameters: {
                 query?: {
                     /**
-                     * @description Target library of the write. Optional only when the identity has
-                     *     exactly one active own recordstore library (spec §4.8.3).
+                     * @description Target library of the write. When omitted, a label write targets
+                     *     the identity's labels library (spec §4.9), and any other write
+                     *     the identity's only active own recordstore library, failing with
+                     *     400 when it has several (spec §4.8.3).
                      */
                     library_address?: components["parameters"]["WriteTarget"];
                 };
@@ -176,8 +194,9 @@ export interface paths {
          * @description Writes a new content object (spec §2.4.1) for the same audio, with
          *     `content.tags` changed as the request says, and appends a PUT of it
          *     under the same track id, which supersedes the current one (spec
-         *     §4.4.2). The audio blob and its size, `audio`, `artwork`,
-         *     `resolver`, and the envelope's labels (spec §2.4.3) are kept.
+         *     §4.4.2). The audio blob and its size, `audio`, `artwork`, and
+         *     `resolver` are kept. Labels are separate records (spec §2.5) and
+         *     are untouched.
          *
          *     Each field of `tags` sets that tag, and `null` removes it.
          *     `acoustid_fingerprint` derives the track id, so a request that
@@ -258,7 +277,7 @@ export interface paths {
          *     from the stored value, it writes a new content object with only
          *     those fields changed and appends a PUT of it under the same track
          *     id, which supersedes the current one (spec §4.4.2). Everything
-         *     else, including the envelope's labels, is kept. A track whose
+         *     else is kept, and labels are untouched. A track whose
          *     stored fields already match appends nothing, so the request is
          *     safe to repeat.
          *
@@ -338,18 +357,20 @@ export interface paths {
         head?: never;
         /**
          * Change a track's labels in the target library.
-         * @description Appends a PUT of the track's current content with the envelope
-         *     labels (spec §2.4.3) the request gives: `add` and `remove` change
-         *     the current labels, and `set` replaces them. `set` excludes `add`
-         *     and `remove`, a request gives at least one of the three, and no
-         *     label is both added and removed; otherwise it fails with 400.
-         *     Adding a label the track carries, or removing one it does not,
-         *     changes nothing. A request that leaves the labels equal as a set
-         *     appends nothing, so it is safe to repeat.
+         * @description Appends one label record (spec §2.5) to the target: `add` sets
+         *     labels and `remove` unsets them, and `set` makes the target's
+         *     labels on the track exactly the given ones, setting the missing
+         *     and unsetting the rest. `set` excludes `add` and `remove`, a
+         *     request gives at least one of the three, and no label is both
+         *     added and removed; otherwise it fails with 400. Adding a label
+         *     the target applies, or removing one it does not, changes nothing.
+         *     A request that changes nothing appends nothing, so it is safe to
+         *     repeat.
          *
-         *     Under a capability, a change that only adds labels needs
-         *     `library.append_tag` or `library.append_track`, and any other
-         *     needs `library.append_track` (spec §3.5.6).
+         *     The track id need not be held by the target or by any library.
+         *     Under a capability the write needs `library.write_label`, and the
+         *     capability's filter must hold for every pair (spec §3.5.6). A
+         *     404 means only that the target library is unknown.
          */
         patch: {
             parameters: {
@@ -373,13 +394,13 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The track as the target library now holds it. */
+                /** @description The track after the write, or its labels when no library holds it. */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Track"];
+                        "application/json": components["schemas"]["LabelWriteResult"];
                     };
                 };
                 400: components["responses"]["ValidationError"];
@@ -488,12 +509,29 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List tags with occurrence counts. */
+        /**
+         * List labels with occurrence counts.
+         * @description Every label that applies, from a library in `label_libraries`, to
+         *     a live track in the membership scope, with the number of such
+         *     tracks.
+         */
         get: {
             parameters: {
                 query?: {
-                    /** @description Optional filter by library addresses. */
+                    /**
+                     * @description Membership scope: count only tracks a live PUT in one of these
+                     *     libraries holds. Without it, every library the node shows.
+                     */
                     library_addresses?: string[];
+                    /**
+                     * @description The libraries whose labels count, for `tags`, `tag_groups`,
+                     *     `Track.tags`, and `TagCount`. A library here need not hold the
+                     *     tracks it labels. Default: every own library of type
+                     *     `recordstore` or `labels`, active and retired, plus the
+                     *     `library_addresses` of the request; with no `library_addresses`,
+                     *     every library the node shows.
+                     */
+                    label_libraries?: components["parameters"]["LabelLibraries"];
                     /**
                      * @description Only labels that begin with this string, compared code point
                      *     by code point, e.g. `view/` for the labels under `view/`.
@@ -521,9 +559,10 @@ export interface paths {
         };
         put?: never;
         /**
-         * Attach a tag to a track in the target library.
-         * @description Under a capability, needs `library.append_tag` or
-         *     `library.append_track` (spec §3.5.6).
+         * Set a label on a track in the target library.
+         * @description Appends a label record setting the pair, as `PATCH
+         *     /tracks/{id}/tags` with `add` would, on any track id. Under a
+         *     capability, needs `library.write_label` (spec §3.5.6).
          */
         post: {
             parameters: {
@@ -543,13 +582,13 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description OK. Returns the updated track. */
+                /** @description The track after the write, or its labels when no library holds it. */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Track"];
+                        "application/json": components["schemas"]["LabelWriteResult"];
                     };
                 };
                 400: components["responses"]["ValidationError"];
@@ -561,9 +600,11 @@ export interface paths {
             };
         };
         /**
-         * Detach a tag from a track in the target library.
-         * @description Under a capability, needs `library.append_track`:
-         *     `library.append_tag` only adds tags (spec §3.5.6).
+         * Unset a label on a track in the target library.
+         * @description Appends a label record unsetting the pair, as `PATCH
+         *     /tracks/{id}/tags` with `remove` would, on any track id. Under a
+         *     capability, needs `library.write_label`, whose filter sees the
+         *     pair with `op` `unset` (spec §3.5.6).
          */
         delete: {
             parameters: {
@@ -571,8 +612,10 @@ export interface paths {
                     track_id: string;
                     tag: string;
                     /**
-                     * @description Target library of the write. Optional only when the identity has
-                     *     exactly one active own recordstore library (spec §4.8.3).
+                     * @description Target library of the write. When omitted, a label write targets
+                     *     the identity's labels library (spec §4.9), and any other write
+                     *     the identity's only active own recordstore library, failing with
+                     *     400 when it has several (spec §4.8.3).
                      */
                     library_address?: components["parameters"]["WriteTarget"];
                     /**
@@ -587,13 +630,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description OK. Returns the updated track. */
+                /** @description The track after the write, or its labels when no library holds it. */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Track"];
+                        "application/json": components["schemas"]["LabelWriteResult"];
                     };
                 };
                 400: components["responses"]["ValidationError"];
@@ -623,15 +666,17 @@ export interface paths {
          * @description Applies each item as `PATCH /tracks/{id}/tags` would, in request
          *     order, to the one target library, and answers with one result per
          *     item in the same order. Items naming the same track apply one
-         *     after the other. An item whose track the target does not hold, or
-         *     whose change the cited capability does not authorise, fails alone
+         *     after the other. Any track id is accepted, held or not. An item
+         *     whose change the cited capability does not authorise fails alone
          *     and the others still apply. A request that fails as a whole (its
-         *     target, or an item breaking the rules of `PATCH
-         *     /tracks/{id}/tags`) fails before any item applies.
+         *     target, an item breaking the rules of `PATCH /tracks/{id}/tags`,
+         *     or a label record over the spec §2.8.3 entry bound) fails before
+         *     any item applies.
          *
-         *     The node appends the changed entries as one batch: it sends one
-         *     `library:index-updated` event for the batch, and no `track:added`
-         *     event per track.
+         *     The node appends every applied item's pairs as one label record,
+         *     and nothing when no item changed. It sends one
+         *     `library:labels-changed` event naming every changed track, and no
+         *     `track:added` or `library:index-updated` event.
          */
         post: {
             parameters: {
@@ -716,8 +761,7 @@ export interface paths {
          * Link a library.
          * @description Appends a `link` PUT to the identity library (spec §4.8.4).
          *     Replication then starts under the library's replication policy,
-         *     `full` unless configured. A link made before v1.1 defaults to
-         *     `index_only` (spec §4.6.1).
+         *     `full` unless configured (spec §4.6.1).
          */
         post: {
             parameters: {
@@ -1196,9 +1240,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get the profile for a library.
-         * @description Profile-only projection of the library. For full library metadata
-         *     including replication status, use `GET /libraries/:address`.
+         * Get the name of a library.
+         * @description The library's current About record (spec §2.6), which carries its
+         *     name and nothing else. For full library metadata including
+         *     replication status, use `GET /libraries/:address`. The person who
+         *     owns a library is described by their profile, `GET
+         *     /libraries/{address}/profile`.
          */
         get: {
             parameters: {
@@ -1228,12 +1275,12 @@ export interface paths {
         };
         put?: never;
         /**
-         * Update the profile for a library.
-         * @description Returns 403 unless the caller owns the target library or cites a
-         *     capability granting `library.update_about` (spec §3.5.6). Any
-         *     subset of mutable fields may be supplied; omitted fields remain
-         *     unchanged. Per protocol spec §2.6, `avatar` MUST be a
-         *     content-addressed CID.
+         * Rename a library.
+         * @description Appends an About record (spec §2.6) with the given name, which
+         *     replaces the current one. Returns 403 unless the caller owns the
+         *     target library or cites a capability granting
+         *     `library.update_about` (spec §3.5.6). A name equal to the current
+         *     one appends nothing.
          */
         post: {
             parameters: {
@@ -1248,11 +1295,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        name?: string | null;
-                        bio?: string | null;
-                        location?: string | null;
-                        /** @description CID of an image blob, served by `/images/{cid}`. */
-                        avatar?: string | null;
+                        /** @description 1 to 128 UTF-8 bytes. */
+                        name: string;
                         capability_id?: components["schemas"]["WriteCapabilityId"];
                     };
                 };
@@ -1271,9 +1315,121 @@ export interface paths {
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/libraries/{address}/labels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                address: components["parameters"]["LibraryAddress"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List a library's label state.
+         * @description Every track id the library currently applies at least one label
+         *     to (spec §2.5), with those labels, whether or not any library
+         *     holds the track. Membership plays no part, so a writer can
+         *     reconcile the labels it owns against what it means to hold.
+         *     Items are ordered by `track_id` ascending, so pages are stable
+         *     while the library is unchanged.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Pagination offset. Default 0. */
+                    offset?: components["parameters"]["Offset"];
+                    /** @description Maximum results per page. Default 100, max 500. */
+                    limit?: components["parameters"]["Limit"];
+                };
+                header?: never;
+                path: {
+                    /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                    address: components["parameters"]["LibraryAddress"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LabelStatePage"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                404: components["responses"]["NotFound"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/libraries/{address}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                address: components["parameters"]["LibraryAddress"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get the profile of a library's owner.
+         * @description For an own library, the identity's own profile. For any other
+         *     library, the owner's profile carried in that library's latest
+         *     verified announcement (spec §5.3.2). A library whose `write` list
+         *     is not a single key has no owner profile, and answers 404, as
+         *     does one for which no announcement has carried a profile.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
+                    address: components["parameters"]["LibraryAddress"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Profile"];
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+                404: components["responses"]["NotFound"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1579,10 +1735,9 @@ export interface paths {
                             id: string;
                             public_key: string;
                             /**
-                             * @description The identity's default own recordstore library: its
-                             *     only active one, or else the one with discriminator
-                             *     `record`, record-node's v1.0 own library (spec
-                             *     §3.6.1). `GET /identity/libraries` lists them all.
+                             * @description The identity's default import target, as
+                             *     `Identity.own_library_address`. `GET
+                             *     /identity/libraries` lists every own library.
                              */
                             own_library_address: string;
                             /** @description Address of the identity library (spec §3.6.2). */
@@ -1601,6 +1756,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/identity/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the identity's profile.
+         * @description The identity's current `profile` record (spec §4.8.2). An
+         *     identity that has written none has a profile with every field
+         *     null.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Profile"];
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        /**
+         * Replace the identity's profile.
+         * @description Appends a `profile` PUT to the identity library (spec §4.8.2),
+         *     which replaces the whole profile: a field the request omits is
+         *     absent afterwards. The profile is never deleted. `avatar` takes
+         *     any valid CID form, such as the `cid` `POST /images` returns, and
+         *     the node records it in the canonical form of spec §4.8.2 (CIDv1,
+         *     base32). A request equal to the current profile appends nothing.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description 1 to 128 UTF-8 bytes. */
+                        name?: string;
+                        /** @description At most 1024 UTF-8 bytes. */
+                        bio?: string;
+                        /** @description CID of an image blob, served by `/images/{cid}`. Never a URL. */
+                        avatar?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The stored profile. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Profile"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                500: components["responses"]["InternalError"];
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/identity/libraries": {
         parameters: {
             query?: never;
@@ -1611,7 +1851,7 @@ export interface paths {
         /**
          * List the identity's own libraries.
          * @description Every library the identity library records as owned (spec §4.8.3),
-         *     active and retired, including the listens library.
+         *     active and retired, including the listens and labels libraries.
          */
         get: {
             parameters: {
@@ -1638,12 +1878,11 @@ export interface paths {
         put?: never;
         /**
          * Create an own recordstore library.
-         * @description Derives the address from the identity key and the discriminator
-         *     (spec §3.6.1), appends a `library` PUT to the identity library,
-         *     and, when `about` is given, an About entry to the new library. If
-         *     `discriminator` is omitted the node generates one. A discriminator
-         *     the identity library already records, active or retired, is
-         *     refused with 409.
+         * @description The node generates a random discriminator (spec §3.6.1), derives
+         *     the address from it and the identity key, appends a `library` PUT
+         *     to the identity library, and appends an About record carrying
+         *     `name` to the new library (spec §2.6). The client never chooses
+         *     the discriminator, which is not a display name.
          */
         post: {
             parameters: {
@@ -1652,16 +1891,11 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: {
+            requestBody: {
                 content: {
                     "application/json": {
-                        discriminator?: string;
-                        about?: {
-                            name?: string | null;
-                            bio?: string | null;
-                            location?: string | null;
-                            avatar?: string | null;
-                        };
+                        /** @description The library's name, 1 to 128 UTF-8 bytes. */
+                        name: string;
                     };
                 };
             };
@@ -1677,7 +1911,6 @@ export interface paths {
                 };
                 400: components["responses"]["ValidationError"];
                 401: components["responses"]["Unauthorized"];
-                409: components["responses"]["Conflict"];
                 500: components["responses"]["InternalError"];
             };
         };
@@ -1704,8 +1937,8 @@ export interface paths {
          * Retire an own library.
          * @description Appends a `library` DEL to the identity library (spec §4.8.3).
          *     Retirement is permanent. The library stays valid and replicable;
-         *     the node refuses new writes to it. The identity's active listens library cannot be retired
-         *     (409).
+         *     the node refuses new writes to it. The identity's active listens
+         *     and labels libraries cannot be retired (409).
          */
         delete: {
             parameters: {
@@ -1800,7 +2033,7 @@ export interface paths {
                     /** @description Maximum results per page. Default 100, max 500. */
                     limit?: components["parameters"]["Limit"];
                     /** @description Only records of this type. */
-                    type?: "library" | "link" | "pin";
+                    type?: "library" | "link" | "pin" | "profile";
                     /** @description Only the current record of each `(type, key)` (spec §4.8.2). */
                     current_only?: boolean;
                 };
@@ -1843,8 +2076,8 @@ export interface paths {
         put?: never;
         /**
          * Ingest one or more audio files via multipart upload.
-         * @description Files are buffered to a temp directory and fed to the protocol-v1
-         *     ingest pipeline via `import_blob(path)`. Returns an `import_id`
+         * @description Files are buffered to a temp directory and fed to the ingest
+         *     pipeline (spec §6.4) via `import_blob(path)`. Returns an `import_id`
          *     immediately; progress is delivered via `import:*` WebSocket
          *     events. The target and capability are checked before the import
          *     is accepted. A file with a degenerate fingerprint fails with
@@ -1903,7 +2136,7 @@ export interface paths {
         /**
          * Ingest a track from a resolver URL.
          * @description Resolves the URL via the resolver plugin, downloads, and feeds the
-         *     result to the protocol-v1 ingest pipeline.
+         *     result to the ingest pipeline (spec §6.4).
          */
         post: {
             parameters: {
@@ -2072,14 +2305,14 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Store an image blob, such as a library avatar.
+         * Store an image blob, such as a profile avatar.
          * @description Stores the uploaded `file` part in the content store as ingest
          *     stores artwork: imported as one UnixFS file under the §5.5.1
          *     profile (spec §6.4.1 step 8) and pinned recursively (step 11).
          *     `GET /images/{cid}` then serves it, and peers fetch it by CID like
-         *     artwork. The returned `cid` is the base58btc string a library's
-         *     `avatar` takes (`POST /libraries/{address}/about`). Uploading bytes
-         *     the node already holds returns the same CID.
+         *     artwork. The returned `cid`, a base58btc string, is what the
+         *     profile's `avatar` takes (`PUT /identity/profile`). Uploading
+         *     bytes the node already holds returns the same CID.
          *
          *     The node refuses a `file` over 16 MiB (16777216 bytes) with 413
          *     and one whose first 4100 bytes do not sniff, via file-type, as an
@@ -2142,7 +2375,7 @@ export interface paths {
             header?: never;
             path: {
                 /**
-                 * @description CID of an image blob: a `Track.artwork` element or a library's
+                 * @description CID of an image blob: a `Track.artwork` element or a profile's
                  *     `avatar`. Accepts any valid CID string, as `/audio/{cid}` does.
                  */
                 cid: string;
@@ -2167,7 +2400,7 @@ export interface paths {
                 header?: never;
                 path: {
                     /**
-                     * @description CID of an image blob: a `Track.artwork` element or a library's
+                     * @description CID of an image blob: a `Track.artwork` element or a profile's
                      *     `avatar`. Accepts any valid CID string, as `/audio/{cid}` does.
                      */
                     cid: string;
@@ -2208,7 +2441,7 @@ export interface paths {
                 header?: never;
                 path: {
                     /**
-                     * @description CID of an image blob: a `Track.artwork` element or a library's
+                     * @description CID of an image blob: a `Track.artwork` element or a profile's
                      *     `avatar`. Accepts any valid CID string, as `/audio/{cid}` does.
                      */
                     cid: string;
@@ -2348,7 +2581,11 @@ export interface components {
             artwork?: string[];
             /** @description External source pointers per protocol spec §2.4.2. */
             resolvers?: components["schemas"]["ResolverEntry"][];
-            /** @description Library-scoped tag labels attached to this track. */
+            /**
+             * @description The labels applied to this track by the libraries in the
+             *     request's `label_libraries`, or its default (spec §2.5), one
+             *     item per library and label.
+             */
             tags: components["schemas"]["TrackTag"][];
             /** @description Total listens recorded for this track across all libraries. */
             listen_count: number;
@@ -2362,12 +2599,42 @@ export interface components {
             added_at_ms?: number;
         };
         TrackTag: {
-            /** @description Library address that applied the tag. */
+            /** @description The library whose label record applies the label. */
             library_address: string;
             tag: string;
         };
-        /** @description An envelope label (spec §2.4.3). */
+        /**
+         * @description A label (spec §2.5): 1 to 128 UTF-8 bytes after NFC
+         *     normalisation, with no control characters.
+         */
         Label: string;
+        /**
+         * @description A track id and the labels one library applies to it, for a track
+         *     no library the node shows holds.
+         */
+        TrackLabels: {
+            track_id: string;
+            /** @description The target library's labels on the track after the write. */
+            tags: string[];
+        };
+        /**
+         * @description The result of a label write: the track, with `tags` over the
+         *     default `label_libraries`, when a library the node shows holds
+         *     it, and otherwise `TrackLabels`.
+         */
+        LabelWriteResult: components["schemas"]["Track"] | components["schemas"]["TrackLabels"];
+        /** @description One track id's labels in a library (spec §2.5). */
+        LabelState: {
+            track_id: string;
+            /** @description The labels the library currently applies to the track. */
+            tags: string[];
+        };
+        LabelStatePage: {
+            library_address: string;
+            items: components["schemas"]["LabelState"][];
+            /** @description Number of track ids with at least one label applied. */
+            total: number;
+        };
         /**
          * @description One track's label change, under the rules of `PATCH
          *     /tracks/{id}/tags`.
@@ -2381,29 +2648,38 @@ export interface components {
         LabelBatchResult: {
             track_id: string;
             /**
-             * @description `updated` appended a PUT with the new labels. `unchanged`
-             *     appended nothing, since the labels were already equal as a
-             *     set. `failed` appended nothing, for the reason in `error`.
+             * @description `updated` put the item's pairs into the batch's label record.
+             *     `unchanged` added nothing, since every pair was already in the
+             *     requested state. `failed` added nothing, for the reason in
+             *     `error`.
              * @enum {string}
              */
             status: "updated" | "unchanged" | "failed";
-            /** @description The track's labels after the item; absent when it failed. */
+            /** @description The target library's labels on the track after the item; absent when it failed. */
             tags?: string[];
             /** @description Present when the item failed. */
             error?: {
                 /**
-                 * @description `VALIDATION_ERROR` when the item's entry breaks a protocol
-                 *     rule, such as the payload size bound (spec §2.9).
+                 * @description `VALIDATION_ERROR` when the item breaks a protocol rule,
+                 *     such as the label size bound (spec §2.8.3).
                  * @enum {string}
                  */
-                code: "NOT_FOUND" | "FORBIDDEN" | "CAPABILITY_EXPIRED" | "CAPABILITY_REVOKED" | "VALIDATION_ERROR";
+                code: "FORBIDDEN" | "CAPABILITY_EXPIRED" | "CAPABILITY_REVOKED" | "VALIDATION_ERROR";
                 message: string;
             };
         };
         TagCount: {
             tag: string;
-            /** @description Number of tracks carrying this tag in the filtered address set. */
+            /**
+             * @description Number of live tracks in the membership scope to which a
+             *     library in `label_libraries` applies the label.
+             */
             count: number;
+            /**
+             * @description Whether a node-managed library in `label_libraries` holds the
+             *     label, so clients show it read-only.
+             */
+            managed: boolean;
         };
         /**
          * @description Library metadata. Flat API-layer shape — no protocol-level
@@ -2415,16 +2691,13 @@ export interface components {
             /** @description sha256 of the library address. */
             id: string;
             address: string;
-            /** @description Manifest type (spec §3.5.1), `recordstore` or `listens`. */
-            library_type: string;
-            name?: string | null;
-            bio?: string | null;
-            location?: string | null;
             /**
-             * @description CID of the library's avatar image (protocol spec §2.6), served
-             *     by `/images/{cid}`.
+             * @description Manifest type (spec §3.5.1).
+             * @enum {string}
              */
-            avatar?: string | null;
+            library_type: "recordstore" | "listens" | "labels";
+            /** @description The name from the library's About record (spec §2.6); null when it has none. */
+            name?: string | null;
             /**
              * @description Display alias from the identity's link to this library (spec
              *     §4.8.4). Null when not linked or when no alias was provided.
@@ -2437,7 +2710,6 @@ export interface components {
              *     payload the node does not hold yet counts zero.
              */
             audio_size_bytes: number;
-            linked_library_count: number;
             /** @description Oplog length (count of live entries). */
             length: number;
             /**
@@ -2472,8 +2744,10 @@ export interface components {
             peer_ids: string[];
         };
         /**
-         * @description Target library of the write. Optional only when the identity has
-         *     exactly one active own recordstore library (spec §4.8.3).
+         * @description Target library of the write. When omitted, a label write targets
+         *     the identity's labels library (spec §4.9), and any other write
+         *     the identity's only active own recordstore library, failing with
+         *     400 when it has several (spec §4.8.3).
          */
         WriteTargetAddress: string;
         /**
@@ -2492,10 +2766,13 @@ export interface components {
             connected: boolean;
         };
         /**
-         * @description Recursive predicate (spec §3.5.7). v1.1 node types are `match`,
-         *     `any_of`, `range`, `and`, `or`, and `not`. The schema admits any
-         *     `type` so a node can report filters from newer peers; a filter
-         *     holding a type the node does not recognise matches nothing.
+         * @description Recursive predicate (spec §3.5.7). Node types are `match`,
+         *     `any_of`, `range`, `prefix` (`{ type: "prefix", field, prefix }`),
+         *     `and`, `or`, and `not`. A label capability's filter sees each pair
+         *     as `{ type: "label", op, track_id, label }` (spec §3.5.6). The
+         *     schema admits any `type` so a node can report filters from newer
+         *     peers; a filter holding a type the node does not recognise
+         *     matches nothing.
          */
         FilterSpec: {
             type: string;
@@ -2512,8 +2789,8 @@ export interface components {
             [key: string]: unknown;
         };
         /**
-         * @description Capability condition (spec §3.5.8). v1.1 defines `expires_at`
-         *     with `at` in Unix milliseconds. Any other `type` never holds.
+         * @description Capability condition (spec §3.5.8): `expires_at` with `at` in
+         *     Unix milliseconds. Any other `type` never holds.
          */
         ConditionSpec: {
             type: string;
@@ -2530,7 +2807,12 @@ export interface components {
             /** @description The capability the issuer cited, for a delegated grant. */
             via_capability_id?: string | null;
             grantee: components["schemas"]["GranteeSpec"];
-            /** @description Action verbs (spec §3.5.6), including any the node does not recognise. */
+            /**
+             * @description Action verbs (spec §3.5.6): `library.append_track`,
+             *     `library.write_label`, `library.update_about`,
+             *     `library.grant_capability`, and any the node does not
+             *     recognise.
+             */
             actions: string[];
             filter: components["schemas"]["FilterSpec"] | null;
             conditions: components["schemas"]["ConditionSpec"][];
@@ -2557,7 +2839,7 @@ export interface components {
             entry_hash: string;
             /** @enum {string} */
             op: "PUT" | "DEL";
-            /** @description Record type, `library`, `link`, `pin`, or one the node does not recognise. */
+            /** @description Record type, `library`, `link`, `pin`, `profile`, or one the node does not recognise. */
             type: string;
             key: string;
             /** @description The operation value as stored. */
@@ -2586,13 +2868,27 @@ export interface components {
             /** @description Total entries expected in the current sync window. */
             total: number;
         };
-        /** @description Profile-only projection of a library. */
+        /** @description A library's name, from its About record (spec §2.6). */
         About: {
             library_address: string;
-            name?: string | null;
-            bio?: string | null;
-            location?: string | null;
-            avatar?: string | null;
+            /** @description Null when the library has no About record. */
+            name: string | null;
+        };
+        /**
+         * @description An identity's profile (spec §4.8.2): who the person is, as
+         *     distinct from a library's name. Fields the node does not define
+         *     are not passed through.
+         */
+        Profile: {
+            /** @description The identity's key (spec §3.1). */
+            public_key: string;
+            name: string | null;
+            bio: string | null;
+            /**
+             * @description Canonical CID (CIDv1, base32) of the avatar image, served by
+             *     `/images/{cid}`.
+             */
+            avatar: string | null;
         };
         ListenCount: {
             track_id: string;
@@ -2646,9 +2942,10 @@ export interface components {
             /** @description Address of the identity library (spec §3.6.2). */
             meta_log_address: string;
             /**
-             * @description The identity's default own recordstore library: its only
-             *     active one, or else the one with discriminator `record`,
-             *     record-node's v1.0 own library (spec §3.6.1).
+             * @description The identity's default import target: the active own
+             *     recordstore library whose `library` PUT is least under spec
+             *     §4.4.2 order, that is, the oldest. Never the labels or listens
+             *     library (spec §4.9).
              */
             own_library_address: string;
         };
@@ -2769,10 +3066,21 @@ export interface components {
         /** @description Full library address, e.g. `/record/<manifest-cid>/<name>`. */
         LibraryAddress: string;
         /**
-         * @description Target library of the write. Optional only when the identity has
-         *     exactly one active own recordstore library (spec §4.8.3).
+         * @description Target library of the write. When omitted, a label write targets
+         *     the identity's labels library (spec §4.9), and any other write
+         *     the identity's only active own recordstore library, failing with
+         *     400 when it has several (spec §4.8.3).
          */
         WriteTarget: string;
+        /**
+         * @description The libraries whose labels count, for `tags`, `tag_groups`,
+         *     `Track.tags`, and `TagCount`. A library here need not hold the
+         *     tracks it labels. Default: every own library of type
+         *     `recordstore` or `labels`, active and retired, plus the
+         *     `library_addresses` of the request; with no `library_addresses`,
+         *     every library the node shows.
+         */
+        LabelLibraries: string[];
         /**
          * @description Capability authorising the write (spec §3.5.9). Required when the
          *     identity does not own the target; omitted otherwise.

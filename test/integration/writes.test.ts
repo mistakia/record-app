@@ -19,7 +19,8 @@ import { create_identity_access } from '#main/identity-access.ts'
 import { serve_generic_request } from '#main/request-policy.ts'
 import { URL_IMPORT_OFF_IN_BUNDLED } from '#shared/bundled.ts'
 import { open_snapshot_store } from '#main/snapshot-store.ts'
-import type { About, Library, Track, TrackList } from '#renderer/api/types.ts'
+import type { About, Library, Profile, TagCount, Track, TrackList } from '#renderer/api/types.ts'
+import { profile_body } from '#renderer/identity/profile.ts'
 import type { NodeEventMessage, NodeRequest } from '#shared/bridge.ts'
 import { start_test_node, type TestNode } from './node-fixture.ts'
 
@@ -115,7 +116,7 @@ describe('tags', () => {
     if (track === undefined) throw new Error('no track')
     const tagged = await call<Track>({ method: 'post', path_template: '/tags', body: { track_id: track.id, tag: 'smoke tag' } })
     expect(tagged.tags.map(({ tag }) => tag)).toContain('smoke tag')
-    expect(await call<Array<{ tag: string, count: number }>>({ method: 'get', path_template: '/tags' })).toContainEqual({ tag: 'smoke tag', count: 1 })
+    expect(await call<TagCount[]>({ method: 'get', path_template: '/tags' })).toContainEqual({ tag: 'smoke tag', count: 1, managed: false })
     const filtered = await tracks({ tags: ['smoke tag'] })
     expect(filtered.items.map(({ id }) => id)).toEqual([track.id])
     const untagged = await call<Track>({ method: 'delete', path_template: '/tags', query: { track_id: track.id, tag: 'smoke tag' } })
@@ -146,11 +147,21 @@ describe('libraries', () => {
     expect(after.some((library) => library.address === address && library.is_linked)).toBe(false)
   })
 
-  test('the own library\'s about can be read and edited', async () => {
+  test('the own library is renamed by its About record, which carries the name only', async () => {
     const address = node.peer.identity().own_address
-    const updated = await call<About>({ method: 'post', path_template: '/libraries/{address}/about', params: { address }, body: { name: 'Smoke Own', bio: 'A test library', location: null } })
-    expect(updated).toMatchObject({ name: 'Smoke Own', bio: 'A test library' })
+    const updated = await call<About>({ method: 'post', path_template: '/libraries/{address}/about', params: { address }, body: { name: 'Smoke Own' } })
+    expect(updated).toEqual({ library_address: address, name: 'Smoke Own' })
     expect(await call<About>({ method: 'get', path_template: '/libraries/{address}/about', params: { address } })).toMatchObject({ name: 'Smoke Own' })
+  })
+
+  test('the identity\'s profile is its own, and naming a library never renames it', async () => {
+    const empty = await call<Profile>({ method: 'get', path_template: '/identity/profile' })
+    expect(empty).toMatchObject({ name: null, bio: null, avatar: null })
+    expect(await call<Profile>({ method: 'put', path_template: '/identity/profile', body: profile_body({ name: 'Smoke Person', bio: '', avatar: '' }) })).toMatchObject({ name: 'Smoke Person', bio: null })
+    const address = node.peer.identity().own_address
+    expect(await call<Profile>({ method: 'get', path_template: '/libraries/{address}/profile', params: { address } })).toMatchObject({ name: 'Smoke Person' })
+    await call<About>({ method: 'post', path_template: '/libraries/{address}/about', params: { address }, body: { name: 'Renamed Library' } })
+    expect((await call<Profile>({ method: 'get', path_template: '/identity/profile' })).name).toBe('Smoke Person')
   })
 })
 
