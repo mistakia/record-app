@@ -5,15 +5,15 @@
     "version": "2.3.0",
     "scope": "shipped",
     "justification": "The fixed 2.4.0 was published 2026-10-22, inside the 7-day minimumReleaseAge floor until 2026-10-29; reached only through record-node's express API, which the bundled node binds to 127.0.0.1 (src/main/bundled/node-manager.ts), so only local callers can send it a body. Upgrade when the floor clears.",
-    "review_by": "2026-10-29"
+    "review_by": "2026-10-31"
   },
   {
     "advisory": "GHSA-jr5w-w6x2-84p9",
     "package": "electron",
     "version": "44.4.5",
     "scope": "shipped",
-    "justification": "The fixed 44.9.1 was published 2026-10-20, inside the 7-day minimumReleaseAge floor until 2026-10-27; the renderer loads only the bundled page and the loopback node, and refuses every navigation, redirect and window.open (src/main/window.ts), so Chromium makes no TLS connection that trusts the revoked intermediates. Upgraded with body-parser and multer on 2026-10-29.",
-    "review_by": "2026-10-29"
+    "justification": "The fixed 44.9.1 was published 2026-10-20, inside the 7-day minimumReleaseAge floor until 2026-10-27; the renderer loads only the bundled page and the loopback node, and refuses every navigation, redirect and window.open (src/main/window.ts), so Chromium makes no TLS connection that trusts the revoked intermediates. Upgraded with body-parser and multer once both clear the floor.",
+    "review_by": "2026-10-31"
   },
   {
     "advisory": "GHSA-ch52-4w7c-c8xp",
@@ -29,7 +29,7 @@
     "version": "2.4.0",
     "scope": "shipped",
     "justification": "The fixed 2.5.0 was published 2026-10-22, inside the 7-day minimumReleaseAge floor until 2026-10-29; record-node pins multer exactly, so the fix is a record-node pin bump and a record-app re-pin. Reached only through the node's upload routes on the loopback-bound bundled node.",
-    "review_by": "2026-10-29"
+    "review_by": "2026-10-31"
   },
   {
     "advisory": "GHSA-86w9-cpqp-85rv",
