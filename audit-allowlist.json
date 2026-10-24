@@ -1,19 +1,19 @@
 [
   {
-    "advisory": "GHSA-vfj7-8cjw-p6xm",
-    "package": "braces",
-    "version": "3.0.3",
+    "advisory": "GHSA-27r3-jxmh-p828",
+    "package": "body-parser",
+    "version": "2.3.0",
     "scope": "shipped",
-    "justification": "No fixed release exists; reached only through record-node's blockstore-fs and datastore-fs, via it-glob and micromatch, which expand fixed internal patterns, never user input.",
-    "review_by": "2027-01-01"
+    "justification": "The fixed 2.4.0 was published 2026-10-22, inside the 7-day minimumReleaseAge floor until 2026-10-29; reached only through record-node's express API, which the bundled node binds to 127.0.0.1 (src/main/bundled/node-manager.ts), so only local callers can send it a body. Upgrade when the floor clears.",
+    "review_by": "2026-10-29"
   },
   {
-    "advisory": "GHSA-86w9-cpqp-85rv",
-    "package": "node-forge",
-    "version": "1.4.0",
+    "advisory": "GHSA-jr5w-w6x2-84p9",
+    "package": "electron",
+    "version": "44.4.5",
     "scope": "shipped",
-    "justification": "No fixed release exists; reached only through @helia/libp2p's autoTLS (acme-client), which record-node imports but never configures, so no RSA signature is verified with it.",
-    "review_by": "2027-01-01"
+    "justification": "The fixed 44.9.1 was published 2026-10-20, inside the 7-day minimumReleaseAge floor until 2026-10-27; the renderer loads only the bundled page and the loopback node, and refuses every navigation, redirect and window.open (src/main/window.ts), so Chromium makes no TLS connection that trusts the revoked intermediates. Upgrade when the floor clears.",
+    "review_by": "2026-10-27"
   },
   {
     "advisory": "GHSA-ch52-4w7c-c8xp",
@@ -21,6 +21,22 @@
     "version": "4.2.0",
     "scope": "build",
     "justification": "No fixed release exists; reached only through electron-builder's @electron/get (got, cacheable-request), which downloads Electron and build tools while packaging, never in the shipped app.",
+    "review_by": "2027-01-01"
+  },
+  {
+    "advisory": "GHSA-q7qp-rjg7-q26m",
+    "package": "multer",
+    "version": "2.4.0",
+    "scope": "shipped",
+    "justification": "The fixed 2.5.0 was published 2026-10-22, inside the 7-day minimumReleaseAge floor until 2026-10-29; record-node pins multer exactly, so the fix is a record-node pin bump and a record-app re-pin. Reached only through the node's upload routes on the loopback-bound bundled node.",
+    "review_by": "2026-10-29"
+  },
+  {
+    "advisory": "GHSA-86w9-cpqp-85rv",
+    "package": "node-forge",
+    "version": "1.4.0",
+    "scope": "shipped",
+    "justification": "No fixed release exists; reached only through @helia/libp2p's autoTLS (acme-client), which record-node imports but never configures, so no RSA signature is verified with it.",
     "review_by": "2027-01-01"
   }
 ]
