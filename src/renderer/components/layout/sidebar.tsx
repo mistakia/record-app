@@ -1,5 +1,5 @@
 // The library sidebar (STYLE.md § Layout › Sidebar), legacy-v0's shell:
-// back and forward, RECORD, MY LIBRARY, the linked and shared LIBRARIES with
+// back and forward, RECORD, YOUR LIBRARIES, the linked and shared LIBRARIES with
 // their menus, and a footer with the identity's profile, Settings, and the
 // connection.
 
@@ -79,7 +79,7 @@ export const Sidebar = () => {
         <NavItem to={ROUTES.listens} current={is_current(ROUTES.listens)}>Recently played</NavItem>
       </div>
       <div className={styles.section}>
-        <h2 className={styles.heading}>My library</h2>
+        <h2 className={styles.heading}>Your libraries</h2>
         {own_active.length <= 1
           ? <NavItem to={tracks_route({ library_address: own_active[0]?.address ?? '' })} current={own_active[0] !== undefined && is_current(tracks_route({ library_address: own_active[0].address }))}>Tracks</NavItem>
           : own_active.map((library) => {

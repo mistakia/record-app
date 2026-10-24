@@ -60,7 +60,7 @@ describe('library address display', () => {
     expect(library_name(library({ ...own, name: 'Crates' }))).toBe('Crates')
     expect(library_name(library({ ...own, alias: 'Home' }))).toBe('Home')
     // Only the own default recordstore: not another identity's, not another own one.
-    expect(library_name(library({ address: '/record/zabc/record' }))).toBe('record')
+    expect(library_name(library({ address: '/record/zabc/record' }))).toBe('Unnamed library')
     expect(library_name(library({ address: MIXES, is_own: true }))).toBe('mixes')
   })
 

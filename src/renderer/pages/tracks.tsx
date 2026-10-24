@@ -64,6 +64,13 @@ export const Tracks = () => {
   const total = current?.total ?? 0
   const error = first_page.error ?? libraries.error
   const filtered = filters.query.trim() !== '' || filters.tags.length > 0
+  // In one library a label filter counts only the labels that library holds
+  // (spec §8.6.9), so tracks here can carry the label from another library and
+  // still be left out. The same filter over every library says what this view
+  // misses; its args are the aggregated view's first page, so following the
+  // link opens from cache.
+  const everywhere = node_api.endpoints.get_tracks.useQuery(track_page_args({ library_address: '', page: 0, filters }), { skip: library_address === '' || filters.tags.length === 0 })
+  const everywhere_total = current === undefined ? undefined : everywhere.currentData?.total
   // Music is added to an own library: on All tracks, or on one of yours
   // that is not retired; never on a library you follow.
   const can_add = own_address !== null && (library_address === '' || (viewed?.is_own === true && !viewed.is_retired))
@@ -136,6 +143,11 @@ export const Tracks = () => {
       <div className={styles.toolbar}>
         <SearchField value={search} on_change={(value) => { list_wanted.current = false; set_search(value) }} on_submit={submit_search} />
         <span className={styles.count} data-testid='track-total'>{total} tracks</span>
+        {everywhere_total !== undefined && everywhere_total > total && (
+          <button type='button' data-variant='glyph' className={styles.count} data-testid='track-total-everywhere' onClick={() => { go({ ...view, library_address: '' }) }}>
+            {everywhere_total} in all libraries
+          </button>
+        )}
         {filtered && (
           <button type='button' data-variant='ghost' data-size='small' onMouseDown={keep_focus} onClick={() => { set_search(''); go(with_filters_cleared(view)) }}>Clear filters</button>
         )}

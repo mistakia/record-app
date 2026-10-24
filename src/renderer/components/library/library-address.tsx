@@ -1,8 +1,8 @@
 // A library's address, short: the discriminator and the manifest CID's
 // tail (`mixes · …8MnGCA`). The whole address is the tooltip, and a click
 // copies it: on hover a small `copy` tip sits under the box, `copied` for a
-// moment after a click. Beside a name that is already the discriminator,
-// only the tail shows.
+// moment after a click. Beside a name only the tail shows: the name already
+// says what the discriminator would, or should hide it (`record`).
 
 import { useEffect, useState } from 'react'
 
@@ -37,7 +37,7 @@ export const LibraryAddress = ({ address, name }: { address: string, name?: stri
         copy_text({ dispatch, text: address, label: 'the address' }).catch(() => {})
       }}
     >
-      {parts !== null && parts.discriminator === name ? `…${parts.fingerprint}` : short_address(address)}
+      {parts !== null && name !== undefined ? `…${parts.fingerprint}` : short_address(address)}
     </button>
   )
 }

@@ -31,7 +31,7 @@ await writeFile(join(user_data_dir, 'connection.json'), JSON.stringify({ mode: '
 
 const step = (label: string, detail: unknown = ''): void => { console.log(`${label}:`, detail) }
 // The sidebar's links; the first 'Tracks' is every library, and with more
-// than one own library My library lists each by name.
+// than one own library Your libraries lists each by name.
 const nav = async (window: Page, name: string) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name, exact: true }).first().click() }
 const unfold = async (window: Page, title: string) => {
   const toggle = window.getByRole('button', { name: title })

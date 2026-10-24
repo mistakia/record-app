@@ -42,13 +42,16 @@ export const short_address = (address: string): string => {
 export const OWN_LIBRARY_DISCRIMINATOR = 'record'
 
 // The alias, then the About name; a library with neither goes by its
-// discriminator rather than its whole address. Two own libraries go by a
-// word instead: the listens library is always Play history, and the default
-// own recordstore, unnamed, is My library rather than `record`.
+// discriminator rather than its whole address. The own listens library is
+// always Play history, and an unnamed default recordstore never goes by the
+// node's internal `record`: My library when it is yours, Unnamed library
+// when it is another identity's.
 export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address' | 'is_own' | 'library_type'>): string => {
   if (library.is_own && library.library_type === 'listens') return 'Play history'
   const discriminator = parse_library_address(library.address)?.discriminator
-  const fallback = library.is_own && library.library_type === 'recordstore' && discriminator === OWN_LIBRARY_DISCRIMINATOR ? 'My library' : discriminator
+  const fallback = discriminator === OWN_LIBRARY_DISCRIMINATOR && library.library_type === 'recordstore'
+    ? library.is_own ? 'My library' : 'Unnamed library'
+    : discriminator
   return library.alias ?? library.name ?? fallback ?? library.address
 }
 
