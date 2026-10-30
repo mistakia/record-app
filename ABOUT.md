@@ -8,13 +8,22 @@ description: >-
 base_uri: user:repository/active/record-app/ABOUT.md
 created_at: '2026-05-13T18:03:58.003Z'
 entity_id: 3f6fd760-c279-487e-aa92-b7ba7455869b
+observations:
+  - >-
+    [finding] The tracks-page Shuffle button turns shuffle off when shuffle is already on, restoring
+    list order around the current song, and a queue that then runs out with repeat off looks hung:
+    the bar holds the finished song and Next does nothing.
+  - >-
+    [follow-up] Operator is deciding whether the tracks-page Shuffle button should always start a
+    fresh shuffle and reshuffle endlessly when the queue runs out; the recommendation also disables
+    Next and marks the bar ended at the end of the queue.
 owner_identity_uri: user:identity/trashman.md
 public_read: false
 relations:
   - follows [[user:guideline/directory-markdown-standards.md]]
 tags:
   - user:tag/record-project.md
-updated_at: '2026-10-04T13:05:07.247Z'
+updated_at: '2026-10-30T22:04:51.345Z'
 ---
 
 ## Purpose
