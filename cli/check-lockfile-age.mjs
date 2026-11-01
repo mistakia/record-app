@@ -18,147 +18,170 @@
 // error or a lockfile that parses to no packages.
 
 import { execFileSync } from 'node:child_process'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, realpathSync } from 'node:fs'
 import { basename } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const argv = process.argv.slice(2)
-const flags = {}
-const positional = []
-for (let i = 0; i < argv.length; i++) {
-  const a = argv[i]
-  if (a.startsWith('--')) flags[a.slice(2)] = argv[++i]
-  else positional.push(a)
-}
-
-const lockfile = positional[0] || autoDetectLockfile()
-const days = Number(flags.days ?? 7)
-const base = flags.base ?? 'HEAD'
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9a-z.-]+)?(?:\+[0-9a-z.-]+)?$/i
 
-if (!lockfile || !existsSync(lockfile)) {
-  console.error(`No lockfile found (tried: ${lockfile || 'auto-detect'})`)
-  process.exit(2)
-}
-
-const allowFile = '.youngpkg-allow'
-const allow = existsSync(allowFile)
-  ? new Set(
-      readFileSync(allowFile, 'utf8')
-        .split('\n')
-        .map((l) => l.split('#')[0].trim())
-        .filter(Boolean)
+// Importing this file must never run it, so the check runs only when node was
+// invoked on it. It is vendored as one standalone file, so it carries its own
+// isMain; resolving both sides keeps a relative or symlinked invocation main.
+function isMain(import_meta_url) {
+  if (!process.argv[1]) return false
+  try {
+    return (
+      realpathSync(process.argv[1]) ===
+      realpathSync(fileURLToPath(import_meta_url))
     )
-  : new Set()
-
-const current = parseLockfile(lockfile, readFileSync(lockfile, 'utf8'))
-if (!current.size) {
-  console.error(`Parsed no packages from ${lockfile}; format not recognized.`)
-  process.exit(2)
-}
-
-let previous = new Set()
-try {
-  const text = execFileSync('git', ['show', `${base}:./${lockfile}`], {
-    encoding: 'utf8',
-    maxBuffer: 1 << 30,
-    stdio: ['ignore', 'pipe', 'ignore']
-  })
-  previous = parseLockfile(lockfile, text)
-} catch {
-  // No lockfile at the base (new file, unborn or shallow ref): every entry is
-  // an addition. Steady-state CI shouldn't hit this path.
-  console.error(`No ${lockfile} at ${base}; checking every entry.`)
-}
-
-const candidates = [...current].filter(
-  (spec) => !previous.has(spec) && !allow.has(spec)
-)
-if (!candidates.length) {
-  console.error(`OK: no package additions in ${lockfile} vs ${base}.`)
-  process.exit(0)
-}
-
-const cutoff = Date.now() - days * 86_400_000
-const violations = []
-const unverified = []
-const packuments = new Map()
-
-// The full packument, not the abbreviated install-v1 document: only the full
-// form carries `time`, and without it every lookup used to skip silently.
-function packument(name) {
-  if (!packuments.has(name)) {
-    const url = `https://registry.npmjs.org/${name.replace('/', '%2f')}`
-    packuments.set(name, fetchPackument(url))
+  } catch {
+    return false
   }
-  return packuments.get(name)
 }
 
-// A single transient `fetch failed` used to fail the whole check closed, so a
-// network error, 429 or 5xx is retried with backoff. A 404 or other 4xx is an
-// answer, not a transient, and fails at once.
-const ATTEMPTS = 3
-async function fetchPackument(url) {
-  let error
-  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
-    if (attempt > 1)
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000 * 2 ** (attempt - 2))
+async function main() {
+  const argv = process.argv.slice(2)
+  const flags = {}
+  const positional = []
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]
+    if (a.startsWith('--')) flags[a.slice(2)] = argv[++i]
+    else positional.push(a)
+  }
+
+  const lockfile = positional[0] || autoDetectLockfile()
+  const days = Number(flags.days ?? 7)
+  const base = flags.base ?? 'HEAD'
+
+  if (!lockfile || !existsSync(lockfile)) {
+    console.error(`No lockfile found (tried: ${lockfile || 'auto-detect'})`)
+    process.exit(2)
+  }
+
+  const allowFile = '.youngpkg-allow'
+  const allow = existsSync(allowFile)
+    ? new Set(
+        readFileSync(allowFile, 'utf8')
+          .split('\n')
+          .map((l) => l.split('#')[0].trim())
+          .filter(Boolean)
       )
-    try {
-      const r = await fetch(url, { headers: { accept: 'application/json' } })
-      if (r.ok) return await r.json()
-      error = `HTTP ${r.status}`
-      if (r.status !== 429 && r.status < 500) break
-    } catch (err) {
-      error = err.message
-    }
+    : new Set()
+
+  const current = parseLockfile(lockfile, readFileSync(lockfile, 'utf8'))
+  if (!current.size) {
+    console.error(`Parsed no packages from ${lockfile}; format not recognized.`)
+    process.exit(2)
   }
-  return { error }
-}
 
-const queue = [...candidates]
-async function worker() {
-  while (queue.length) {
-    const spec = queue.shift()
-    const at = spec.lastIndexOf('@')
-    const meta = await packument(spec.slice(0, at))
-    const t = meta.time?.[spec.slice(at + 1)]
-    if (!t) {
-      unverified.push({
-        spec,
-        reason: meta.error ?? 'no publish time in registry metadata'
-      })
-    } else if (new Date(t).getTime() > cutoff) {
-      violations.push({ spec, published: t })
-    }
+  let previous = new Set()
+  try {
+    const text = execFileSync('git', ['show', `${base}:./${lockfile}`], {
+      encoding: 'utf8',
+      maxBuffer: 1 << 30,
+      stdio: ['ignore', 'pipe', 'ignore']
+    })
+    previous = parseLockfile(lockfile, text)
+  } catch {
+    // No lockfile at the base (new file, unborn or shallow ref): every entry is
+    // an addition. Steady-state CI shouldn't hit this path.
+    console.error(`No ${lockfile} at ${base}; checking every entry.`)
   }
-}
-await Promise.all(Array.from({ length: 16 }, worker))
 
-for (const u of unverified)
-  console.error(`Unverified: ${u.spec}  (${u.reason})`)
-
-if (violations.length) {
-  console.error(
-    `Refusing ${lockfile}: ${violations.length} package(s) published in last ${days} days:`
+  const candidates = [...current].filter(
+    (spec) => !previous.has(spec) && !allow.has(spec)
   )
-  for (const v of violations)
-    console.error(`  ${v.spec}  (published ${v.published})`)
-}
-if (violations.length || unverified.length) {
-  if (unverified.length)
+  if (!candidates.length) {
+    console.error(`OK: no package additions in ${lockfile} vs ${base}.`)
+    process.exit(0)
+  }
+
+  const cutoff = Date.now() - days * 86_400_000
+  const violations = []
+  const unverified = []
+  const packuments = new Map()
+
+  // The full packument, not the abbreviated install-v1 document: only the full
+  // form carries `time`, and without it every lookup used to skip silently.
+  function packument(name) {
+    if (!packuments.has(name)) {
+      const url = `https://registry.npmjs.org/${name.replaceAll('/', '%2f')}`
+      packuments.set(name, fetchPackument(url))
+    }
+    return packuments.get(name)
+  }
+
+  // A single transient `fetch failed` used to fail the whole check closed, so a
+  // network error, 429 or 5xx is retried with backoff. A 404 or other 4xx is an
+  // answer, not a transient, and fails at once.
+  const ATTEMPTS = 3
+  async function fetchPackument(url) {
+    let error
+    for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+      if (attempt > 1)
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * 2 ** (attempt - 2))
+        )
+      try {
+        const r = await fetch(url, { headers: { accept: 'application/json' } })
+        if (r.ok) return await r.json()
+        error = `HTTP ${r.status}`
+        if (r.status !== 429 && r.status < 500) break
+      } catch (err) {
+        error = err.message
+      }
+    }
+    return { error }
+  }
+
+  const queue = [...candidates]
+  async function worker() {
+    while (queue.length) {
+      const spec = queue.shift()
+      const at = spec.lastIndexOf('@')
+      const meta = await packument(spec.slice(0, at))
+      const t = meta.time?.[spec.slice(at + 1)]
+      if (!t) {
+        unverified.push({
+          spec,
+          reason: meta.error ?? 'no publish time in registry metadata'
+        })
+      } else if (new Date(t).getTime() > cutoff) {
+        violations.push({ spec, published: t })
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: 16 }, worker))
+
+  for (const u of unverified)
+    console.error(`Unverified: ${u.spec}  (${u.reason})`)
+
+  if (violations.length) {
     console.error(
-      `Refusing ${lockfile}: ${unverified.length} package(s) with no verifiable publish time.`
+      `Refusing ${lockfile}: ${violations.length} package(s) published in last ${days} days:`
     )
+    for (const v of violations)
+      console.error(`  ${v.spec}  (published ${v.published})`)
+  }
+  if (violations.length || unverified.length) {
+    if (unverified.length)
+      console.error(
+        `Refusing ${lockfile}: ${unverified.length} package(s) with no verifiable publish time.`
+      )
+    console.error(
+      `Override: add to ${allowFile} (one "pkg@version" per line) or rerun with --days N.`
+    )
+    process.exit(1)
+  }
+
   console.error(
-    `Override: add to ${allowFile} (one "pkg@version" per line) or rerun with --days N.`
+    `OK: ${candidates.length} added package(s) in ${lockfile} vs ${base}, none younger than ${days} days.`
   )
-  process.exit(1)
 }
 
-console.error(
-  `OK: ${candidates.length} added package(s) in ${lockfile} vs ${base}, none younger than ${days} days.`
-)
+if (isMain(import.meta.url)) {
+  await main()
+}
 
 function autoDetectLockfile() {
   for (const f of [
