@@ -21,13 +21,17 @@ observations:
     [finding] 2026-11-07 perf-probe's facet_toggle_x4 clicks origin and tier/ labels the seeder no
     longer writes (it writes file-origin/ and collection-tier/), so the step always records a 30 s
     click timeout.
+  - >-
+    [gotcha] 2026-11-07 base-storage has no ffmpeg, fpcalc or record toolchain, and its main
+    record-app checkout no node_modules: run integration, smoke and perf on the MacBook (rsync the
+    worktree to a tmp copy, symlink its node_modules and toolchain).
 owner_identity_uri: user:identity/trashman.md
 public_read: false
 relations:
   - follows [[user:guideline/directory-markdown-standards.md]]
 tags:
   - user:tag/record-project.md
-updated_at: '2026-11-07T21:01:54.728Z'
+updated_at: '2026-11-07T22:16:14.873Z'
 ---
 
 ## Purpose
