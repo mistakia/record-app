@@ -37,3 +37,20 @@
 .loading {
   height: 100%;
 }
+
+/* The corner gauges (STYLE.md § Layout › Page column), stacked. */
+.corner {
+  position: absolute;
+  right: var(--space-base);
+  bottom: var(--space-base);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-xs);
+  pointer-events: none;
+}
+
+.corner > * {
+  pointer-events: auto;
+}

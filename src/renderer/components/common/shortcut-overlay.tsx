@@ -1,5 +1,5 @@
 // The ? overlay: every binding in HOTKEYS, as Settings › Shortcuts shows it,
-// with the track list's keys first when the page shows a list.
+// with the list's keys first when the page shows a list.
 
 import { Dialog } from './dialog.tsx'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
@@ -12,7 +12,7 @@ export const ShortcutOverlay = () => {
   const open = use_app_selector((state) => state.ui.shortcuts_open)
   return (
     <Dialog open={open} title='Shortcuts' wide on_close={() => { dispatch(shortcuts_toggled(false)) }}>
-      {open && <ShortcutTable list_first={list_commands() !== null} />}
+      {open && <ShortcutTable list={list_commands()} />}
     </Dialog>
   )
 }

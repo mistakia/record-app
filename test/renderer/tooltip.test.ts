@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 
+import { HOTKEYS, NO_LIST_ACTIONS, type HotkeyAction } from '#renderer/hooks/hotkeys.ts'
 import { hotkey_text, place_tip, show_delay, tip, tip_scroll, TIP_DELAY_MS } from '#renderer/components/common/tooltip-logic.ts'
+
+const TRACK_LIST: ReadonlySet<HotkeyAction> = new Set(HOTKEYS.flatMap(({ scope, action }) => scope === 'list' ? [action] : []))
 
 const viewport = { width: 1000, height: 800 }
 const tip_size = { width: 80, height: 18 }
@@ -38,13 +41,15 @@ describe('tooltip', () => {
   })
 
   test('names the key from HOTKEYS, the first alternative, only where it is live', () => {
-    expect(hotkey_text('toggle_playback', true)).toBe('Space')
-    expect(hotkey_text('open_menu', true)).toBe('.')
-    expect(hotkey_text('previous_track', false)).toBe('Cmd+←')
-    expect(hotkey_text('go_settings', false)).toBe('Cmd+,')
-    expect(hotkey_text('adopt', false)).toBeNull()
-    expect(hotkey_text('adopt_playing', true)).toBeNull()
-    expect(hotkey_text('adopt_playing', false)).toBe('f')
+    expect(hotkey_text('toggle_playback', TRACK_LIST)).toBe('Space')
+    expect(hotkey_text('open_menu', TRACK_LIST)).toBe('.')
+    expect(hotkey_text('previous_track', NO_LIST_ACTIONS)).toBe('Cmd+←')
+    expect(hotkey_text('go_settings', NO_LIST_ACTIONS)).toBe('Cmd+,')
+    expect(hotkey_text('adopt', NO_LIST_ACTIONS)).toBeNull()
+    expect(hotkey_text('adopt_playing', TRACK_LIST)).toBeNull()
+    expect(hotkey_text('adopt_playing', NO_LIST_ACTIONS)).toBe('f')
+    expect(hotkey_text('adopt_playing', new Set<HotkeyAction>(['rename_labels']))).toBe('f')
+    expect(hotkey_text('adopt', new Set<HotkeyAction>(['rename_labels']))).toBeNull()
   })
 
   test('tip() sets the label, and the hotkey only when there is one', () => {

@@ -1,0 +1,107 @@
+/* The page's 640px column (tags.module.css), so a count sits near its label. */
+.scroller {
+  flex: 0 1 var(--tags-column);
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--space-lg) var(--space-lg);
+  outline: none;
+  scrollbar-width: thin;
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+}
+
+/* A row (STYLE.md § Tags page): 22px, as the facet sidebar's. */
+.facet,
+.label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: 100%;
+  height: 22px;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 6px;
+  border: 1px solid transparent;
+  cursor: default;
+  font-size: var(--font-size-xs);
+  user-select: none;
+}
+
+.facet[data-cursor='true'],
+.label[data-cursor='true'] {
+  background: var(--color-surface-cursor);
+}
+
+.label[aria-selected='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-wash);
+  color: var(--color-accent);
+}
+
+.chevron {
+  width: 14px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+}
+
+.facet_name {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.facet[data-cursor='true'] .facet_name {
+  font-weight: 600;
+}
+
+.facet_count {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+}
+
+.rule {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-light);
+}
+
+.label {
+  padding-left: 26px;
+  color: var(--color-text-secondary);
+}
+
+.label[data-cursor='true'] .value {
+  font-weight: 600;
+}
+
+.value {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Why a label is read-only, beside its name: a smaller OWNER chip. */
+.pill {
+  flex: none;
+  padding: 0 3px;
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-tertiary);
+  font-size: 8px;
+  letter-spacing: 0.4px;
+  line-height: 11px;
+  text-transform: uppercase;
+}
+
+.count {
+  flex: none;
+  margin-left: auto;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}

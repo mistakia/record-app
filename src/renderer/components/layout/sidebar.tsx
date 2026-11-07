@@ -77,6 +77,7 @@ export const Sidebar = () => {
         <h2 className={styles.heading}>Record</h2>
         <NavItem to={ROUTES.tracks} current={is_current(ROUTES.tracks)}>Tracks</NavItem>
         <NavItem to={ROUTES.listens} current={is_current(ROUTES.listens)}>Recently played</NavItem>
+        <NavItem to={ROUTES.tags} current={is_current(ROUTES.tags)}>Tags</NavItem>
       </div>
       <div className={styles.section}>
         <h2 className={styles.heading}>Your libraries</h2>

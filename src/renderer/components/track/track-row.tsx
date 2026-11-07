@@ -150,7 +150,7 @@ export const TrackRow = memo(({ track, index, columns, play_state, is_cursor, is
           className={styles.play}
           tabIndex={-1}
           aria-label={play_state === 'playing' ? 'Pause' : 'Play'}
-          {...(play_state === null ? tip('Play', row_key('play_cursor')) : tip(play_state === 'playing' ? 'Pause' : 'Play', 'toggle_playback'))}
+          {...(play_state === null ? tip('Play', row_key('activate')) : tip(play_state === 'playing' ? 'Pause' : 'Play', 'toggle_playback'))}
           onClick={(event) => {
             event.stopPropagation()
             handlers.on_play(index)

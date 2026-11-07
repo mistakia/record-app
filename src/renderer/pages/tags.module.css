@@ -1,0 +1,87 @@
+.page {
+  /* One column for the header row, the near duplicates and the index. */
+  --tags-column: 640px;
+
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+/* The body header row (STYLE.md § Tags page): scope, filter, count, sort. */
+.toolbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-base);
+  max-width: var(--tags-column);
+  height: 48px;
+  padding: 0 var(--space-lg);
+}
+
+.filter {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: var(--font-size-reading);
+}
+
+.count {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.toolbar .sort {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Under 960px the details are the 320px inspector beside the index. */
+.pane {
+  display: flex;
+  flex: none;
+}
+
+/* From 960px they fill the room the index column leaves, under the near
+   duplicates (STYLE.md § Tags page). */
+.side {
+  display: flex;
+  flex: 1 1 360px;
+  min-width: 0;
+  flex-direction: column;
+  padding-top: var(--space-xs);
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface-solid);
+}
+
+.side > aside {
+  flex: 1;
+  width: auto;
+  min-height: 0;
+  border-left: none;
+}
+
+.note {
+  margin: 0;
+  padding: 0 var(--space-lg) var(--space-sm);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.error {
+  margin: 0;
+  padding: 0 var(--space-lg) var(--space-sm);
+  color: var(--color-error);
+}

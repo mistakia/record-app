@@ -1,8 +1,4 @@
 .gauge {
-  position: absolute;
-  right: var(--space-base);
-  bottom: var(--space-base);
-  z-index: 10;
   padding: var(--space-xs) var(--space-sm);
 }
 

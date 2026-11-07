@@ -15,6 +15,7 @@ import { node_api } from '#renderer/store/api.ts'
 const TITLES: Record<string, string> = {
   [ROUTES.tracks]: 'All tracks',
   [ROUTES.listens]: 'Recently played',
+  [ROUTES.tags]: 'Tags',
   [ROUTES.libraries]: 'Libraries',
   [ROUTES.link_library]: 'Link a library',
   [ROUTES.new_library]: 'New library',

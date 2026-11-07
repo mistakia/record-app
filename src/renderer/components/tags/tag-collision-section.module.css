@@ -1,0 +1,38 @@
+.wrap {
+  flex: none;
+  max-width: var(--tags-column);
+  max-height: 30%;
+  overflow-y: auto;
+  padding: 0 var(--space-lg) var(--space-sm);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 26px;
+  font-size: var(--font-size-xs);
+}
+
+.members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.count {
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The target's exact case and spacing: the choice a merge makes. */
+.exact {
+  text-transform: none;
+}

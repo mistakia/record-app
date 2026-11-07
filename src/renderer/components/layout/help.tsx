@@ -16,6 +16,7 @@ import { help_toggled, shortcuts_toggled } from '#renderer/store/ui.ts'
 const HELP: Record<string, string> = {
   [ROUTES.tracks]: 'Every track in your libraries and the ones you follow, in one list. j and k move, Enter plays, t tags, and i opens the details.',
   [ROUTES.listens]: 'What you played, newest first. A play counts once a minute of it has played.',
+  [ROUTES.tags]: 'Every label on your tracks, with how many carry it. A label like mix/friday belongs to the facet mix; one with no slash is a hand label. j and k move, Enter opens the label in Tracks, e renames (several selected merge into one; on a facet it renames the prefix), Backspace deletes, and i opens the details. A change applies to your labels everywhere, whatever the scope, and skips libraries you cannot write. Managed labels belong to the node and are read-only.',
   [ROUTES.libraries]: 'Your libraries hold what you import and tag. Follow someone else’s by linking its address; its tracks replicate to this node.',
   [ROUTES.link_library]: 'Linking follows a library: its tracks replicate here and show in your tracks. Only its owner, and those they share it with, can change it.',
   [ROUTES.new_library]: 'A library is a collection with its own address, profile, and the people you let write to it. Your imports go to the library you choose.',

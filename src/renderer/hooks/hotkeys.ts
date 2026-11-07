@@ -9,7 +9,7 @@
 export type HotkeyAction =
   | 'cursor_down' | 'cursor_up' | 'cursor_first' | 'cursor_last'
   | 'extend_down' | 'extend_up' | 'extend_first' | 'extend_last' | 'toggle_selection'
-  | 'play_cursor' | 'play_next' | 'add_to_queue' | 'tag' | 'adopt' | 'toggle_inspector' | 'open_menu'
+  | 'activate' | 'play_next' | 'add_to_queue' | 'tag' | 'adopt' | 'rename_labels' | 'delete_labels' | 'toggle_inspector' | 'open_menu'
   | 'adopt_playing' | 'open_playing_menu'
   | 'focus_search' | 'escape'
   | 'toggle_playback' | 'previous_track' | 'next_track' | 'seek_back' | 'seek_forward'
@@ -25,9 +25,11 @@ export interface KeyPress {
   in_field: boolean
   dialog_open: boolean
   menu_open?: boolean
-  // A track list is mounted, so the list's keys are live.
-  list_shown: boolean
+  // The list keys the mounted list answers; empty with no list mounted.
+  list_actions: ReadonlySet<HotkeyAction>
 }
+
+export const NO_LIST_ACTIONS: ReadonlySet<HotkeyAction> = new Set()
 
 // One key press a binding answers. Letters match either case; shift 'any'
 // is for keys a layout types with Shift, such as ?.
@@ -37,10 +39,10 @@ interface Combo {
   shift?: boolean | 'any'
 }
 
-// Where a binding is live: 'list' keys only while a track list is mounted
-// (it registers its commands, list-commands.ts), 'player' keys only while
-// none is, where the same keys act on the playing track, and 'app' keys
-// everywhere.
+// Where a binding is live: 'list' keys only while a mounted list answers
+// them (it registers its commands and the actions it answers,
+// list-commands.ts), 'player' keys whenever no live list key takes the same
+// press, where they act on the playing track, and 'app' keys everywhere.
 export type HotkeyScope = 'list' | 'player' | 'app'
 
 export interface Hotkey {
@@ -63,11 +65,14 @@ export const HOTKEYS: readonly Hotkey[] = [
   { keys: 'Shift+Home', label: 'Extend the selection to the first row', action: 'extend_first', scope: 'list', combos: [k('Home', { shift: true })] },
   { keys: 'Shift+End', label: 'Extend the selection to the last row', action: 'extend_last', scope: 'list', combos: [k('End', { shift: true })] },
   { keys: 'x', label: 'Toggle the row in the selection', action: 'toggle_selection', scope: 'list', combos: [k('x')] },
-  { keys: 'Enter', label: 'Play from the cursor; the list continues after the queue', action: 'play_cursor', scope: 'list', combos: [k('Enter')] },
+  // A list names what Enter does on it (ListCommands.labels); this is the track list's.
+  { keys: 'Enter', label: 'Play from the cursor; the list continues after the queue', action: 'activate', scope: 'list', combos: [k('Enter')] },
   { keys: 'n', label: 'Play next', action: 'play_next', scope: 'list', combos: [k('n')] },
   { keys: 'q', label: 'Add to the end of the queue', action: 'add_to_queue', scope: 'list', combos: [k('q')] },
   { keys: 't', label: 'Tag the row or the selection', action: 'tag', scope: 'list', combos: [k('t')] },
   { keys: 'f', label: 'Adopt into your library', action: 'adopt', scope: 'list', combos: [k('f')] },
+  { keys: 'e', label: 'Rename the label or facet; several selected merge into one', action: 'rename_labels', scope: 'list', combos: [k('e')] },
+  { keys: 'Backspace', label: 'Delete the label or the selection', action: 'delete_labels', scope: 'list', combos: [k('Backspace')] },
   { keys: 'i', label: 'Show or hide the details pane', action: 'toggle_inspector', scope: 'list', combos: [k('i')] },
   { keys: '. or Shift+F10', label: 'Open the row menu', action: 'open_menu', scope: 'list', combos: [k('.'), k('F10', { shift: true })] },
   { keys: 'f', label: 'Adopt the playing track into your library', action: 'adopt_playing', scope: 'player', combos: [k('f')] },
@@ -98,11 +103,12 @@ export const HOTKEYS: readonly Hotkey[] = [
 
 // The keys after g (STYLE.md § Keyboard Model): a page, or 1 to 9 for the
 // sidebar's libraries in the order it lists them.
-export type GoTarget = 'tracks' | 'listens' | 'library' | 'libraries' | 'import' | 'identity' | 'settings'
+export type GoTarget = 'tracks' | 'listens' | 'tags' | 'library' | 'libraries' | 'import' | 'identity' | 'settings'
 
 export const GO_KEYS: ReadonlyArray<{ key: string, label: string, target: GoTarget }> = [
   { key: 't', label: 'All tracks', target: 'tracks' },
   { key: 'r', label: 'Recently played', target: 'listens' },
+  { key: '#', label: 'Tags', target: 'tags' },
   { key: 'l', label: 'Your library', target: 'library' },
   { key: 'b', label: 'Libraries', target: 'libraries' },
   { key: 'i', label: 'Import', target: 'import' },
@@ -123,7 +129,7 @@ export const resolve_go = (key: string): GoTarget | { library: number } | null =
 
 const LETTER = /^[a-z]$/i
 
-const matches = (combo: Combo, press: KeyPress): boolean => {
+const matches = (combo: Combo, press: Pick<KeyPress, 'key' | 'meta' | 'ctrl' | 'shift'>): boolean => {
   const command = press.meta || press.ctrl
   if ((combo.command ?? false) !== command) return false
   if (combo.shift !== 'any' && (combo.shift ?? false) !== press.shift) return false
@@ -135,8 +141,24 @@ const matches = (combo: Combo, press: KeyPress): boolean => {
 export const is_field = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
 
+// The press a combo stands for, to ask what else answers it.
+const combo_press = ({ key, command = false, shift = false }: Combo) => ({ key, meta: command, ctrl: false, shift: shift === true })
+
+const live_list_key = (list_actions: ReadonlySet<HotkeyAction>, press: Pick<KeyPress, 'key' | 'meta' | 'ctrl' | 'shift'>): Hotkey | undefined =>
+  HOTKEYS.find(({ scope, action, combos }) => scope === 'list' && list_actions.has(action) && combos.some((combo) => matches(combo, press)))
+
+// Whether a binding is live beside the mounted list's actions: a list key
+// when the list answers it, a player key when no live list key takes any of
+// its presses, an app key always.
+export const is_live = (hotkey: Hotkey, list_actions: ReadonlySet<HotkeyAction>): boolean => {
+  if (hotkey.scope === 'app') return true
+  if (hotkey.scope === 'list') return list_actions.has(hotkey.action)
+  return hotkey.combos.every((combo) => live_list_key(list_actions, combo_press(combo)) === undefined)
+}
+
 export const resolve_hotkey = (press: KeyPress): HotkeyAction | null => {
   if (press.key === 'Escape') return press.dialog_open || press.menu_open === true ? null : 'escape'
   if (press.in_field || press.dialog_open || press.menu_open === true || press.alt) return null
-  return HOTKEYS.find(({ scope, combos }) => (scope === 'app' || (scope === 'list') === press.list_shown) && combos.some((combo) => matches(combo, press)))?.action ?? null
+  return live_list_key(press.list_actions, press)?.action ??
+    HOTKEYS.find(({ scope, combos }) => scope !== 'list' && combos.some((combo) => matches(combo, press)))?.action ?? null
 }

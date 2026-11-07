@@ -11,7 +11,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import styles from './tooltip.module.css'
 import { hotkey_text, place_tip, show_delay, TIP_WARM_MS } from './tooltip-logic.ts'
 import { list_commands } from '#renderer/components/track/list-commands.ts'
-import type { HotkeyAction } from '#renderer/hooks/hotkeys.ts'
+import { NO_LIST_ACTIONS, type HotkeyAction } from '#renderer/hooks/hotkeys.ts'
 
 interface Shown { anchor: HTMLElement, label: string, keys: string | null, scroll: boolean }
 
@@ -34,7 +34,7 @@ const read = (anchor: HTMLElement): Shown => {
   return {
     anchor,
     label: anchor.dataset.tip ?? '',
-    keys: hotkey === undefined ? null : hotkey_text(hotkey, list_commands() !== null),
+    keys: hotkey === undefined ? null : hotkey_text(hotkey, list_commands()?.actions ?? NO_LIST_ACTIONS),
     scroll: anchor.dataset.tipScroll === 'true'
   }
 }

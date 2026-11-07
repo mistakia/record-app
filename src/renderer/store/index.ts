@@ -8,6 +8,7 @@ import { imports_slice } from './imports.ts'
 import { list_cursor_slice } from './list-cursor.ts'
 import { notifications_slice } from './notifications.ts'
 import { player_slice } from './player.ts'
+import { relabel_slice } from './relabel-job.ts'
 import { replication_slice } from './replication.ts'
 import { ui_slice } from './ui.ts'
 
@@ -20,6 +21,7 @@ export const store = configureStore({
     list_cursor: list_cursor_slice.reducer,
     notifications: notifications_slice.reducer,
     player: player_slice.reducer,
+    relabel: relabel_slice.reducer,
     replication: replication_slice.reducer,
     ui: ui_slice.reducer
   },

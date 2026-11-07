@@ -1,0 +1,88 @@
+/* The Tags inspector's own blocks (STYLE.md § Tags page › Inspector),
+   under the shared inspector's fields. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.kicker {
+  margin: 0;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  font-weight: normal;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tracks,
+.shares {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+}
+
+.tracks li {
+  display: flex;
+  gap: var(--space-sm);
+  min-width: 0;
+  line-height: 20px;
+}
+
+.title,
+.artist,
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.artist {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--color-text-secondary);
+}
+
+/* A label's share of its facet's uses: name, a hairline bar, the count.
+   One grid for every row, so each bar and each count column is as wide as
+   the others'. */
+.shares {
+  display: grid;
+  grid-template-columns: minmax(0, 9em) minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 0 var(--space-sm);
+  line-height: 20px;
+}
+
+.shares li {
+  display: contents;
+}
+
+.bar {
+  height: 4px;
+  background: var(--color-border-light);
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--color-text-tertiary);
+}
+
+.count {
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.more {
+  margin: 0;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
