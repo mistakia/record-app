@@ -17,13 +17,17 @@ observations:
     [follow-up] Operator is deciding whether the tracks-page Shuffle button should always start a
     fresh shuffle and reshuffle endlessly when the queue runs out; the recommendation also disables
     Next and marks the bar ended at the end of the queue.
+  - >-
+    [finding] 2026-11-07 perf-probe's facet_toggle_x4 clicks origin and tier/ labels the seeder no
+    longer writes (it writes file-origin/ and collection-tier/), so the step always records a 30 s
+    click timeout.
 owner_identity_uri: user:identity/trashman.md
 public_read: false
 relations:
   - follows [[user:guideline/directory-markdown-standards.md]]
 tags:
   - user:tag/record-project.md
-updated_at: '2026-10-30T22:04:51.345Z'
+updated_at: '2026-11-07T21:01:54.728Z'
 ---
 
 ## Purpose
