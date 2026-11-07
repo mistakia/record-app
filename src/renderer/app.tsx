@@ -15,6 +15,7 @@ import { PageHead } from '#renderer/components/layout/page-head.tsx'
 import { Sidebar } from '#renderer/components/layout/sidebar.tsx'
 import { PlayerBar } from '#renderer/components/player/player-bar.tsx'
 import { QueuePanel } from '#renderer/components/player/queue-panel.tsx'
+import { RelabelGauge } from '#renderer/components/tags/relabel-gauge.tsx'
 import { use_bundled_node } from '#renderer/hooks/use-bundled-node.ts'
 import { current_route, use_hibernation } from '#renderer/hooks/use-hibernation.ts'
 import { use_hotkeys } from '#renderer/hooks/use-hotkeys.ts'
@@ -30,6 +31,7 @@ import { Importer } from '#renderer/pages/importer.tsx'
 import { Libraries } from '#renderer/pages/libraries.tsx'
 import { Listens } from '#renderer/pages/listens.tsx'
 import { Settings } from '#renderer/pages/settings.tsx'
+import { Tags } from '#renderer/pages/tags.tsx'
 import { Tracks } from '#renderer/pages/tracks.tsx'
 import { ROUTES, route_path, settings_route } from '#renderer/routes.ts'
 import { connection_loaded } from '#renderer/store/connection.ts'
@@ -73,6 +75,7 @@ export const App = () => {
 const NODE_PAGES: Array<{ path: string, element: ReactElement }> = [
   { path: ROUTES.tracks, element: <Tracks /> },
   { path: ROUTES.listens, element: <Listens /> },
+  { path: ROUTES.tags, element: <Tags /> },
   { path: ROUTES.libraries, element: <Libraries /> },
   { path: ROUTES.link_library, element: <LinkLibrary /> },
   { path: ROUTES.new_library, element: <NewLibrary /> },
@@ -109,7 +112,11 @@ const Shell = ({ configured }: { configured: boolean }) => {
                 <Route path='*' element={<Navigate to={configured ? ROUTES.tracks : unconfigured_route} replace />} />
               </Routes>
             </main>
-            <IngestGauge />
+            {/* The page's bottom-right corner: the relabel gauge over the ingest gauge. */}
+            <div className={styles.corner}>
+              <RelabelGauge />
+              <IngestGauge />
+            </div>
             {queue_open && <QueuePanel />}
             <Toaster />
             <ShortcutOverlay />

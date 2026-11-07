@@ -52,6 +52,12 @@ export const library_name = (library: Pick<Library, 'alias' | 'name' | 'address'
 // oldest active own recordstore, while the list holds it; else the first
 // active own recordstore listed (chapter 7 lists every own library, the
 // listens and labels libraries and retired ones included).
+// A library's name by address among those known; the address itself when none is.
+export const library_name_at = (address: string, libraries: readonly Library[]): string => {
+  const library = libraries.find((each) => each.address === address)
+  return library === undefined ? address : library_name(library)
+}
+
 export const own_library_address = (libraries: readonly Library[] | undefined, preferred: string | null = null): string | null => {
   const active = (libraries ?? []).filter(({ is_own, is_retired, library_type }) => is_own && !is_retired && library_type === 'recordstore')
   return active.find(({ address }) => address === preferred)?.address ?? active[0]?.address ?? null

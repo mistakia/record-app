@@ -7,22 +7,29 @@
 // held list),
 // pinning from the track menu, holders in the aggregated view, removal
 // from an own library, and the replication-policy editor on a
-// linked library. Writes stay on the
-// in-process node. Needs ffmpeg and fpcalc; set
+// linked library, and the Tags page under spec v2.0 label rules (a rename
+// in a shared library under a write_label right scoped to `mix/`, one the
+// right does not cover, and a node-managed library's labels read-only).
+// Writes stay on the in-process node and a loopback peer. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
 // record-node's pins. Runs under Node: node test/e2e/v1-1-smoke.ts
 
 import { mkdir, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { type Page } from 'playwright-core'
 
 import { create_peer, start_peer, stop_peer } from 'record-node'
 
-import { start_test_node } from '../integration/node-fixture.ts'
-import { assert_quiet, launch_app } from './launch.ts'
+import { dial_address, LOOPBACK_NETWORK, start_test_node } from '../integration/node-fixture.ts'
+import { assert_quiet, capture, launch_app } from './launch.ts'
+import { until } from './node-helpers.ts'
 
-const node = await start_test_node()
+// Managed libraries are marked once their labels are seeded; the node is on
+// loopback networking so the Tags steps' shared library replicates to it.
+const managed = new Map<string, string>()
+const node = await start_test_node({ network: LOOPBACK_NETWORK, managed_label_libraries: managed })
 await node.peer.ingest_file(node.make_audio({ name: 'V11 Alpha.flac', seed: 11 }))
 const other = await create_peer({ config: { network: false, allow_toolchain_mismatch: true } })
 await start_peer(other)
@@ -42,6 +49,11 @@ const unfold = async (window: Page, title: string) => {
 // The library the track list shows, from the hash route's query.
 const viewed_library = async (window: Page) => await window.evaluate(() => new URLSearchParams(location.hash.split('?')[1] ?? '').get('library') ?? '')
 const toast = async (window: Page, text: string | RegExp) => { await window.getByTestId('toast').filter({ hasText: text }).first().waitFor({ timeout: 30_000 }) }
+// A library's labels on one track, from the node.
+const labels_on = async (library_address: string, track_id: string): Promise<string[]> => {
+  const page = await node.peer.list_library_labels({ address: library_address, limit: 500 })
+  return [...page.items.find((item) => item.track_id === track_id)?.tags ?? []].sort()
+}
 
 const app = await launch_app({ user_data_dir })
 try {
@@ -222,6 +234,74 @@ try {
   await window.getByTestId('held-capabilities').getByText('No other identity has granted you a capability.').waitFor()
   step('held capabilities', await window.getByTestId('held-capabilities').innerText())
   step('identity own libraries', await window.getByTestId('identity-own-library').allInnerTexts())
+
+  // The Tags page under v2 label rules. An owner on loopback grants this
+  // node's identity library.write_label under the prefix mix/ in its library,
+  // which the node links; the node also labels the track itself, and a
+  // library of its own becomes node-managed once labelled.
+  const owner = await create_peer({ config: { network: { ...LOOPBACK_NETWORK, bootstrap: [await dial_address(node.peer)] }, allow_toolchain_mismatch: true } })
+  await start_peer(owner)
+  try {
+    const shared_address = owner.identity().own_address
+    const { track_id } = await owner.ingest_file(node.make_audio({ name: 'V2 Shared.flac', seed: 21 }))
+    await owner.change_labels({ track_id, add: ['mix/a', 'mix/c'], library_address: shared_address })
+    const { capability_id } = await owner.issue_capability({
+      library_address: shared_address,
+      grantee: { type: 'key', key: node.peer.identity().key_pair.public_key },
+      actions: ['library.write_label'],
+      filter: { type: 'prefix', field: 'label', prefix: 'mix/' }
+    })
+    await node.peer.link_library({ address: shared_address, alias: 'V2 Shared' })
+    await until(async () => (await node.peer.list_held_capabilities()).some((held) => held.capability_id === capability_id && held.status === 'active'), 'the mix/ capability')
+    await until(async () => (await labels_on(shared_address, track_id)).includes('mix/a'), 'the shared labels')
+    await node.peer.change_labels({ track_id, add: ['mix/c'] })
+    const facets = await node.peer.create_own_library({ name: 'V2 Facets' })
+    await node.peer.change_labels({ track_id, add: ['view/x'], library_address: facets.address })
+    managed.set(facets.address, 'exporter0001')
+    const labels_address = node.peer.identity().labels_address
+
+    await window.keyboard.press('g')
+    await window.keyboard.press('#')
+    const index = window.getByTestId('tag-index')
+    // Facets open folded; a wholly managed one says so on its header.
+    await index.locator('[data-testid=tag-facet-row]').filter({ hasText: 'view' }).getByTestId('managed-mark').waitFor({ timeout: 20_000 })
+    await index.getByRole('button', { name: 'Unfold view' }).click()
+    await index.getByRole('button', { name: 'Unfold mix' }).click()
+    await index.locator('[data-label="mix/a"]').waitFor()
+    const managed_row = index.locator('[data-label="view/x"]')
+    await managed_row.getByTestId('managed-mark').waitFor()
+    await capture(app, join(process.env.RECORD_SMOKE_SCREENSHOT_DIR ?? tmpdir(), 'record-app-tags-managed.png'))
+    // e on a managed label says why and opens nothing.
+    await managed_row.click()
+    await window.keyboard.press('e')
+    await toast(window, 'The node manages this label')
+    if (await window.getByTestId('relabel-dialog').count() !== 0) throw new Error('e on a managed label opened the dialog')
+    step('managed label', 'it and its facet marked managed; e says why without the dialog')
+
+    // mix/a to mix/b: the right covers both pairs, so the shared copy changes.
+    await index.locator('[data-label="mix/a"]').click()
+    await window.keyboard.press('e')
+    const dialog = window.getByTestId('relabel-dialog')
+    await dialog.getByTestId('relabel-name').fill('mix/b')
+    await dialog.getByTestId('relabel-confirm').click()
+    await until(async () => JSON.stringify(await labels_on(shared_address, track_id)) === JSON.stringify(['mix/b', 'mix/c']), 'mix/b in the shared library')
+    step('rename under the right', 'the shared library holds mix/b, not mix/a')
+
+    // mix/c to chill: the right does not cover chill, so only the labels
+    // library's copy changes and the shared library is named.
+    await index.locator('[data-label="mix/c"]').click()
+    await window.keyboard.press('e')
+    await dialog.getByTestId('relabel-name').fill('chill')
+    await dialog.getByTestId('relabel-scope').locator('dt:text-is("Kept") + dd').filter({ hasText: 'mix/c in' }).filter({ hasText: 'does not cover chill' }).waitFor()
+    await dialog.getByTestId('relabel-confirm').click()
+    await toast(window, 'not covered by your right')
+    await until(async () => JSON.stringify(await labels_on(labels_address, track_id)) === JSON.stringify(['chill']), 'chill in the labels library')
+    if (JSON.stringify(await labels_on(shared_address, track_id)) !== JSON.stringify(['mix/b', 'mix/c'])) throw new Error('an uncovered rename changed the shared library')
+    if (JSON.stringify(await labels_on(facets.address, track_id)) !== JSON.stringify(['view/x'])) throw new Error('the managed library changed')
+    step('rename past the right', 'labels library holds chill; the shared library keeps mix/c and is named')
+  } finally {
+    await stop_peer(owner)
+  }
 
   if (console_errors.length > 0) throw new Error(`renderer console errors: ${console_errors.join(' | ')}`)
   await assert_quiet(app)

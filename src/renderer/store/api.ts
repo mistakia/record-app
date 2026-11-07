@@ -137,8 +137,14 @@ export const node_api = createApi({
       // Per library, so the head-check refetches only what moved (§8.8.5).
       providesTags: (_result, _error, args) => library_ids(args.library_addresses).map((id) => ({ type: 'tracks' as const, id }))
     }),
-    get_tags: build.query<TagCount[], { library_addresses?: string[], prefix?: string }>({
-      query: ({ library_addresses, prefix }) => ({ method: 'get', path_template: '/tags', query: { library_addresses, ...(prefix === undefined ? {} : { prefix }) } }),
+    // label_libraries narrows whose labels count (the node's default is
+    // every own recordstore and labels library plus the membership scope).
+    get_tags: build.query<TagCount[], { library_addresses?: string[], label_libraries?: string[], prefix?: string }>({
+      query: ({ library_addresses, label_libraries, prefix }) => ({
+        method: 'get',
+        path_template: '/tags',
+        query: { library_addresses, ...(label_libraries === undefined ? {} : { label_libraries }), ...(prefix === undefined ? {} : { prefix }) }
+      }),
       providesTags: (_result, _error, { library_addresses }) => library_ids(library_addresses).map((id) => ({ type: 'tags' as const, id }))
     }),
     // The library's name (spec §2.6). A library that never wrote one

@@ -3,7 +3,7 @@
 // tip(), which sets data-tip and, for a control a key also reaches,
 // data-tip-hotkey; the layer reads both when it shows the tip.
 
-import { HOTKEYS, type HotkeyAction } from '#renderer/hooks/hotkeys.ts'
+import { HOTKEYS, is_live, type HotkeyAction } from '#renderer/hooks/hotkeys.ts'
 
 // A hover waits this long before the tip shows...
 export const TIP_DELAY_MS = 400
@@ -44,13 +44,12 @@ export const place_tip = ({ anchor, tip, viewport }: {
 }
 
 // The keys a tip names for an action, as HOTKEYS shows them (the first of
-// its alternatives), or null when the key is not live here: a track list's
-// keys need a list mounted, the playing track's keys need none.
-export const hotkey_text = (action: HotkeyAction, list_shown: boolean): string | null => {
+// its alternatives), or null when the key is not live here: a list key
+// needs a mounted list that answers it, and the playing track's keys need
+// no live list key on the same press.
+export const hotkey_text = (action: HotkeyAction, list_actions: ReadonlySet<HotkeyAction>): string | null => {
   const hotkey = HOTKEYS.find((entry) => entry.action === action)
-  if (hotkey === undefined) return null
-  if (hotkey.scope === 'list' && !list_shown) return null
-  if (hotkey.scope === 'player' && list_shown) return null
+  if (hotkey === undefined || !is_live(hotkey, list_actions)) return null
   return hotkey.keys.split(' or ')[0] ?? null
 }
 

@@ -10,7 +10,11 @@
 //
 // RECORD_PERF_APPS is a comma-separated list of built app roots to measure
 // in turn (default this checkout); RECORD_PERF_OUT writes the report there
-// as well.
+// as well. RECORD_PERF_RELABEL=<n> labels n tracks `perf/source` in the
+// labels library and renames it to `perf/target` from the Tags page in the
+// first app measured, timing collection and the whole job, sampling frame
+// times and an audio fetch while it writes, then checks the population:
+// no `perf/source` left and exactly n `perf/target` pairs.
 
 import { writeFile } from 'node:fs/promises'
 import { createServer, request as http_request, type IncomingMessage } from 'node:http'
@@ -23,8 +27,10 @@ import { type Page } from 'playwright-core'
 import { start_test_node } from '../integration/node-fixture.ts'
 import { create_seeder } from './seed-library.ts'
 import { capture, launch_app, quiet_violations } from './launch.ts'
+import { node_json } from './node-helpers.ts'
 
 const TRACKS = Number(process.env.RECORD_PERF_TRACKS ?? 200_000)
+const RELABEL = Number(process.env.RECORD_PERF_RELABEL ?? 0)
 // Each app root measured in turn against the same node, so a before and an
 // after share the library and the machine's load.
 const APP_ROOTS = (process.env.RECORD_PERF_APPS ?? fileURLToPath(new URL('../..', import.meta.url))).split(',')
@@ -193,6 +199,81 @@ const wait_rows = async (window: Page, row?: number) => {
 
 const nav = async (window: Page, name: string) => { await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name, exact: true }).first().click() }
 
+// The Tags-page relabel at size, and the population check after it.
+const run_relabel = async (window: Page): Promise<Record<string, unknown>> => {
+  const { labels_address } = node.peer.identity()
+  const ids: string[] = []
+  let audio_cid = ''
+  for (let offset = 0; ids.length < RELABEL; offset += 500) {
+    const page = await node_json<{ items: Array<{ id: string, audio_cid: string }> }>(node.node_url, `/tracks?offset=${offset}&limit=500`)
+    if (page.items.length === 0) break
+    audio_cid ||= page.items[0]!.audio_cid
+    ids.push(...page.items.map(({ id }) => id))
+  }
+  ids.length = Math.min(ids.length, RELABEL)
+  for (let at = 0; at < ids.length; at += 200) {
+    await node.peer.change_labels_batch({ items: ids.slice(at, at + 200).map((track_id) => ({ track_id, add: ['perf/source'] })), library_address: labels_address })
+  }
+  await window.keyboard.press('g')
+  await window.keyboard.press('#')
+  const index = window.getByTestId('tag-index')
+  await index.waitFor({ timeout: 60_000 })
+  // About 900 labels: the filter brings the row into the virtualized window.
+  await window.getByTestId('tags-filter').fill('perf/source')
+  await index.locator('[data-label="perf/source"]').waitFor({ timeout: 60_000 })
+  await index.locator('[data-label="perf/source"]').click()
+  await window.keyboard.press('e')
+  const dialog = window.getByTestId('relabel-dialog')
+  await dialog.getByTestId('relabel-name').fill('perf/target')
+  const started = performance.now()
+  await dialog.getByTestId('relabel-confirm').click()
+  const gauge = window.getByTestId('relabel-gauge')
+  await gauge.filter({ hasText: 'relabelling' }).waitFor({ timeout: 120_000 })
+  const collect_ms = Math.round(performance.now() - started)
+  // While it writes: frame intervals, and an audio fetch through the proxy.
+  const [frames, audio_fetch_ms] = await Promise.all([
+    window.evaluate(FRAME_SAMPLER, { frames: 180, kind: 'idle' as const }),
+    (async () => {
+      const fetch_started = performance.now()
+      const response = await fetch(`${proxy.url}/api/audio/${encodeURIComponent(audio_cid)}`, { headers: { range: 'bytes=0-65535' } })
+      await response.arrayBuffer()
+      return Math.round(performance.now() - fetch_started)
+    })()
+  ])
+  await gauge.filter({ hasText: /done|!!/ }).waitFor({ timeout: 600_000 })
+  const job_ms = Math.round(performance.now() - started)
+  const gauge_text = await gauge.innerText()
+  // The population, not a sample: the aggregate, then every pair the labels library holds.
+  const tags = await node_json<Array<{ tag: string, count: number }>>(node.node_url, `/tags?prefix=${encodeURIComponent('perf/')}`)
+  let source_pairs = 0
+  let target_pairs = 0
+  for (let offset = 0; ; offset += 500) {
+    const page = await node_json<{ items: Array<{ tags: string[] }>, total: number }>(node.node_url, `/libraries/${encodeURIComponent(labels_address)}/labels?offset=${offset}&limit=500`)
+    for (const { tags: labels } of page.items) {
+      if (labels.includes('perf/source')) source_pairs += 1
+      if (labels.includes('perf/target')) target_pairs += 1
+    }
+    if (offset + 500 >= page.total) break
+  }
+  const population = {
+    source_row: tags.find(({ tag }) => tag === 'perf/source')?.count ?? 0,
+    target_row: tags.find(({ tag }) => tag === 'perf/target')?.count ?? 0,
+    source_pairs,
+    target_pairs
+  }
+  const passed = population.source_row === 0 && population.source_pairs === 0 && population.target_row === ids.length && population.target_pairs === ids.length
+  if (!passed) console.error('relabel population check failed', population)
+  // Back to Tracks, so the relaunch's snapshot opens on a track list; the
+  // renderer hands main a changed snapshot every 5 s, so wait one out.
+  await window.keyboard.press('g')
+  await window.keyboard.press('t')
+  await wait_rows(window)
+  await window.waitForTimeout(6000)
+  const result = { tracks: ids.length, collect_ms, job_ms, gauge_text, frames_while_writing: frames, audio_fetch_ms, population, population_passed: passed }
+  console.error('relabel', JSON.stringify(result))
+  return result
+}
+
 const run_app = async (app_root: string, report: Record<string, unknown>): Promise<void> => {
   const user_data_dir = join(node.work_dir, `profile-${Object.keys(reports).length}`)
   const app = await launch_app({ user_data_dir, app_root })
@@ -325,6 +406,8 @@ const run_app = async (app_root: string, report: Record<string, unknown>): Promi
   })
 
   await measure(report, window, 'idle_after_burst_5s', async () => await window.evaluate(FRAME_SAMPLER, { frames: 300, kind: 'idle' as const }))
+
+  if (RELABEL > 0 && Object.keys(reports).length === 2) report.relabel = await run_relabel(window)
 
   report.main_memory_mb = await app.evaluate(() => Math.round(process.memoryUsage().rss / 1e6))
   // Reported, not asserted: a build under comparison may predate background mode.

@@ -1,0 +1,93 @@
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 380px;
+}
+
+.dialog p {
+  margin: 0;
+}
+
+.labels {
+  display: flex;
+  max-height: 160px;
+  flex-wrap: wrap;
+  gap: var(--space-xxs) var(--space-base);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+/* One row per fact, as the inspector's fields: a tertiary term, its value. */
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-xxs) var(--space-base);
+  margin: 0;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border-light);
+  font-size: var(--font-size-sm);
+}
+
+.facts dt {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  line-height: 20px;
+  text-transform: uppercase;
+}
+
+.facts dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-base);
+  margin: 0;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.line {
+  flex-basis: 100%;
+}
+
+/* A merge or delete: one line in the error ink, no sentence. */
+.warning {
+  color: var(--color-error);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.count {
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.note {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+/* A field's label (STYLE.md § Typography): uppercase tertiary, a lowercase qualifier after it. */
+.field_label {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xxs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.qualifier {
+  text-transform: none;
+}

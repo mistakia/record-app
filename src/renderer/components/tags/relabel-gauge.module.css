@@ -1,0 +1,6 @@
+/* The gauge's cancel (STYLE.md § Layout › Page column), tertiary beside its count. */
+.cancel {
+  margin-left: var(--space-sm);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}

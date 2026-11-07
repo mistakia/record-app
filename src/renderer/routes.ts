@@ -7,6 +7,7 @@ import { DEFAULT_TRACK_FILTERS, type SortOrder, type TrackFilters, type TrackSor
 export const ROUTES = {
   tracks: '/tracks',
   listens: '/listens',
+  tags: '/tags',
   libraries: '/libraries',
   link_library: '/libraries/link',
   new_library: '/libraries/new',
@@ -52,6 +53,13 @@ export const parse_track_view = (search: URLSearchParams): TrackView => {
     }
   }
 }
+
+// The Tags page, optionally scoped to one library's tracks ('' is every
+// library). The scope narrows what it lists, not what a change touches.
+export const tags_route = ({ library_address = '' }: { library_address?: string } = {}): string =>
+  library_address === '' ? ROUTES.tags : `${ROUTES.tags}?${new URLSearchParams({ library: library_address }).toString()}`
+
+export const parse_tags_scope = (search: URLSearchParams): string => search.get('library') ?? ''
 
 // An own library's management tabs, beside its track list.
 export type LibraryTab = 'tracks' | 'about' | 'writers'

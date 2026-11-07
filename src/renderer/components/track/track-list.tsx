@@ -18,11 +18,15 @@ import { use_label_removal } from './use-label-removal.ts'
 import type { Track } from '#renderer/api/types.ts'
 import { ContextMenu, type MenuItem } from '#renderer/components/common/context-menu.tsx'
 import { tip } from '#renderer/components/common/tooltip-logic.ts'
-import { is_field } from '#renderer/hooks/hotkeys.ts'
+import { HOTKEYS, is_field, type HotkeyAction } from '#renderer/hooks/hotkeys.ts'
 import { use_view_pref } from '#renderer/prefs/view-prefs.ts'
 import type { SortOrder, TrackSort } from '#renderer/store/api.ts'
 import { use_app_dispatch, use_app_selector, type RootState } from '#renderer/store/index.ts'
 import { action_rows, cursor_moved, row_clicked, selection_cleared, selection_toggled, view_entered } from '#renderer/store/list-cursor.ts'
+
+// Every list key but the Tags page's label actions.
+const TRACK_LIST_ACTIONS: ReadonlySet<HotkeyAction> = new Set(HOTKEYS.flatMap(({ scope, action }) =>
+  scope === 'list' && action !== 'rename_labels' && action !== 'delete_labels' ? [action] : []))
 
 const ROW_HEIGHT = 36
 // A column's narrowest and widest a drag or a key step can hold it, and the
@@ -252,6 +256,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
   latest.current = { total, actions, play_row, open_menu_at, action_tracks, menu, virtualizer }
 
   useEffect(() => register_list_commands({
+    actions: TRACK_LIST_ACTIONS,
     move: ({ by, extend }) => {
       const { total: count, virtualizer: list } = latest.current
       const to = store.getState().list_cursor.cursor + by
@@ -265,7 +270,7 @@ export const TrackList = ({ source, view_key, total, busy, sort, actions, beside
       list.scrollToIndex(Math.max(to, 0), { align: 'auto' })
     },
     toggle_selection: () => { dispatch(selection_toggled()) },
-    play: () => { latest.current.play_row(store.getState().list_cursor.cursor) },
+    activate: () => { latest.current.play_row(store.getState().list_cursor.cursor) },
     play_next: () => { latest.current.actions.queue({ tracks: latest.current.action_tracks(), at: 'next' }) },
     add_to_queue: () => { latest.current.actions.queue({ tracks: latest.current.action_tracks(), at: 'end' }) },
     tag: () => { latest.current.actions.add_tag({ tracks: latest.current.action_tracks(), row: store.getState().list_cursor.cursor }) },

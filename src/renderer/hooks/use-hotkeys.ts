@@ -8,7 +8,7 @@ import { useEffect } from 'react'
 import { useStore } from 'react-redux'
 import { useNavigate } from 'react-router'
 
-import { is_field, resolve_go, resolve_hotkey, type GoTarget, type HotkeyAction } from './hotkeys.ts'
+import { is_field, NO_LIST_ACTIONS, resolve_go, resolve_hotkey, type GoTarget, type HotkeyAction } from './hotkeys.ts'
 import { section_index_commands } from '#renderer/components/common/indexed-page.tsx'
 import { own_library_address, sidebar_libraries } from '#renderer/components/library/library-category.ts'
 import { now_playing_commands } from '#renderer/components/player/now-playing-commands.ts'
@@ -46,6 +46,7 @@ export const use_hotkeys = (): void => {
     const PAGES: Record<Exclude<GoTarget, 'library'>, string> = {
       tracks: ROUTES.tracks,
       listens: ROUTES.listens,
+      tags: ROUTES.tags,
       libraries: ROUTES.libraries,
       import: ROUTES.import,
       identity: ROUTES.identity,
@@ -77,11 +78,13 @@ export const use_hotkeys = (): void => {
         case 'extend_first': list()?.move_to({ edge: 'first', extend: true }); return true
         case 'extend_last': list()?.move_to({ edge: 'last', extend: true }); return true
         case 'toggle_selection': list()?.toggle_selection(); return true
-        case 'play_cursor': list()?.play(); return true
-        case 'play_next': list()?.play_next(); return true
-        case 'add_to_queue': list()?.add_to_queue(); return true
-        case 'tag': list()?.tag(); return true
-        case 'adopt': list()?.adopt(); return true
+        case 'activate': list()?.activate(); return true
+        case 'play_next': list()?.play_next?.(); return true
+        case 'add_to_queue': list()?.add_to_queue?.(); return true
+        case 'tag': list()?.tag?.(); return true
+        case 'adopt': list()?.adopt?.(); return true
+        case 'rename_labels': list()?.rename_labels?.(); return true
+        case 'delete_labels': list()?.delete_labels?.(); return true
         case 'toggle_inspector': list()?.toggle_inspector(); return true
         case 'open_menu': list()?.open_menu(); return true
         // With nothing playing the key passes on.
@@ -161,7 +164,7 @@ export const use_hotkeys = (): void => {
         in_field: is_field(event.target),
         dialog_open: document.querySelector('dialog[open]') !== null,
         menu_open: document.querySelector('[role=menu]') !== null,
-        list_shown: list() !== null
+        list_actions: list()?.actions ?? NO_LIST_ACTIONS
       })
       if (action === null) return
       if (run(action, event.target)) event.preventDefault()

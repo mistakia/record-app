@@ -6,7 +6,7 @@
 // add by CID), libraries (link, disconnect, connect, unlink), identity (the
 // profile, public key, export, and no trace of the key in any file the app
 // wrote), listens, peers, the list and player hotkeys
-// (t, q, Shift+Q, Space), and gapless playback with its listen and Media
+// (t, q, Shift+Q, Space), the Tags page (tags-smoke-steps.ts), and gapless playback with its listen and Media
 // Session, and that the app:// scheme serves only the renderer. Needs ffmpeg and fpcalc; set
 // RECORD_TOOLCHAIN_PREFLIGHT=bypass when their versions differ from
 // record-node's pins. Runs under Node: node test/e2e/local-smoke.ts
@@ -21,6 +21,7 @@ import { create_peer, start_peer, stop_peer } from 'record-node'
 import { start_test_node } from '../integration/node-fixture.ts'
 import { check_quit_stops_child, run_bundled_checks } from './bundled-run.ts'
 import { assert_quiet, capture, launch_app } from './launch.ts'
+import { run_tags_steps } from './tags-smoke-steps.ts'
 
 const screenshot_dir = process.env.RECORD_SMOKE_SCREENSHOT_DIR ?? tmpdir()
 
@@ -281,6 +282,9 @@ try {
   await playing_editor.getByLabel('New tag').press('Escape')
   await window.getByTestId('now-playing').getByText('playing-tag', { exact: true }).waitFor({ state: 'detached', timeout: 10_000 })
   step('tag removal', 'Backspace twice removed playing-tag')
+
+  // The Tags page, while Smoke Beta is current, so f there has a track to adopt.
+  await run_tags_steps({ app, window, node_url: node.node_url, step, screenshot_dir })
 
   // Ingest: main's picker (stubbed in main, as a user's choice), a drop, a URL, and a CID.
   await window.getByRole('navigation', { name: 'Library' }).getByRole('link', { name: 'Add music' }).click()
