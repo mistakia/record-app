@@ -69,7 +69,7 @@ bun run verify   # lint and typecheck
 bun test         # unit and integration tests
 ```
 
-The integration test starts record-node in process and ingests a fixture, which needs `ffmpeg` and `fpcalc`. When their versions differ from record-node's pins, run `RECORD_TOOLCHAIN_PREFLIGHT=bypass bun test`.
+The integration test starts record-node in process and ingests a fixture, which needs `ffmpeg` and `fpcalc` at record-node's pins. On linux x86_64, `sh node_modules/record-node/cli/fetch-toolchain.sh` installs them, and the test preload finds them without a PATH change. Where no pinned artifact exists (macOS), run `RECORD_TOOLCHAIN_PREFLIGHT=bypass bun test`.
 
 `bun run smoke:remote` launches the built app against a running node, finds a track, and plays it, then relaunches from the offline snapshot and checks the unreachable state. Set `RECORD_NODE_URL`, `RECORD_SMOKE_TITLE`, and `RECORD_SMOKE_ARTIST` to choose the node and the track. The script header documents the optional live-update and offline-relaunch checks. The remote smoke stays read-only: it never plays long enough to record a listen.
 

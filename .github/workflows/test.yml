@@ -35,12 +35,15 @@ jobs:
       - name: Download the Electron binary
         run: bun run setup:electron
 
-      # The integration test ingests one file into an in-process record-node,
-      # which needs ffmpeg and fpcalc. record-node's own suite checks the
-      # pinned versions; here any version will do, so the preflight is
-      # bypassed below.
-      - name: Install ffmpeg and fpcalc
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg libchromaprint-tools xvfb
+      # The integration tests ingest into an in-process record-node, which
+      # refuses any ffmpeg or fpcalc but its pins. record-node's own script, at
+      # the commit this app depends on, installs the pinned artifacts;
+      # GITHUB_PATH carries them to the end-to-end smoke as well.
+      - name: Install pinned ffmpeg and fpcalc
+        run: sh node_modules/record-node/cli/fetch-toolchain.sh "$RUNNER_TEMP/audio-tools" >> "$GITHUB_PATH"
+
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
 
       # Spec 8.10.8: high and critical advisories anywhere in the lockfile fail
       # unless audit-allowlist.json justifies them for their shipped or
@@ -54,8 +57,6 @@ jobs:
       # The bundled node's utilityProcess test runs inside Electron, which
       # needs a display on Linux.
       - name: Test
-        env:
-          RECORD_TOOLCHAIN_PREFLIGHT: bypass
         run: xvfb-run -a bun test
 
       - name: Build

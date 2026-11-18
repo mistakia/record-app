@@ -18,7 +18,8 @@ bun run setup:electron      # Electron binary; its postinstall never runs
 bun run dev                 # electron-vite dev; Electron flags go through node_modules/.bin/electron-vite dev -- --user-data-dir=<dir> (bun run drops them)
 bun run build               # production build into out/, no source maps
 bun run verify              # eslint + three tsc projects
-bun test                    # RECORD_TOOLCHAIN_PREFLIGHT=bypass when ffmpeg/fpcalc differ from record-node's pins
+bun test                    # pinned ffmpeg/fpcalc from sh node_modules/record-node/cli/fetch-toolchain.sh (linux x86_64);
+                            # RECORD_TOOLCHAIN_PREFLIGHT=bypass only where no pinned artifact exists (macOS)
 bun run gen:api             # regenerate API types and the route allowlist after bumping record-node
 bun run smoke:remote        # built app against a running node, read-only (RECORD_NODE_URL; options in the script header)
 bun run smoke:local         # built app against its own in-process node: every write, gapless, identity export
