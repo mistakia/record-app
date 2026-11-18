@@ -10,6 +10,7 @@ import { NODE_API_TAGS } from './event-invalidation.ts'
 import { library_ids } from './cache-ids.ts'
 import { label_filter_args } from './label-facets.ts'
 import { compressed_public_key } from '#renderer/identity/identity.ts'
+import type { CapturedListen } from '#renderer/player/listen-recorder.ts'
 
 const READ_METHODS = new Set(['get', 'head'])
 const WRITES_WAIT: NodeFailure = { kind: 'refused', message: 'Writes wait until the app has caught up with the node.' }
@@ -183,8 +184,9 @@ export const node_api = createApi({
       providesTags: ['peers']
     }),
     // The one write of the playback path (spec §8.9.1 listen recording).
-    record_listen: build.mutation<unknown, { track_id: string, library_address: string }>({
-      query: ({ track_id, library_address }) => ({ method: 'post', path_template: '/listens', body: { track_id, library_address } }),
+    record_listen: build.mutation<unknown, CapturedListen>({
+      query: ({ track_id, library_address, client_listen_id, listened_at_ms }) =>
+        ({ method: 'post', path_template: '/listens', body: { track_id, library_address, client_listen_id, listened_at_ms } }),
       invalidatesTags: ['listens']
     }),
     // Every write that appends to a library names its target (chapter 7

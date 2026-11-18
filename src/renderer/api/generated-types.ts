@@ -1478,12 +1478,26 @@ export interface paths {
         put?: never;
         /**
          * Record a listen event.
-         * @description Server assigns the timestamp. Per protocol spec §2.7, listen
-         *     entries are `{trackId, address, timestamp}`; the `address` is the
-         *     library address the track was played from (may differ from the
-         *     recording library if the listener is attributing a remote track).
-         *     The listen is written to the identity's listens library (spec
+         * @description Per protocol spec §2.7, listen entries are `{trackId, address,
+         *     timestamp, clientListenId?}`; the `address` is the library
+         *     address the track was played from (may differ from the recording
+         *     library if the listener is attributing a remote track). The
+         *     listen is written to the identity's listens library (spec
          *     §4.8.3); there is no write target.
+         *
+         *     The node uses `listened_at_ms` as the listen's timestamp, and the
+         *     current time when it is absent. It returns 400 for a
+         *     `listened_at_ms` more than 5 minutes ahead of its clock or more
+         *     than 90 days behind it. A client that queues listens drops a
+         *     listen that gets 400 rather than retrying it.
+         *
+         *     A client that may send a listen more than once sends a
+         *     `client_listen_id`, minted when the listen is captured and the
+         *     same on every retry, together with `listened_at_ms`. When this
+         *     node already holds that `client_listen_id` in the identity's
+         *     listens libraries, it appends nothing and returns 200 with the
+         *     current count, as for a fresh listen. A copy it appends before
+         *     another device's arrives is still one listen (spec §2.7).
          */
         post: {
             parameters: {
@@ -1498,6 +1512,16 @@ export interface paths {
                         track_id: string;
                         /** @description Library address the track was played from. */
                         library_address: string;
+                        /**
+                         * @description When the play crossed the client's listen threshold,
+                         *     in milliseconds since the Unix epoch.
+                         */
+                        listened_at_ms?: number;
+                        /**
+                         * @description Client-minted key for this listen (spec §2.7
+                         *     `clientListenId`). Clients SHOULD use a random UUID.
+                         */
+                        client_listen_id?: string;
                     };
                 };
             };
@@ -2196,7 +2220,8 @@ export interface paths {
         /**
          * Stream audio content by CID.
          * @description MIME type is detected from the first 4100 bytes via file-type.
-         *     Supports RFC 7233 Range requests (206 Partial Content). No
+         *     Supports RFC 7233 Range requests (206 Partial Content); a range
+         *     the blob cannot satisfy is answered 416. No
          *     side-effects — pinning is handled when a track is adopted into
          *     the requestor's own library, not when its audio is streamed.
          */
@@ -2246,6 +2271,14 @@ export interface paths {
                 };
                 401: components["responses"]["Unauthorized"];
                 404: components["responses"]["NotFound"];
+                /** @description Range Not Satisfiable. No range of the header lies within the blob. */
+                416: {
+                    headers: {
+                        "Content-Range"?: string;
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 500: components["responses"]["InternalError"];
             };
         };
