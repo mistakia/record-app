@@ -5,18 +5,31 @@
 import { beforeAll, describe, expect, test } from 'bun:test'
 
 import type { Track } from '#renderer/api/types.ts'
-import type { NodeRequest, NodeResult } from '#shared/bridge.ts'
+import type { NodeFailure, NodeRequest, NodeResult } from '#shared/bridge.ts'
 import { create_mock_context, sleep } from './mock-audio-context.ts'
 
 const mock = create_mock_context()
 const requests: NodeRequest[] = []
 const audio_requests: string[] = []
+// The node's side of POST /listens: it counts a client_listen_id once, and
+// listen_outcome decides what the app hears back.
+const node_listen_ids = new Set<string>()
+let listen_outcome: 'ok' | 'lost' | 'rejected' = 'ok'
+const answer_listen = (body: { client_listen_id: string }): NodeResult<unknown> => {
+  if (listen_outcome === 'rejected') return { ok: false, failure: { kind: 'http', status: 400, code: 'VALIDATION_ERROR', message: 'listened_at_ms is outside the window' } }
+  node_listen_ids.add(body.client_listen_id)
+  if (listen_outcome === 'lost') return { ok: false, failure: { kind: 'network', message: 'timeout', code: 'TIMEOUT' } }
+  return { ok: true, data: { track_id: 'x', count: node_listen_ids.size } }
+}
+const storage_items = new Map<string, string>()
+const listens = () => requests.filter(({ path_template }) => path_template === '/listens')
 Object.assign(globalThis, {
   AudioContext: function AudioContext () { return mock.context },
   window: {
     record: {
       request: async (request: NodeRequest): Promise<NodeResult<unknown>> => {
         requests.push(request)
+        if (request.path_template === '/listens') return answer_listen(request.body as { client_listen_id: string })
         return { ok: true, data: { track_id: 'x', count: 1 } }
       },
       // Duration in seconds is the byte length (see the mock context).
@@ -25,7 +38,8 @@ Object.assign(globalThis, {
         return { ok: true, data: new ArrayBuffer(Number(cid.split('-')[1])) }
       },
       cancel_audio: async () => {}
-    }
+    },
+    localStorage: { getItem: (key: string) => storage_items.get(key) ?? null, setItem: (key: string, value: string) => { storage_items.set(key, value) } }
   }
 })
 
@@ -51,13 +65,32 @@ let store: typeof import('#renderer/store/index.ts')['store']
 // counting happen on a tick.
 const tick = async () => { await sleep(300) }
 
+// Plays a long track past the threshold and stops, leaving one listen sent.
+const record_a_listen = async () => {
+  controller.play_tracks({ tracks: [track('heard', 300)], start_index: 0, library_address: LIBRARY, scope: '' })
+  await sleep()
+  mock.context.currentTime += 61
+  await tick()
+  controller.stop_playback()
+  await sleep()
+}
+
+// Pending listens go out when writes become allowed again.
+const flush_listens = async () => {
+  const { reconcile_started, reconcile_finished } = await import('#renderer/store/connection.ts')
+  store.dispatch(reconcile_started({ connection_id: 99 }))
+  store.dispatch(reconcile_finished({ connection_id: 99, ok: true }))
+  await sleep()
+}
+
 const player = () => store.getState().player
 const current_title = () => player().queue.entries[player().queue.index]?.title
 
 beforeAll(async () => {
   controller = await import('#renderer/player/player-controller.ts')
   store = (await import('#renderer/store/index.ts')).store
-  const { events_state_changed, reconcile_finished } = await import('#renderer/store/connection.ts')
+  const { connection_loaded, events_state_changed, reconcile_finished } = await import('#renderer/store/connection.ts')
+  store.dispatch(connection_loaded({ mode: 'remote', node_url: 'http://127.0.0.1:3000', node_key: 'http://127.0.0.1:3000', auth: { status: 'none', persistent: true } }))
   // Writes are allowed: an open, reconciled connection.
   store.dispatch(events_state_changed({ status: 'open', node_url: 'http://127.0.0.1:3000', connection_id: 99, attempt: 0, retry_at_ms: null, last_error: null }))
   store.dispatch(reconcile_finished({ connection_id: 99, ok: true }))
@@ -115,7 +148,6 @@ describe('player controller', () => {
   test('records one listen at 60 s of play, through POST /listens with the play\'s library', async () => {
     controller.play_tracks({ tracks: TRACKS, start_index: 0, library_address: LIBRARY, scope: '' })
     await sleep()
-    const listens = () => requests.filter(({ path_template }) => path_template === '/listens')
     const before = listens().length
     mock.context.currentTime += 59
     await tick()
@@ -125,7 +157,10 @@ describe('player controller', () => {
     mock.context.currentTime += 20
     await tick()
     expect(listens()).toHaveLength(before + 1)
-    expect(listens().at(-1)).toEqual({ method: 'post', path_template: '/listens', body: { track_id: TRACKS[0]?.id, library_address: LIBRARY } })
+    expect(listens().at(-1)).toMatchObject({ method: 'post', path_template: '/listens', body: { track_id: TRACKS[0]?.id, library_address: LIBRARY } })
+    const body = listens().at(-1)?.body as { client_listen_id: string, listened_at_ms: number }
+    expect(body.client_listen_id).toMatch(/^[A-Za-z0-9._:-]{1,128}$/)
+    expect(Math.abs(body.listened_at_ms - Date.now())).toBeLessThan(10_000)
   })
 
   test('remove, move, and add next keep the current entry and the engine\'s next in step', async () => {
@@ -190,7 +225,6 @@ describe('player controller', () => {
     const long = track('long', 300)
     controller.play_tracks({ tracks: [long, track('b', 40)], start_index: 0, library_address: LIBRARY, scope: '' })
     await sleep()
-    const listens = () => requests.filter(({ path_template }) => path_template === '/listens')
     const before = listens().length
     mock.context.currentTime += 59.9
     await tick()
@@ -202,22 +236,50 @@ describe('player controller', () => {
     controller.stop_playback()
   })
 
-  test('a listen is retried only when the request provably never reached the node', () => {
-    const never: Array<Parameters<typeof controller.listen_never_reached_node>[0]> = [
+  test('a listen whose response was lost is sent again with the same key and counted once', async () => {
+    const counted = node_listen_ids.size
+    listen_outcome = 'lost'
+    await record_a_listen()
+    const first = listens().at(-1)?.body
+    const attempts = listens().length
+    listen_outcome = 'ok'
+    await flush_listens()
+    expect(listens()).toHaveLength(attempts + 1)
+    expect(listens().at(-1)?.body).toEqual(first)
+    expect(node_listen_ids.size).toBe(counted + 1)
+    const sent = listens().length
+    await flush_listens()
+    expect(listens()).toHaveLength(sent)
+  })
+
+  test('a listen the node answers 400 is dropped, not sent again', async () => {
+    listen_outcome = 'rejected'
+    await record_a_listen()
+    const sent = listens().length
+    listen_outcome = 'ok'
+    await flush_listens()
+    expect(listens()).toHaveLength(sent)
+  })
+
+  test('a listen is kept for a failure that may pass and dropped for one that will not', () => {
+    const retried: NodeFailure[] = [
       { kind: 'refused', message: 'gated' },
       { kind: 'not_configured', message: 'none' },
-      { kind: 'network', message: 'refused', code: 'ECONNREFUSED' },
-      { kind: 'network', message: 'dns', code: 'ENOTFOUND' },
-      { kind: 'network', message: 'dns', code: 'EAI_AGAIN' }
-    ]
-    const maybe: Array<Parameters<typeof controller.listen_never_reached_node>[0]> = [
+      { kind: 'busy', message: 'busy' },
+      { kind: 'auth', status: 401, message: 'token refused' },
+      { kind: 'tls', message: 'bad cert' },
+      { kind: 'aborted', message: 'cancelled' },
       { kind: 'network', message: 'timeout', code: 'TIMEOUT' },
-      { kind: 'network', message: 'reset', code: 'ECONNRESET' },
       { kind: 'network', message: 'unknown', code: null },
       { kind: 'http', status: 500, code: null, message: 'boom' },
-      { kind: 'tls', message: 'bad cert' }
+      { kind: 'http', status: 503, code: null, message: 'unavailable' }
     ]
-    expect(never.map(controller.listen_never_reached_node)).toEqual(never.map(() => true))
-    expect(maybe.map(controller.listen_never_reached_node)).toEqual(maybe.map(() => false))
+    const dropped: NodeFailure[] = [
+      { kind: 'http', status: 400, code: 'VALIDATION_ERROR', message: 'bad time' },
+      { kind: 'http', status: 404, code: null, message: 'no such track' },
+      { kind: 'too_large', message: 'too large' }
+    ]
+    expect(retried.map(controller.listen_worth_retrying)).toEqual(retried.map(() => true))
+    expect(dropped.map(controller.listen_worth_retrying)).toEqual(dropped.map(() => false))
   })
 })

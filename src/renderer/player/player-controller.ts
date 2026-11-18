@@ -52,25 +52,29 @@ const engine = create_audio_engine({
   }
 })
 
-// System errors that mean the request never left this machine or was never
-// accepted by the node.
-const NEVER_SENT_CODES = new Set(['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN'])
 const LISTEN_FLUSH_INTERVAL_MS = 30_000
 
-// POST /listens is not idempotent, so a listen is retried only when the
-// request provably never reached the node: gated by the app, no node
-// configured, connection refused, or the name did not resolve. A timeout or
-// a connection dropped mid-request may have landed, and a rare lost listen
-// is better than a duplicate.
-export const listen_never_reached_node = (failure: NodeFailure): boolean =>
-  failure.kind === 'refused' || failure.kind === 'not_configured' ||
-  (failure.kind === 'network' && failure.code !== null && NEVER_SENT_CODES.has(failure.code))
+// A listen carries its client_listen_id on every attempt, so the node
+// counts it once however often it is sent (chapter 7 POST /listens). It is
+// kept for another attempt after any failure that may pass: no answer,
+// writes gated, no node configured, the node refusing the token until a new
+// one is entered, or a 5xx. Any other answer, a 400 for a time outside the
+// node's window among them, would come back the same and drops it.
+const RETRIED_FAILURES = new Set<NodeFailure['kind']>(['network', 'refused', 'not_configured', 'busy', 'auth', 'tls', 'aborted'])
+export const listen_worth_retrying = (failure: NodeFailure): boolean =>
+  RETRIED_FAILURES.has(failure.kind) || (failure.kind === 'http' && failure.status >= 500)
 
 const recorder = create_listen_recorder({
   record: async (listen) => {
     const result = await store.dispatch(node_api.endpoints.record_listen.initiate(listen))
     if (result.error === undefined) return true
-    return !listen_never_reached_node(result.error as NodeFailure)
+    return !listen_worth_retrying(result.error as NodeFailure)
+  },
+  get_node_key: () => store.getState().connection.config?.node_key ?? null,
+  // Looked up on each use: this module loads where no window exists yet.
+  storage: {
+    getItem: (key) => window.localStorage.getItem(key),
+    setItem: (key, value) => { window.localStorage.setItem(key, value) }
   }
 })
 
